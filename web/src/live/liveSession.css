@@ -6,3 +6,34 @@
 .live-session__error-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .live-session__announcer { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .live-session__paused-hint { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
+
+@media (max-width: 480px) {
+  .live-session,
+  .live-session__layout > * {
+    min-width: 0;
+  }
+
+  .live-session__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .live-session .skeleton-view,
+  .live-session .skeleton-view--empty {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .live-session__banner,
+  .live-session__paused-hint,
+  .live-session__error-list {
+    overflow-wrap: anywhere;
+  }
+
+  .live-session button {
+    min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
