@@ -22,8 +22,10 @@ from fastapi.testclient import TestClient
 from routine_watch import live
 from routine_watch.api import app
 from routine_watch.contracts import (
+    BoundingBox,
     CaptureFrame,
     CaptureSource,
+    ObjectLabel,
     StepEvent,
     StepSource,
     TaskError,
@@ -210,9 +212,56 @@ def test_frames_scenario_sends_skeleton_frames() -> None:
 
 def test_step_scenario_sends_synthetic_frames() -> None:
     """A scenario written at step level has no recorded frames, so the skeleton view
-    gets a made-up one per step instead of staying empty the whole session."""
+    gets made-up ones instead of staying empty the whole session: one every
+    `1 / SYNTHETIC_FPS` seconds, from the start of the session to its last step."""
     events = load_scenario(scenario_path(BAD)).events
-    assert len(of_type(live_session(BAD), "frame")) == len(events)
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    assert [f.seq for f in frames] == list(range(len(frames)))
+    assert frames[0].t == 0.0
+    assert frames[-1].t == pytest.approx(max(event.t_end for event in events))
+    gaps = {round(later.t - earlier.t, 6) for earlier, later in pairwise(frames)}
+    assert gaps == {round(1.0 / live.SYNTHETIC_FPS, 6)}
+
+
+def test_synthetic_frames_carry_a_skeleton_and_not_just_boxes() -> None:
+    """The bug this is a regression for: every made-up frame had `poses=[]`, so the
+    live skeleton view (SPEC section 10, step 3) drew labelled boxes and no body."""
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    assert frames
+    for frame in frames:
+        assert len(frame.poses) == 1  # one person, so the session is not "assisted"
+        assert len(frame.hands) == 1
+        for landmark in [*frame.poses[0].landmarks, *frame.hands[0].landmarks]:
+            assert 0.0 <= landmark.x <= 1.0
+            assert 0.0 <= landmark.y <= 1.0
+
+
+def test_the_synthetic_hand_travels_between_the_objects_of_the_steps() -> None:
+    """A still skeleton is barely better than no skeleton: the hand has to be on the
+    object of the step being done, and somewhere else between steps."""
+    events = load_scenario(scenario_path(BAD)).events
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    for event in events:
+        middle = min(frames, key=lambda f: abs(f.t - (event.t_start + event.t_end) / 2.0))
+        target = next(o for o in middle.objects if str(o.label) == str(event.objects[0]))
+        assert _overlaps(_hand_box(middle), target.box), f"{event.step_id} at {middle.t}"
+
+    places = {(f.hands[0].landmarks[0].x, f.hands[0].landmarks[0].y) for f in frames}
+    assert len(places) > len(events)  # it moves between the steps, not only at them
+
+
+def _hand_box(frame: CaptureFrame) -> BoundingBox:
+    """The box the detector would put around the hand in this frame."""
+    return next(found.box for found in frame.objects if found.label is ObjectLabel.HAND)
+
+
+def _overlaps(one: BoundingBox, other: BoundingBox) -> bool:
+    return (
+        one.x1 <= other.x2 and other.x1 <= one.x2 and one.y1 <= other.y2 and other.y1 <= one.y2
+    )
 
 
 @pytest.mark.parametrize(

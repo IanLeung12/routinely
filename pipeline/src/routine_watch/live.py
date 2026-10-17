@@ -27,8 +27,9 @@ The messages, in the order a session produces them:
                  is the map going red and amber mid-session (SPEC section 10).
 ``frame``        One `CaptureFrame`: skeletons, hand landmarks and object
                  boxes, never an image (SPEC section 8). Capped at
-                 `MAX_FRAME_FPS`, and absent altogether for a scenario
-                 written at step level, which has no frames to send.
+                 `MAX_FRAME_FPS`; a scenario written at step level has no
+                 recorded frames, so it is sent made-up ones that move the
+                 way a recording would (`_synthetic_frames`).
 ``step``         One `StepEvent`, sent when the step is over.
 ``error``        One `TaskError`. Errors are classified again after every step
                  (`classify_errors(..., ended=False)`), so a session flashes
@@ -78,6 +79,7 @@ import re
 from collections.abc import AsyncIterator, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Literal
 
@@ -89,6 +91,7 @@ from .contracts import (
     CaptureFrame,
     ErrorType,
     ObjectDetection,
+    ObjectLabel,
     Session,
     StepEvent,
     TaskError,
@@ -97,6 +100,7 @@ from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents
 from .errors import classify_errors
 from .notify import Notifier, get_notifier
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
+from .stick_figure import HAND_SPAN, REST, Point, centre_of, reaching_for
 from .tasks import TaskGraph
 
 STAGE = "live"
@@ -361,7 +365,8 @@ def _beats(
 
 #: Fixed, made-up positions for the skeleton view when a scenario is written at step
 #: level and has no real capture frames to show (SPEC section 8: boxes only, never
-#: video, so these are as good as real ones for the dashboard's purposes).
+#: video, so these are as good as real ones for the dashboard's purposes). Both tasks'
+#: objects, because the live view plays either routine (`web/src/live/LiveScreen.tsx`).
 _PLACEHOLDER_BOXES: dict[str, BoundingBox] = {
     "cup": BoundingBox(x1=0.05, y1=0.75, x2=0.15, y2=0.87),
     "kettle": BoundingBox(x1=0.66, y1=0.26, x2=0.84, y2=0.54),
@@ -369,32 +374,128 @@ _PLACEHOLDER_BOXES: dict[str, BoundingBox] = {
     "spoon": BoundingBox(x1=0.22, y1=0.6, x2=0.38, y2=0.66),
     "milk": BoundingBox(x1=0.86, y1=0.6, x2=0.96, y2=0.72),
     "sugar": BoundingBox(x1=0.86, y1=0.3, x2=0.96, y2=0.42),
+    "glass": BoundingBox(x1=0.06, y1=0.74, x2=0.17, y2=0.88),
+    "water_jug": BoundingBox(x1=0.62, y1=0.22, x2=0.82, y2=0.52),
+    "pill_organiser": BoundingBox(x1=0.2, y1=0.28, x2=0.36, y2=0.4),
+    "pill_bottle": BoundingBox(x1=0.86, y1=0.28, x2=0.95, y2=0.46),
 }
+
+#: How often a scenario written at step level gets a made-up frame, in frames per
+#: second of session time: the rate the frame-level recordings were written at
+#: (`tests/scenarios/tea_normal`), which is fast enough for the stand-in figure to
+#: move and slow enough to keep the socket light.
+SYNTHETIC_FPS = 2.0
 
 
 def _synthetic_frames(events: Sequence[StepEvent], session_id: str) -> list[CaptureFrame]:
-    """One made-up frame per step event, for a scenario written at step level (no
-    `frames.jsonl`) so the skeleton view still has something to show (SPEC section 10,
-    step 3) rather than staying on "waiting for camera" the whole session."""
+    """Made-up frames for a scenario written at step level (no `frames.jsonl`), so the
+    skeleton view has something to show (SPEC section 10, step 3) rather than staying
+    on "waiting for camera" the whole session.
+
+    One frame every `1 / SYNTHETIC_FPS` seconds, from the start of the session to the
+    end of its last step. Each carries the objects this session's steps are done with,
+    where `_PLACEHOLDER_BOXES` puts them, and a stand-in figure
+    (`routine_watch.stick_figure`) whose hand travels to the object of the step being
+    done and back to its rest spot in between: a recording of nobody, shaped like a
+    recording of somebody, which is what the skeleton view knows how to draw.
+    """
+    if not events:
+        return []
+    steps = sorted(events, key=lambda event: (event.t_start, event.t_end))
+    objects = [
+        ObjectDetection(label=label, confidence=1.0, box=box)
+        for label in dict.fromkeys(label for step in steps for label in step.objects)
+        if (box := _PLACEHOLDER_BOXES.get(str(label))) is not None
+    ]
+    track = _hand_track(steps)
     frames: list[CaptureFrame] = []
-    for seq, event in enumerate(events):
-        objects = [
-            ObjectDetection(label=label, confidence=1.0, box=box)
-            for label in event.objects
-            if (box := _PLACEHOLDER_BOXES.get(str(label))) is not None
-        ]
+    for seq, t in enumerate(_ticks(steps[-1].t_end)):
+        point = _hand_at(track, t)
+        pose, hand = reaching_for(point)
         frames.append(
             CaptureFrame(
                 session_id=session_id,
                 seq=seq,
-                t=(event.t_start + event.t_end) / 2.0,
+                t=t,
                 source="synthetic",
-                poses=[],
-                hands=[],
-                objects=objects,
+                poses=[pose],
+                hands=[hand],
+                objects=[*objects, _hand_box(point)],
             )
         )
     return frames
+
+
+def _ticks(end: float) -> list[float]:
+    """Every moment a made-up frame is written for: 0 to `end`, `SYNTHETIC_FPS` apart."""
+    gap = 1.0 / SYNTHETIC_FPS
+    return [index * gap for index in range(int(end / gap) + 1)]
+
+
+def _hand_track(steps: Sequence[StepEvent]) -> list[tuple[Point, float]]:
+    """Where the stand-in hand is through the session, as (point, t) keyframes.
+
+    At rest until the first step, on the object that step is done with from its start
+    to its end, then back at rest halfway through the gap to the next step. Steps that
+    overlap in time just leave their keyframes in time order, which is all the track
+    is read in.
+    """
+    track: list[tuple[Point, float]] = [(REST, 0.0)]
+    for index, step in enumerate(steps):
+        point = _step_anchor(step)
+        track.append((point, step.t_start))
+        track.append((point, step.t_end))
+        following = steps[index + 1] if index + 1 < len(steps) else None
+        if following is not None and following.t_start > step.t_end:
+            track.append((REST, (step.t_end + following.t_start) / 2.0))
+    track.sort(key=lambda keyframe: keyframe[1])
+    return track
+
+
+def _step_anchor(step: StepEvent) -> Point:
+    """Where the hand goes for this step: the first of its objects that is on the
+    counter, or the rest spot for a step done with nothing `_PLACEHOLDER_BOXES` knows.
+
+    A step event lists the object that was in the hand first (both the recogniser's
+    rules and the hand-written `steps.jsonl` files do), so that is the one to reach
+    for: the kettle of a pour rather than the cup it is poured into.
+    """
+    for label in step.objects:
+        box = _PLACEHOLDER_BOXES.get(str(label))
+        if box is not None:
+            return centre_of(box)
+    return REST
+
+
+def _hand_at(track: Sequence[tuple[Point, float]], t: float) -> Point:
+    """The hand's place at `t`: evenly between the keyframes on either side of it."""
+    for (start, t0), (end, t1) in pairwise(track):
+        if t <= t1:
+            if t1 <= t0:
+                return end
+            share = min(1.0, max(0.0, (t - t0) / (t1 - t0)))
+            return (
+                start[0] + share * (end[0] - start[0]),
+                start[1] + share * (end[1] - start[1]),
+            )
+    return track[-1][0]
+
+
+def _hand_box(point: Point, span: float = HAND_SPAN) -> ObjectDetection:
+    """The hand as the detector would have reported it: a box around the landmarks the
+    figure's hand is drawn from, the way the frame-level recordings carry one."""
+    x, y = point
+    half = span / 2.0
+    return ObjectDetection(
+        label=ObjectLabel.HAND,
+        confidence=1.0,
+        box=BoundingBox(
+            x1=max(0.0, x - half),
+            y1=max(0.0, y - half),
+            x2=min(1.0, x + half),
+            y2=min(1.0, y + half),
+        ),
+    )
 
 
 def _downsampled(
