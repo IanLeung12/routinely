@@ -241,16 +241,17 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T301 — Review: contract schema + smoke check for GET /residents/{id}/feedback
-- status: claimed
+- status: todo
 - class: heavy
 - priority: 1
 - kind: improvement
 - source: reviewer
 - deps: T291
 - area: pipeline/src/routine_watch/contracts.py, contracts/resident_feedback.schema.json, contracts/README.md, web/src/contracts.ts, web/src/resident/types.ts, pipeline/tests/test_api_payload_contracts.py, scripts/smoke.sh
-- owner: ian-claude
-- claimed: 2026-10-17T15:38Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude: run ended without progress; partial work on branch task/T301-wip-1548: start from it (git switch task/T301-wip-1548 && git merge origin/main)
 
 What: T283 added `GET /residents/{id}/feedback` (`api_residents.resident_feedback`) returning `{resident_id, answers[{alert_id, verdict, cause, at}], pattern_weights, pattern_names}`, but there is no model in `contracts.py`/schema in `contracts/`, and `web/src/resident/types.ts` hand-writes `FeedbackAnswer`/`ResidentFeedback` (already missing `resident_id`). Same drift class as T250/T292. Fix: add `ResidentFeedback` (+ `FeedbackAnswer`) pydantic models in `contracts.py`, generate `contracts/resident_feedback.schema.json` and the TS type into `web/src/contracts.ts`, make `types.ts` re-export it, validate the route body in `test_api_payload_contracts.py`, and add a `check_schema` for `GET /residents/mrs-k/feedback` in `scripts/smoke.sh`.
 Acceptance:
