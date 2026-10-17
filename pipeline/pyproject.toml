@@ -5,6 +5,7 @@ description = "Routine Watch: capture, step recogniser, task graph, errors, base
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "fastapi>=0.115",
+    "httpx2>=2.13",  # fastapi.testclient, and verifier.py's Gemini REST calls
     "pydantic>=2.9",
     "pyyaml>=6.0",  # the task graphs in src/routine_watch/tasks/*.yaml
     "uvicorn>=0.32",
@@ -14,7 +15,6 @@ dependencies = [
 [project.optional-dependencies]
 # Installed by scripts/ci.sh via `uv sync --all-extras`.
 dev = [
-    "httpx2>=2.13",  # fastapi.testclient needs an http client
     "jsonschema>=4.23",  # validates payloads against contracts/*.schema.json
     "pytest>=8.3",
     "ruff>=0.7",
