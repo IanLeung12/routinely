@@ -496,15 +496,15 @@ Acceptance:
 - `cd web && npm test -- replays` and `scripts/ci.sh` pass.
 
 ### T442 — Bug: main CI red — first-load JS 336 bytes over bundle budget
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - source: orchestrator
 - deps: —
 - area: web/scripts/check-bundle.mjs, web/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T22:48Z
 - pr: #418
 - note: merge conflict with main on PR #418: check out its branch, merge origin/main, fix, push
 - rating: 5/5 clear
