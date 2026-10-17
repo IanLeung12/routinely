@@ -1,0 +1,178 @@
+"""Skeleton replay for alert evidence (SPEC section 8): frames, never video."""
+
+import json
+from itertools import pairwise
+
+import pytest
+from fastapi.testclient import TestClient
+from jsonschema import Draft202012Validator
+
+from routine_watch.api import app
+from routine_watch.contracts import repo_root
+from routine_watch.demo import demo_residents
+from routine_watch.evidence import (
+    MAX_REPLAY_FPS,
+    EvidenceError,
+    known_resident,
+    known_session,
+    normal_replay_frames,
+    replay_frames,
+)
+
+MRS_K = "mrs-k"
+#: The flagged resident's latest session (`routine_watch.alerts._qualifying_sessions`).
+LATEST_SESSION = f"{MRS_K}-22"
+
+#: `tests/scenarios/tea_no_kettle`: 25 frames, t=0.0 .. t=12.0, 0.5s apart.
+SESSION_T_START, SESSION_T_END = 0.0, 12.0
+
+CAPTURE_FRAME_SCHEMA = json.loads(
+    (repo_root() / "contracts" / "capture_frame.schema.json").read_text()
+)
+
+
+def _frame_validator() -> Draft202012Validator:
+    Draft202012Validator.check_schema(CAPTURE_FRAME_SCHEMA)
+    return Draft202012Validator(CAPTURE_FRAME_SCHEMA)
+
+
+def test_latest_session_is_known() -> None:
+    assert known_session(LATEST_SESSION)
+    assert known_resident(MRS_K)
+
+
+def test_unknown_session_and_resident_are_not_known() -> None:
+    assert not known_session("does-not-exist-0")
+    assert not known_session(MRS_K)  # no trailing index
+    assert not known_resident("does-not-exist")
+
+
+def test_replay_frames_rejects_an_unknown_session() -> None:
+    with pytest.raises(EvidenceError):
+        replay_frames("does-not-exist-0", t_start=0.0, t_end=1.0)
+
+
+def test_normal_replay_frames_rejects_an_unknown_resident() -> None:
+    with pytest.raises(EvidenceError):
+        normal_replay_frames("does-not-exist", t_start=0.0, t_end=1.0)
+
+
+def test_frames_are_padded_by_two_seconds_either_side() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=4.0, t_end=5.0)
+
+    times = [frame.t for frame in frames]
+    assert min(times) == pytest.approx(2.0)
+    assert max(times) == pytest.approx(7.0)
+
+
+def test_padded_window_is_clipped_to_the_session() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=-5.0, t_end=20.0)
+
+    assert min(frame.t for frame in frames) == pytest.approx(SESSION_T_START)
+    assert max(frame.t for frame in frames) == pytest.approx(SESSION_T_END)
+
+
+def test_fps_cap_is_honoured_even_for_a_very_high_request() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=0.0, t_end=12.0, fps=1_000.0)
+
+    min_gap = 1.0 / MAX_REPLAY_FPS
+    for earlier, later in pairwise(frames):
+        assert later.t - earlier.t >= min_gap - 1e-9
+
+
+def test_a_low_fps_downsamples_below_the_native_rate() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=0.0, t_end=12.0, fps=1.0)
+
+    for earlier, later in pairwise(frames):
+        assert later.t - earlier.t >= 1.0 - 1e-9
+    assert len(frames) < 25
+
+
+def test_replayed_frames_carry_the_requested_session_id() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=0.0, t_end=1.0)
+
+    assert frames
+    assert {frame.session_id for frame in frames} == {LATEST_SESSION}
+
+
+def test_replayed_frames_validate_against_the_capture_frame_schema() -> None:
+    validator = _frame_validator()
+    frames = replay_frames(LATEST_SESSION, t_start=0.0, t_end=12.0)
+
+    assert frames
+    for frame in frames:
+        payload = frame.model_dump(mode="json")
+        validator.validate(payload)
+        assert not any("image" in key or "byte" in key for key in payload)
+
+
+def test_normal_replay_frames_come_from_a_different_session_id() -> None:
+    frames = normal_replay_frames(MRS_K, t_start=0.0, t_end=1.0)
+
+    assert frames
+    assert {frame.session_id for frame in frames} == {f"{MRS_K}-normal"}
+
+
+def test_every_demo_resident_has_a_known_latest_session() -> None:
+    for resident in demo_residents():
+        session_id = f"{resident['id']}-{len(resident['sessions']) - 1}"
+        assert known_session(session_id)
+
+
+# ----------------------------------------------------------------------- the API
+
+
+def test_session_replay_route_returns_frames() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            f"/sessions/{LATEST_SESSION}/replay", params={"t_start": 4.0, "t_end": 5.0}
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["session_id"] == LATEST_SESSION
+    assert body["frames"]
+    assert all(frame["session_id"] == LATEST_SESSION for frame in body["frames"])
+
+
+def test_session_replay_route_honours_the_fps_query_param() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            f"/sessions/{LATEST_SESSION}/replay",
+            params={"t_start": 0.0, "t_end": 12.0, "fps": 1.0},
+        )
+
+    assert response.status_code == 200
+    times = [frame["t"] for frame in response.json()["frames"]]
+    for earlier, later in pairwise(times):
+        assert later - earlier >= 1.0 - 1e-9
+
+
+def test_session_replay_route_404s_for_an_unknown_session() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            "/sessions/does-not-exist-0/replay", params={"t_start": 0.0, "t_end": 1.0}
+        )
+
+    assert response.status_code == 404
+
+
+def test_normal_replay_route_returns_frames() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            f"/residents/{MRS_K}/normal_replay", params={"t_start": 0.0, "t_end": 1.0}
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resident_id"] == MRS_K
+    assert body["frames"]
+
+
+def test_normal_replay_route_404s_for_an_unknown_resident() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            "/residents/does-not-exist/normal_replay", params={"t_start": 0.0, "t_end": 1.0}
+        )
+
+    assert response.status_code == 404
