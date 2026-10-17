@@ -14,10 +14,21 @@ export type HandoffResident = {
   flags: number
   pending_review: number
   trending: boolean
+  monitoring_paused?: boolean
+}
+
+/** A room the monitoring store currently has paused (SPEC section 12): nobody was
+ * watching, so the resident's quiet row means "not looked at", not "all quiet". */
+export type PausedRoom = {
+  room: string
+  resident_id: string
+  name: string
 }
 
 export type Handoff = {
   window_hours: number
   residents: HandoffResident[]
+  /** Missing on an older API that predates pause tracking: treat as `[]`. */
+  paused?: PausedRoom[]
   summary: string
 }

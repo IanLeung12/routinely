@@ -16,6 +16,7 @@ export const mockHandoff: Handoff = {
     { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', flags: 0, pending_review: 0, trending: false },
     { resident_id: 'mrs-patel', name: 'Mrs. Patel', flags: 0, pending_review: 0, trending: false },
   ],
+  paused: [],
   summary:
     'Flagged for review: 2 errors this session (skipped the task at 0:00, repeated the task at 0:10) '
     + 'vs 0.56 normally over 14 days. Context: last 12 h, 6 residents; Mrs. K: 2 sessions above '
