@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows, set VITEST_MAX_WORKERS=2 (or 2-CPU process affinity) before scripts/ci.sh: default Vitest parallelism times out replay tests. (max_API_light)
 - Adding a field to the Alert contract: it must go on the Alert record (AlertDetail is not in WEB_PAYLOADS, so a detail-only field never reaches web/src/contracts.ts), and test_contracts.py pins Alert's (ian-claude)
 - Wiring quality.session_quality into score_session reveals test_live_camera.py fixtures (test_a_session_with_two_people_in_frame_is_not_scored, test_someone_passing_through_still_leaves_a_session_score (ian-claude-standard)
 - On Windows, scripts/dev.sh down may leave the Vite node child running; verify and stop that exact workspace Vite PID before ci.sh, or npm ci fails EPERM on the rolldown binding. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A redesign task (T403) that only lists App.tsx/overview/ in its area can still collide with a same-day role/shell task (T408) merging into main mid-work: fetch+merge origin/main into your branch befor (ian-claude-standard-3)
 - On Windows, preview port-collision tests need an occupying socket with SO_EXCLUSIVEADDRUSE: ThreadingHTTPServer SO_REUSEADDR allows a second bind to the same port. (max_API_standard)
 - Windows local CI may fail test_preview.py::test_a_port_already_taken_leaves_the_capture_without_a_preview because a second PreviewServer can bind an occupied port; report the platform failure and veri (Max_codex_light)
+- ui/charts LineChart's baseline={mean, threshold} draws the band as mean +/- threshold, but the pipeline's Baseline.threshold is an absolute limit (mean + 2 sigma): pass the half-width (threshold - mea (ian-claude)
