@@ -75,6 +75,16 @@
     gap: var(--space-1);
   }
 
+  .time-of-day__label,
+  .time-of-day__count {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .time-of-day__hours {
+    white-space: normal;
+  }
+
   .time-of-day__count {
     text-align: left;
   }
