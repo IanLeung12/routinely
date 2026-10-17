@@ -15,6 +15,25 @@ fails=()
 fail() { fails+=("$1"); }
 demo_room=""
 
+# Searching a captured page/DOM is a plain string match, never
+# `echo "$dom" | grep -q X`: with `set -o pipefail` grep -q exits at its first
+# match, echo then dies of SIGPIPE, and the pipeline reports 141 even though the
+# text was right there. That is how the dashboard render check below failed on
+# about half of its runs while the dashboard was fine (T367).
+contains() {
+  case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac
+}
+
+# contains(), case-insensitive, over several needles.
+contains_any_ci() {
+  local haystack=${1,,} phrase
+  shift
+  for phrase in "$@"; do
+    contains "$haystack" "${phrase,,}" && return 0
+  done
+  return 1
+}
+
 # Resume the demo room no matter how the script exits (success, a failed check,
 # or dev.sh up itself failing before demo_room is even known) so a broken pause
 # switch never leaves the room paused for whatever runs after this script.
@@ -33,7 +52,15 @@ rid=$(json /residents | python3 -c 'import sys,json;d=json.load(sys.stdin);d=d i
 [ -n "$rid" ] && { json "/residents/$rid" >/dev/null || fail "GET /residents/$rid"; }
 demo_room=$(json /residents | python3 -c 'import sys,json;d=json.load(sys.stdin);d=d if isinstance(d,list) else d.get("residents",[]);print(d[0].get("room",""))' 2>/dev/null)
 json /alerts >/dev/null || fail "GET /alerts"
-curl -fsS --max-time 10 "$WEB/" | grep -q '<div id="root"' || fail "dashboard index.html"
+index=$(curl -fsS --max-time 10 "$WEB/" 2>/dev/null) || index=""
+contains "$index" '<div id="root"' || fail "dashboard index.html"
+
+# dev.sh waits for index.html, which Vite serves before it has transformed a
+# single module. Ask for the entry module too (web/index.html's script src): a
+# cold Vite optimises deps while answering that first request and then tells the
+# page to reload, which would otherwise land in the middle of the DOM dump
+# below. Not a check - if this path ever moves, the checks still speak.
+curl -fsS --max-time 60 -o /dev/null "$WEB/src/main.tsx" || true
 
 # Live session WebSocket: at least one message within 10 s.
 (cd pipeline && timeout 20 uv run python - "$API_PORT" <<'PY') || fail "WebSocket /ws/live sent nothing"
@@ -97,11 +124,13 @@ if [ -n "$CHROME" ]; then
   dom=""
   for attempt in 1 2 3; do
     dom=$("$CHROME" --no-sandbox --headless --virtual-time-budget=8000 --dump-dom "$WEB/" 2>/dev/null)
-    echo "$dom" | grep -q "Routine Watch" && break
+    contains "$dom" "Routine Watch" && break
     [ "$attempt" -lt 3 ] && sleep 3
   done
-  echo "$dom" | grep -q "Routine Watch" || fail "dashboard did not render (no 'Routine Watch' in DOM)"
-  echo "$dom" | grep -qiE "something went wrong|uncaught|cannot read prop" && fail "dashboard rendered an error"
+  contains "$dom" "Routine Watch" ||
+    fail "dashboard did not render (no 'Routine Watch' in ${#dom} bytes of DOM; see $DEV_DIR/web.log)"
+  contains_any_ci "$dom" "something went wrong" "uncaught" "cannot read prop" &&
+    fail "dashboard rendered an error"
 fi
 
 if [ ${#fails[@]} -gt 0 ]; then
