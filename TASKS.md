@@ -421,7 +421,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T267 — Web: visible keyboard focus and a skip-to-content link
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -429,7 +429,8 @@ Acceptance:
 - area: web/src/index.css, web/src/App.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T12:57Z
-- pr: —
+- pr: #256
+- rating: 5/5 clear
 
 What: Accessibility pass for keyboard users (Clarity/Execution). Add a global `:focus-visible` outline in the design-system accent colour (min 2 px, 3:1 contrast) and a "Skip to main content" link as the first focusable element in App, targeting `<main id="main">`.
 Interface: `.skip-link` class in index.css (visually hidden until focused); `<main id="main">` in App.tsx.
