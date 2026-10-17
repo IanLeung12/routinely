@@ -233,25 +233,6 @@ Acceptance:
 - one parametrized test per scenario; fakes only, no real API calls
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
-### T249 — Review: pausing a room mid-session doesn't stop the live session
-- status: done
-- class: standard
-- priority: 1
-- kind: bug
-- source: reviewer
-- deps: —
-- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T11:52Z
-- pr: #234
-- rating: 5/5 clear
-
-What: `/ws/live` checks `get_monitoring_store().is_on(room)` only once before the session starts. If a nurse pauses the room while a session is streaming, frames keep going out and the finished session is still recorded into the resident's history (and can flag them), although the UI says "No camera data is processed while paused" (SPEC §12).
-Interface: in the `async for message in session_messages(...)` loop in `api.py`, re-check the resident's room each message; if paused, send `{"type": "paused", "room": room}`, close normally and stop iterating (closing the generator early means `session_messages` never records the session, same as a dashboard disconnect). Factor the check into one helper used at start and in the loop.
-Acceptance:
-- test: start `/ws/live`, `PUT /rooms/{room}/monitoring {"on": false}` after the first message, assert a `paused` message arrives, no `session_end`, and `/residents/{id}` session count is unchanged
-- `scripts/ci.sh` passes
-
 ### T250 — Review: /ws/live message protocol has no contract
 - status: done
 - class: heavy
