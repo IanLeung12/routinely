@@ -39,6 +39,7 @@
           "type": "boolean"
         },
         "monitoring_paused": {
+          "default": false,
           "description": "Their room's monitoring is paused (SPEC section 12), so a quiet row means nobody was looking rather than nothing happened.",
           "title": "Monitoring Paused",
           "type": "boolean"
@@ -50,8 +51,7 @@
         "room",
         "flags",
         "pending_review",
-        "trending",
-        "monitoring_paused"
+        "trending"
       ],
       "title": "HandoffResident",
       "type": "object"
@@ -121,7 +121,6 @@
   "required": [
     "window_hours",
     "residents",
-    "paused",
     "summary"
   ],
   "title": "Handoff",
