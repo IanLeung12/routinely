@@ -429,7 +429,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T338 — Test: unit overview sort combined with filters
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -437,7 +437,8 @@ Acceptance:
 - area: web/src/overview/ResidentSort.filter.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T17:21Z
-- pr: —
+- pr: #332
+- rating: 5/5 clear
 
 What: T318 added "Most recent change first" but tests cover sort alone. Add a test that sort and filter compose correctly.
 Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/ResidentSort.tsx`, `web/src/overview/ResidentSort.test.tsx` (copy its fetch mocking). New file only.
