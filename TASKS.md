@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T068 — Show the demo-data banner in the app
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
