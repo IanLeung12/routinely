@@ -130,7 +130,7 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass
 
 ### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -138,7 +138,8 @@ Acceptance:
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx, web/src/overview/overview.css
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T12:59Z
-- pr: —
+- pr: #257
+- rating: 5/5 clear
 
 What: A nurse scanning the unit can't tell which rooms are paused (SPEC §12 privacy pause). On load, call `fetchPausedRooms()` and show a small grey "Monitoring paused" chip on each resident card whose `resident.room` is in the list.
 Interface: read `web/src/about/monitoringApi.ts` (`fetchPausedRooms(): Promise<string[]>`) and `web/src/overview/UnitOverview.tsx` (card markup around the `resident-room` span). If the fetch fails (API down / mock mode), show no chips and no error. Add the chip text to the card's `aria-label`.
