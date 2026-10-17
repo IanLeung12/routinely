@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Contracts are generated from pipeline/src/routine_watch/contracts.py; never hand-edit contracts/*.json or web/src/contracts.ts. (ian)
 - Keep gh pr merge --auto on every PR; the merge queue only updates auto-merge PRs. (ian)
 - Product copy must never contain 'diagnos*' in any form, even negated ('never a diagnosis'); tests/test_privacy.py rejects it. Say 'flagged for review'. (orchestrator)
 - A new scenario's row in tests/scenarios/README.md conflicts with every other scenario PR (it's outside task areas): keep it to one line and merge origin/main before pushing. (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Adding a fetch to a screen breaks sibling tests whose stub answers every URL with the screen's payload (ResidentDetail's zero-sessions test): make the new client tolerate a body without its field, or  (ian-claude)
 - A session that flags via abandonment (step_id=None, contracts.py's documented null case) 500'd GET /alerts/{id}: explain.py's _format_error assumed every TaskError had a step_id; only a full-scenario- (ian-claude-standard)
 - A new contracts/ schema in PAYLOADS or REQUESTS also needs a row in contracts/README.md's table: test_api_payload_contracts.py::test_the_contracts_readme_lists_the_payloads fails on the file name alon (ian-claude)
+- Never pkill -f a pattern that also appears in your own command line (e.g. 'vite --port 5191'): pkill kills the Bash call itself and you get no output. Kill by pid from ss -ltnp instead. (ian-claude)
