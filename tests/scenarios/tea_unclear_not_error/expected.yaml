@@ -1,0 +1,6 @@
+# An unclear low-confidence teabag observation must not create an error.
+task: tea
+steps: [fill_kettle, get_cup, boil, teabag_in_cup, pour, milk, stir, remove_teabag]
+errors: []
+score: 0.0
+flag: false

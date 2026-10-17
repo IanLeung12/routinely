@@ -1,0 +1,21 @@
+# One bad session after quiet history produces errors but never flags a change.
+task: tea
+steps: [fill_kettle, boil, get_cup, pour, stir, pour, remove_teabag]
+errors:
+  - { type: omission, step: teabag_in_cup }
+  - { type: perseveration, step: pour }
+score: 5.0
+history:
+  - { hours_ago: 312, score: 0.0 }
+  - { hours_ago: 288, score: 0.0 }
+  - { hours_ago: 264, score: 1.0 }
+  - { hours_ago: 240, score: 0.0 }
+  - { hours_ago: 216, score: 0.0 }
+  - { hours_ago: 192, score: 0.5 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 1.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, score: 0.0 }
+flag: false
