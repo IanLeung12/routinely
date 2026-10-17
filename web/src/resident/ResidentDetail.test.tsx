@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.tsx'
 import { apiUrl } from '../config.ts'
@@ -262,7 +262,7 @@ describe('ResidentDetail', () => {
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
     const heading = await screen.findByRole('heading', { level: 1 })
-    expect(document.activeElement).toBe(heading)
+    await waitFor(() => expect(document.activeElement).toBe(heading))
   })
 
   it('wraps the view in a landmark labelled by the h1', async () => {
