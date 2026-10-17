@@ -25,7 +25,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T061 — Live session screen accessibility pass
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
