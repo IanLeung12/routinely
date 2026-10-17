@@ -9,4 +9,5 @@ dist/
 .DS_Store
 *.mp4
 *.mov
+.cache/
 .worker.out

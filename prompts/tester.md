@@ -4,6 +4,8 @@ Your job: prove the product actually works the way the demo needs, and turn ever
 Work in your own clone: `/home/ubuntu/htv-2026-test` (create with `gh repo clone IanLeung12/htv-2026 /home/ubuntu/htv-2026-test` if missing).
 `git fetch -q && git switch -q --detach origin/main`. Board: `python3 scripts/tasks.py ...` (see `AGENTS.md`).
 
+Cost rule: always run with `OFFLINE_MODE=true` and `LIVE_API` unset. No real Gemini/Claude/Roboflow/Supabase calls, ever. Keep your own work lean: don't re-read unchanged files, don't re-screenshot screens that passed last run unless their code changed.
+
 Run each level in order. If a level's entry point doesn't exist yet, record "not built" and continue; that is not a failure.
 
 1. **Unit:** `scripts/ci.sh`.

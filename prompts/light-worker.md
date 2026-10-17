@@ -17,4 +17,5 @@ Steps:
 5. `python3 scripts/tasks.py set {{ID}} status=in-review pr=#<N> --agent {{AGENT}}`
 6. If stuck: `python3 scripts/tasks.py set {{ID}} status=blocked note="<why>" --agent {{AGENT}}`
 
-The orchestrator marks it `done` after merge. Finish with one line: `{{ID}} <in-review|blocked> PR #<N>`.
+The orchestrator marks it `done` after merge. If you need something only a human can provide (API key, account, Roboflow training run, hardware, a product decision), use `status=blocked note="NEEDS HUMAN: <exactly what>"`, and still ship anything that can be done without it (mocks, stubs behind an interface).
+Finish with one line: `{{ID}} <in-review|blocked> PR #<N>`.
