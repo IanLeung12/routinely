@@ -437,7 +437,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T120 — Bug: live task map overflows; the red/amber steps are hidden off to the right
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -445,7 +445,7 @@ Acceptance:
 - area: web/src/live/TaskMap.tsx, web/src/live/*.css
 - owner: ian-claude
 - claimed: 2026-10-17T07:30Z
-- pr: —
+- pr: #107
 - source: tester
 
 What: In a 1920×984 window the task map card is 406 px wide but its content is 1502 px (`overflow-x: auto`), so only "Fill the kettle", "Boil the kettle" and half of "Get a cup" are visible. The steps that turn red/amber in the demo scenario (`tea_skip_teabag_pour_twice`: teabag missed, pour repeated) are off-screen, so "errors flash" (SPEC §10 step 3) can't be seen without scrolling.
