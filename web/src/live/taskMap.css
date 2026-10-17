@@ -1,0 +1,63 @@
+/* Task map (live session, SPEC section 9 screen 3). The steps flow in wrapping rows
+   instead of one scrolling line: the card sits in a ~400 px column, so a single row
+   pushed the steps that turn red and amber off to the right, where the demo's
+   "errors flash" moment (SPEC section 10 step 3) could not be seen. */
+
+.task-map {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  color: var(--text);
+}
+
+.task-map .step {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel);
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+/* Only the map's own steps give way when a label outruns the card; the legend's swatches
+   are `.task-map .step` nested in an `li`, and must keep their swatch size. */
+.task-map > .step {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.task-map__arrow {
+  flex: none;
+  align-self: center;
+  color: var(--muted);
+}
+
+.task-map .step--done {
+  background: var(--status-normal-bg);
+  border-color: var(--status-normal-text);
+  color: var(--status-normal-text);
+}
+
+.task-map .step--omission {
+  background: var(--error-red-bg);
+  border-color: var(--error-red-text);
+  color: var(--error-red-text);
+  animation: task-map-pulse 1s ease-in-out infinite;
+}
+
+.task-map .step--repeat,
+.task-map .step--sequence {
+  background: var(--error-amber-bg);
+  border-color: var(--error-amber-text);
+  color: var(--error-amber-text);
+}
+
+@keyframes task-map-pulse {
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--error-red-text) 40%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-map .step--omission { animation: none; }
+}
