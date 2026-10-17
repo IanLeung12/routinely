@@ -1697,3 +1697,91 @@ Acceptance:
 - claimed: 2026-10-17T07:43Z
 - pr: #109
 - `cd pipeline && uv run pytest -q` passes.
+
+### T107 — Review: evidence ghost layer replays the same frames as "today"
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/evidence.py, pipeline/tests/test_evidence.py, tests/scenarios/tea_normal/frames.jsonl
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:02Z
+- pr: #93
+
+What: `evidence.py` sets both `_ALERT_SCENARIO` and `_NORMAL_SCENARIO` to `tea_no_kettle`, so `GET /residents/{id}/normal_replay` returns exactly the frames of `GET /sessions/{id}/replay` (only `session_id` differs). On the alert screen the ghost overlay sits perfectly on top of today's skeleton, so demo step 5 ("compare against her normal routine") shows no difference.
+Fix: add a frame-level `tests/scenarios/tea_normal/frames.jsonl` (same capture format and timing as `tea_no_kettle/frames.jsonl`, but with the fill-kettle and boil contacts, so the recogniser reads all tea steps; check `tea_normal/expected.yaml` still passes via `scripts/e2e.sh`) and point `_NORMAL_SCENARIO` at `tea_normal`.
+Acceptance:
+- New test in `test_evidence.py`: for the same window, `normal_replay_frames` and `replay_frames` return different landmark/object data.
+- `scripts/ci.sh` passes (including e2e on `tea_normal`).
+
+### T108 — Review: smoke.sh skips the evidence replay routes and isn't syntax-checked in CI
+- status: done
+- class: light
+- priority: 1
+- kind: test
+- source: reviewer
+- deps: —
+- area: scripts/smoke.sh, scripts/ci.sh
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:01Z
+- pr: #88
+
+What: T037/T080 added `GET /sessions/{session_id}/replay` and `GET /residents/{resident_id}/normal_replay` (`pipeline/src/routine_watch/api.py`), which the alert screen's evidence card depends on, but `scripts/smoke.sh` only checks health/residents/alerts, so a broken replay route passes the demo-day checklist. `scripts/ci.sh` also runs `bash -n` on other scripts but not `smoke.sh`.
+Fix: in `smoke.sh`, after fetching the first alert, read its `errors[0].session_id`, `t_start`, `t_end` and `resident_id` (same inline python3 JSON parsing the script already uses) and check both replay routes return a non-empty `frames` list; add `bash -n scripts/smoke.sh` to the "repo tooling" block of `ci.sh`. Read only these two files plus the two route handlers in `api.py`.
+Acceptance:
+- PASS/FAIL lines for both new checks; FAIL (non-zero exit) on 404 or empty frames.
+- `scripts/ci.sh` passes.
+
+### T110 — Live task map: step state not conveyed by colour alone
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx, web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:14Z
+- pr: #96
+
+What: The red/amber flashes in the live task map (demo beat 3) are colour-only. Add a text/icon cue and an accessible name per step so the state reads for colour-blind judges and screen readers.
+Interface: each `role="listitem"` step gets an accessible name like "Add teabag — missed" / "Pour water — repeated" / "Boil kettle — done"; a visible icon or short label per non-pending state; legend uses the same icons.
+Acceptance:
+- Tests query steps by accessible name for each state (pending, active, done, omission, repeat/sequence).
+- No behaviour change to state transitions; existing tests still pass.
+- `scripts/ci.sh` passes.
+
+### T111 — Demo residents: evening-only worsening and motor slowing
+- status: done
+- class: standard
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:23Z
+- pr: #98
+
+What: SPEC §8 wants 5–6 demo residents, one per pattern. The generators for `"evening"` (T086) and `"motor"` (T087) exist but no demo resident uses them. Add two residents to the demo config with pinned seeds.
+Interface: two new entries in the resident config list in `demo.py` (`scenario: "evening"` and `scenario: "motor"`, new ids/names/rooms); no API or contract change.
+Acceptance:
+- pytest in `test_demo.py`: both new residents appear in `demo_residents()`, deterministic across calls; the evening resident's evening (≥16:00) sessions in the last 7 days average ≥3× the errors of its morning ones; the existing four residents keep their current status (the T091 status test still passes unchanged).
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T112 — AlertContext: care-record context next to the alert (component only)
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/alert/AlertContext.tsx (new), web/src/alert/AlertContext.test.tsx (new)
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:47Z
+- pr: #111
+
+What: SPEC §5 Nice to have 5: show care-record context (new meds, temperature, fluids) beside an alert. Build a small component that shows only the records from the 72 h before the alert time, newest first; not wired into AlertView yet.
+Interface: `AlertContext({ records: CareRecord[], alertTs: string, windowHours?: number })`. Read only `web/src/resident/types.ts` (CareRecord), `web/src/resident/ContextTimeline.tsx` (copy its formatting; reuse its helpers if exported) and `web/src/ui/EmptyState.tsx`. Empty window → EmptyState "No care-record changes in the last 3 days".
+Acceptance:
+- vitest: filters to the window, orders newest first, med_change rows are labelled as medication, empty state shown when nothing is in the window.
+- `scripts/ci.sh` passes.
