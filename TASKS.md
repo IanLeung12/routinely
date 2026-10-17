@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1146319
+- last-reviewed: 6b93111
 
 ## Tasks
 
@@ -486,3 +486,58 @@ What: Ian wants the task map to look like **Postman Flows** (node-graph canvas).
 Why: the task map is the centrepiece of the live demo shot; a flow canvas makes "dependencies, not a fixed order" obvious at a glance.
 Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layout (topological levels left→right) computed from deps; same props and data as today's TaskMap; keyboard/screen-reader: nodes are a list with state in their accessible names.
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
+
+### T433 — Redesign follow-up: pattern library onto the Fey system
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- deps: T401
+- area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.css, web/src/patterns/urgencyFilter.css, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/PatternLibrary.filters.test.tsx, web/src/patterns/PatternLibrary.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The pattern library still uses the pre-redesign tokens (`--panel`, `--border`, `--muted`, `--accent`) and its own boxes. Rebuild its markup on the ui primitives (`Card`, `SectionHeader`, `Row`, `Pill`, `SegmentedControl` for the urgency filter) and the new tokens only. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
+Why: judges click into "consistent with" patterns from the alert; it's the one demo screen that still looks like the old app.
+Interface: same exports/props as today; same data from `web/src/patterns/api.ts` and `mockPatterns.ts` (don't edit those).
+Acceptance:
+- no legacy tokens (`--panel`, `--border`, `--muted`, `--bg`) and no hex/px literals in the two CSS files;
+- wording unchanged ("consistent with", never "diagnose");
+- existing tests pass (update selectors only, keep behaviour); `cd web && npx vitest run src/patterns && npm run lint`.
+
+### T434 — Redesign follow-up: guided tour card on the Fey system
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T401
+- area: web/src/tour/Tour.tsx, web/src/tour/tour.css, web/src/tour/Tour.test.tsx, web/src/tour/Tour.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Restyle the guided-tour card: `--surface-raised`, `--hairline-strong`, `--radius-lg`, the one allowed float shadow (DESIGN.md principle 3), `Button` from `web/src/ui/Button.tsx` for next/back/close. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area. Don't touch `steps.ts`.
+Why: the tour is the first thing a judge sees on the dashboard; it should match the redesigned screens under it.
+Interface: same `Tour` props/exports; behaviour and keyboard handling unchanged.
+Acceptance:
+- tokens only, no hex/px literals in `tour.css`;
+- existing tests pass (selectors only); `cd web && npx vitest run src/tour && npm run lint`.
+
+### T435 — Redesign follow-up: privacy panel + monitoring toggle on the Fey system
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T401
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.test.tsx, web/src/about/PrivacyPanel.keyboard.test.tsx, web/src/about/PrivacyPanel.mobile.test.tsx, web/src/about/MonitoringToggle.test.tsx, web/src/about/MonitoringToggle.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Move the supervisor-side privacy panel and the pause-monitoring toggle onto the new tokens and primitives (`Card`, `SectionHeader`, `Row` for each "what's stored" line, `Button` for the toggle). Don't edit `monitoringApi.ts` or `ResidentDetail.tsx` (T404 owns it). Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
+Why: privacy (skeletons only, no video) is a judging talking point; the panel that says so is still in the old style.
+Interface: same exports/props; same text.
+Acceptance:
+- no legacy tokens (`--muted`, `--panel`, `--border`) and no hex/px literals in `privacyPanel.css`;
+- existing tests pass (selectors only, keep the phone-width wrapping assertion meaningful); `cd web && npx vitest run src/about && npm run lint`.
