@@ -15,6 +15,9 @@ export default function App() {
   /** The shift handoff sits off the main demo path, behind one button. */
   const [openHandoff, setOpenHandoff] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
+  /** Bumped when a live session ends, so the overview and alerts list refetch
+   * without a page reload (SPEC demo beat "alert appears after the second bad session"). */
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -22,7 +25,7 @@ export default function App() {
       if (!cancelled) setAlerts(result)
     })
     return () => { cancelled = true }
-  }, [])
+  }, [refreshKey])
 
   return (
     <main className="app">
@@ -46,12 +49,16 @@ export default function App() {
         <>
           <section>
             <h2>Unit overview</h2>
-            <UnitOverview onSelect={setOpenResident} />
+            <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
           </section>
 
           <section>
             <h2>Live session</h2>
-            <LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={setOpenAlert} />
+            <LiveSession
+              scenario="tea_skip_teabag_pour_twice"
+              onOpenAlert={setOpenAlert}
+              onSessionEnd={() => setRefreshKey((key) => key + 1)}
+            />
           </section>
 
           <section>

@@ -30,7 +30,14 @@ function summarize(residents: ResidentSummary[]): string {
 /** Screen 1 (SPEC section 9): resident list with a status chip and an error-score
  * sparkline, flagged residents first. Visual first; a nurse should read it in 10s.
  * The whole row opens that resident's detail. Without `onSelect` the list is read-only. */
-export function UnitOverview({ onSelect }: { onSelect?: (residentId: string) => void }) {
+export function UnitOverview({
+  onSelect,
+  refreshKey,
+}: {
+  onSelect?: (residentId: string) => void
+  /** Bump this (e.g. after a live session ends) to refetch residents. */
+  refreshKey?: number | string
+}) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
 
   useEffect(() => {
@@ -43,7 +50,7 @@ export function UnitOverview({ onSelect }: { onSelect?: (residentId: string) => 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refreshKey])
 
   if (residents === null) {
     return <Loading label="Loading residents…" />
