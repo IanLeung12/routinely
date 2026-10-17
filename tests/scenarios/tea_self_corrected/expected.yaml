@@ -1,0 +1,26 @@
+# Guards the reduced weight of a sequence slip corrected inside the 15-second window.
+# Actual replay reports a self-corrected sequence at 20-30s and also counts the second
+# pour at 32-36s as full perseveration (not a self-corrected repeat). Together they
+# score 2.5, below the 3.1805 threshold despite one earlier bad session. Counting the
+# sequence at full weight would score 4.0 and flag, so this pins slip weighting.
+task: tea
+steps: [fill_kettle, get_cup, boil, pour, teabag_in_cup, pour, milk, stir, remove_teabag]
+errors:
+  - { type: sequence, step: pour }
+  - { type: perseveration, step: pour }
+score: 2.5
+assisted: false
+history:
+  - { hours_ago: 312, score: 0.0 }
+  - { hours_ago: 288, score: 0.0 }
+  - { hours_ago: 264, score: 0.0 }
+  - { hours_ago: 240, score: 0.0 }
+  - { hours_ago: 216, score: 0.0 }
+  - { hours_ago: 192, score: 0.0 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, score: 5.0 }
+flag: false
