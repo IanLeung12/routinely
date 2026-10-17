@@ -71,3 +71,73 @@ h1 {
   letter-spacing: 0.08em;
   color: var(--muted);
 }
+
+.muted {
+  color: var(--muted);
+}
+
+.resident-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0 2.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.resident-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.resident-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+}
+
+.resident-name {
+  font-weight: 600;
+}
+
+.resident-room {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.resident-row .status-chip {
+  flex-shrink: 0;
+}
+
+.resident-row svg {
+  margin-left: auto;
+}
+
+.status-chip {
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-chip--normal {
+  background: #16331f;
+  color: #5fd889;
+}
+
+.status-chip--watch {
+  background: #3a2f12;
+  color: #e8b33d;
+}
+
+.status-chip--flagged {
+  background: #3a1518;
+  color: #f0636a;
+}
