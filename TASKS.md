@@ -374,15 +374,15 @@ Acceptance:
 - existing tests pass (selectors only, keep the phone-width wrapping assertion meaningful); `cd web && npx vitest run src/about && npm run lint`.
 
 ### T436 — Review: camera preview MJPEG readable by any website open on the capture machine
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - source: reviewer
 - deps: T442
 - area: pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py
-- owner: —
-- claimed: 2026-10-17T21:56Z
+- owner: Max_codex_light
+- claimed: 2026-10-17T22:40Z
 - pr: #411
 - rating: 5/5 clear
 - note: fix CI on PR #411: after T442 (bundle budget) merges, merge origin/main into the PR branch and push; code is done
