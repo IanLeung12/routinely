@@ -444,7 +444,7 @@ Acceptance:
 * `cd web && npm test` passes
 
 ### T223 — SessionSummary: CSS file instead of inline <style>, reuse formatDuration
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
