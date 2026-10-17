@@ -539,3 +539,45 @@ Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; 
 
 What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (or the person's name), "nurse" only where it's specifically the care-home supervisor, never "patient". Landing page: say it's for anyone, alone or with family, a carer or a care home.
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
+
+### T412 — Replay store: keep skeleton replays of every session with errors
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- source: ian
+- deps: —
+- area: pipeline/src/routine_watch/replays.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_residents.py, pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_replays.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants supervisors (and the person) to look back at failed attempts and judge for themselves (SPEC §17). Today replays exist only inside an alert and come from two canned recordings; live sessions keep steps and errors but not frames. Store a replay for every session that had at least one error (and keep the person's most recent normal session as the comparison). Skeletons, hand landmarks, object boxes and timestamps only, downsampled (~10 fps); never video (SPEC §8).
+Interface:
+- `replays.py`: `ReplayStore` interface with in-memory default and an on-disk JSONL.gz implementation (`REPLAY_DIR`, default `.data/replays/`); `save(session, frames, errors)`, `list(person_id, since=None, error_type=None) -> [ReplaySummary]`, `get(session_id) -> Replay` (frames + error markers with t_start/t_end/type/step), `delete(session_id)`, retention `REPLAY_RETENTION_DAYS` (default 30) pruned on save. Shape as contracts (`ReplaySummary`, `Replay`, `ReplayMarker`) and regenerate TS.
+- Live and camera sessions save on `session_end` when errors > 0; demo/synthetic people get generated replays for their bad sessions (reuse `stick_figure` where no landmarks), so the library isn't empty in the demo.
+- API: `GET /people/{person_id}/replays?type=&since=`, `GET /replays/{session_id}` (frames + markers, supersedes the alert-only path; keep `/sessions/{id}/replay` working), `DELETE /replays/{session_id}`.
+Acceptance:
+- Tests: a session with errors is saved and listed, a clean session is not; markers line up with the error timestamps; retention prunes; delete works; no image/video fields can be stored (privacy test).
+- `scripts/ci.sh` + `scripts/e2e.sh` pass.
+
+### T413 — Replays library for supervisors and the person
+- status: todo
+- class: standard
+- priority: 1
+- kind: feature
+- source: ian
+- deps: T412
+- area: web/src/replays/, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: A "Replays" screen where a supervisor can browse a person's sessions that had errors and analyse them, and the person can see (and delete) their own (SPEC §17: they see exactly what supervisors see). Use the mobbin MCP for 2–3 references of video/recording libraries and timeline scrubbers; follow `docs/DESIGN.md` if merged.
+Interface:
+- List: per person, newest first, each row = date/time, task, error pills (omission/sequence/repeat/…), duration; filter by error type and date range; empty state ("No sessions with errors in the last 30 days").
+- Player (extend `ReplayPlayer`): skeleton + object boxes, **timeline with error markers** (click to jump), play/pause/speed (0.5×/1×/2×), step labels as it plays, optional ghost overlay of the person's normal session, frame-by-frame with arrow keys.
+- Supervisor notes on a replay (local/mock, shown with author + time); person view shows "Delete this replay".
+- Entry points: from a person's detail ("Replays"), from an alert's error rows, and from "My routine" for the person.
+- Offline/mock fallback in `web/src/mock/replays.ts`.
+Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
