@@ -1,0 +1,94 @@
+/* Errors by time of day (SPEC section 7.5), under the alert's error list: the
+   evidence behind an evening-only worsening. One row per part of the day, each
+   spelling its numbers out in words as well as a bar, so nothing here is carried
+   by length or colour alone. Tokens only (web/src/index.css), no hex. */
+
+.time-of-day {
+  margin: var(--space-4) 0 0;
+}
+
+.time-of-day__caption {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.time-of-day__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.time-of-day__bucket {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.time-of-day__hours {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* The bar: errors per session, against the worst part of this resident's own day. */
+.time-of-day__track {
+  height: var(--space-3);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--border) 70%, var(--panel));
+  overflow: hidden;
+}
+
+.time-of-day__fill {
+  display: block;
+  width: calc(var(--share) * 100%);
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--error-red-text);
+}
+
+.time-of-day__count {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
+.time-of-day__rate {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phone width (375 px and similar, SPEC section 9): the row stacks, so the bar keeps
+   a readable length instead of being squeezed between label and numbers. */
+@media (max-width: 480px) {
+  /* One bucket per block, with a clear gap between them: stacked rows otherwise
+     run into each other and the numbers read against the wrong label. */
+  .time-of-day__list {
+    gap: var(--space-4);
+  }
+
+  .time-of-day__bucket {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .time-of-day__count {
+    text-align: left;
+  }
+}
+
+/* Print (SPEC section 9 follow-up): the alert goes to care conferences on paper, and
+   `alert.css`'s print rules paint every background white. The numbers carry the strip
+   on their own, but a black bar keeps the shape of the day readable there too. */
+@media print {
+  .time-of-day__track {
+    border: 1px solid #000;
+  }
+
+  .time-of-day__fill {
+    background: #000 !important;
+  }
+}

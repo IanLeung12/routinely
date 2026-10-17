@@ -152,6 +152,19 @@ class AlertKind(StrEnum):
     TREND = "trend"
 
 
+class TimeOfDay(StrEnum):
+    """Which part of a day a session started in (SPEC section 7.5).
+
+    The three parts a nurse reads off a shift rather than clock hours, so "errors
+    only late in the day" is something an alert can show rather than only say:
+    morning before noon, afternoon until 17:00, evening from 17:00 on.
+    """
+
+    MORNING = "morning"
+    AFTERNOON = "afternoon"
+    EVENING = "evening"
+
+
 class BaselineMetric(StrEnum):
     """What a baseline comparison measures."""
 
@@ -442,6 +455,28 @@ class PatternMatch(_Contract):
     )
 
 
+class TimeOfDayErrors(_Contract):
+    """One part of the day, counted over the two weeks behind an alert (SPEC section
+    7.5).
+
+    `sessions` is how many sessions this resident started in that part of the day and
+    `errors` how many errors those sessions had between them, so a reader can tell
+    "three bad evenings" from "one evening, three errors". Both are counts over this
+    resident's own history, not rates: the strip is evidence a nurse reads, and the
+    rate is already in the pattern's own evidence lines.
+    """
+
+    bucket: TimeOfDay
+    sessions: int = Field(
+        ge=0, description="Sessions started in this part of the day, assisted ones left out."
+    )
+    errors: int = Field(
+        ge=0,
+        description="Errors in those sessions, self-corrected slips left out - the same "
+        "count the session score and this resident's normal are built from (SPEC section 7).",
+    )
+
+
 class Alert(_Contract):
     """A change flagged for a human to review (SPEC section 7).
 
@@ -470,6 +505,14 @@ class Alert(_Contract):
     )
     feedback: AlertFeedback | None = Field(
         default=None, description="Null until a nurse confirms it or calls it a false alarm."
+    )
+    errors_by_time_of_day: list[TimeOfDayErrors] | None = Field(
+        default=None,
+        description="Errors and sessions per part of the day over the two weeks before "
+        "the alert, one entry per bucket: the visible evidence behind an evening-only "
+        "pattern (SPEC section 7.5). Read off the resident's own session history by the "
+        "route that serves the alert (`routine_watch.api_alerts`), so it is null on a "
+        "stored record and on a resident with no sessions in that window.",
     )
 
 
@@ -879,10 +922,10 @@ class AlertDetail(Alert):
     feedback has tuned it, not the one the alert was raised against (SPEC section 5,
     MVP 7).
     Otherwise field for field the record, which is why the dashboard reads both
-    through the one generated `Alert` type in `web/src/contracts.ts`. The two the
+    through the one generated `Alert` type in `web/src/contracts.ts`. The three the
     record lets default are required here: a route sends the whole alert every time,
-    so the dashboard can read an empty answer off an empty list and a missing key is
-    a bug rather than "nothing to say".
+    so the dashboard can read an empty answer off an empty list or a null and a
+    missing key is a bug rather than "nothing to say".
     """
 
     patterns: list[PatternMatch] = Field(
@@ -892,6 +935,13 @@ class AlertDetail(Alert):
     feedback: AlertFeedback | None = Field(
         description="What the care team said, or null when nobody has answered yet. Always "
         "present: the route reads it from the feedback store for every alert it sends."
+    )
+    errors_by_time_of_day: list[TimeOfDayErrors] | None = Field(
+        description="One entry per part of the day - morning, afternoon, evening, in that "
+        "order - over the two weeks before the alert, or null when this resident has no "
+        "sessions in that window to read a daily pattern off. Always present: the route "
+        "fills it from her own history for every alert it sends, and the dashboard hides "
+        "the strip on a null rather than drawing three empty bars."
     )
 
 

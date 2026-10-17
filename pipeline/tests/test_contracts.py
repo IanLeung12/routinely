@@ -58,6 +58,8 @@ from routine_watch.contracts import (
     StepSource,
     SuggestedCheck,
     TaskError,
+    TimeOfDay,
+    TimeOfDayErrors,
     example_capture_frames,
     schema_name,
     stale_files,
@@ -185,6 +187,11 @@ def _alert() -> Alert:
         ),
         summary="Three errors making tea this morning, against 0.2 a day for this resident.",
         suggested_checks=[SuggestedCheck.INFECTION_OR_UTI, SuggestedCheck.HYDRATION],
+        errors_by_time_of_day=[
+            TimeOfDayErrors(bucket=TimeOfDay.MORNING, sessions=14, errors=3),
+            TimeOfDayErrors(bucket=TimeOfDay.AFTERNOON, sessions=0, errors=0),
+            TimeOfDayErrors(bucket=TimeOfDay.EVENING, sessions=9, errors=11),
+        ],
     )
 
 
@@ -401,11 +408,12 @@ def ts_read_fields(function: str, path: Path = WEB_MONITORING_API) -> set[str]:
 def test_the_alert_detail_is_the_record_with_nothing_left_out() -> None:
     """`GET /alerts/{id}` and every row of `GET /alerts` dump the whole alert
     (`api_alerts._alert_payload`), so the detail is the stored record's fields with
-    the two it lets default always sent: an empty list and a null, never a gap."""
+    the three it lets default always sent: an empty list, a nurse's verdict and the
+    time-of-day strip the route reads off her history, never a gap."""
     assert set(AlertDetail.model_fields) == set(Alert.model_fields)
     assert all(field.is_required() for field in AlertDetail.model_fields.values())
     optional = {name for name, f in Alert.model_fields.items() if not f.is_required()}
-    assert optional == {"patterns", "feedback"}
+    assert optional == {"patterns", "feedback", "errors_by_time_of_day"}
 
 
 def test_the_detail_schema_fails_an_alert_that_left_its_feedback_out() -> None:

@@ -342,10 +342,48 @@
       ],
       "title": "TaskError",
       "type": "object"
+    },
+    "TimeOfDay": {
+      "description": "Which part of a day a session started in (SPEC section 7.5).\n\nThe three parts a nurse reads off a shift rather than clock hours, so \"errors\nonly late in the day\" is something an alert can show rather than only say:\nmorning before noon, afternoon until 17:00, evening from 17:00 on.",
+      "enum": [
+        "morning",
+        "afternoon",
+        "evening"
+      ],
+      "title": "TimeOfDay",
+      "type": "string"
+    },
+    "TimeOfDayErrors": {
+      "additionalProperties": false,
+      "description": "One part of the day, counted over the two weeks behind an alert (SPEC section\n7.5).\n\n`sessions` is how many sessions this resident started in that part of the day and\n`errors` how many errors those sessions had between them, so a reader can tell\n\"three bad evenings\" from \"one evening, three errors\". Both are counts over this\nresident's own history, not rates: the strip is evidence a nurse reads, and the\nrate is already in the pattern's own evidence lines.",
+      "properties": {
+        "bucket": {
+          "$ref": "#/$defs/TimeOfDay"
+        },
+        "sessions": {
+          "description": "Sessions started in this part of the day, assisted ones left out.",
+          "minimum": 0,
+          "title": "Sessions",
+          "type": "integer"
+        },
+        "errors": {
+          "description": "Errors in those sessions, self-corrected slips left out - the same count the session score and this resident's normal are built from (SPEC section 7).",
+          "minimum": 0,
+          "title": "Errors",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "sessions",
+        "errors"
+      ],
+      "title": "TimeOfDayErrors",
+      "type": "object"
     }
   },
   "additionalProperties": false,
-  "description": "One alert as the routes answer it (`GET /alerts/{id}` and every row of `GET /alerts`).\n\nThe stored `Alert` plus what `routine_watch.api_alerts._alert_payload` fills in on\nthe way out: `feedback` is always there - null until somebody answers, never\nmissing - and `baseline.threshold` is this resident's bar as the care team's\nfeedback has tuned it, not the one the alert was raised against (SPEC section 5,\nMVP 7).\nOtherwise field for field the record, which is why the dashboard reads both\nthrough the one generated `Alert` type in `web/src/contracts.ts`. The two the\nrecord lets default are required here: a route sends the whole alert every time,\nso the dashboard can read an empty answer off an empty list and a missing key is\na bug rather than \"nothing to say\".",
+  "description": "One alert as the routes answer it (`GET /alerts/{id}` and every row of `GET /alerts`).\n\nThe stored `Alert` plus what `routine_watch.api_alerts._alert_payload` fills in on\nthe way out: `feedback` is always there - null until somebody answers, never\nmissing - and `baseline.threshold` is this resident's bar as the care team's\nfeedback has tuned it, not the one the alert was raised against (SPEC section 5,\nMVP 7).\nOtherwise field for field the record, which is why the dashboard reads both\nthrough the one generated `Alert` type in `web/src/contracts.ts`. The three the\nrecord lets default are required here: a route sends the whole alert every time,\nso the dashboard can read an empty answer off an empty list or a null and a\nmissing key is a bug rather than \"nothing to say\".",
   "properties": {
     "alert_id": {
       "minLength": 1,
@@ -416,6 +454,21 @@
         }
       ],
       "description": "What the care team said, or null when nobody has answered yet. Always present: the route reads it from the feedback store for every alert it sends."
+    },
+    "errors_by_time_of_day": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/TimeOfDayErrors"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "One entry per part of the day - morning, afternoon, evening, in that order - over the two weeks before the alert, or null when this resident has no sessions in that window to read a daily pattern off. Always present: the route fills it from her own history for every alert it sends, and the dashboard hides the strip on a null rather than drawing three empty bars.",
+      "title": "Errors By Time Of Day"
     }
   },
   "required": [
@@ -429,7 +482,8 @@
     "summary",
     "suggested_checks",
     "patterns",
-    "feedback"
+    "feedback",
+    "errors_by_time_of_day"
   ],
   "title": "AlertDetail",
   "type": "object"
