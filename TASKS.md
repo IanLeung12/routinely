@@ -514,7 +514,7 @@ Acceptance:
 - `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
 
 ### T124 — Review: Mrs. K is already flagged before the live session, so demo beat 4 never happens
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
