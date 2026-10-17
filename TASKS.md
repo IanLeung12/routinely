@@ -532,15 +532,15 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T250 — Review: /ws/live message protocol has no contract
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - source: reviewer
 - deps: T244
 - area: contracts/live_message.schema.json, contracts/README.md, pipeline/tests/test_live_contract.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T11:53Z
 - pr: —
 
 What: The live socket's messages (`session_start`, `frame`, `step`, `step_state`, `error`, `session_end`, and now `paused`) cross the pipeline/web boundary but are defined only in `live.py`'s docstring and hand-mirrored in `web/src/live/useLiveSession.ts`; `paused` was just added on one side only. Add a JSON Schema (`oneOf` on `type`) to `contracts/`.
