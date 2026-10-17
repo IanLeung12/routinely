@@ -1,15 +1,12 @@
+import type { PatternMatch, PatternUrgency, SuggestedCheck } from '../contracts.ts'
+import { SUGGESTED_CHECK_LABELS } from './SuggestedChecks.tsx'
 import './PatternList.css'
 
-export interface PatternView {
-  pattern_id: string
-  name: string
-  confidence: number /* 0-1 */
-  urgency: 'routine' | 'next_round' | 'same_shift' | 'urgent'
-  evidence: string[]
-  checks: string[]
+function checkLabel(check: SuggestedCheck | string): string {
+  return (SUGGESTED_CHECK_LABELS as Record<string, string>)[check] ?? check
 }
 
-const URGENCY_LABELS: Record<PatternView['urgency'], string> = {
+const URGENCY_LABELS: Record<PatternUrgency, string> = {
   routine: 'Routine',
   next_round: 'Check next round',
   same_shift: 'Check this shift',
@@ -18,7 +15,7 @@ const URGENCY_LABELS: Record<PatternView['urgency'], string> = {
 
 /** Possible patterns a flagged change is consistent with, ranked (SPEC section 9,
  * screen 4). Never diagnostic: always "consistent with", never "has". */
-export function PatternList({ patterns }: { patterns: PatternView[] }) {
+export function PatternList({ patterns }: { patterns: PatternMatch[] }) {
   if (patterns.length === 0) {
     return <p className="muted">Change detected, no clear pattern.</p>
   }
@@ -52,7 +49,7 @@ export function PatternList({ patterns }: { patterns: PatternView[] }) {
                 <p className="pattern__checks-label">Consider ruling out:</p>
                 <ul className="pattern__checks">
                   {pattern.checks.map((check, index) => (
-                    <li key={index}>{check}</li>
+                    <li key={index}>{checkLabel(check)}</li>
                   ))}
                 </ul>
               </>

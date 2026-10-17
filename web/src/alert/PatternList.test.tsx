@@ -1,10 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { PatternList, type PatternView } from './PatternList.tsx'
+import type { PatternMatch } from '../contracts.ts'
+import { PatternList } from './PatternList.tsx'
 
 afterEach(cleanup)
 
-function pattern(overrides: Partial<PatternView> = {}): PatternView {
+function pattern(overrides: Partial<PatternMatch> = {}): PatternMatch {
   return {
     pattern_id: 'delirium',
     name: 'Sudden change (delirium)',
