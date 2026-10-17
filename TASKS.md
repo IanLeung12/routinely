@@ -320,7 +320,7 @@ Acceptance:
 - `cd web && for i in 1 2 3 4 5; do npx vitest run --pool=threads --maxWorkers=1 src/alert/AlertView.test.tsx || exit 1; done` passes, and `scripts/ci.sh` passes.
 
 ### T238 — Alert view: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
