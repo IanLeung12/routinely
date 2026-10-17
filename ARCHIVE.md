@@ -7606,3 +7606,37 @@ Acceptance: renders N bars; compare series only when present; callout shows its 
 
 What: Split from T402. Read only `docs/DESIGN.md` and `web/src/index.css`. A row of thin vertical ticks (like Fey's sector rows), one per day, height = score, colour by status token (normal / watch / flagged; missing day = faint hairline). Props: `days: {date: string, score: number | null, status: 'normal'|'watch'|'flagged'}[]`, `ariaLabel`. Fixed small size (~84×20) for list rows.
 Acceptance: one tick per day; null days render as hairlines; status colours via tokens; accessible name summarises "14 days, 2 flagged"; `cd web && npx vitest run src/ui/charts/MicroBars.test.tsx`.
+
+### T421 — Restyle: BaselineChart + drift card on LineChart
+- status: done
+- class: standard
+- priority: 0
+- kind: improvement
+- source: ian
+- deps: T417
+- area: web/src/resident/BaselineChart.tsx, web/src/resident/BaselineChart.test.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*Drift*.test.tsx
+- owner: ian-claude-standard-4
+- claimed: 2026-10-17T21:37Z
+- pr: #409
+- rating: 4/5 mostly clear: DriftCard has no series data in its props (only slopePerDay/days/trending/minDays), so the acceptance's 'dotted trend series' and 'same props and data as today' had to be reconciled by synthesizing a 2-point fitted line from the slope rather than plotting real daily readings - worth saying explicitly next time if that's the intent
+- note: CI fails only on check:bundle (over budget); rebase on main once T442 (bundle budget) merges.
+
+What: Split from T402. `BaselineChart` → `LineChart` with the personal baseline band, end-of-line tag and `RangeSelector`; the slow-drift card → `LineChart` with a dotted trend series. Same props and data as today.
+Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
+
+### T422 — Restyle: HeatCalendar in the Fey palette
+- status: done
+- class: light
+- priority: 0
+- kind: improvement
+- source: ian
+- deps: T401
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx, web/src/resident/heatCalendar.css
+- owner: ian-claude-standard
+- claimed: 2026-10-17T21:27Z
+- pr: #401
+- note: released by ian-claude-standard-4: run ended without progress; partial work on branch task/T422-wip-2122: start from it (git switch task/T422-wip-2122 && git merge origin/main)
+- rating: 5/5 clear
+
+What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the HeatCalendar files. Muted Fey palette: tinted cells from the status tokens, hairline gaps, small rounded cells, muted weekday labels, legend as small pills. No hex in the component; behaviour unchanged.
+Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.
