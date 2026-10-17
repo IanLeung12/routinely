@@ -443,14 +443,14 @@ Acceptance:
 - `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
 
 ### T232 — Bug: alert feedback buttons (Confirmed / False alarm / cause) render unstyled
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/alert.css, web/src/alert/FeedbackButtons.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T11:06Z
 - pr: —
 - source: tester
 
