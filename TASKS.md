@@ -443,7 +443,7 @@ Acceptance:
 * `cd web && npm test` passes
 
 ### T223 — SessionSummary: CSS file instead of inline <style>, reuse formatDuration
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -451,7 +451,8 @@ Acceptance:
 - area: web/src/live/SessionSummary.tsx, web/src/live/sessionSummary.css, web/src/live/SessionSummary.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T10:27Z
-- pr: —
+- pr: #210
+- rating: 5/5 clear
 
 What: `SessionSummary.tsx` (from PR #204) injects a `<style>` block, against the CSS-class cleanup done in T214/T215 (see `web/src/resident/driftCard.css` for the pattern), and re-implements `formatDuration` that `web/src/resident/format.ts` already exports.
 Interface: move the two rules into `web/src/live/sessionSummary.css` imported by the component; use `formatDuration` from `../resident/format.ts` only if its output matches the current strings in `SessionSummary.test.tsx`, otherwise keep the local one and add a one-line comment why.
