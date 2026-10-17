@@ -138,14 +138,14 @@ Acceptance:
 * No other file changed.
 
 ### T180 — Handoff: each row says what's normal for that resident
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/handoff/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:35Z
 - source: proposed
 - pr: —
 
