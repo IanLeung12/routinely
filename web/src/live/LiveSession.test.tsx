@@ -46,6 +46,10 @@ const MRS_K: Resident = {
 beforeEach(() => {
   installFakeWebSocket()
   vi.mocked(fetchResident).mockResolvedValue(null)
+  // The camera-preview probe (`CameraPreview`) fetches http://127.0.0.1:8765/health on
+  // a localhost page, which in jsdom every test is: answer it here so no test opens a
+  // real socket to whatever happens to be on that port.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('no preview in tests')))
 })
 
 afterEach(() => {
@@ -674,5 +678,89 @@ describe('LiveSession', () => {
 
     expect(screen.queryByText(/No camera could be opened/)).toBeNull()
     expect(screen.getByText('Mock data')).toBeTruthy()
+  })
+
+  // ------------------------------------- the camera picture, this device only (T416)
+
+  const PREVIEW_TOGGLE = 'Show camera preview (this device only)'
+  const PREVIEW_BADGE = 'Preview · not recorded · this device only'
+
+  /** A capture process answering `GET /health` on loopback, the way
+   * `routine_watch.preview` does when `scripts/camera.sh --preview` started it. */
+  function previewAnswers() {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) })
+    vi.stubGlobal('fetch', fetch)
+    return fetch
+  }
+
+  /** The screen watching this machine's camera, with frames arriving. */
+  function liveCamera() {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage())
+    })
+    return socket
+  }
+
+  it('offers the camera picture under the skeleton once the local preview answers', async () => {
+    previewAnswers()
+    liveCamera()
+
+    const toggle = await screen.findByRole('button', { name: PREVIEW_TOGGLE })
+    fireEvent.click(toggle)
+
+    // The badge says what it is, and the skeleton is still drawn over the picture.
+    expect(screen.getByText(PREVIEW_BADGE)).toBeTruthy()
+    expect(screen.getByRole('img', { name: /Skeleton view/ })).toBeTruthy()
+    expect(document.querySelector('.camera-preview__video')?.getAttribute('src')).toBe(
+      'http://127.0.0.1:8765/preview.mjpg',
+    )
+  })
+
+  it('offers nothing when the local preview does not answer', async () => {
+    const fetch = vi.fn().mockRejectedValue(new TypeError('nothing on 8765'))
+    vi.stubGlobal('fetch', fetch)
+    liveCamera()
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+    expect(screen.queryByRole('button', { name: PREVIEW_TOGGLE })).toBeNull()
+    expect(screen.queryByText(PREVIEW_BADGE)).toBeNull()
+    expect(screen.getByRole('img', { name: /Skeleton view/ })).toBeTruthy()
+  })
+
+  it('asks for no preview at all when the page is not on localhost', async () => {
+    const fetch = previewAnswers()
+    vi.stubGlobal('location', { ...window.location, hostname: 'routine-watch.example' })
+    liveCamera()
+
+    await waitFor(() => expect(screen.getByRole('img', { name: /Skeleton view/ })).toBeTruthy())
+    expect(screen.queryByRole('button', { name: PREVIEW_TOGGLE })).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('asks for no preview on a recorded session, however local the page is', async () => {
+    const fetch = previewAnswers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage({ source: 'synthetic' }))
+    })
+
+    await waitFor(() => expect(screen.getByRole('img', { name: /Skeleton view/ })).toBeTruthy())
+    expect(screen.queryByRole('button', { name: PREVIEW_TOGGLE })).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('asks for no preview before the camera has sent a frame', async () => {
+    const fetch = previewAnswers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+
+    await waitFor(() => expect(screen.getByText('Live camera')).toBeTruthy())
+    expect(fetch).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: PREVIEW_TOGGLE })).toBeNull()
   })
 })

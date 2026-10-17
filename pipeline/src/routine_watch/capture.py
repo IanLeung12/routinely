@@ -33,6 +33,12 @@ and testable with none of the heavy dependencies installed:
     The pure bit: MediaPipe-shaped landmarks in, one `CaptureFrame` out. Everything
     that decides what is written down lives here, which is what the tests pin.
 
+The one thing that ever sees a frame besides the two models is the optional local
+preview (`routine_watch.preview`, off unless `CAMERA_PREVIEW=1`): a small JPEG of the
+current frame, served to `127.0.0.1` only, so whoever is standing at this machine can
+aim the camera. It is held in memory for one frame at a time and written nowhere, and
+the records this module writes are the same with it on or off.
+
 mediapipe and opencv are in the ``capture`` extra (`uv sync --extra capture`) and are
 imported lazily, so CI, the pipeline and `--help` never need them. MediaPipe also needs
 its two task bundles on disk; `MediaPipeLandmarker` says where to get them if they are
@@ -64,6 +70,7 @@ from .contracts import (
     repo_root,
 )
 from .detector import Detector, DetectorError, build_detector
+from .preview import Preview, start_preview
 
 STAGE = "capture"
 
@@ -301,6 +308,7 @@ def frame_stream(
     source: CaptureSource | str,
     session_id: str,
     limit: int | None = None,
+    preview: Preview | None = None,
 ) -> Iterator[CaptureFrame]:
     """One record per frame, handed over as the frame is read and then dropped.
 
@@ -315,12 +323,21 @@ def frame_stream(
     them as they arrive (`routine_watch.live_camera`, via `camera_frames`). Both see the
     same records in the same order, which is what makes a live session and a replay of
     the recording it wrote agree.
+
+    `preview` is the optional local camera preview (`routine_watch.preview`, off unless
+    `CAMERA_PREVIEW=1`): the frame is offered to it here, between the two models and the
+    `del` below, because this is the one loop that has the frame and there is only ever
+    one camera handle. What it takes is a small JPEG of the current frame, kept in memory
+    for whoever is standing at this machine and never written anywhere; the record this
+    loop yields is the same record with or without it.
     """
     for seq, (t, image) in enumerate(images):
         if limit is not None and seq >= limit:
             return
         seen = landmarker.landmark(image, t)
         detections = detector.detect(image)
+        if preview is not None:
+            preview.offer(image, t)  # a JPEG of this frame, in memory, for this device
         del image  # the frame is gone from here on; only the record survives
 
         yield frame_record(
@@ -357,12 +374,14 @@ def record_stream(
     source: CaptureSource | str,
     session_id: str,
     limit: int | None = None,
+    preview: Preview | None = None,
 ) -> CaptureResult:
     """Write one JSONL record per frame, then forget the frame.
 
     `frame_stream` read into `recorded`, which is the capture process's whole job, plus
     the summary it prints. Ctrl-C ends the recording cleanly with everything so far on
-    disk.
+    disk. `preview` is handed straight on to `frame_stream`, which is the only thing in
+    the capture process that ever has a frame.
     """
     counts = _Counts()
     stream = frame_stream(
@@ -372,6 +391,7 @@ def record_stream(
         source=source,
         session_id=session_id,
         limit=limit,
+        preview=preview,
     )
     try:
         for record in recorded(stream, out):
@@ -669,6 +689,13 @@ def camera_frames(
     With `record` every record is also written there as JSONL, which makes the session
     replayable offline afterwards - records, never video (SPEC section 8).
 
+    With `CAMERA_PREVIEW=1` (`scripts/camera.sh --preview`) the same frames are also
+    offered to a loopback MJPEG server for the length of the session, so whoever is
+    standing at this machine can see what the camera sees under the skeleton
+    (`routine_watch.preview`). It is started here and closed in the `finally` below,
+    with the camera: a preview exists only while something is being filmed, is served to
+    `127.0.0.1` and nothing else, and is never written down.
+
     The camera and MediaPipe are opened on the first record and raise `CaptureError`
     there - no camera at that index, no `capture` extra, no task bundles - so a reader
     can tell "there is no camera here" from "the session ended". Both are let go of when
@@ -676,6 +703,7 @@ def camera_frames(
     """
     detector = build_detector(weights_path(weights))  # bad weights before MediaPipe starts
     landmarker = MediaPipeLandmarker(pose_model=pose_model, hand_model=hand_model)
+    preview = start_preview()  # None unless CAMERA_PREVIEW=1
     records = frame_stream(
         camera_images(index, fps if fps is not None else _env_int("CAPTURE_FPS", DEFAULT_FPS)),
         landmarker=landmarker,
@@ -683,11 +711,14 @@ def camera_frames(
         source=CaptureSource.CAMERA,
         session_id=session_id or default_session_id(CaptureSource.CAMERA),
         limit=limit,
+        preview=preview.preview if preview is not None else None,
     )
     keep = record if record is not None else (os.environ.get(RECORD_ENV) or None)
     try:
         yield from (recorded(records, Path(keep)) if keep else records)
     finally:
+        if preview is not None:
+            preview.close()  # the frame is dropped before the camera is released
         landmarker.close()
 
 
@@ -714,6 +745,10 @@ def run(
     An `int` source is a camera index; anything else is a path to a video file.
 
     `out` is overwritten: one run, one session, one file.
+
+    With `CAMERA_PREVIEW=1` this process also serves its current frame on loopback while
+    it runs, the same preview a live session gets (`routine_watch.preview`). What it
+    writes to `out` is the same either way.
     """
     live = isinstance(source, int)
     kind = CaptureSource.CAMERA if live else CaptureSource.VIDEO
@@ -722,6 +757,7 @@ def run(
     detector = detector or build_detector(weights)
     ours = landmarker is None
     landmarker = landmarker or MediaPipeLandmarker(pose_model=pose_model, hand_model=hand_model)
+    preview = start_preview()  # None unless CAMERA_PREVIEW=1
     try:
         return record_stream(
             images,
@@ -731,8 +767,11 @@ def run(
             source=kind,
             session_id=session_id or default_session_id(kind),
             limit=limit,
+            preview=preview.preview if preview is not None else None,
         )
     finally:
+        if preview is not None:
+            preview.close()
         close = getattr(landmarker, "close", None) if ours else None
         if close is not None:
             close()  # a landmarker we were handed is the caller's to close
