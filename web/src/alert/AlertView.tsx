@@ -114,7 +114,7 @@ export function AlertView({
   if (loaded === null || loaded.alertId !== alertId) {
     body = <Loading label="Loading alert…" />
   } else if (loaded.alert === null) {
-    body = <EmptyState message={`No alert found for ${alertId}.`} />
+    body = <EmptyState message="No change flagged for review." />
   } else {
     const alert = loaded.alert
     body = (
