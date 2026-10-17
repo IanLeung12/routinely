@@ -458,14 +458,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_notify.py -q` and `scripts/ci.sh` pass.
 
 ### T045 — Privacy & limits panel
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:14Z
-- pr: —
+- pr: #35
 
 What: A small static panel for the demo close (SPEC §10 step 6, §12): what the system stores and doesn't, and its limits. Not wired into App.tsx in this task. Read only the files in `area` and `web/src/live/TaskMap.tsx` (component style).
 Interface: `export function PrivacyPanel()` rendering a `<section aria-labelledby>` with heading "Privacy and limits" and these bullets verbatim: "Only skeleton points and object boxes leave the camera. No video is stored."; "No face recognition. Each camera is linked to a room by configuration."; "It flags a change for a nurse to review. It is not a medical assessment."; "Low-confidence moments are shown as unclear, never counted as errors."; "Pose tracking is less accurate with walkers, wheelchairs and unusual postures."; "Residents or their decision-maker opt in, and monitoring can be turned off per room."
