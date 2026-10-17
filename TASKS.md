@@ -284,7 +284,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T140 — Test: every scenario directory is listed in the scenario README
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: test
