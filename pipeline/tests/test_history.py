@@ -1,6 +1,6 @@
 import pytest
 
-from routine_watch.synth.history import generate_history
+from routine_watch.synth.history import MOTOR_MED_START_DAYS_BEFORE_END, generate_history
 
 
 def test_deterministic_for_seed():
@@ -57,3 +57,46 @@ def test_drift_trends_upward_and_capped_early():
     early_avg = sum(sum(s["errors"].values()) for s in early) / len(early)
     late_avg = sum(sum(s["errors"].values()) for s in late) / len(late)
     assert late_avg > early_avg
+
+
+def test_all_scenarios_have_duration():
+    from routine_watch.synth.history import SCENARIOS
+
+    for scenario in SCENARIOS:
+        sessions = generate_history("r1", days=14, seed=4, scenario=scenario)
+        for s in sessions:
+            assert s["duration_s"] > 0
+
+
+def test_motor_duration_rises_after_med_start_and_sequencing_stays_rare():
+    from datetime import UTC, datetime, timedelta
+
+    sessions = generate_history("r1", days=14, seed=5, scenario="motor")
+    end = datetime(2026, 1, 1, tzinfo=UTC)
+    med_start = end - timedelta(days=MOTOR_MED_START_DAYS_BEFORE_END + 1)
+    before = [s for s in sessions if datetime.fromisoformat(s["ts"]) < med_start]
+    after = [s for s in sessions if datetime.fromisoformat(s["ts"]) >= med_start]
+    assert before and after
+
+    before_avg = sum(s["duration_s"] for s in before) / len(before)
+    after_avg = sum(s["duration_s"] for s in after) / len(after)
+    assert after_avg >= 1.4 * before_avg
+
+    for s in after:
+        assert s["errors"].get("omission", 0) == 0
+        assert s["errors"].get("sequence", 0) == 0
+
+
+def test_motor_sequencing_no_more_common_than_normal():
+    motor = generate_history("r1", days=14, seed=6, scenario="motor")
+    normal = generate_history("r1", days=14, seed=6, scenario="normal")
+
+    def seq_omission_rate(sessions):
+        total = sum(
+            s["errors"].get("omission", 0) + s["errors"].get("sequence", 0) for s in sessions
+        )
+        return total / len(sessions)
+
+    assert seq_omission_rate(motor) <= seq_omission_rate(normal)
+    with_hesitation = [s for s in motor if "hesitation" in s["errors"]]
+    assert with_hesitation
