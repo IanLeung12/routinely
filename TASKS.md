@@ -280,7 +280,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T052 — Demo-data banner component
-- status: claimed
+- status: blocked
 - class: light
 - priority: 3
 - kind: feature
@@ -289,12 +289,13 @@ Acceptance:
 - source: proposed
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:39Z
-- pr: —
+- pr: #52
 
 What: Responsible design / Clarity for judges: a thin banner stating the dashboard runs on synthetic residents. Component only; wiring into `App.tsx` is a later task. Read only the files in `area` and `web/src/ui/Card.tsx` (style).
 Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void })` renders `role="note"` with text "Demo mode: synthetic residents, no real patient data. Flags a change for review; never a diagnosis." and, if `onDismiss` is given, a "Dismiss" button. CSS vars only.
 Acceptance:
 - Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
+- note: Required wording never a diagnosis is rejected by test_privacy.py negation regex; needs a scoped guard fix. Banner focused tests/lint/build pass; draft PR #52 ready.
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T053 — Review: offline feedback fallback hides API rejections from the nurse
