@@ -468,7 +468,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T365 — Test: live session summary has accessible names
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -476,7 +476,8 @@ Acceptance:
 - area: web/src/live/SessionSummary.a11y.test.tsx, web/src/live/SessionSummary.tsx
 - owner: Max_codex_light
 - claimed: 2026-10-17T18:05Z
-- pr: —
+- pr: #355
+- rating: 4/5 clear except quality is not rendered by this component
 
 What: The end-of-session summary on the live screen must be readable by a screen reader: a heading, and each figure (duration, errors, quality) with a text label, not only an icon or colour.
 Interface: read `web/src/live/SessionSummary.tsx` and `web/src/live/SessionSummary.test.tsx`. Add `SessionSummary.a11y.test.tsx` using `getByRole('heading')` and `getByText`/`getByLabelText`. Only if a figure has no accessible name, add an `aria-label` in `SessionSummary.tsx` (no visual change).
