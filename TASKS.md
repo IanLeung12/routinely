@@ -76,7 +76,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T039 — Capture process: MediaPipe + local detector → JSONL
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
