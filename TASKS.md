@@ -333,7 +333,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T243 — Resident detail: monitoring switch reads and writes the real pause state
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
