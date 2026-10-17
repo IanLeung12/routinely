@@ -42,7 +42,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T044 — Alert notifier behind an interface (push alert)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -130,7 +130,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T070 — Tests for Sparkline and SessionList
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -292,7 +292,7 @@ Acceptance:
 - `scripts/e2e.sh` passes with the new scenario included; `scripts/ci.sh` passes.
 
 ### T079 — Alerts use get_explainer() instead of a hard-wired template
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
