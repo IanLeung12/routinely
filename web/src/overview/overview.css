@@ -10,6 +10,18 @@
   font-weight: 600;
 }
 
+.unit-sort {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.unit-sort__button[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
 .resident-list {
   display: flex;
   flex-direction: column;
@@ -103,6 +115,15 @@
   }
 
   .unit-filter__button {
+    min-height: 2.75rem;
+    flex: 1 1 auto;
+  }
+
+  .unit-sort {
+    flex-wrap: wrap;
+  }
+
+  .unit-sort__button {
     min-height: 2.75rem;
     flex: 1 1 auto;
   }
