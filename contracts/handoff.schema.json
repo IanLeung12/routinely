@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "HandoffResident": {
+      "additionalProperties": false,
+      "description": "One resident's line of the shift handoff (SPEC section 9).\n\n`flags` counts the sessions inside the window that scored above this resident's\nown threshold, which is the evidence a flag rests on rather than the flag itself:\none bad session never alerts (SPEC section 7). `pending_review` counts the alerts\nraised for them that nobody has given a verdict on yet.",
+      "properties": {
+        "resident_id": {
+          "minLength": 1,
+          "title": "Resident Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "flags": {
+          "description": "Sessions in the window above this resident's bar.",
+          "minimum": 0,
+          "title": "Flags",
+          "type": "integer"
+        },
+        "pending_review": {
+          "description": "Alerts in the window with no verdict yet.",
+          "minimum": 0,
+          "title": "Pending Review",
+          "type": "integer"
+        },
+        "trending": {
+          "description": "Their error score is on a slow rise. Read over their whole history, not this window: a drift takes weeks to show (SPEC section 7.5).",
+          "title": "Trending",
+          "type": "boolean"
+        },
+        "monitoring_paused": {
+          "description": "Their room's monitoring is paused (SPEC section 12), so a quiet row means nobody was looking rather than nothing happened.",
+          "title": "Monitoring Paused",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "resident_id",
+        "name",
+        "flags",
+        "pending_review",
+        "trending",
+        "monitoring_paused"
+      ],
+      "title": "HandoffResident",
+      "type": "object"
+    },
+    "PausedRoom": {
+      "additionalProperties": false,
+      "description": "A room a nurse has paused, and whose it is (SPEC section 12).",
+      "properties": {
+        "room": {
+          "minLength": 1,
+          "title": "Room",
+          "type": "string"
+        },
+        "resident_id": {
+          "minLength": 1,
+          "title": "Resident Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "room",
+        "resident_id",
+        "name"
+      ],
+      "title": "PausedRoom",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The shift handoff (`GET /handoff`, SPEC section 9).\n\nWhat the nurse coming on shift missed: one row per resident for the window,\nrows worth a look first, quiet ones listed too so the unit is visibly looked at\nrather than silently skipped. `paused` is every room nobody was watching.",
+  "properties": {
+    "window_hours": {
+      "description": "How far back the window reaches.",
+      "maximum": 168,
+      "minimum": 1,
+      "title": "Window Hours",
+      "type": "integer"
+    },
+    "residents": {
+      "description": "Every resident, the ones needing review first.",
+      "items": {
+        "$ref": "#/$defs/HandoffResident"
+      },
+      "title": "Residents",
+      "type": "array"
+    },
+    "paused": {
+      "description": "Rooms whose monitoring is paused right now.",
+      "items": {
+        "$ref": "#/$defs/PausedRoom"
+      },
+      "title": "Paused",
+      "type": "array"
+    },
+    "summary": {
+      "description": "Plain language, written from the window's own numbers (`Explainer`).",
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "window_hours",
+    "residents",
+    "paused",
+    "summary"
+  ],
+  "title": "Handoff",
+  "type": "object"
+}

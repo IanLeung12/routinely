@@ -10,10 +10,12 @@ the copies other languages read cannot drift:
     contracts/examples/capture.jsonl  a few sample frames, for fixtures and scenarios
     web/src/contracts.ts              TypeScript types for the dashboard
 
-Two kinds live here. `CONTRACTS` are the records that flow between the stages and
+Three kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
-`oneOf`, an envelope around those records - and get a schema but no TypeScript,
-because the dashboard reads the socket through its own types.
+`oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
+with: a resident, the overview's row for one, a shift handoff. The last two get a
+schema but no TypeScript, because the dashboard reads the socket and those routes
+through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
@@ -31,7 +33,7 @@ import json
 import re
 import sys
 import textwrap
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any, Literal
@@ -169,6 +171,24 @@ class FeedbackVerdict(StrEnum):
 
     CONFIRMED = "confirmed"
     FALSE_ALARM = "false_alarm"
+
+
+class ResidentStatus(StrEnum):
+    """The chip on a resident's overview row (SPEC section 9, screen 1): nothing to
+    say, worth a look, or a change flagged for review."""
+
+    NORMAL = "normal"
+    WATCH = "watch"
+    FLAGGED = "flagged"
+
+
+class CareRecordKind(StrEnum):
+    """A line of the care record the unit already keeps (SPEC section 6.4): the two
+    readings a pattern is read against, and a medication change."""
+
+    TEMPERATURE = "temperature"
+    FLUID_INTAKE = "fluid_intake"
+    MED_CHANGE = "med_change"
 
 
 # ---------------------------------------------------------------------- capture
@@ -561,6 +581,201 @@ class LiveMessage(RootModel[LiveMessageBody]):
     """
 
 
+# ------------------------------------------------------ what the HTTP routes answer
+
+
+class TopPattern(_Contract):
+    """The pattern chip on a resident's row (SPEC section 9, screen 1).
+
+    The best-scoring `PatternMatch` for this resident's change, cut down to what a
+    row shows: what it is consistent with and how soon somebody should look.
+    """
+
+    pattern_id: Id = Field(description="The pattern in the library, e.g. 'sudden_change'.")
+    name: str = Field(min_length=1, description="How the pattern is shown to a nurse.")
+    urgency: PatternUrgency
+
+
+class ScorePoint(_Contract):
+    """One point of a resident's sparkline: a session's score, and when it ran."""
+
+    ts: datetime = Field(description="When the session started (wall clock).")
+    score: float = Field(ge=0.0, description="Weighted sum of that session's errors.")
+
+
+class ErrorCounts(_Contract):
+    """How many errors of each type one session had (SPEC section 7).
+
+    One optional field per `ErrorType`: a type the session had none of is left out
+    rather than sent as a zero, so `{}` is a clean session. Self-corrected slips are
+    counted by `ResidentSession.self_corrected` instead, not here.
+    """
+
+    omission: int = Field(default=0, ge=0)
+    sequence: int = Field(default=0, ge=0)
+    perseveration: int = Field(default=0, ge=0)
+    substitution: int = Field(default=0, ge=0)
+    hesitation: int = Field(default=0, ge=0)
+    abandonment: int = Field(default=0, ge=0)
+
+
+class ResidentSession(_Contract):
+    """One attempt at one task in a resident's history (`routine_watch.demo`).
+
+    Generated history and a session played live this run are written the same way, so
+    everything downstream reads both alike; the two fields only a watched session can
+    fill - `session_id` and the errors the classifier really found in it - are absent
+    from a generated one. Not `Session`: that is the record the pipeline stores, this
+    is the row the dashboard draws a history from.
+    """
+
+    resident_id: Id
+    ts: datetime = Field(description="When the session started (wall clock).")
+    task: Id = Field(description="The task graph that was followed, e.g. 'tea'.")
+    errors: ErrorCounts
+    self_corrected: int = Field(
+        ge=0, description="Slips the resident put right straight away, which score less."
+    )
+    duration_s: float = Field(ge=0.0, description="How long the session took.")
+    assisted: bool = Field(
+        default=False, description="A second person was in frame. Excluded from the baseline."
+    )
+    session_id: Id | None = Field(
+        default=None, description="Absent on a generated session: only a watched one has an id."
+    )
+    error_events: list[TaskError] | None = Field(
+        default=None,
+        description="The errors this session really had, with their steps and times. Absent "
+        "on a generated session, which only knows how many of each type there were.",
+    )
+
+
+class ResidentBaseline(_Contract):
+    """What this resident is normally like, and the bar a session is held to.
+
+    `mean`, `std` and `threshold` are the flag baseline (`change_detection.Baseline`)
+    built from this resident's own history and nobody else's (SPEC section 7). The
+    two `usual_` fields are what the live screen reads back when a session ends, taken
+    over the resident's earliest days so the very change being flagged cannot quietly
+    raise them (SPEC section 8, beat 6); both are absent for a resident with no early
+    sessions of their own.
+    """
+
+    mean: float
+    std: float = Field(ge=0.0)
+    threshold: float = Field(description="Error score above which a session qualifies.")
+    usual_duration_s: float | None = Field(default=None, ge=0.0)
+    usual_errors: float | None = Field(default=None, ge=0.0)
+
+
+class CareRecord(_Contract):
+    """One line of the care record the unit already keeps (SPEC section 6.4)."""
+
+    resident_id: Id
+    ts: datetime
+    kind: CareRecordKind
+    value: float | str = Field(
+        description="The reading for a temperature or a fluid intake; the drug for a "
+        "med_change."
+    )
+    note: str = Field(description="Free text from whoever wrote the record. Often empty.")
+
+
+class ConsentRecord(_Contract):
+    """Who opted this resident in to being monitored, and when (SPEC section 12)."""
+
+    given_by: str = Field(
+        min_length=1, description="The resident themself, or a substitute decision-maker."
+    )
+    on: date = Field(description="The day consent was given, always before the history it covers.")
+
+
+class ResidentSummary(_Contract):
+    """One row of the unit overview (`GET /residents`, SPEC section 9, screen 1).
+
+    Six fields and no history: the resident, their status chip, the pattern their
+    change is consistent with and the sparkline. `routine_watch.api._SUMMARY_FIELDS`
+    is this list, because the row is this much of the resident below.
+    """
+
+    id: Id
+    name: str = Field(min_length=1)
+    room: str = Field(min_length=1)
+    status: ResidentStatus
+    top_pattern: TopPattern | None = Field(
+        description="Null for a normal resident, and for a change no pattern fits: an "
+        "empty answer is a real one (SPEC section 7.5)."
+    )
+    scores: list[ScorePoint] = Field(description="One point per session, oldest first.")
+
+
+class Resident(ResidentSummary):
+    """One resident in full (`GET /residents/{id}`, SPEC section 9, screen 2).
+
+    The overview's row plus everything the detail screen draws: the consent this
+    monitoring rests on, every session and care record, and the baseline they are
+    read against. It inherits `ResidentSummary` because the row really is this
+    payload's first six fields and nothing else, which is how `/residents` builds it.
+    Synthetic for now (`routine_watch.demo`) - the shape is what the dashboard is held
+    to, not where the numbers come from.
+    """
+
+    consent: ConsentRecord
+    sessions: list[ResidentSession] = Field(description="Every session, oldest first.")
+    care_records: list[CareRecord]
+    baseline: ResidentBaseline
+
+
+class HandoffResident(_Contract):
+    """One resident's line of the shift handoff (SPEC section 9).
+
+    `flags` counts the sessions inside the window that scored above this resident's
+    own threshold, which is the evidence a flag rests on rather than the flag itself:
+    one bad session never alerts (SPEC section 7). `pending_review` counts the alerts
+    raised for them that nobody has given a verdict on yet.
+    """
+
+    resident_id: Id
+    name: str = Field(min_length=1)
+    flags: int = Field(ge=0, description="Sessions in the window above this resident's bar.")
+    pending_review: int = Field(ge=0, description="Alerts in the window with no verdict yet.")
+    trending: bool = Field(
+        description="Their error score is on a slow rise. Read over their whole history, "
+        "not this window: a drift takes weeks to show (SPEC section 7.5)."
+    )
+    monitoring_paused: bool = Field(
+        description="Their room's monitoring is paused (SPEC section 12), so a quiet row "
+        "means nobody was looking rather than nothing happened."
+    )
+
+
+class PausedRoom(_Contract):
+    """A room a nurse has paused, and whose it is (SPEC section 12)."""
+
+    room: str = Field(min_length=1)
+    resident_id: Id
+    name: str = Field(min_length=1)
+
+
+class Handoff(_Contract):
+    """The shift handoff (`GET /handoff`, SPEC section 9).
+
+    What the nurse coming on shift missed: one row per resident for the window,
+    rows worth a look first, quiet ones listed too so the unit is visibly looked at
+    rather than silently skipped. `paused` is every room nobody was watching.
+    """
+
+    window_hours: int = Field(ge=1, le=168, description="How far back the window reaches.")
+    residents: list[HandoffResident] = Field(
+        description="Every resident, the ones needing review first."
+    )
+    paused: list[PausedRoom] = Field(description="Rooms whose monitoring is paused right now.")
+    summary: str = Field(
+        min_length=1,
+        description="Plain language, written from the window's own numbers (`Explainer`).",
+    )
+
+
 #: Every top-level contract: a JSON Schema file and a TypeScript type each.
 CONTRACTS: tuple[type[_Contract], ...] = (
     CaptureFrame,
@@ -578,8 +793,15 @@ CONTRACTS: tuple[type[_Contract], ...] = (
 #: to - `pipeline/tests/test_live_contract.py` validates a real session against it.
 PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
+#: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
+#: for the same reason as the protocols above - the dashboard mirrors these by hand
+#: in `web/src/overview/types.ts` and `web/src/handoff/types.ts`, so the schema is
+#: what the two sides are held to. `pipeline/tests/test_api_payload_contracts.py`
+#: validates the real routes against them.
+PAYLOADS: tuple[type[BaseModel], ...] = (ResidentSummary, Resident, Handoff)
+
 #: Everything that has a schema file in `contracts/`.
-SCHEMAS: tuple[type[BaseModel], ...] = (*CONTRACTS, *PROTOCOLS)
+SCHEMAS: tuple[type[BaseModel], ...] = (*CONTRACTS, *PROTOCOLS, *PAYLOADS)
 
 
 # ------------------------------------------------------------------- generation
