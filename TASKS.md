@@ -431,7 +431,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T365 — Test: live session summary has accessible names
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
