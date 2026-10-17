@@ -446,7 +446,7 @@ Acceptance:
   * `cd web && npm test -- FeedbackButtons` and `scripts/ci.sh` pass
 
 ### T288 — Smoke: validate /monitoring, room history and the first /ws/live message against contracts/
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -454,7 +454,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-standard
 - claimed: 2026-10-17T14:21Z
-- pr: —
+- pr: #278
+- rating: 5/5 clear
 
 What: T279 schema-checks four bodies in smoke.sh; the monitoring and live endpoints (pipeline/src/routine_watch/api_live.py) still get spot checks or none, so contract drift there is only caught by unit tests.
 Interface: reuse `check_schema` in scripts/smoke.sh. Add: GET /monitoring vs contracts/monitoring.schema.json; GET /rooms/<demo_room>/monitoring/history vs contracts/room_monitoring_history.schema.json (SKIP if demo_room is empty); the first message from /ws/live?scenario=tea_skip_teabag_pour_twice&speed=20 vs contracts/live_message.schema.json (pipeline venv Python with a websocket client already in pipeline deps, 5 s timeout; SKIP if none importable). Read-only: no PUTs.
