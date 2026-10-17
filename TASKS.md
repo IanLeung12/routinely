@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 08ab990
+- last-reviewed: ca08f66
 
 ## Tasks
 
@@ -518,3 +518,41 @@ What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard
 Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T320 — Test: unit overview works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/UnitOverview.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a keyboard-only test for the unit overview, mirroring `web/src/about/PrivacyPanel.keyboard.test.tsx` and `web/src/alert/AlertView.keyboard.test.tsx`.
+Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/UnitOverview.test.tsx` (mocks/fixtures) and one existing `*.keyboard.test.tsx`. Create only `web/src/overview/UnitOverview.keyboard.test.tsx`.
+Acceptance:
+* Tab reaches every resident card/link in DOM order; Enter on a card opens that resident (assert the callback/route the existing tests use).
+* Every focusable element has an accessible name.
+* If a real bug is found, don't fix it; note it in the PR body.
+* `cd web && npm test -- UnitOverview.keyboard` passes; `scripts/ci.sh` passes.
+
+### T321 — Test: shift handoff works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a keyboard-only test for the shift handoff screen, mirroring `web/src/alert/AlertView.keyboard.test.tsx`.
+Interface: read `web/src/handoff/Handoff.tsx`, `web/src/handoff/Handoff.test.tsx`, `web/src/handoff/mockHandoff.ts` and one existing `*.keyboard.test.tsx`. Create only `web/src/handoff/Handoff.keyboard.test.tsx`.
+Acceptance:
+* Tab reaches each resident entry and each open-alert link/button in DOM order; Enter activates it (assert the callback/route the existing tests use).
+* Every focusable element has an accessible name.
+* If a real bug is found, don't fix it; note it in the PR body.
+* `cd web && npm test -- Handoff.keyboard` passes; `scripts/ci.sh` passes.
