@@ -493,7 +493,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T256 — Refactor: move monitoring routes and /ws/live out of api.py
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -501,7 +501,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_live.py, docs/CODEMAP.md
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T12:13Z
-- pr: —
+- pr: #241
+- rating: 5/5 clear
 
 What: `api.py` is 450 lines mixing residents, alerts, feedback, replay, monitoring and the live socket. Move `GET /monitoring`, `PUT /rooms/{room}/monitoring`, `_room_for`, `_pause_message` and `/ws/live` into a new `api_live.py` (FastAPI `APIRouter`) included by `api.py`. Pure move: no behaviour or URL change.
 Interface: `api_live.router` included with `app.include_router(...)`; keep any names tests import from `routine_watch.api` re-exported there (grep `pipeline/tests` for `from routine_watch.api import`). Add a CODEMAP note.
