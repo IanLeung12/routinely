@@ -156,6 +156,59 @@ describe('useLiveSession', () => {
     expect(result.current.paused).toBeNull()
   })
 
+  it('retry clears the paused state and opens a new socket that can stream normally', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal'))
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    expect(result.current.paused).toEqual({ room: '204' })
+
+    act(() => {
+      result.current.retry()
+    })
+    expect(result.current.paused).toBeNull()
+    expect(FakeWebSocket.instances.length).toBe(2)
+    expect(firstSocket.closed).toBe(true)
+
+    const secondSocket = FakeWebSocket.latest()
+    expect(secondSocket).not.toBe(firstSocket)
+
+    act(() => {
+      secondSocket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
+    })
+    expect(result.current.paused).toBeNull()
+    expect(result.current.states.fill_kettle).toBe('done')
+  })
+
+  it('leaves paused set when a retry reconnects to a still-paused room', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal'))
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+
+    act(() => {
+      result.current.retry()
+    })
+    const secondSocket = FakeWebSocket.latest()
+
+    act(() => {
+      secondSocket.emit({ type: 'paused', room: '204' })
+      secondSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(result.current.paused).toEqual({ room: '204' })
+    expect(result.current.source).toBe('live')
+  })
+
   it('closes the socket on unmount', () => {
     const { unmount } = renderHook(() => useLiveSession('tea_normal'))
     const socket = FakeWebSocket.latest()

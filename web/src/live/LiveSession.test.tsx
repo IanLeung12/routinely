@@ -343,6 +343,78 @@ describe('LiveSession', () => {
     await act(async () => {})
   })
 
+  it('reconnects and clears the paused panel when "Check again" finds the room unpaused', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+
+    act(() => {
+      screen.getByRole('button', { name: 'Check again' }).click()
+    })
+
+    const secondSocket = FakeWebSocket.latest()
+    expect(secondSocket).not.toBe(firstSocket)
+
+    act(() => {
+      secondSocket.emit({
+        type: 'session_start',
+        session_id: 'live-session-2',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+      secondSocket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
+    })
+
+    expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
+    expect(screen.getByText('Fill the kettle').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(
+      'done',
+    )
+
+    await act(async () => {})
+  })
+
+  it('stays on the paused panel, with no mock fallback, when a retry finds the room still paused', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    act(() => {
+      screen.getByRole('button', { name: 'Check again' }).click()
+    })
+    const secondSocket = FakeWebSocket.latest()
+
+    act(() => {
+      secondSocket.emit({ type: 'paused', room: '204' })
+      secondSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(screen.queryByText('Mock data')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+
+    await act(async () => {})
+  })
+
   it('announces step completions and raised flags through a polite live region', () => {
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
     const socket = FakeWebSocket.latest()

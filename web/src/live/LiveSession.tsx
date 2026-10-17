@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './liveSession.css'
 import { fetchResident } from '../resident/api.ts'
 import type { Baseline } from '../resident/types.ts'
+import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
@@ -114,7 +115,7 @@ export type LiveSessionProps = {
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, stepSpan, ended, paused, source } = useLiveSession(scenario, speed)
+  const { steps, frame, states, errors, stepSpan, ended, paused, source, retry } = useLiveSession(scenario, speed)
   const announcement = useAnnouncement(steps, states, errors, source)
   const baseline = useResidentBaseline(DEMO_RESIDENT_ID)
   const handledEnded = useRef<LiveSessionEnded | null>(null)
@@ -139,8 +140,9 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
 
       {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
           `paused` message and closes without playing anything, so say so instead of
-          showing an empty skeleton view and task map. Picking a routine above reopens
-          the socket, which is how the screen recovers once monitoring is back on. */}
+          showing an empty skeleton view and task map. "Check again" reopens the socket,
+          which is how the screen recovers once a nurse turns monitoring back on, without
+          needing a full reload (T266). */}
       {paused ? (
         <Card>
           <div role="status">
@@ -148,6 +150,7 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
             <p className="live-session__paused-hint">
               Turn it back on from the resident's page to watch their routines again.
             </p>
+            <Button onClick={retry}>Check again</Button>
           </div>
         </Card>
       ) : (
