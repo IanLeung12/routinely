@@ -205,7 +205,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T291 — Web: drift, pattern-library and replay types generated from contracts.py
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
@@ -365,7 +365,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T300 — Pattern library: filter by urgency
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
