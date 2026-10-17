@@ -317,3 +317,4 @@ T354 | standard | claude-sonnet | merged first try | ~45k tok
 T345 | light | claude-sonnet | merged first try | ~30k tok
 T341 | light | codex | merged first try | ~4k tok
 T359 | light | claude-sonnet | merged first try | ~6k tok
+T357 | standard | claude-sonnet | merged first try | ~45k tok
