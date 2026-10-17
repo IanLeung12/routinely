@@ -5,7 +5,9 @@ sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so th
 tests check four things: every type round-trips through JSON into its own schema, the
 sample frames validate, nothing on disk has drifted away from the models, and what the
 dashboard writes by hand against a schema - its `Alert` type, the feedback body its
-client posts, the monitoring bodies its client casts - still names the same fields.
+client posts, the monitoring bodies its client casts, the drift card's type, the
+pattern library's two types and the body both replay clients read - still names the
+same fields.
 """
 
 import json
@@ -40,11 +42,16 @@ from routine_watch.contracts import (
     HandLandmarks,
     Monitoring,
     MonitoringChange,
+    NormalReplay,
     ObjectDetection,
     ObjectLabel,
+    PatternLibraryEntry,
+    PatternTimeProfile,
     Pose,
+    ResidentDrift,
     RoomMonitoringHistory,
     Session,
+    SessionReplay,
     StepEvent,
     StepSource,
     SuggestedCheck,
@@ -67,12 +74,31 @@ WEB_ALERT_API = REPO / "web" / "src" / "alert" / "api.ts"
 #: routes by hand (SPEC section 12).
 WEB_MONITORING_API = REPO / "web" / "src" / "about" / "monitoringApi.ts"
 
+#: The resident screen's client, which writes the drift card's payload out by hand.
+WEB_RESIDENT_API = REPO / "web" / "src" / "resident" / "api.ts"
+
+#: The pattern screen's types, its hand-written copy of a library entry (SPEC §7.5).
+WEB_PATTERN_TYPES = REPO / "web" / "src" / "patterns" / "types.ts"
+
+#: The evidence view's client, which reads both replay routes through one cast.
+WEB_EVIDENCE_API = REPO / "web" / "src" / "evidence" / "api.ts"
+
+#: The field each replay payload's reader has no use for: it asked about the session
+#: or the resident, so the answer naming it back tells the player nothing new.
+REPLAY_SUBJECTS = {SessionReplay: "session_id", NormalReplay: "resident_id"}
+
 #: The one field of the audit trail its client has no use for: it asked about the
 #: room, so the answer naming it again tells the screen nothing new.
 TRAIL_ROOM = {"room"}
 
 #: What the server stamps on a stored verdict, so a nurse's POST never sends it.
 SERVER_STAMPED = {"by", "at"}
+
+#: What a map's values may be where a schema cannot list its fields: a closed enum
+#: (the live protocol's `step_state`, keyed by step id) or a number (a pattern
+#: entry's signal weights). Neither leaves anywhere for an image to go; a string
+#: would.
+MAP_VALUE_TYPES = {"number", "integer", "boolean"}
 
 #: Nothing in a contract may name an image, a frame or a clip (SPEC section 8).
 BANNED_FIELD_WORDS = (
@@ -193,6 +219,32 @@ def walk_objects(node: object) -> list[dict]:
     return found
 
 
+def closed_to_images(extra: object) -> bool:
+    """Whether one object's `additionalProperties` leaves nowhere for an image.
+
+    Every contract forbids unknown fields outright. A map is the exception - its
+    fields cannot be listed - and then its values have to be a closed enum or a
+    number, which still leaves nowhere for an image to go.
+    """
+    if extra is False:
+        return True
+    return isinstance(extra, dict) and ("enum" in extra or extra.get("type") in MAP_VALUE_TYPES)
+
+
+def carries_a_contract(node: dict) -> bool:
+    """Whether a property is nothing but a reference to another contract, or a list of
+    them, so this loop checks it where that contract is defined.
+
+    That is how the live protocol's envelope holds a `frame` (one CaptureFrame, which
+    is skeletons, boxes and timestamps) and a replay payload holds `frames` (a list
+    of the same) without either having a field of its own to hide an image in.
+    """
+    if set(node) == {"$ref"}:
+        return True
+    items = node.get("items")
+    return node.get("type") == "array" and isinstance(items, dict) and set(items) == {"$ref"}
+
+
 def test_contracts_dir_is_documented() -> None:
     assert (CONTRACTS_DIR / "README.md").read_text().strip()
 
@@ -229,18 +281,9 @@ def test_schema_rejects_a_smuggled_frame(model: type, sample: object) -> None:
 def test_no_schema_can_carry_a_raw_frame() -> None:
     for path in sorted(CONTRACTS_DIR.glob("*.schema.json")):
         for node in walk_objects(json.loads(path.read_text())):
-            # Every object forbids unknown fields. A map is the exception - the live
-            # protocol's `step_state` is keyed by step id, so its fields cannot be
-            # listed - and then its values have to be a closed enum, which still
-            # leaves nowhere for an image to go.
-            extra = node["additionalProperties"]
-            assert extra is False or "enum" in extra, path.name
+            assert closed_to_images(node["additionalProperties"]), path.name
             for field, sub in node.get("properties", {}).items():
-                # A property that is only a reference carries another contract, and
-                # this loop checks that contract where it is defined: that is how the
-                # live protocol's envelope holds a `frame` (one CaptureFrame, which is
-                # skeletons, boxes and timestamps) without a field of its own.
-                if set(sub) == {"$ref"}:
+                if carries_a_contract(sub):
                     continue
                 banned = [word for word in BANNED_FIELD_WORDS if word in field]
                 assert not banned, f"{path.name}: {field} looks like raw video"
@@ -313,9 +356,11 @@ def ts_read_fields(function: str, path: Path = WEB_MONITORING_API) -> set[str]:
 
     These clients cast the body inline (`as { paused_rooms: string[] }`) instead of
     naming a type, which is still a hand-written copy of a payload and still drifts.
+    Exported or not: the evidence view's `replayWindow` is module-private and is as
+    much a copy as the rest.
     """
     source = path.read_text(encoding="utf-8")
-    body = re.search(rf"^export async function {function}\b.*?^\}}$", source, re.S | re.M)
+    body = re.search(rf"^(?:export )?async function {function}\b.*?^\}}$", source, re.S | re.M)
     assert body, f"{path.name} has no function {function}"
     cast = re.search(r"\bas \{([^}]*)\}", body.group(0))
     assert cast, f"{function} no longer casts the body it reads"
@@ -387,6 +432,33 @@ def test_the_dashboard_reads_the_whole_audit_trail() -> None:
 def test_the_dashboards_monitoring_change_names_every_logged_field() -> None:
     """The trail's rows are a hand-written type in the same client."""
     assert ts_fields("MonitoringChange", WEB_MONITORING_API) == set(MonitoringChange.model_fields)
+
+
+def test_the_dashboards_drift_type_names_every_field() -> None:
+    """`fetchDrift` reads `GET /residents/{id}/drift` through a type it writes out
+    itself (`web/src/resident/api.ts`), so a field added to the drift card on either
+    side alone fails here."""
+    assert ts_fields("ResidentDrift", WEB_RESIDENT_API) == set(ResidentDrift.model_fields)
+
+
+def test_the_dashboards_pattern_entry_names_every_library_field() -> None:
+    """The pattern screen's copy of a library entry and its time profile
+    (`web/src/patterns/types.ts`), against what `GET /patterns` really sends."""
+    assert ts_fields("PatternLibraryEntry", WEB_PATTERN_TYPES) == set(
+        PatternLibraryEntry.model_fields
+    )
+    assert ts_fields("TimeProfile", WEB_PATTERN_TYPES) == set(PatternTimeProfile.model_fields)
+
+
+def test_the_dashboard_reads_both_replay_windows_through_one_cast() -> None:
+    """`replayWindow` is the one client behind both replay routes
+    (`web/src/evidence/api.ts`): it casts the body for its frames and leaves only the
+    subject it asked about, so anything either route grows has to reach the player
+    and anything the player reads has to be something a route sends."""
+    read = ts_read_fields("replayWindow", WEB_EVIDENCE_API)
+
+    for model, subject in REPLAY_SUBJECTS.items():
+        assert read | {subject} == set(model.model_fields)
 
 
 def test_a_logged_change_is_what_the_monitoring_store_writes() -> None:

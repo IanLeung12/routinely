@@ -16,8 +16,12 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `live_message.schema.json` | one message on the live WebSocket (`/ws/live`): a `oneOf` keyed on `type` over `session_start`, `step_state`, `frame`, `step`, `error`, `session_end` and `paused` (SPEC section 16, decision B) |
 | `resident_summary.schema.json` | one row of the unit overview (`GET /residents`): status chip, the pattern the change is consistent with, sparkline (SPEC section 9, screen 1) |
 | `resident.schema.json` | one resident in full (`GET /residents/{id}`): that row plus consent, sessions, care records and baseline (SPEC section 9, screen 2) |
+| `resident_drift.schema.json` | one resident's slow trend (`GET /residents/{id}/drift`): the robust slope behind the drift card, the days of their own history it is read over, and whether it is worth a look (SPEC section 8) |
 | `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
 | `alert_detail.schema.json` | an alert as a route answers it (`GET /alerts/{id}`, and each row of `GET /alerts`): the `alert` record with `patterns` and `feedback` always sent and the resident's feedback-tuned threshold applied |
+| `pattern_library_entry.schema.json` | one entry of the pattern library (`GET /patterns`): signals and weights, time profile, what to rule out, urgency and where the pattern comes from - the rule, not a verdict on a resident (SPEC section 7.5) |
+| `session_replay.schema.json` | one window of a session's skeleton replay (`GET /sessions/{id}/replay`): the capture frames the evidence view plays, never video (SPEC section 8) |
+| `normal_replay.schema.json` | the same window from a normal session (`GET /residents/{id}/normal_replay`): the ghost layer the evidence view lays under it |
 | `feedback.schema.json` | the body of `POST /alerts/{id}/feedback`: the nurse's verdict, an optional note, and the optional answer to "what was it?" (SPEC section 5, MVP 7 and 8) |
 | `monitoring.schema.json` | every room whose monitoring a nurse has paused (`GET /monitoring`): the state behind the dashboard's pause switches (SPEC section 12) |
 | `room_monitoring.schema.json` | one room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`): the room and whether it is on now |
@@ -38,16 +42,19 @@ the other does not.
 
 Everything from `resident_summary.schema.json` down is an HTTP payload rather than
 a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
-`handoff.py` and `monitoring.py` and served by `api.py`, plus the one body that
-travels the other way. The dashboard mirrors them by hand too
-(`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
-`web/src/about/monitoringApi.ts`, `web/src/alert/api.ts`) or reads them through a
-record's own generated type (`alert_detail` through `Alert`), so again nothing is
-generated for the web side and the schema is what both sides are held to:
+`drift.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and `monitoring.py`
+and served by `api.py` and its route modules, plus the one body that travels the
+other way. The dashboard mirrors them by hand too (`web/src/overview/types.ts`,
+`web/src/handoff/types.ts`, `web/src/resident/api.ts`, `web/src/patterns/types.ts`,
+`web/src/evidence/api.ts`, `web/src/about/monitoringApi.ts`, `web/src/alert/api.ts`)
+or reads them through a record's own generated type (`alert_detail` through `Alert`,
+a replay's `frames` through `CaptureFrame`), so again nothing is generated for the
+web side and the schema is what both sides are held to:
 `pipeline/tests/test_api_payload_contracts.py` calls every one of those routes -
-every demo resident, one with a live session in their history, a handoff with a room
-paused, an alert before and after a nurse answers it, a room paused and resumed -
-and validates what comes back.
+every demo resident, one with a live session in their history, every resident's
+drift, a handoff with a room paused, an alert before and after a nurse answers it,
+every pattern in the library, the replay window behind a real alert's first error in
+both layers, and a room paused and resumed - and validates what comes back.
 
 ## Changing them
 

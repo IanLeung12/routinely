@@ -1,21 +1,25 @@
 """The dashboard's HTTP payloads, against their schemas in `contracts/`.
 
-`GET /residents`, `GET /residents/{id}`, `GET /handoff` and the alert and monitoring
-routes cross the pipeline/web boundary like any other shared shape, and the
-dashboard mirrors them by hand (`web/src/overview/types.ts`,
-`web/src/handoff/types.ts`, `web/src/alert/api.ts`,
+`GET /residents`, `GET /residents/{id}`, `GET /handoff` and the drift, pattern,
+replay, alert and monitoring routes cross the pipeline/web boundary like any other
+shared shape, and the dashboard mirrors them by hand
+(`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+`web/src/resident/api.ts`, `web/src/patterns/types.ts`,
+`web/src/evidence/api.ts`, `web/src/alert/api.ts`,
 `web/src/about/monitoringApi.ts`), which is how fields drift. So `contracts/`
 carries a schema for each, generated from `routine_watch.contracts` like the rest,
 and these tests hold the routes to them: every demo resident, a resident with a live
-session in their history, a handoff with a room paused, an alert before and after a
-nurse answers it - including the body she posts, the one payload travelling the
-other way - and a room paused, resumed and read back off its audit trail.
+session in their history, every resident's drift, every pattern in the library, an
+alert before and after a nurse answers it - including the body she posts, the one
+payload travelling the other way - the replay window behind that alert's first error
+in both layers, and a room paused, resumed and read back off its audit trail.
 
 Fakes only - the template explainer writes the handoff's summary and the session is
 a recording replayed through the pipeline, so nothing here makes a paid call.
 """
 
 import json
+from dataclasses import fields
 from typing import Any
 
 import pytest
@@ -36,15 +40,23 @@ from routine_watch.contracts import (
     Feedback,
     Handoff,
     Monitoring,
+    NormalReplay,
+    PatternLibraryEntry,
+    PatternTimeProfile,
     Resident,
+    ResidentDrift,
     ResidentSummary,
     RoomMonitoring,
     RoomMonitoringHistory,
+    SessionReplay,
     repo_root,
     schema_name,
 )
 from routine_watch.demo import DEMO_RESIDENT, demo_residents
+from routine_watch.drift import Drift
 from routine_watch.monitoring import DEFAULT_BY, get_monitoring_store
+from routine_watch.patterns_library import LIBRARY as PATTERN_LIBRARY
+from routine_watch.patterns_library import Pattern, TimeProfile
 
 CONTRACTS_DIR = repo_root() / "contracts"
 
@@ -52,11 +64,40 @@ CONTRACTS_DIR = repo_root() / "contracts"
 #: just the one the demo spends its time on.
 RESIDENT_IDS = [resident["id"] for resident in demo_residents()]
 
+#: The demo resident the live session and most of these payloads are about.
+MRS_K = next(resident for resident in demo_residents() if resident["id"] == DEMO_RESIDENT)
+
 #: mrs-k's room: the one a live session lands in (`routine_watch.live`).
-MRS_K_ROOM = next(r["room"] for r in demo_residents() if r["id"] == DEMO_RESIDENT)
+MRS_K_ROOM = MRS_K["room"]
+
+#: mrs-k's most recent seeded session, in the `resident-index` shape
+#: `routine_watch.alerts.session_id_for` builds and the evidence view replays.
+MRS_K_SESSION = f"{DEMO_RESIDENT}-{len(MRS_K['sessions']) - 1}"
 
 #: The alert mrs-k's live session raises (`routine_watch.alerts`).
 MRS_K_ALERT = f"alert-{DEMO_RESIDENT}"
+
+#: A second of replay: enough frames to be a real answer, few enough to validate fast.
+SHORT_WINDOW = {"t_start": 4.0, "t_end": 5.0}
+
+#: What `GET /patterns` keeps to itself: the scoring machinery behind a library
+#: entry, which `routine_watch.patterns` owns and no reader of the library is sent.
+INTERNAL_PATTERN_FIELDS = {"requires", "context_weights", "max_confidence"}
+
+#: One library entry as the route answers it, to mutate in the rejection cases below.
+A_PATTERN_ENTRY: dict[str, Any] = {
+    "pattern_id": "sudden_change",
+    "name": "Sudden change",
+    "signals": {"omissions_up": 3.0, "errors_up": 1.0},
+    "time_profile": {
+        "onset_days": [0.0, 3.0],
+        "tolerance_days": 2.0,
+        "note": "a step change within 1-3 days",
+    },
+    "checks": ["hydration", "Cognitive reassessment"],
+    "urgency": "same_shift",
+    "source": "SPEC section 7.5",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -119,6 +160,24 @@ def test_a_live_session_is_the_same_shape(client: TestClient, mrs_k_flagged: Non
     assert live[0]["error_events"]
 
 
+@pytest.mark.parametrize("resident_id", RESIDENT_IDS)
+def test_every_residents_drift_validates(client: TestClient, resident_id: str) -> None:
+    """The drift card's own payload (SPEC section 8), for every resident the demo has:
+    `web/src/resident/api.ts` reads it with a hand-written type."""
+    payload = client.get(f"/residents/{resident_id}/drift").json()
+
+    check(ResidentDrift, payload)
+    assert payload["resident_id"] == resident_id
+
+
+def test_a_rising_and_a_steady_trend_both_validate(client: TestClient) -> None:
+    """`trending` is the card's whole judgement and the demo has residents on both
+    sides of it (`routine_watch.demo`), so the schema is held to both answers."""
+    answers = [client.get(f"/residents/{rid}/drift").json() for rid in RESIDENT_IDS]
+
+    assert {answer["trending"] for answer in answers} == {True, False}
+
+
 def test_the_handoff_validates(client: TestClient) -> None:
     handoff = client.get("/handoff").json()
 
@@ -137,6 +196,18 @@ def test_the_handoff_validates_with_a_room_paused(client: TestClient) -> None:
     assert [room["room"] for room in handoff["paused"]] == [MRS_K_ROOM]
     paused = {row["resident_id"] for row in handoff["residents"] if row["monitoring_paused"]}
     assert paused == {DEMO_RESIDENT}
+
+
+def test_every_pattern_in_the_library_validates(client: TestClient) -> None:
+    """`GET /patterns` reads the library out as data (SPEC section 7.5), so every
+    entry is held to the schema the pattern screen mirrors
+    (`web/src/patterns/types.ts`), signals and time profile and citation included."""
+    entries = client.get("/patterns").json()
+
+    assert [entry["pattern_id"] for entry in entries] == [p.pattern_id for p in PATTERN_LIBRARY]
+    for entry in entries:
+        check(PatternLibraryEntry, entry)
+        assert entry["signals"] and entry["checks"] and entry["source"].strip()
 
 
 def test_the_monitoring_state_validates(client: TestClient) -> None:
@@ -199,6 +270,48 @@ def test_the_alert_detail_validates(client: TestClient, mrs_k_flagged: None) -> 
     check(AlertDetail, detail)
     assert detail["errors"] and detail["patterns"]
     assert detail["feedback"] is None
+
+
+def test_the_replay_behind_an_alert_validates_in_both_layers(
+    client: TestClient, mrs_k_flagged: None
+) -> None:
+    """What the evidence view really asks for (`web/src/evidence/api.ts`): the first
+    error's own window, off the live session's own id, with the resident's normal
+    routine over the same window beside it (SPEC section 10, step 5)."""
+    error = client.get(f"/alerts/{MRS_K_ALERT}").json()["errors"][0]
+    window = {"t_start": error["t_start"], "t_end": error["t_end"]}
+
+    today = client.get(f"/sessions/{error['session_id']}/replay", params=window).json()
+    normal = client.get(f"/residents/{DEMO_RESIDENT}/normal_replay", params=window).json()
+
+    check(SessionReplay, today)
+    check(NormalReplay, normal)
+    assert today["frames"] and normal["frames"]
+    assert {frame["session_id"] for frame in today["frames"]} == {error["session_id"]}
+
+
+def test_a_seeded_sessions_replay_validates(client: TestClient) -> None:
+    """A session nobody watched replays off the stand-in recording
+    (`routine_watch.evidence`) and answers with the same payload, thinned to the
+    frame rate the player asked for."""
+    body = client.get(
+        f"/sessions/{MRS_K_SESSION}/replay", params={**SHORT_WINDOW, "fps": 2.0}
+    ).json()
+
+    check(SessionReplay, body)
+    assert body["session_id"] == MRS_K_SESSION
+    assert body["frames"]
+
+
+@pytest.mark.parametrize("resident_id", RESIDENT_IDS)
+def test_every_residents_ghost_layer_validates(client: TestClient, resident_id: str) -> None:
+    """The ghost layer is asked about the resident, not a session, and comes back
+    under a normal session's own id (SPEC section 9, screen 4)."""
+    body = client.get(f"/residents/{resident_id}/normal_replay", params=SHORT_WINDOW).json()
+
+    check(NormalReplay, body)
+    assert body["resident_id"] == resident_id
+    assert {frame["session_id"] for frame in body["frames"]} == {f"{resident_id}-normal"}
 
 
 def test_the_alert_still_validates_once_a_nurse_has_answered(
@@ -271,7 +384,15 @@ def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) ->
     payloads = {
         ResidentSummary: client.get("/residents").json()[0],
         Resident: client.get(f"/residents/{DEMO_RESIDENT}").json(),
+        ResidentDrift: client.get(f"/residents/{DEMO_RESIDENT}/drift").json(),
         Handoff: client.get("/handoff").json(),
+        PatternLibraryEntry: client.get("/patterns").json()[0],
+        SessionReplay: client.get(
+            f"/sessions/{MRS_K_SESSION}/replay", params=SHORT_WINDOW
+        ).json(),
+        NormalReplay: client.get(
+            f"/residents/{DEMO_RESIDENT}/normal_replay", params=SHORT_WINDOW
+        ).json(),
         Monitoring: client.get("/monitoring").json(),
         RoomMonitoring: switched.json(),
         RoomMonitoringHistory: client.get(f"/rooms/{MRS_K_ROOM}/monitoring/history").json(),
@@ -328,6 +449,38 @@ def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) ->
             {"room": "204", "history": [{"on": False, "at": "2026-10-17T09:00:00Z"}]},
             id="a-logged-change-with-nobody-to-answer-for-it",
         ),
+        pytest.param(
+            ResidentDrift,
+            {"resident_id": "mrs-k", "slope_per_day": 0.2, "days": -1, "trending": True},
+            id="a-trend-over-less-than-no-days",
+        ),
+        pytest.param(
+            PatternLibraryEntry,
+            A_PATTERN_ENTRY | {"signals": {}},
+            id="a-pattern-that-looks-for-nothing",
+        ),
+        pytest.param(
+            PatternLibraryEntry,
+            A_PATTERN_ENTRY
+            | {
+                "time_profile": {
+                    "onset_days": [0.0, 3.0, 7.0],
+                    "tolerance_days": 2.0,
+                    "note": "a step change within 1-3 days",
+                }
+            },
+            id="an-onset-window-with-three-ends",
+        ),
+        pytest.param(
+            SessionReplay,
+            {"session_id": "mrs-k-22"},
+            id="a-replay-without-its-frames",
+        ),
+        pytest.param(
+            NormalReplay,
+            {"resident_id": "mrs-k", "frames": [{"t": 1.0}]},
+            id="a-ghost-frame-that-is-not-a-capture-frame",
+        ),
     ],
 )
 def test_the_schema_rejects(model: type, payload: dict[str, Any]) -> None:
@@ -343,6 +496,30 @@ def test_the_overview_row_is_the_detail_cut_down() -> None:
     two schemas have to agree on which fields those are."""
     assert set(ResidentSummary.model_fields) == set(api_state._SUMMARY_FIELDS)
     assert set(ResidentSummary.model_fields) <= set(Resident.model_fields)
+
+
+def test_the_drift_card_is_the_drift_the_pipeline_computes() -> None:
+    """`/residents/{id}/drift` answers `drift.Drift` plus the resident it was asked
+    about (`api_residents.resident_drift`), so a field added on either side alone
+    fails here."""
+    assert set(ResidentDrift.model_fields) == {f.name for f in fields(Drift)} | {"resident_id"}
+
+
+def test_the_library_entry_is_the_pattern_without_the_scoring_machinery() -> None:
+    """`/patterns` serves the library as data, not how it is weighed
+    (`api_residents._pattern_payload`). A new field on `patterns_library.Pattern` has
+    to be either served or named here deliberately, never quietly dropped."""
+    served = {f.name for f in fields(Pattern)} - INTERNAL_PATTERN_FIELDS
+
+    assert served == set(PatternLibraryEntry.model_fields)
+    assert set(PatternTimeProfile.model_fields) == {f.name for f in fields(TimeProfile)}
+
+
+def test_the_two_replay_windows_differ_only_in_what_was_asked_for() -> None:
+    """One player reads both routes (`web/src/evidence/api.ts`): the session's window
+    and the resident's normal one carry the same frames under a different key."""
+    assert set(SessionReplay.model_fields) - {"session_id"} == {"frames"}
+    assert set(NormalReplay.model_fields) - {"resident_id"} == {"frames"}
 
 
 def test_the_error_counts_cover_every_error_type() -> None:
