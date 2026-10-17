@@ -476,14 +476,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T063 — Wire the alert evidence screen into the app
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - deps: —
 - area: web/src/App.tsx, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:41Z
 - pr: —
 
 What: `AlertView` (T028, `web/src/alert/AlertView.tsx`) is merged but `App.tsx` still shows an "Alert evidence — not built yet" placeholder, so the demo can't reach screen 4. Replace the placeholder with an "Alerts" section listing alerts and opening `AlertView` for one.
