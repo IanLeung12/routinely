@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: ef9d86f
+- last-reviewed: 085dc7c
 
 ## Tasks
 
@@ -494,3 +494,90 @@ Interface: in `scripts/dev.sh`, next to the `VITE_API_URL` export, add `export C
 Acceptance:
 - `bash -n scripts/dev.sh` passes; `.env.example` lists `CORS_ORIGINS`.
 - `scripts/ci.sh` passes.
+
+### T128 — Bug: smoke.sh finds no alert since mrs-k is only flagged after her live session
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T124 (#108) a fresh stack has no flagged resident until mrs-k's live session plays, so `GET /alerts` is empty and smoke.sh fails the alert and replay checks. Make smoke.sh play that session first, the same way the demo does. Read only `scripts/smoke.sh` and the `/ws/live` handler at the bottom of `pipeline/src/routine_watch/api.py`.
+Interface: before the `/alerts` checks, open `ws://<api>/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000` with a short inline `python3 -c` using the `websockets` package (already a pipeline dependency; run it with the pipeline venv python if present, else `python3`) and read until the socket closes; report it as `PASS: live session played` / `FAIL: ...`. Keep "never POSTs feedback". Update the header comment.
+Acceptance:
+- Against `scripts/dev.sh up`, `scripts/smoke.sh` prints PASS for every check, including GET /alerts/<id> and both replay routes; run it twice in a row and it still passes.
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
+
+### T129 — Feedback "what was it?" cause reaches the API (contract + API + web)
+- status: todo
+- class: heavy
+- priority: 2
+- kind: feature
+- deps: —
+- area: contracts/alert.schema.json, contracts/examples/, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py, web/src/contracts.ts, web/src/alert/api.ts, web/src/alert/api.test.ts, web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 MVP 8. The "what was it?" picker (T090) and the per-resident cause store (T100) exist, but the contract and `POST /alerts/{id}/feedback` have no `cause`, so the nurse's answer is dropped. Wire it end to end.
+Interface: optional `cause` (a pattern_id from `patterns_library`, or `"other"`, or null) on `AlertFeedback` in `contracts/alert.schema.json` + `contracts.py` + `web/src/contracts.ts`; `AlertFeedbackIn.cause` validated against known pattern ids (422 otherwise); API calls the FeedbackStore cause-recording method from T100; web `postFeedback` sends the picked cause. Update every consumer and the example alert.
+Acceptance:
+- API test: posting `{verdict: "confirmed", cause: "sudden_change"}` returns the alert with `feedback.cause == "sudden_change"` and the store has it for mrs-k; unknown cause → 422; omitting cause still works.
+- Web test: picking a cause then confirming sends it in the request body.
+- `scripts/ci.sh` passes.
+
+### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
+- status: todo
+- class: heavy
+- priority: 3
+- kind: feature
+- deps: T129
+- area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/feedback.py, pipeline/tests/test_pattern_feedback.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 Nice to have 8. Causes a nurse confirmed for a resident nudge that pattern's weight up for her next alerts (and a false alarm on a top pattern nudges it down), bounded so one answer can't flip the ranking alone.
+Interface: `FeedbackStore.pattern_weights(resident_id) -> dict[str, float]` (default 1.0, clamped e.g. 0.7–1.3); `score_patterns(..., weights=None)` multiplies confidence before the threshold/sort; `build_alerts` passes the resident's weights. Evidence line notes "weighted by N past nurse answers" when weight ≠ 1.
+Acceptance:
+- Tests: no feedback → identical ranking to today; two confirmed `slow_drift` causes raise its confidence for that resident only; weights stay within bounds after many answers.
+- Wording stays "consistent with"; no "diagnose".
+- `scripts/ci.sh` passes.
+
+### T131 — Push alert fires once when a live session flags a resident
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 Nice to have 3. `notify.py` (FakeNotifier default, SupabaseNotifier when LIVE_API=1) is built but nothing calls it. When a live session's end flips a resident to flagged, send that alert through `get_notifier()` exactly once.
+Interface: in `live.py`, after the session's flag is computed, if the resident was not flagged before and is now, call `get_notifier().notify(<alert dict>)`; injectable notifier for tests. Never a real network call without LIVE_API=1.
+Acceptance:
+- Test with a fake notifier: playing `tea_skip_teabag_pour_twice` for mrs-k notifies once; playing it again while already flagged does not notify again; a clean `tea_normal` session never notifies.
+- `scripts/ci.sh` passes.
+
+### T132 — Web tests: AlertView and PatternList time out under default parallelism
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/AlertView.test.tsx, web/src/alert/PatternList.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: On a slower machine `npm test` (default workers) timed out in these two files while `--maxWorkers=2` passed (seen on T071). Make them fast and deterministic without changing what they assert. Read only those two test files, their components, and `.tasks/LESSONS.md`.
+Interface: test files only. Typical fixes: resolve mocked fetches immediately, prefer one `findBy*` then sync `getBy*` instead of many `waitFor`s, use fake timers where the component waits.
+Acceptance:
+- `cd web && npx vitest run src/alert --reporter=verbose` shows no single test over 1 s; `npm run lint && npm test && npm run build` passes twice with no flakes.
+- Same test count and assertions as before (state the before/after durations in the PR).
