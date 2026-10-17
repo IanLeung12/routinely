@@ -313,7 +313,7 @@ Acceptance:
 - every command in the file exists in `scripts/` or `web/package.json`; `scripts/ci.sh` passes.
 
 ### T154 — Bug: evidence replay is empty for the demo alert (no skeleton, no ghost)
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
