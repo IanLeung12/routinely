@@ -46,14 +46,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T068 — Show the demo-data banner in the app
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: T052, T063
 - area: web/src/App.tsx, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:22Z
 - pr: —
 
 What: Render the `DemoBanner` component from T052 (`web/src/ui/DemoBanner.tsx`) once, at the top of `App.tsx` above the header, on every screen.
