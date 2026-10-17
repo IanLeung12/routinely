@@ -99,6 +99,54 @@ else
   fail "GET $DASHBOARD_URL: no response (is 'scripts/dev.sh up' running?)"
 fi
 
+replay_args=""
+if [ -n "$first_alert_id" ] && [ -n "${body:-}" ]; then
+  replay_args=$(python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+errors = data.get("errors") or []
+if not errors:
+    print("")
+else:
+    e = errors[0]
+    print(f"{data[\"resident_id\"]} {e[\"session_id\"]} {e[\"t_start\"]} {e[\"t_end\"]}")
+' "$body" 2>/dev/null) || replay_args=""
+fi
+
+if [ -n "$replay_args" ]; then
+  read -r resident_id session_id t_start t_end <<<"$replay_args"
+
+  if body2=$(get "$API_URL/sessions/$session_id/replay?t_start=$t_start&t_end=$t_end"); then
+    if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert data.get("frames"), "empty frames"
+' "$body2" 2>/dev/null; then
+      pass "GET /sessions/$session_id/replay"
+    else
+      fail "GET /sessions/$session_id/replay: no frames in response"
+    fi
+  else
+    fail "GET /sessions/$session_id/replay: no response"
+  fi
+
+  if body3=$(get "$API_URL/residents/$resident_id/normal_replay?t_start=$t_start&t_end=$t_end"); then
+    if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert data.get("frames"), "empty frames"
+' "$body3" 2>/dev/null; then
+      pass "GET /residents/$resident_id/normal_replay"
+    else
+      fail "GET /residents/$resident_id/normal_replay: no frames in response"
+    fi
+  else
+    fail "GET /residents/$resident_id/normal_replay: no response"
+  fi
+else
+  fail "GET /sessions/<id>/replay and /residents/<id>/normal_replay: no alert error to derive session/resident/time window from"
+fi
+
 if [ "$failures" -eq 0 ]; then
   echo "smoke: all checks passed"
   exit 0
