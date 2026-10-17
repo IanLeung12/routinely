@@ -385,14 +385,14 @@ Acceptance:
 - existing tests pass (selectors only); `cd web && npx vitest run src/tour && npm run lint`.
 
 ### T435 — Redesign follow-up: privacy panel + monitoring toggle on the Fey system
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T401
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.test.tsx, web/src/about/PrivacyPanel.keyboard.test.tsx, web/src/about/PrivacyPanel.mobile.test.tsx, web/src/about/MonitoringToggle.test.tsx, web/src/about/MonitoringToggle.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-17T22:29Z
 - pr: —
 - note: released by ian-laptop-standard: run ended without progress
 
