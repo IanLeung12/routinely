@@ -275,16 +275,16 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T330 — Heat calendar: usable at phone width (375 px)
-- status: blocked
+- status: todo
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/heatCalendar.css
-- owner: max_API_light
+- owner: —
 - claimed: 2026-10-17T16:43Z
 - pr: —
-- note: CSS fix committed locally on task/T330-phone-calendar (a546d11); 375px Edge check passed (12px labels, no overflow), screenshot in worker TEMP. Full CI blocked after two fix attempts by shared Windows rolldown EPERM lock and running-local-API WebSocket conflict. Python 1123 passed; no PR pushed because local CI must pass.
+- note: re-queued by orch: previous attempt blocked only by local Windows env (rolldown EPERM / port clash, see LESSONS), not the fix; branch was never pushed, so redo the small CSS change from origin/main
 
 What: Same series as T234/T239: at 375 px the heat calendar must fit without horizontal page scroll and keep readable cells.
 Interface: read `web/src/resident/heatCalendar.css`, `web/src/resident/HeatCalendar.tsx`, and the `@media` block in `web/src/overview/overview.css` for the breakpoint convention. CSS only.
