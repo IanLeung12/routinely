@@ -137,7 +137,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T109 — Resident detail: not-found, API-down and no-sessions states
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
