@@ -1,41 +1,27 @@
 import { formatScore } from '../resident/format.ts'
+import { MicroBars } from '../ui/charts/MicroBars.tsx'
 
-const WIDTH = 120
-const HEIGHT = 32
-const PADDING = 2
-
-/** Plain-SVG sparkline of a resident's error score over time (SPEC section 9). No
- * chart library: this is a handful of points, not a reason to pull one in. */
+/** Compact error-score history, retaining the overview's existing input shape. */
 export function Sparkline({ scores }: { scores: { ts: string; score: number }[] }) {
-  if (scores.length === 0) {
-    return <svg width={WIDTH} height={HEIGHT} role="img" aria-label="No error score history yet" />
-  }
-
   const values = scores.map((point) => point.score)
+  const latest = values[values.length - 1]
   const min = Math.min(...values)
   const max = Math.max(...values)
-  const range = max - min || 1
-  const latest = values[values.length - 1]
   const trend = latest > values[0] ? 'rising' : latest < values[0] ? 'falling' : min === max ? 'flat' : 'varying'
 
-  const points = values.map((value, index) => {
-    const x =
-      values.length === 1
-        ? WIDTH / 2
-        : PADDING + (index / (values.length - 1)) * (WIDTH - 2 * PADDING)
-    const y = HEIGHT - PADDING - ((value - min) / range) * (HEIGHT - 2 * PADDING)
-    return `${x},${y}`
-  })
+  const label = scores.length === 0
+    ? 'No error score history yet'
+    : `Error score over the last ${values.length} sessions, latest ${formatScore(latest)}, ${trend}`
 
   return (
-    <svg
-      width={WIDTH}
-      height={HEIGHT}
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      role="img"
-      aria-label={`Error score over the last ${values.length} sessions, latest ${formatScore(latest)}, ${trend}`}
-    >
-      <polyline points={points.join(' ')} fill="none" stroke="currentColor" strokeWidth={2} />
-    </svg>
+    <span role="img" aria-label={label}>
+      {/* Scores have no status metadata; retain the existing text alternative. */}
+      <span aria-hidden="true">
+        <MicroBars
+          days={scores.map(({ ts, score }) => ({ date: ts, score, status: 'normal' }))}
+          ariaLabel={label}
+        />
+      </span>
+    </span>
   )
 }
