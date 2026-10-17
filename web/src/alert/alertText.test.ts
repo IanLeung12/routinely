@@ -45,6 +45,20 @@ describe('alertText', () => {
     expect(text).toContain(`Resident: ${mockAlerts[0].resident_id}`)
   })
 
+  it('says "slow trend" for a trend alert, not "change flagged"', () => {
+    const text = alertText({ ...mockAlerts[0], kind: 'trend' })
+
+    expect(text).toContain('Slow trend for review')
+    expect(text).not.toContain('Change flagged')
+  })
+
+  it('still says "change flagged" for a change alert', () => {
+    const text = alertText({ ...mockAlerts[0], kind: 'change_flag' })
+
+    expect(text).toContain('Change flagged for review')
+    expect(text).not.toContain('Slow trend')
+  })
+
   it('works with zero patterns', () => {
     const noPatterns = { ...mockAlerts[0], patterns: [] }
     const text = alertText(noPatterns)
