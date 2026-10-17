@@ -269,3 +269,4 @@ T289 | standard | claude-sonnet | merged first try | ~95k tok
 T291 | heavy | claude-opus | merged first try | ~95k tok
 T300 | standard | claude-sonnet | merged first try | ~45k tok
 T302 | light | claude-sonnet | merged first try | ~55k tok
+T294 | light | claude-sonnet+claude-opus | merged after CI fix | ~30k tok

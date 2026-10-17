@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 99dcc12
+- last-reviewed: e5558ab
 
 ## Tasks
 
@@ -194,7 +194,6 @@ Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes;
 - claimed: 2026-10-17T15:14Z
 - pr: #285
 - rating: 4/5 clear, but the task didn't say the handoff screen already had a user-event-free copy test to match, and 'fix CI on PR #285' hid that the failure was tsc in npm run build, not vitest
-- note: fix CI on PR #285
 
 What: Nurses at a shared workstation may use only the keyboard; prove the handoff screen's "Copy summary" and back button need no mouse.
 Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-library/user-event`: Tab to "Copy summary", press Enter, check the status text ("Copied" with a mocked `navigator.clipboard.writeText`); Tab to the back button, press Enter, check `onBack` was called. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
