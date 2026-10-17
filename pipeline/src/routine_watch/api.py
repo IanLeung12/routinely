@@ -112,9 +112,17 @@ def _flagged_residents() -> list[dict]:
 
 
 def _alerts_by_id() -> dict[str, Alert]:
+    """Every raw-flagged resident's alert, keyed by id.
+
+    Looks up by the raw flag rather than `_flagged_residents()`'s feedback-tuned
+    subset, so an alert a nurse has just tuned away with a "false alarm" (SPEC MVP 7)
+    still resolves here: `GET /alerts/{id}` and a second feedback POST (the "what was
+    it?" cause) must keep working on it even after `/alerts` stops listing it.
+    """
+    residents = [resident for resident in demo_residents() if resident["status"] == "flagged"]
     return {
         alert.alert_id: alert
-        for alert in build_alerts(_flagged_residents(), feedback=_feedback_store)
+        for alert in build_alerts(residents, feedback=_feedback_store)
     }
 
 
