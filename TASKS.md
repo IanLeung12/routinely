@@ -104,14 +104,14 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T187 — Test: App shows the live routine picker with tea selected
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: test
 - deps: —
 - area: web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T17:47Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T187-wip-1503: start from it (git switch task/T187-wip-1503 && git merge origin/main)
 
