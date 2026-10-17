@@ -266,14 +266,14 @@ Acceptance:
 - `cd web && npm test -- Sparkline` and `scripts/ci.sh` pass.
 
 ### T172 — Heat calendar: colour legend and formatted scores
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: improvement
 - deps: —
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T09:18Z
 - pr: —
 
 What: The heat calendar has no legend, so a nurse can't tell what darker red means, and cell labels show raw scores ("score 3.4000001"). Add a one-line legend under the grid ("Lighter = fewer errors · Darker = more errors · Grey = no session", with small swatches using the same CSS vars) and format cell labels with `formatScore`.
