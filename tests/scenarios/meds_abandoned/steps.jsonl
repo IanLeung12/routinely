@@ -1,0 +1,3 @@
+{"event_id":"abandoned-1","session_id":"meds-abandoned-1","step_id":"get_glass","objects":["glass"],"t_start":1,"t_end":6,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-2","session_id":"meds-abandoned-1","step_id":"open_organiser","objects":["pill_organiser"],"t_start":8,"t_end":13,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-3","session_id":"meds-abandoned-1","step_id":"take_pill","objects":["pill_organiser"],"t_start":151,"t_end":156,"confidence":0.95,"source":"rule"}
