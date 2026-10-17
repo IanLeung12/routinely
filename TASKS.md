@@ -412,7 +412,7 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T213 — Alert view: heading order, focus on open, landmark
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
