@@ -513,7 +513,7 @@ Acceptance:
 - `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
 
 ### T124 — Review: Mrs. K is already flagged before the live session, so demo beat 4 never happens
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -522,7 +522,7 @@ Acceptance:
 - source: reviewer
 - owner: ian-claude-standard
 - claimed: 2026-10-17T07:37Z
-- pr: —
+- pr: #108
 
 What: SPEC §10 beats 2–4: dashboard shows Mrs. K's normal weeks, then the live tea session is "the second qualifying session" that triggers her flag. Today `demo_residents()` with an empty `session_log` already has `mrs-k` status `flagged` (last scores `… 5.0, 5.0, 5.0`, threshold ≈4.1) and `/alerts` already lists `alert-mrs-k`, so the live session changes nothing visible.
 Interface: change the spike seed/scenario so the seeded history has exactly **one** qualifying session (score > threshold) inside `FLAG_WINDOW_H` of `DEMO_NOW` and status `watch`; playing `tests/scenarios/tea_skip_teabag_pour_twice` live as `mrs-k` then makes her `flagged` with an alert. Keep `sudden_change` her top pattern once flagged.
