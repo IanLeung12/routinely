@@ -251,6 +251,46 @@ describe('LiveSession', () => {
     expect(announcer.textContent).toBe('Connection lost. Showing offline demo data.')
   })
 
+  it('calls onSessionEnd once with the ended payload when flagged, not again on re-render', () => {
+    const onSessionEnd = vi.fn()
+    const { rerender } = render(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
+    })
+
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1' })
+
+    rerender(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onSessionEnd once when the session is clear', () => {
+    const onSessionEnd = vi.fn()
+    render(<LiveSession scenario="tea_normal" onSessionEnd={onSessionEnd} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null })
+  })
+
+  it('does not throw when onSessionEnd is omitted', () => {
+    render(<LiveSession scenario="tea_normal" />)
+    const socket = FakeWebSocket.latest()
+
+    expect(() => {
+      act(() => {
+        socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+      })
+    }).not.toThrow()
+  })
+
   it('does not fall back to mock if the socket closes after already receiving data', () => {
     vi.useFakeTimers()
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
