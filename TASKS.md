@@ -462,7 +462,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T159 — Resident detail: real empty states for sessions and heat calendar
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -470,7 +470,8 @@ Acceptance:
 - area: web/src/resident/SessionList.tsx, web/src/resident/SessionList.test.tsx, web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:37Z
-- pr: —
+- pr: #146
+- rating: 5/5 clear
 
 What: `SessionList` renders a bare `<p className="muted">` when empty and `HeatCalendar` returns `null` (the section just vanishes). Use the shared `EmptyState` so a new resident's page explains itself.
 Interface: Read only those four files plus `web/src/ui/EmptyState.tsx` and `web/src/ui/README.md`. SessionList empty → `<EmptyState message="No sessions recorded yet." />`. HeatCalendar empty → `<EmptyState message="No sessions yet, so nothing to show on the calendar." />`.
