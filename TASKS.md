@@ -517,7 +517,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T119 — Bug: API sends no CORS headers, so the dashboard silently shows mock data
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -525,7 +525,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py (middleware only), pipeline/tests/test_api_cors.py (new)
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T07:29Z
-- pr: —
+- pr: #101
 - source: tester
 
 What: With `scripts/dev.sh up` (dashboard :5173, API :8000), every `fetch` from the dashboard to the API fails in the browser with `TypeError: NetworkError` because API responses have no `access-control-allow-origin` header. The web clients catch that and fall back to `web/src/mock/*`, so overview, Mrs. K detail and the alert screen show mock data (e.g. Mr. Chen "watch" vs API "normal"; alert threshold 1.2 vs API 4.09), and "Confirmed" only updates the local mock, so the threshold never visibly changes (SPEC §10 last step). The WebSocket works (not subject to CORS), so the live session is real while everything else is fake.
