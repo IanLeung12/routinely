@@ -1,7 +1,37 @@
-import { act, cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchResident } from '../resident/api.ts'
+import type { Resident } from '../resident/types.ts'
 import type { LiveMessage } from './useLiveSession.ts'
 import { LiveSession } from './LiveSession.tsx'
+
+vi.mock('../resident/api.ts', () => ({
+  fetchResident: vi.fn(),
+}))
+
+/** A resident with one normal session, so the baseline math in tests is exact
+ * instead of tracking whatever the mock resident data happens to be today. */
+const MRS_K_WITH_ONE_NORMAL_SESSION: Resident = {
+  id: 'mrs-k',
+  name: 'Mrs. K',
+  room: '204',
+  status: 'normal',
+  top_pattern: null,
+  scores: [],
+  sessions: [
+    {
+      resident_id: 'mrs-k',
+      ts: '2025-12-25T08:00:00+00:00',
+      task: 'tea',
+      errors: { hesitation: 1 },
+      self_corrected: 0,
+      duration_s: 170,
+      assisted: false,
+    },
+  ],
+  care_records: [],
+  baseline: { mean: 1, std: 0.5, threshold: 2 },
+}
 
 /** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
  * `emit`/`fail` on the latest instance instead of opening a real socket. */
@@ -43,6 +73,7 @@ class FakeWebSocket {
 beforeEach(() => {
   FakeWebSocket.instances = []
   vi.stubGlobal('WebSocket', FakeWebSocket)
+  vi.mocked(fetchResident).mockResolvedValue(null)
 })
 
 afterEach(() => {
@@ -134,6 +165,61 @@ describe('LiveSession', () => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
     })
     expect(screen.getByRole('status').textContent).toBe('Flagged for review')
+  })
+
+  it('shows an end-of-session summary above the flag banner, timed from the first and last step', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'step',
+        event: {
+          event_id: 'e1',
+          session_id: 'live-session',
+          step_id: 'fill_kettle',
+          objects: [],
+          t_start: 0,
+          t_end: 1,
+          confidence: 0.9,
+          source: 'rule',
+        },
+      })
+      socket.emit({
+        type: 'step',
+        event: {
+          event_id: 'e2',
+          session_id: 'live-session',
+          step_id: 'pour',
+          objects: [],
+          t_start: 219,
+          t_end: 220,
+          confidence: 0.9,
+          source: 'rule',
+        },
+      })
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    const summary = screen.getByText('Session summary').closest('.card') as HTMLElement
+    expect(within(summary).getByText('Finished in 3m 40s · 0 errors')).toBeTruthy()
+    expect(summary.nextElementSibling?.getAttribute('role')).toBe('status')
+  })
+
+  it("adds the resident's usual duration and error count once the baseline loads", async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K_WITH_ONE_NORMAL_SESSION)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector('.session-summary__line')?.textContent).toBe(
+        'Finished in 0s (usually ~2m 50s) · 0 errors (usually ~1)',
+      )
+    })
   })
 
   it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {

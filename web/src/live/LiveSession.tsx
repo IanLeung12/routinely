@@ -1,14 +1,55 @@
 import { useEffect, useRef, useState } from 'react'
+import { fetchResident } from '../resident/api.ts'
+import type { ResidentSession } from '../resident/types.ts'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
+import { SessionSummary } from './SessionSummary.tsx'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
 import type { LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
+
+/** `routine_watch.demo.DEMO_RESIDENT`: whoever is on camera, the live WS always
+ * records the session against this resident unless told otherwise, and nothing on
+ * this screen tells it otherwise. */
+const DEMO_RESIDENT_ID = 'mrs-k'
+
+function average(values: number[]): number | undefined {
+  return values.length === 0 ? undefined : values.reduce((total, value) => total + value, 0) / values.length
+}
+
+function sessionErrorTotal(session: ResidentSession): number {
+  return Object.values(session.errors).reduce((total, count) => total + (count ?? 0), 0)
+}
+
+type Baseline = { usualDurationS?: number; usualErrors?: number }
+
+/** This resident's own normal duration and error count, averaged over their own
+ * recorded sessions (excluding assisted ones, which aren't theirs alone). */
+function useResidentBaseline(residentId: string): Baseline {
+  const [baseline, setBaseline] = useState<Baseline>({})
+
+  useEffect(() => {
+    let cancelled = false
+    fetchResident(residentId).then((resident) => {
+      if (cancelled || !resident || !Array.isArray(resident.sessions)) return
+      const ownSessions = resident.sessions.filter((session) => !session.assisted)
+      setBaseline({
+        usualDurationS: average(ownSessions.map((session) => session.duration_s)),
+        usualErrors: average(ownSessions.map(sessionErrorTotal)),
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [residentId])
+
+  return baseline
+}
 
 function formatClock(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
@@ -82,8 +123,9 @@ export type LiveSessionProps = {
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
+  const { steps, frame, states, errors, stepSpan, ended, source } = useLiveSession(scenario, speed)
   const announcement = useAnnouncement(steps, states, errors, source)
+  const baseline = useResidentBaseline(DEMO_RESIDENT_ID)
   const handledEnded = useRef<LiveSessionEnded | null>(null)
 
   useEffect(() => {
@@ -115,17 +157,25 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
       />
 
       {ended && (
-        <p
-          role="status"
-          className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
-        >
-          {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
-          {ended.flag && ended.alert_id && onOpenAlert && (
-            <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
-              Open alert
-            </button>
-          )}
-        </p>
+        <>
+          <SessionSummary
+            durationS={stepSpan ? stepSpan.end - stepSpan.start : 0}
+            errorCount={errors.length}
+            usualDurationS={baseline.usualDurationS}
+            usualErrors={baseline.usualErrors}
+          />
+          <p
+            role="status"
+            className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
+          >
+            {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+            {ended.flag && ended.alert_id && onOpenAlert && (
+              <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
+                Open alert
+              </button>
+            )}
+          </p>
+        </>
       )}
 
       <div className="live-session__layout">
