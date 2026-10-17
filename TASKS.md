@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: bug
@@ -459,7 +459,7 @@ Acceptance:
 - Run it for real against `scripts/dev.sh up`, paste the checklist in the PR, then `scripts/dev.sh down`. `scripts/ci.sh` passes.
 
 ### T382 — Refactor: move scenario loading out of replay.py into scenario.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
