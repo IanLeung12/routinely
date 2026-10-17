@@ -7,21 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T404 — Redesign 4/6: resident detail
-- status: done
-- class: standard
-- priority: 0
-- kind: improvement
-- deps: T401, T421, T422
-- area: web/src/resident/ResidentDetail.tsx, web/src/resident/SessionList.tsx, web/src/resident/ContextTimeline.tsx, web/src/resident/*.css, web/src/resident/ResidentDetail.test.tsx
-- owner: max_API_standard-2
-- claimed: 2026-10-17T22:36Z
-- pr: #421
-- rating: 5/5 clear
-
-What: Fey "stock detail" layout for a resident: header (name, status pill, top pattern), hero BaselineChart card with range selector, then a two-column grid of cards (heat calendar, sessions as dense rows with error pills, care-record timeline with tinted markers for new meds/fever). Faint warm vignette background per `docs/DESIGN.md`.
-Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
-
 ### T406 — Redesign 6/6: live session + handoff
 - status: claimed
 - class: standard
@@ -91,52 +76,6 @@ Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; key
 
 What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/MicroBars.tsx) from the same input it takes today; keep its props and export so callers don't change. Read only those files and `web/src/overview/types.ts`.
 Acceptance: existing Sparkline tests pass (update selectors only); `cd web && npx vitest run src/overview`.
-
-### T428 — Handoff: delta chip onto the Pill primitive
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- source: orch (carved from T406)
-- deps: —
-- area: web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.css, web/src/handoff/HandoffDelta.test.tsx
-- owner: Max_codex_light
-- claimed: 2026-10-17T21:17Z
-- pr: #400
-- rating: 5/5 clear
-
-What: Render `<HandoffDelta>` with the redesign's `Pill` (`web/src/ui/Pill.tsx`) instead of its own CSS chip, so handoff rows get Fey-style delta pills.
-Why: inherits T406 — the handoff screen is on the demo path and should match the redesign.
-Read only: `web/src/handoff/HandoffDelta.tsx`, `web/src/handoff/HandoffDelta.test.tsx`, `web/src/ui/Pill.tsx`.
-Interface: keep `HandoffDelta({flags, previousFlags})` and `handoffDeltaLabel(...)` signatures and every label string unchanged. Mapping: more → `<Pill tone="negative" direction="up">`, fewer → `tone="positive" direction="down"`, same → `tone="neutral"` (no direction). Keep a `handoff-delta` class on the pill (via `className`) so existing selectors in `Handoff.tsx` tests still find it. Delete `HandoffDelta.css` if nothing else imports it (`grep -r HandoffDelta.css web/src`).
-Acceptance:
-- Tests updated: each tone renders the matching `pill--<tone>` class and the same label text; nothing rendered when `previousFlags` is null/undefined.
-- `cd web && npx vitest run src/handoff` and `scripts/ci.sh` pass.
-
-### T429 — Person view: privacy card (pause, what's stored, who sees it)
-- status: done
-- class: light
-- priority: 1
-- kind: feature
-- source: orch (carved from T409)
-- deps: —
-- area: web/src/person/PrivacyCard.tsx, web/src/person/PrivacyCard.test.tsx, web/src/person/privacyCard.css
-- owner: max_API_standard
-- claimed: 2026-10-17T21:28Z
-- pr: #402
-- rating: 5/5 clear
-
-What: A self-contained card T409 ("My routine") will drop in. Not wired into any screen here.
-Why: inherits T409 — "skeletons only, no video" is the privacy story judges ask about.
-Read only: `web/src/ui/Card.tsx`, `web/src/ui/Button.tsx`, `web/src/ui/SectionHeader.tsx`, `web/src/person/personNotes.test.ts` (wording-check style).
-Interface: `export function PrivacyCard({ paused, onTogglePause, supervisorNames }: { paused: boolean; onTogglePause: () => void; supervisorNames: string[] })`.
-- Heading "Your privacy". Pause button: "Pause watching" / "Resume watching" (`aria-pressed={paused}`); when paused a line "Watching is paused. Nothing is recorded until you resume."
-- "What's stored": "Body outlines (skeletons) and timings only. No video or photos ever leave this device or get saved."
-- Who sees it: with names → "Lena and Sam see exactly what you see here." (join 1/2/3+ names naturally); with none → "Only you can see this."
-- Own CSS in `privacyCard.css` using tokens from `web/src/index.css`.
-Acceptance:
-- Vitest: paused/unpaused text + `aria-pressed`, click calls `onTogglePause`, 0/1/2/3 supervisor names; no "diagnos", "patient", "danger", "warning", "emergency" in rendered text.
-- `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
 
 ### T430 — Replays: list with error-type filter and empty state (component)
 - status: done
