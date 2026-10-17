@@ -401,7 +401,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T262 — Monitoring audit trail: who paused/resumed a room and when
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: feature
@@ -410,7 +410,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/about/monitoringApi.ts
 - owner: ian-claude
 - claimed: 2026-10-17T12:38Z
-- pr: —
+- pr: #253
+- rating: 5/5 clear
 
 What: Rationale: SPEC §12 privacy accountability; judges see that pausing a camera is logged. Record each pause/resume (room, on/off, by, at) in memory and show the last 5 on resident detail under the monitoring switch.
 Interface: `MonitoringState.history(room) -> list[dict(on: bool, by: str, at: iso str)]`; PUT /rooms/{room}/monitoring accepts optional `by` (default "nurse"); GET /rooms/{room}/monitoring/history returns the list (newest first, max 20); `/demo/reset` clears it. Web: small "Recent changes" list under the switch, empty state "No changes this shift". Use the real file names after T256's refactor (adjust area paths in the PR if they differ).
