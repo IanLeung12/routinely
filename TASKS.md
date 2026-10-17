@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: feature
