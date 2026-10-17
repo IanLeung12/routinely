@@ -28,7 +28,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T367 — Bug: integration check failing on main
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -36,9 +36,10 @@ Acceptance:
 - area: scripts/integration.sh, scripts/dev.sh
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T19:59Z
-- pr: —
+- pr: #384
 - source: integration
 - note: area narrowed (was web/src/, which overlapped claims and kept this P0 from being handed out). T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. If it is Vite cold-start timing, make integration.sh wait for Vite readiness. If the render itself is broken, note the file and set blocked so a web task can be filed.
+- rating: 4/5 the note's two hypotheses (dev-stack sharing, Vite cold start) were both wrong - the cause was the check's own 'echo | grep -q' + pipefail SIGPIPE race, so 'first re-run it twice and mark done if both print OK' would have closed a real, ~50%-flaky bug
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ c332a28:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
