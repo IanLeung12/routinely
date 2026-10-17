@@ -130,7 +130,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T347 — Unit overview: show how many residents each filter holds
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
@@ -466,7 +466,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T369 — Privacy panel: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
