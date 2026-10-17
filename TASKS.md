@@ -425,14 +425,14 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T226 — Ghost replay: say the figure is a stand-in for demo recordings
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T10:49Z
 - pr: —
 
 What: Since T207 (PR #205) the demo's recordings get a made-up body (`pipeline/src/routine_watch/stick_figure.py`) so the ghost replay has something to draw. A judge or nurse should not mistake it for tracked motion, so add a small muted caption under the replay: "Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box."
