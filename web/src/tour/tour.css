@@ -1,0 +1,12 @@
+@media (max-width: 480px) {
+  .tour {
+    box-sizing: border-box;
+    max-width: calc(100vw - 2rem);
+    right: 1rem;
+  }
+
+  .tour__footer,
+  .tour__nav {
+    flex-wrap: wrap;
+  }
+}

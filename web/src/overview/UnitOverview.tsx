@@ -17,6 +17,16 @@ const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'watch', label: 'Watch' },
 ]
 
+function countForFilter(
+  filterId: UnitFilter,
+  residents: ResidentSummary[],
+  pausedRooms: string[],
+): number {
+  if (filterId === 'all') return residents.length
+  if (filterId === 'paused') return pausedRooms.length
+  return residents.filter((resident) => resident.status === filterId).length
+}
+
 function applyFilter(
   residents: ResidentSummary[],
   filter: UnitFilter,
@@ -117,7 +127,7 @@ export function UnitOverview({
             aria-pressed={filter === id}
             onClick={() => setFilter(id)}
           >
-            {label}
+            {`${label} (${countForFilter(id, residents, pausedRooms)})`}
           </Button>
         ))}
         <Button
@@ -126,7 +136,7 @@ export function UnitOverview({
           aria-pressed={filter === 'paused'}
           onClick={() => setFilter('paused')}
         >
-          {`Paused (${pausedRooms.length})`}
+          {`Paused (${countForFilter('paused', residents, pausedRooms)})`}
         </Button>
       </div>
       <ResidentSort mode={sortMode} onChange={setSortMode} />

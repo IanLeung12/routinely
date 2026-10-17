@@ -62,7 +62,7 @@ describe('ResidentSort combined with filters in UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(residents.length)
     })
 
-    await user.click(screen.getByRole('button', { name: 'Watch' }))
+    await user.click(screen.getByRole('button', { name: 'Watch (2)' }))
     await user.click(screen.getByRole('button', { name: 'Most recent change first' }))
 
     await waitFor(() => {
@@ -74,7 +74,7 @@ describe('ResidentSort combined with filters in UnitOverview', () => {
       expect(residentNames()).toEqual(['Resident B', 'Resident D'])
     })
 
-    await user.click(screen.getByRole('button', { name: 'All' }))
+    await user.click(screen.getByRole('button', { name: 'All (4)' }))
     await waitFor(() => {
       expect(residentNames()).toEqual(['Resident C', 'Resident B', 'Resident D', 'Resident A'])
     })
