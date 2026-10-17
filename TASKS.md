@@ -135,6 +135,7 @@ Acceptance: existing Sparkline tests pass (update selectors only); `cd web && np
 - claimed: 2026-10-17T21:37Z
 - pr: #409
 - rating: 4/5 mostly clear: DriftCard has no series data in its props (only slopePerDay/days/trending/minDays), so the acceptance's 'dotted trend series' and 'same props and data as today' had to be reconciled by synthesizing a 2-point fitted line from the slope rather than plotting real daily readings - worth saying explicitly next time if that's the intent
+- note: CI fails only on check:bundle (over budget); rebase on main once T441 merges.
 
 What: Split from T402. `BaselineChart` → `LineChart` with the personal baseline band, end-of-line tag and `RangeSelector`; the slow-drift card → `LineChart` with a dotted trend series. Same props and data as today.
 Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
