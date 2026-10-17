@@ -478,7 +478,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
 ### T249 — Review: pausing a room mid-session doesn't stop the live session
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
