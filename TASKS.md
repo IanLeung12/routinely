@@ -318,7 +318,7 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T142 — Pattern scenario: evening-only worsening
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
