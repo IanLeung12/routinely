@@ -7874,3 +7874,22 @@ Acceptance:
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
+
+### T431 — Replays: supervisor notes on a replay (component, local only)
+- status: done
+- class: light
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/replays/ReplayNotes.tsx, web/src/replays/ReplayNotes.test.tsx, web/src/replays/replayNotes.css
+- owner: ian-claude-standard
+- claimed: 2026-10-17T21:47Z
+- pr: #406
+- rating: 5/5 clear
+
+What: Carved from T413. Supervisors leave short notes on a replay, shown with author and time; the person sees the same notes (SPEC §17: they see exactly what supervisors see). Local state only, no API.
+Interface: `export type ReplayNote = { id: string; author: string; at: string; text: string }`; `export function ReplayNotes(props: { notes: ReplayNote[]; canAdd: boolean; author: string; onAdd: (note: ReplayNote) => void; now?: () => Date })`. Lists notes oldest first ("Author · 21:40", time from `at`); when `canAdd`, a labelled textarea + "Add note" `Button` (disabled on empty/whitespace, trims text, clears after add). Empty: "No notes yet."
+Files to read: `web/src/ui/Button.tsx`, `web/src/ui/Card.tsx`, `web/src/ui/SectionHeader.tsx`, `docs/DESIGN.md` (tokens only); CSS vars from `web/src/index.css`.
+Acceptance:
+- Vitest: notes in order with author + time, add flow calls `onAdd` with trimmed text and the given author, button disabled on blank input, `canAdd=false` hides the form, empty text shown.
+- `cd web && npx vitest run src/replays/ReplayNotes` and `scripts/ci.sh` pass.
