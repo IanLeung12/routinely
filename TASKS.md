@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: b9fb831
+- last-reviewed: 4008ae3
 
 ## Tasks
 
@@ -573,7 +573,7 @@ Acceptance:
 - If the mock has already drifted, do not edit web/; mark the failing case `xfail` with the reason and list the drift in the PR body.
 - `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
 
-### T353 — Live camera on the dashboard: one command, laptop webcam → /ws/live
+### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
 - status: todo
 - class: heavy
 - priority: 0

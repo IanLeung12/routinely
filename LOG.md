@@ -303,3 +303,6 @@ T329 | light | claude-sonnet | merged first try | ~15k tok
 T339 | standard | claude-sonnet | merged first try | ~45k tok
 T340 | standard | claude-sonnet | merged first try | ~45k tok
 T331 | light | codex | merged first try | ~3k tok
+T333 | standard | claude-sonnet | merged first try | ~45k tok
+T344 | standard | claude-sonnet | merged first try | ~65k tok
+T335 | light | claude-sonnet | merged first try | ~15k tok
