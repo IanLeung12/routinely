@@ -419,14 +419,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T260 — Test: first-load JS bundle size budget for the dashboard
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: web/scripts/check-bundle.mjs, web/package.json, web/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:45Z
 - pr: —
 - note: released by ian-claude-standard: run ended without progress; partial work on branch task/T260-wip-1234: start from it (git switch task/T260-wip-1234 && git merge origin/main)
 
