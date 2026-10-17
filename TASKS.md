@@ -63,14 +63,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T076 — Tests for ContextTimeline and BaselineChart
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T07:44Z
 - pr: —
 
 What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
