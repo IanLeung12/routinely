@@ -36,10 +36,10 @@ describe('Privacy panel and monitoring toggle keyboard access', () => {
 
     await user.keyboard('{Enter}')
     expect(document.activeElement).toBe(openButton)
-    expect(screen.getByRole('heading', { level: 2, name: 'Privacy and limits' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 3, name: 'Privacy and limits' })).toBeTruthy()
 
     await user.keyboard('{Enter}')
-    expect(screen.queryByRole('heading', { level: 2, name: 'Privacy and limits' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 3, name: 'Privacy and limits' })).toBeNull()
     expect(document.activeElement).toBe(openButton)
 
     const toggle = screen.getByRole('switch', { name: 'Monitoring in room 101' })

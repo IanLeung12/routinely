@@ -1,4 +1,5 @@
 import { Button } from '../ui/Button'
+import './privacyPanel.css'
 
 export function MonitoringToggle({ room, on, onChange }: {
   room: string
@@ -6,7 +7,7 @@ export function MonitoringToggle({ room, on, onChange }: {
   onChange: (on: boolean) => void
 }) {
   return (
-    <div>
+    <div className="monitoring-toggle">
       <Button
         role="switch"
         aria-checked={on}
@@ -15,7 +16,7 @@ export function MonitoringToggle({ room, on, onChange }: {
       >
         {on ? 'On' : 'Paused'}
       </Button>
-      {!on && <p>No camera data is processed while paused.</p>}
+      {!on && <p className="monitoring-toggle__note">No camera data is processed while paused.</p>}
     </div>
   )
 }
