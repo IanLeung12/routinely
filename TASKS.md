@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: c36c7b8
+- last-reviewed: f3265fa
 
 ## Tasks
 
@@ -514,3 +514,58 @@ Interface: Read `web/src/alert/FeedbackButtons.tsx` and its test. With `@testing
 Acceptance:
   * New test(s) in `FeedbackButtons.test.tsx` using only keyboard events
   * `cd web && npm test -- FeedbackButtons` and `scripts/ci.sh` pass
+
+### T288 — Smoke: validate /monitoring, room history and the first /ws/live message against contracts/
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T279 schema-checks four bodies in smoke.sh; the monitoring and live endpoints (pipeline/src/routine_watch/api_live.py) still get spot checks or none, so contract drift there is only caught by unit tests.
+Interface: reuse `check_schema` in scripts/smoke.sh. Add: GET /monitoring vs contracts/monitoring.schema.json; GET /rooms/<demo_room>/monitoring/history vs contracts/room_monitoring_history.schema.json (SKIP if demo_room is empty); the first message from /ws/live?scenario=tea_skip_teabag_pour_twice&speed=20 vs contracts/live_message.schema.json (pipeline venv Python with a websocket client already in pipeline deps, 5 s timeout; SKIP if none importable). Read-only: no PUTs.
+Acceptance:
+- `scripts/dev.sh up && scripts/smoke.sh` prints PASS for the three new checks on a fresh stack; then `scripts/dev.sh down`.
+- Breaking a field by hand in one schema makes the matching check FAIL (say so in the PR, don't commit it).
+- `scripts/ci.sh` passes.
+
+### T289 — Alert view: print-friendly layout
+- status: todo
+- class: standard
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/alert/alert.css, web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: nurses bring flagged alerts to care conferences on paper; printing the alert today includes nav, feedback buttons and the dark replay card. Add a `@media print` layout so the page shows resident, errors, "consistent with" patterns, rule-outs and suggested checks in black on white.
+Interface: `@media print` rules in alert.css; hide feedback buttons and the replay player via a `no-print` class; wording unchanged. Optional "Print" button calling `window.print()`.
+Acceptance:
+- AlertView.test.tsx: elements that must not print carry `no-print`; the Print button (if added) calls `window.print`.
+- PR notes a Chrome print-preview check of the Mrs. K alert: 1–2 pages, no dark backgrounds.
+- `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
+
+### T290 — Alert: errors by time of day (morning / afternoon / evening)
+- status: todo
+- class: heavy
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: T284
+- area: web/src/alert/TimeOfDayStrip.tsx, web/src/alert/TimeOfDayStrip.test.tsx, web/src/alert/AlertView.tsx, pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py, contracts/alert_detail.schema.json, web/src/contracts.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: evening-only worsening (SPEC §7.5, already in pipeline/src/routine_watch/patterns.py) appears on the alert as text only; a nurse can't see why. Show a small strip of errors per session bucketed morning/afternoon/evening over the last 14 days, as visible evidence for that pattern.
+Interface: optional alert-detail field `errors_by_time_of_day: [{bucket: "morning"|"afternoon"|"evening", sessions: int, errors: int}]` (buckets <12:00, 12:00–17:00, ≥17:00 local); contracts change, so regenerate alert_detail.schema.json and update web/src/contracts.ts and every consumer in this PR. `<TimeOfDayStrip>` under the error list, caption "Errors by time of day, last 14 days"; hidden when the field is absent. No "diagnos" wording.
+Acceptance:
+- pytest: buckets from mrs-k demo history; summed errors equal the 14-day total; payload validates against the schema.
+- Vitest: three buckets with text labels (not colour only); hidden when absent.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
