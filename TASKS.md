@@ -80,7 +80,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T084 — Pattern library + scorer + Alert.patterns contract (SPEC §7.5)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
