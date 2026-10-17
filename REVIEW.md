@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 02e89fa
-- next-area: tests/scenarios
+- last-reviewed: a5bef2c
+- next-area: web
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -17,3 +17,6 @@
 - T107 evidence ghost == today frames (both tea_no_kettle)
 - T108 smoke.sh missing replay routes; not bash -n in ci
 - (noted) notify.py + store.py built but not wired into api yet
+- T124 mrs-k flagged before live session (beat 4)
+- T125 drift/evening/motor residents never watch (baseline absorbs drift)
+- T126 session_log leaks across tests; need conftest reset

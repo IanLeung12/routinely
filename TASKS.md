@@ -610,3 +610,57 @@ Repro: `scripts/dev.sh up && scripts/smoke.sh` → `FAIL: GET /sessions/<id>/rep
 Expected: keep the alert body in its own variable; smoke passes against a fresh stack.
 Acceptance:
 - `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
+
+### T124 — Review: Mrs. K is already flagged before the live session, so demo beat 4 never happens
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/synth/history.py (spike scenario only), pipeline/tests/test_demo.py, pipeline/tests/test_live_flag.py
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §10 beats 2–4: dashboard shows Mrs. K's normal weeks, then the live tea session is "the second qualifying session" that triggers her flag. Today `demo_residents()` with an empty `session_log` already has `mrs-k` status `flagged` (last scores `… 5.0, 5.0, 5.0`, threshold ≈4.1) and `/alerts` already lists `alert-mrs-k`, so the live session changes nothing visible.
+Interface: change the spike seed/scenario so the seeded history has exactly **one** qualifying session (score > threshold) inside `FLAG_WINDOW_H` of `DEMO_NOW` and status `watch`; playing `tests/scenarios/tea_skip_teabag_pour_twice` live as `mrs-k` then makes her `flagged` with an alert. Keep `sudden_change` her top pattern once flagged.
+Acceptance:
+- pytest: empty log → `mrs-k` status `watch`, no `alert-mrs-k` in `build_alerts`; after one live `tea_skip_teabag_pour_twice` → `flagged`, alert present, `patterns[0].pattern_id == "sudden_change"`.
+- `scripts/ci.sh` passes.
+
+### T125 — Review: drift/evening/motor demo residents never leave "normal" (no "watch" for demo beat 6)
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `_status` only returns `watch` when the latest score beats a threshold built from the resident's *whole* history, so a slow drift raises its own bar: `mr-chen` (drift, recent scores 8–9, threshold ≈10.1), `mr-nguyen` (evening) and `mrs-patel` (motor) all show `normal`. SPEC §10 beat 6 needs Mr. D/Chen on `watch` with the slow-drift pattern, and T089's acceptance assumes it.
+Interface: in `demo.py`, build the baseline from the earliest sessions only (e.g. first 7 of `DEMO_DAYS`), and also return `watch` when `drift.drift(...)` over daily scores reports `trending` (same daily-mean helper as `api._daily_scores`; move it into `drift.py` rather than copying it). Normal residents must stay `normal`.
+Acceptance:
+- pytest: `mr-chen` status `watch`; `mrs-ahmed`, `mr-silva` stay `normal`; evening and motor residents are `watch` or `flagged` (pin which).
+- `scripts/ci.sh` passes.
+
+### T126 — Review: live-session tests leak into session_log; add a shared reset fixture
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: pipeline/tests/conftest.py (new), pipeline/tests/test_live_flag.py
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `routine_watch.session_log` is process-global and `demo_residents()` reads it. Only `test_live_flag.py` resets it; `test_live.py` and `test_live_camera.py` play sessions via `session_messages` without resetting, so every later test (demo/alerts/api/patterns) sees an extra Mrs. K session and results depend on test order.
+Interface: add `pipeline/tests/conftest.py` with an `autouse` fixture calling `session_log.reset()` before and after each test; drop the now-duplicate fixture in `test_live_flag.py`.
+Acceptance:
+- `cd pipeline && uv run pytest -q -p no:cacheprovider` passes, and passes with `tests/test_live.py` run before `tests/test_demo.py` in one invocation.
+- `scripts/ci.sh` passes.
