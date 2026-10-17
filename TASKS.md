@@ -519,14 +519,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
 
 ### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/api_live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/capture.py, scripts/camera.sh, pipeline/tests/test_api_live_camera.py, docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T17:34Z
 - pr: —
 
 What: Ian wants to try the real camera locally. `capture.py --camera 0` already writes JSONL and `live_camera.camera_session_messages()` already turns a frame stream into live messages, but `/ws/live` only plays recorded scenarios. Wire them together so the dashboard's Live screen shows his webcam session.
