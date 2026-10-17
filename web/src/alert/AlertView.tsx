@@ -10,7 +10,10 @@ import { fetchReplay } from '../evidence/api.ts'
 import type { EvidenceReplay } from '../evidence/api.ts'
 import GhostReplay from '../evidence/GhostReplay.tsx'
 import { ReplayPlayer } from '../evidence/ReplayPlayer.tsx'
+import { fetchResident } from '../resident/api.ts'
+import type { CareRecord } from '../resident/types.ts'
 import { fetchAlert, postFeedback } from './api.ts'
+import { AlertContext } from './AlertContext.tsx'
 import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
@@ -38,6 +41,7 @@ export function AlertView({
   const [loaded, setLoaded] = useState<{ alertId: string; alert: Alert | null } | null>(null)
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [replay, setReplay] = useState<{ alertId: string; replay: EvidenceReplay | null } | null>(null)
+  const [careRecords, setCareRecords] = useState<{ alertId: string; records: CareRecord[] | null } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -50,6 +54,21 @@ export function AlertView({
       cancelled = true
     }
   }, [alertId])
+
+  useEffect(() => {
+    let cancelled = false
+    if (loaded === null || loaded.alertId !== alertId || loaded.alert === null) {
+      return
+    }
+    fetchResident(loaded.alert.resident_id).then((resident) => {
+      if (!cancelled) {
+        setCareRecords({ alertId, records: resident?.care_records ?? null })
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [alertId, loaded])
 
   useEffect(() => {
     let cancelled = false
@@ -87,6 +106,13 @@ export function AlertView({
         <p className="alert-view__threshold">
           Current threshold: {alert.baseline.threshold.toFixed(1)}
         </p>
+
+        {careRecords !== null && careRecords.alertId === alertId && careRecords.records !== null && (
+          <Card>
+            <SectionHeader title="Recent care records" />
+            <AlertContext records={careRecords.records} alertTs={alert.created_at} />
+          </Card>
+        )}
 
         <Card>
           <SectionHeader title="Possible patterns" />
