@@ -79,7 +79,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T075 — Review: error-type labels and colours defined three times in the web app
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
