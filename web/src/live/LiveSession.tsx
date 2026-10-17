@@ -50,7 +50,8 @@ export type LiveSessionProps = {
 
 /** Screen 3 (SPEC section 9): skeleton view next to the task-graph map. Steps turn green
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
- * happen; a flagged `session_end` opens a "flagged for review" banner (never "diagnose"). */
+ * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
+ * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
   const { frame, states, errors, ended, source } = useLiveSession(scenario, speed)
 
