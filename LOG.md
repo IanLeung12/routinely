@@ -296,3 +296,7 @@ T326 | light | claude-sonnet | merged first try | ~25k tok
 T323 | light | codex | merged first try | ~6k tok
 T332 | standard | claude-sonnet | merged first try | ~40k tok
 T290 | heavy | claude-opus | merged first try | ~230k tok
+T337 | standard | claude-sonnet | merged first try | ~65k tok
+T328 | light | codex | merged first try | ~4k tok
+T336 | standard | claude-sonnet | merged first try | ~75k tok
+T329 | light | claude-sonnet | merged first try | ~15k tok

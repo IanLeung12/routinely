@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: d657310
+- last-reviewed: 2923506
 
 ## Tasks
 
@@ -518,3 +518,126 @@ Acceptance:
 - after demo reset, every resident in `GET /residents` has `scores` sorted ascending by `ts`, every `ts` parses as ISO 8601
 - after a live session completes (use the existing fake/replay path, no real APIs), that resident's newest score is last
 - `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
+
+### T342 — Review: unclear live sessions still go into the resident's history and can flag
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- source: orchestrator (review of #322)
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_unclear.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: PR #322 made `replay.score_session` return score 0.0 / flag False for an unclear session (`quality.session_quality`), but `live.session_messages` (~line 290) still calls `_record(...)` with that session's errors and `assisted=False`. `demo.py` recomputes scores from recorded errors and only skips assisted sessions, so an unclear session's errors still count toward the 24–48 h flag and a 0.0 score enters the baseline. Fix: when `session_quality(events) == "unclear"`, don't record the session into `session_log` at all (nothing to trust), and keep `was_flagged`/alert logic unchanged.
+Interface: `live.py` only; `from .quality import session_quality`. No contract change (T343 adds the `quality` field to `session_end`).
+Acceptance:
+- new test: a live session whose events are mostly `unclear` (build in-test, reuse the fake WebSocket helper from `pipeline/tests/` used by `test_api_live_ws.py`) leaves `session_log` for that resident unchanged and the resident's flag state unchanged; a clean session is still recorded
+- `cd pipeline && uv run pytest tests/test_live_unclear.py tests/test_live*.py` and `scripts/ci.sh` pass
+
+### T343 — Live: session_end says when a session was too unclear to score
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: T342
+- area: pipeline/src/routine_watch/contracts.py, contracts/live_message.schema.json, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, web/src/contracts.ts, web/src/live/SessionSummary.tsx, web/src/live/SessionSummary.test.tsx, web/src/live/mockLiveStream.ts, pipeline/tests/test_live_quality.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §12 says low-confidence capture (walker, bad lighting) is "unclear", never an error. Today the nurse just sees score 0 with no explanation. Add `quality: "ok" | "unclear"` to `LiveSessionEnd`, send it from both `live.py` and `live_camera.py` (`session_quality(events)`), and have `SessionSummary` show "Capture unclear — this session wasn't scored" with one line on why (lighting, view blocked, walker) instead of the score.
+Interface: `LiveSessionEnd.quality: Quality` (required; regenerate `contracts/live_message.schema.json` the way the repo does it and update web types + mock stream in the same PR).
+Acceptance:
+- pipeline test: unclear session → `session_end.quality == "unclear"`, clean → `"ok"`, for both `live` and `live_camera` paths; schema validates
+- web test: SessionSummary renders the unclear copy and no score for `quality: "unclear"`; unchanged for `"ok"`; no diagnosis wording
+- `scripts/ci.sh` passes
+
+### T344 — Scenario: tea_session_unclear_no_flag (whole session too unclear to score)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_session_unclear_no_flag/
+- owner: —
+- claimed: —
+- pr: —
+
+What: #322 added an optional `quality:` assertion to `expected.yaml`, but no scenario uses it. Add one where most tea steps come through low-confidence/unclear (bad lighting), with history that would otherwise flag, so replay must report `quality: unclear`, `score: 0.0`, `flag: false`.
+Interface: copy `tests/scenarios/tea_unclear_not_error/` as the template (read its README comment and `tests/scenarios/README.md`); see `Expected` and `score_session` in `pipeline/src/routine_watch/replay.py` and `pipeline/src/routine_watch/quality.py` for the rule (>40% unclear or <3 events).
+Acceptance:
+- `expected.yaml` sets `quality: unclear`, `flag: false`, `score: 0.0`, and a header comment says why
+- `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
+
+### T345 — Resident detail: session list usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/SessionList.tsx, web/src/resident/sessionList.css, web/src/resident/SessionList.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Make the resident's session list readable on a phone, the same way the drift card was done. Read `web/src/resident/SessionList.tsx`, `web/src/resident/DriftCard.mobile.test.tsx` (test template) and `web/src/resident/driftCard.css` (the `@media (max-width: 480px)` pattern). Put new styles in a new `sessionList.css` imported by `SessionList.tsx`; don't edit `resident.css`.
+Interface: CSS + class names only; no behaviour change.
+Acceptance:
+- at ≤480 px rows stack (date/time above score/errors), no horizontal scroll, text wraps
+- new `SessionList.mobile.test.tsx` checks the stylesheet has the 480 px media rule and the list still renders every session
+- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
+
+### T346 — Test: alert time-of-day strip has accessible names
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/TimeOfDayStrip.a11y.test.tsx, web/src/alert/TimeOfDayStrip.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Each morning/afternoon/evening cell in the alert's time-of-day strip should be readable by a screen reader ("Evening: 3 errors"). Read `web/src/alert/TimeOfDayStrip.tsx` and `web/src/alert/TimeOfDayStrip.test.tsx`. Add the test; only if a cell has no accessible name, add an `aria-label` in `TimeOfDayStrip.tsx` (no visual change).
+Interface: new test file; at most `aria-label`/`role` attributes in the component.
+Acceptance:
+- every cell has an accessible name with its part of day and count (`getByRole(..., { name })` / `toHaveAccessibleName`), including zero-count cells
+- `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass
+
+### T347 — Unit overview: show how many residents each filter holds
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/overview.css, web/src/overview/UnitOverview.counts.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: a charge nurse should see "Flagged (1) · Watch (4) · Paused (0)" at a glance before clicking. Add the count to each filter button label in the unit overview, computed from the loaded residents and paused rooms the component already holds.
+Interface: `UnitOverview.tsx` only (+ css). Accessible name stays clear, e.g. "Flagged, 1 resident".
+Acceptance:
+- counts match the residents each filter would show (incl. Paused) and update after a reset/refresh
+- existing overview tests (`UnitOverview*.test.tsx`) still pass unchanged or with label-matcher updates only
+- `cd web && npx vitest run src/overview` and `scripts/ci.sh` pass
+
+### T348 — Docs: CODEMAP note that unclear sessions are never scored
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a 2–3 line note to the pipeline section of `docs/CODEMAP.md` (notes only; the file list is generated): `quality.session_quality` gates `replay.score_session`; an unclear session (fewer than 3 events or >40% unclear/low-confidence) gets score 0.0 and never flags, like an assisted one. Read `pipeline/src/routine_watch/quality.py` and `score_session` in `pipeline/src/routine_watch/replay.py`.
+Interface: docs only.
+Acceptance:
+- note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
