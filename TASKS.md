@@ -585,3 +585,37 @@ Interface: Read only `web/src/alert/AlertView.tsx`, `web/src/alert/api.ts`, `web
 Acceptance:
 * Empty result renders `EmptyState` with the copy above; loading is still shown while fetching.
 * Test covers the empty result; `cd web && npx vitest run src/alert/AlertView.test.tsx` and `scripts/ci.sh` pass.
+
+### T182 — Review: false alarm makes the alert 404, so the cause answer can't be saved
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T167, `_alerts_by_id()` builds alerts only from `_flagged_residents()` (feedback-tuned). A "false alarm" raises the resident's threshold 10%; if that un-flags her, the alert disappears, so `GET /alerts/{id}` and the next `POST /alerts/{id}/feedback` return 404. AlertView posts the verdict, then posts again with the "what was it?" cause, so the nurse sees "Feedback could not be saved" and can never correct a mistaken tap. Fix: look alerts up by id from every raw-flagged resident (`build_alerts([r for r in demo_residents() if r["status"] == "flagged"], feedback=_feedback_store)`); keep the tuned filter only for the `/alerts` list.
+Acceptance:
+* Test: flagged resident, POST false_alarm with a threshold step big enough to un-flag; `/alerts` no longer lists it, but `GET /alerts/{id}` is 200 and a second POST with `cause` is 200 and stores the cause.
+* `scripts/ci.sh` passes.
+
+### T183 — Review: overview/handoff top pattern ignores nurse-feedback weights
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: T182
+- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_api_residents.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `/residents` shows `top_pattern` from `demo.py` (`score_patterns` with no weights), while the alert's `patterns[0]` is re-weighted by `FeedbackStore.pattern_weights` (T130). After a nurse answers "what was it?", the overview chip and the alert can name different patterns for the same resident. `handoff.build_handoff` also calls `build_alerts(residents)` without `feedback=`. Fix: in `api._tuned`, when the resident has pattern weights, recompute `top_pattern` with `score_patterns(features, weights=..., answers=...)` (reuse `alerts._patterns` or expose a small helper) and pass the store into `build_alerts` in handoff.
+Acceptance:
+* Test: confirm an alert with a cause that reorders the ranking; `/residents` top_pattern id equals `/alerts/{id}` `patterns[0].pattern_id`.
+* `scripts/ci.sh` passes.
