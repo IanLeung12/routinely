@@ -1,0 +1,80 @@
+"""Synthetic tea-making session history generator for demo residents."""
+
+import random
+from datetime import UTC, datetime, timedelta
+
+from routine_watch.errors import ERROR_TYPES
+
+SCENARIOS = ("normal", "spike", "drift")
+
+
+def generate_history(
+    resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal"
+) -> list[dict]:
+    if scenario not in SCENARIOS:
+        raise ValueError(f"unknown scenario: {scenario}")
+
+    rng = random.Random(seed)
+    end = datetime(2026, 1, 1, tzinfo=UTC)
+    start = end - timedelta(days=days)
+
+    sessions: list[dict] = []
+    for day in range(days):
+        day_start = start + timedelta(days=day)
+        n_sessions = rng.choice([1, 2])
+        for hour in (8, 18)[:n_sessions]:
+            ts = day_start + timedelta(hours=hour, minutes=rng.randint(0, 30))
+            hours_until_end = (end - ts).total_seconds() / 3600
+            errors, self_corrected = _session_errors(rng, scenario, day, days, hours_until_end)
+            sessions.append(
+                {
+                    "resident_id": resident_id,
+                    "ts": ts.isoformat(),
+                    "task": "tea",
+                    "errors": errors,
+                    "self_corrected": self_corrected,
+                    "duration_s": round(rng.uniform(90.0, 240.0), 1),
+                    "assisted": False,
+                }
+            )
+
+    sessions.sort(key=lambda s: s["ts"])
+    return sessions
+
+
+def _session_errors(
+    rng: random.Random, scenario: str, day: int, days: int, hours_until_end: float
+) -> tuple[dict[str, int], int]:
+    if scenario == "normal":
+        errors: dict[str, int] = {}
+        self_corrected = 0
+        if rng.random() < 0.2:
+            if rng.random() < 0.5:
+                errors["hesitation"] = 1
+            else:
+                self_corrected = 1
+        return errors, self_corrected
+
+    if scenario == "spike":
+        if hours_until_end <= 36:
+            return {"omission": 1, "perseveration": 1}, 0
+        errors = {}
+        self_corrected = 0
+        if rng.random() < 0.2:
+            errors["hesitation"] = 1
+        return errors, self_corrected
+
+    # drift: total errors per session trend upward across the whole window,
+    # at most one error per session in the first 3 days.
+    progress = day / max(days - 1, 1)
+    if day < 3:
+        count = 1 if rng.random() < 0.3 else 0
+    else:
+        count = round(progress * 3) + (1 if rng.random() < 0.5 else 0)
+        count = max(count, 1)
+    errors = {}
+    error_types = list(ERROR_TYPES)
+    for _ in range(count):
+        et = rng.choice(error_types)
+        errors[et] = errors.get(et, 0) + 1
+    return errors, 0
