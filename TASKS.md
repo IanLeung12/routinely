@@ -315,7 +315,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` passes; `scripts/ci.sh` passes.
 
 ### T151 — Shift handoff: "Copy summary" button for the shift report
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
