@@ -393,7 +393,7 @@ Acceptance:
 - Only the test file changes; `cd web && npm test -- LiveScreen` and `scripts/ci.sh` pass.
 
 ### T191 — Test: FeedbackStore.reset() puts threshold and weights back to base
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -401,7 +401,8 @@ Acceptance:
 - area: pipeline/tests/test_feedback.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:26Z
-- pr: —
+- pr: #183
+- rating: 5/5 clear
 
 What: `FeedbackStore.reset()` (added by T144) has no unit test.
 Interface: read `pipeline/src/routine_watch/feedback.py` and `pipeline/tests/test_feedback.py`.
