@@ -80,7 +80,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T084 — Pattern library + scorer + Alert.patterns contract (SPEC §7.5)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -88,7 +88,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/patterns_library.py, pipeline/src/routine_watch/alerts.py, pipeline/tests/test_patterns.py, contracts/, web/src/contracts.ts
 - owner: ian-claude
 - claimed: 2026-10-17T07:04Z
-- pr: —
+- pr: #99
 
 What: The pivot in SPEC §7.5 (decision D): every flag ranks the patterns the change is consistent with. Deterministic rules over features, library as data, LLM never adds patterns.
 Interface:
