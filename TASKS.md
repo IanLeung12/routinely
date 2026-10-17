@@ -42,14 +42,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_evidence.py -q` and `scripts/ci.sh` pass.
 
 ### T038 — Session store: in-memory default + Tiger Data (TimescaleDB)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/store.py, pipeline/sql/schema.sql, pipeline/tests/test_store.py, pipeline/pyproject.toml, .env.example
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:01Z
 - pr: —
 
 What: SPEC §6.3 and the Tiger Data prize: sessions, step events and errors stored as time series. In-memory is the default so tests/CI/demo need no DB; Timescale only when `DATABASE_URL` is set.
