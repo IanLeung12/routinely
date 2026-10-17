@@ -338,7 +338,7 @@ Acceptance:
 * `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
 
 ### T197 — Heat calendar legend: CSS classes instead of inline styles
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -346,8 +346,9 @@ Acceptance:
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:51Z
-- pr: —
+- pr: #193
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T197-wip-0932: start from it (git switch task/T197-wip-0932 && git merge origin/main)
+- rating: 5/5 clear
 
 What: T172 (PR #176) added three legend swatches with long inline `style={{...}}` objects. Move them to classes so the colours live in one place with the grid cells.
 Interface: Read only `web/src/resident/HeatCalendar.tsx` and `web/src/alert/alert.css` (example of a component stylesheet). Create `heatCalendar.css` with `.heat-swatch`, `.heat-swatch--low`, `.heat-swatch--high`, `.heat-swatch--none` using the same CSS variables; import it in `HeatCalendar.tsx`. No visible change.
