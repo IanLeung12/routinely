@@ -289,7 +289,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T394 — Live: tell the nurse when the camera could not be opened (close code 4503)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
