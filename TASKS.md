@@ -494,14 +494,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T064 — Show the task map legend on the live session screen
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:43Z
 - pr: —
 
 What: `TaskMapLegend` (T057) exists but is not rendered anywhere. Render it inside the "Task map" card in `LiveSession.tsx`, directly below `<TaskMap>`.
