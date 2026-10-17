@@ -364,3 +364,4 @@ T415 | standard | codex | merged first try | ~?k tok
 T408 | heavy | claude-opus | merged first try | ~?k tok
 T412 | heavy | claude-opus | merged first try | ~?k tok
 T423 | light | codex | merged first try | ~5k tok
+T418 | light | codex | merged first try | ~?k tok
