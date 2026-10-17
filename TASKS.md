@@ -233,13 +233,13 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T029 — Live session WebSocket (scenario-driven)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - deps: T020
 - area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_live.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T05:04Z
 - pr: —
 
 What: SPEC §16 B and §10 fallback: one WebSocket carries the live view. For now it plays a recorded scenario through the pipeline in (sped-up) real time, which is also the demo fallback; the camera source plugs into the same generator later.
