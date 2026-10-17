@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T411 — Wording pass: people, not just residents and nurses
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -17,8 +17,9 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T23:28Z
-- pr: —
+- pr: #428
 - note: released by max_API_light: run ended without progress
+- rating: 4/5 area list missed the files the new rule forces (about/, ui/DemoBanner, tour/) and the pipeline-written handoff summary; acceptance itself was clear
 
 What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (or the person's name), "nurse" only where it's specifically the care-home supervisor, never "patient". Landing page: say it's for anyone, alone or with family, a carer or a care home.
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
