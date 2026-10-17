@@ -9,6 +9,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mrs. K',
     room: '204',
     status: 'flagged',
+    consent: { given_by: 'Substitute decision-maker (daughter)', on: '2026-09-28' },
     top_pattern: { pattern_id: 'sudden_change', name: 'Sudden change (delirium pattern)', urgency: 'same_shift' },
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.12 },
@@ -22,6 +23,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mr. Chen',
     room: '211',
     status: 'watch',
+    consent: { given_by: 'Self', on: '2025-11-02' },
     top_pattern: { pattern_id: 'slow_drift', name: 'Slow drift (cognitive decline pattern)', urgency: 'routine' },
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.1 },
@@ -35,6 +37,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mrs. Ahmed',
     room: '108',
     status: 'normal',
+    consent: { given_by: 'Substitute decision-maker (son)', on: '2026-01-05' },
     top_pattern: null,
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.08 },
