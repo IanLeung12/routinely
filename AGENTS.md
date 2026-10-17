@@ -15,6 +15,10 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 - Status flow: `todo → claimed → in-review → done` (or `blocked`). Only claim tasks at or below your class (`MODELS.md`).
 - A claim is yours only if `tasks.py` says so. If it prints `LOST`, pick another task.
 
+## Finding your way
+- Your prompt includes a code map of your task's area. For anything else run `python3 scripts/codemap.py <path>` instead of exploring; architecture notes in `docs/CODEMAP.md`. Open only the files you need.
+- If you add, move or remove a module or screen, update `docs/CODEMAP.md` in the same PR (only its notes; the file list is generated).
+
 ## Shipping a task
 1. `git fetch && git switch -c task/T012-short-name origin/main`
 2. Touch only the files/area the task lists. Need something outside it? Note it in the PR; don't widen scope.

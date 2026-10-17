@@ -50,6 +50,14 @@ rules = [("web", r"\bweb/"), ("pipeline", r"\bpipeline/|tests/scenarios"), ("inf
 guides = [g for g, pat in rules if re.search(pat, area) and os.path.exists(f"prompts/areas/{g}.md")]
 for g in guides:
     s += "\n\n---\n" + open(f"prompts/areas/{g}.md").read()
+# Attach a code map of the task's area so the agent doesn't have to explore.
+import subprocess
+dirs = sorted({p.strip().rstrip("/").rsplit("/", 1)[0] if "." in p.strip().rsplit("/", 1)[-1] else p.strip().rstrip("/")
+               for p in area.split(",") if "/" in p})
+if dirs:
+    cm = subprocess.run(["python3", "scripts/codemap.py", *dirs], capture_output=True, text=True).stdout.strip().splitlines()
+    if len(cm) > 2:
+        s += "\n\n---\nCode map of your area (python3 scripts/codemap.py <path> for more):\n" + "\n".join(cm[:70])
 print(s)
 PY
 )

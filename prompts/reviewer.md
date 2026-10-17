@@ -9,6 +9,9 @@ Your job: find real problems in the codebase that individual task reviews miss, 
 2. **Diff pass.** `git diff --stat <last-reviewed>..origin/main`, then read only the hunks that matter (`git diff <sha>..origin/main -- <path>`), max ~15 files; skip lockfiles, generated files and tests-only noise.
    Look for: bugs and edge cases, broken or missing error/offline handling, privacy violations (raw frames stored or sent, faces, "diagnose" wording), paid API calls outside the fake/`LIVE_API` path, secrets, contract drift between `pipeline/` and `web/`, duplicated logic across modules, dead code, tests that don't test anything, inconsistent UI (hard-coded colours, ignoring `web/src/ui/`), obvious performance traps.
 
+   Start from `python3 scripts/codemap.py` (and `docs/CODEMAP.md`) instead of listing files.
+   If `docs/CODEMAP.md` is wrong or missing a module/screen, file a light task to fix it.
+
 3. **Area pass (one area per run, rotating):** `web` → `pipeline` → `contracts+api` → `scripts+ci` → `tests/scenarios` → back to `web`. Skim the structure (`git ls-files <area> | head -60`, a few key files) for architecture-level issues: wrong layering, a missing piece the demo needs (SPEC §10), two things that should be one. Keep it short.
 
 4. **File tasks.** At most **5 new tasks per run**, only issues that matter (would break the demo, mislead a nurse, violate a rule, or cost real time later). Skip nitpicks and style preferences. Dedupe against `python3 scripts/tasks.py list` and the known-issues list. Use the task format in `prompts/orchestrator.md`, title prefix `Review:`, `source: reviewer`, priority 0 for demo/privacy/correctness, else 1–2, class by the `MODELS.md` rubric. Each task must name exact files and a concrete fix, so a light worker can do most of them.
