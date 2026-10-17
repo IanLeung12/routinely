@@ -363,7 +363,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T260 — Test: first-load JS bundle size budget for the dashboard
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
