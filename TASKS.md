@@ -7,7 +7,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T342 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
+### T349 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
 - status: todo
 - class: light
 - priority: 1
