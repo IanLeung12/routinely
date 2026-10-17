@@ -516,7 +516,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T381 — scripts/preflight.sh: one command that says "ready to demo"
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: improvement
@@ -524,7 +524,8 @@ Acceptance:
 - area: scripts/preflight.sh, docs/DEMO.md, tests/test_preflight.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T19:05Z
-- pr: —
+- pr: #365
+- rating: 5/5 clear
 
 What: Before judging, one command should confirm the demo path works offline (SPEC §10 fallback, §13 risks) instead of someone remembering five scripts.
 Interface: `scripts/preflight.sh` runs in order and prints a ✓/✗ checklist: LIVE_API unset and OFFLINE_MODE=true; `scripts/dev.sh up` (if not already up); `scripts/smoke.sh`; `scripts/e2e.sh` (scenario count); POST /demo/reset then GET /residents shows the demo resident on watch. Exits non-zero on the first ✗ with the fix hint. Never calls paid APIs.
