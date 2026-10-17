@@ -410,7 +410,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T282 — Integration: pausing a room makes /ws/live send "paused", resuming lets it run
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -418,7 +418,8 @@ Acceptance:
 - area: scripts/integration.sh
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T13:56Z
-- pr: —
+- pr: #272
+- rating: 5/5 clear
 
 What: The pause flow (T244/T249/T266/T275) is covered by unit tests and an in-process API test, but not against the running stack. Extend scripts/integration.sh's existing websockets block to check it end to end.
 Interface: against the stack integration.sh already starts: `PUT /rooms/204/monitoring` with `{"on": false}` → connect `/ws/live?scenario=tea_skip_teabag_pour_twice&speed=20` → first message has `"type": "paused"`; then `PUT ... {"on": true}` → a fresh connection gets a normal frame/step message. Always resume in a `trap`/finally so the stack is left unpaused; read the demo room from `GET /residents` (as smoke.sh does since T274) rather than hard-coding 204 if practical.
