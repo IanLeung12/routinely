@@ -558,7 +558,7 @@ Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
 
 ### T352 — Test: web mockPatterns stays in step with the pipeline pattern library
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
