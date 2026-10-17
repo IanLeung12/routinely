@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A new scenario's row in tests/scenarios/README.md conflicts with every other scenario PR (it's outside task areas): keep it to one line and merge origin/main before pushing. (ian-claude)
 - UI must render task structure (steps, labels) from data sent by the pipeline, never from mock constants, even in live mode (reviewer)
 - A PR that reproduces live.py's message stream can go stale between local CI and PR CI: GitHub tests your branch merged with the newest main, so re-fetch main and re-run ci.sh right before pushing when (ian-claude)
 - A test that plays a live session (live.session_messages or /ws/live) now records it against the demo resident: reset session_log in a fixture or later tests see it in demo_residents(). (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Never pkill -f a pattern that also appears in your own command line (e.g. 'vite --port 5191'): pkill kills the Bash call itself and you get no output. Kill by pid from ss -ltnp instead. (ian-claude)
 - web tests open a real WebSocket to localhost:8000 outside App.test.tsx's stubbed test, so another worker's uvicorn on the shared VPS makes vitest exit 1 with an undici ERR_INVALID_ARG_TYPE uncaught ex (ian-claude)
 - A keyboard test that loops 'while (document.activeElement?.textContent !== X)' then compares to Y passes vitest but fails npm run build: tsc narrows the first loop's exit to the X literal, so the seco (ian-claude)
+- In web keyboard-only tests, vi.useFakeTimers() alone makes @testing-library/user-event's tab()/keyboard() hang forever (even with delay:null); pass vi.useFakeTimers({ shouldAdvanceTime: true }). (ian-claude-standard-2)
