@@ -568,14 +568,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T375 — Unit overview: say when it is showing demo data because the API is unreachable
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/overview/api.ts, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.states.test.tsx, web/src/overview/overview.css
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T18:48Z
 - pr: —
 
 What: `fetchResidents()` silently falls back to `mockResidents` when `/residents` fails (T366 rating), so a nurse or judge can't tell live data from demo data. Keep the fallback (demo robustness) but surface it as a one-line notice above the list.
