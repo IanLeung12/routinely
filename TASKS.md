@@ -66,7 +66,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T187 — Test: App shows the live routine picker with tea selected
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: test
