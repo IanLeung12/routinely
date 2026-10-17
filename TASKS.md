@@ -483,15 +483,15 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T412 — Replay store: keep skeleton replays of every session with errors
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: feature
 - source: ian
 - deps: —
 - area: pipeline/src/routine_watch/replays.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_residents.py, pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_replays.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T20:18Z
 - pr: —
 
 What: Ian wants supervisors (and the person) to look back at failed attempts and judge for themselves (SPEC §17). Today replays exist only inside an alert and come from two canned recordings; live sessions keep steps and errors but not frames. Store a replay for every session that had at least one error (and keep the person's most recent normal session as the comparison). Skeletons, hand landmarks, object boxes and timestamps only, downsampled (~10 fps); never video (SPEC §8).
