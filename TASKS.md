@@ -474,13 +474,13 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T047 — Bug: flaky web CI ("window is not defined" after App.test.tsx)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - deps: —
 - area: web/src/App.test.tsx, web/src/test-setup.ts, web/vite.config.ts
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:17Z
 - pr: —
 
 What: main CI run 39005334024 failed although all 52 web tests passed: Vitest reported an unhandled `ReferenceError: window is not defined` from react-dom, originating in `src/App.test.tsx`. The test renders `<App />` and returns synchronously, while the overview's API fetch (which falls back to mock data when the API is unreachable) resolves after jsdom is torn down and triggers a React update. Timing-dependent, so it fails only sometimes.
