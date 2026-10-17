@@ -119,7 +119,7 @@ Acceptance:
 - `scripts/ci.sh` passes; update `docs/CODEMAP.md` data-flow notes.
 
 ### T086 — Synthetic history: evening-only worsening resident scenario
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
