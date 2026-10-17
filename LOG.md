@@ -343,3 +343,8 @@ T382 | standard | claude-sonnet | merged first try | ~?k tok
 T388 | standard | claude-sonnet | merged first try | ~?k tok
 T377 | light | claude-sonnet | merged first try | ~?k tok
 T374 | light | claude-opus | merged first try | ~?k tok
+T343 | heavy | claude-opus | merged first try | ~210k tok
+T397 | heavy | claude-opus | merged first try | ~105k tok
+T392 | standard | codex | merged after release (wip branch) | ~9k tok
+T384 | light | claude-opus | merged first try | ~90k tok
+T379 | light | codex | merged first try | ~3k tok
