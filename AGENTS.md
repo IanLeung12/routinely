@@ -7,6 +7,7 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 - **Orchestrator** (one, runs on Ian's VPS): writes tasks, reviews merged work, releases stuck claims, keeps `main` green. Never writes feature code. Prompt: `prompts/orchestrator.md`.
 - **Tester** (one, runs on Ian's VPS when `main` changes): runs CI, replays recorded scenarios end to end, walks the dashboard in a real browser, files `Bug:` tasks. Never fixes code. Prompt: `prompts/tester.md`.
 - **Reviewer** (one, on Ian's VPS, ~30 min when `main` moves): reviews the diff since its last run plus one rotating area, files `Review:` tasks. Never changes code. Prompt: `prompts/reviewer.md`.
+- **Retro** (one, on Ian's VPS, ~3 h): reads `METRICS.md` (from `scripts/metrics.py`) and improves the loop itself (prompts, routing, task template, lessons) as logged experiments. Prompt: `prompts/retro.md`.
 - **Workers** (Claude Code / Codex, any teammate): claim one task, ship one PR, repeat. Prompt: `prompts/worker.md`. Run via `scripts/worker.sh`.
 
 ## The board

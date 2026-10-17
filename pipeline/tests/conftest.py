@@ -15,8 +15,16 @@ MRS_K_LIVE_SCENARIO = "tea_skip_teabag_pour_twice"
 _FAST = 1000.0
 
 
+@pytest.fixture(autouse=True)
+def _empty_log():
+    """Every test starts and ends with the seeded demo and nothing recorded."""
+    session_log.reset()
+    yield
+    session_log.reset()
+
+
 @pytest.fixture
-def mrs_k_flagged():
+def mrs_k_flagged(_empty_log):
     """Play mrs-k's live session (SPEC section 10 beats 2-4) so tests that need a
     flagged demo resident with an alert don't have to know how she got there: the
     seeded history alone only leaves her on watch (T124)."""
@@ -28,7 +36,5 @@ def mrs_k_flagged():
         async for _ in messages:
             pass
 
-    session_log.reset()
     asyncio.run(play())
     yield
-    session_log.reset()
