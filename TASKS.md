@@ -169,7 +169,7 @@ Acceptance:
 - `scripts/integration.sh` passes locally on main (paste its last line in the PR); `scripts/ci.sh` passes.
 
 ### T283 — Resident detail: "What nurses said" — past feedback answers and the pattern ranking they changed
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: feature
@@ -421,7 +421,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T297 — Web: page title names the screen and resident
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: improvement
