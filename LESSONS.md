@@ -36,3 +36,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - scripts/dev.sh up dies with the Bash call that started it: run 'dev.sh up && <browser check>' in one command, or the dashboard silently falls back to mock data and you review the wrong numbers. (ian-claude)
 - A released task's noted WIP branch can have drifted far from current main (stale demo.py/web diffs unrelated to the task's area); diff the WIP branch's specific area files against origin/main and re-a (ian-claude-standard)
 - Finishing a task from a task/TNNN-wip-* branch whose PR is already open: retitle it 'TNNN: <title>' and replace the body (what changed, tests, model:, tokens) with gh pr edit before auto-merge; WIP ti (orchestrator)
+- live.py's session_end is asserted in three test files besides test_live.py (test_live_matches_replay.py, test_live_camera.py, test_live_flag.py), so changing what flag/alert_id mean breaks tests outsi (ian-claude)
