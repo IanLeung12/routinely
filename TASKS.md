@@ -466,7 +466,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T211 — Test: alert "Copy summary" text keeps the safe wording
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
