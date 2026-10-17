@@ -181,15 +181,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T255 — Resident detail: show who consented to monitoring
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - source: proposed
 - deps: T254
 - area: web/src/overview/types.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx, web/src/resident/resident.css
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T13:06Z
 - pr: —
 
 What: Show T254's consent record under the monitoring switch: "Consent: Substitute decision-maker (daughter), 2026-09-28". Small grey text, nothing when the field is missing (older API / mock without it).
