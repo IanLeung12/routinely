@@ -37,6 +37,11 @@ session, and the alert list all on one page — no screen to navigate to first.
   a decline being easy for staff to miss (SPEC §10.1).
 - **Baseline:** in **Unit overview**, click Mrs. K's row. Her detail screen shows her
   last two normal weeks — the baseline the alert will compare against.
+- **Privacy switch:** still on Mrs. K's row, point at the "Consent: ..." line, then
+  flip the monitoring switch to **Paused** — "No camera data is processed while
+  paused" appears, and **Recent changes** logs "Paused by ...". Back on **Unit
+  overview** her row now shows a **Monitoring paused** chip, and the shift handoff
+  names the paused room. Flip the switch back to **On** (or run `/demo/reset`).
 - **Live:** go back (or stay on the home screen) and watch the **Live session**
   section, already running the `tea_skip_teabag_pour_twice` scenario. A teammate (or
   the scenario itself) skips the teabag and pours twice; the task map tiles flash

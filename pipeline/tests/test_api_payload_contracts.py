@@ -28,7 +28,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as SchemaValidationError
 from pydantic import ValidationError
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch.api import app
 from routine_watch.api_alerts import AlertFeedbackIn
 from routine_watch.contracts import (
@@ -54,7 +54,6 @@ from routine_watch.contracts import (
 )
 from routine_watch.demo import DEMO_RESIDENT, demo_residents
 from routine_watch.drift import Drift
-from routine_watch.feedback import FeedbackStore
 from routine_watch.monitoring import DEFAULT_BY, get_monitoring_store
 from routine_watch.patterns_library import LIBRARY as PATTERN_LIBRARY
 from routine_watch.patterns_library import Pattern, TimeProfile
@@ -105,10 +104,10 @@ A_PATTERN_ENTRY: dict[str, Any] = {
 def _nothing_reviewed_and_every_room_on():
     """Both stores the API keeps are global, so each test starts from the seeded
     demo: nobody has answered an alert and no room is paused."""
-    api_module._feedback_store = FeedbackStore()
+    api_state.reset()
     get_monitoring_store().reset()
     yield
-    api_module._feedback_store = FeedbackStore()
+    api_state.reset()
     get_monitoring_store().reset()
 
 
@@ -493,9 +492,9 @@ def test_the_schema_rejects(model: type, payload: dict[str, Any]) -> None:
 
 
 def test_the_overview_row_is_the_detail_cut_down() -> None:
-    """`/residents` serves exactly `api._SUMMARY_FIELDS` of a resident, so the two
-    schemas have to agree on which fields those are."""
-    assert set(ResidentSummary.model_fields) == set(api_module._SUMMARY_FIELDS)
+    """`/residents` serves exactly `api_state._SUMMARY_FIELDS` of a resident, so the
+    two schemas have to agree on which fields those are."""
+    assert set(ResidentSummary.model_fields) == set(api_state._SUMMARY_FIELDS)
     assert set(ResidentSummary.model_fields) <= set(Resident.model_fields)
 
 

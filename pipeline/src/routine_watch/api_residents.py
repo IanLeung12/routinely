@@ -3,16 +3,17 @@
 Split out of `api.py`: `GET /residents`, `GET /residents/{id}`,
 `GET /residents/{id}/drift`, `GET /patterns`, `GET /sessions/{id}/replay` and
 `GET /residents/{id}/normal_replay` share these helpers, kept together here.
-The feedback-tuned status/threshold helpers (`_tuned`, `_SUMMARY_FIELDS`) stay
-on `api.py` (`api._flagged_residents()` also needs them for `/alerts`), so
-every lookup here goes back through `. import api` rather than caching either
-at import time, or a test's reset would be invisible to these routes.
+The feedback-tuned status/threshold helpers (`_tuned`, `_SUMMARY_FIELDS`) live
+on `api_state.py`, imported here at module load time instead of reached back
+into for on every call, so a reset there is visible to these routes without
+either module rebinding the other's state.
 """
 
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 
+from . import api_state
 from .contracts import SuggestedCheck
 from .demo import demo_residents
 from .drift import daily_scores, drift
@@ -26,11 +27,9 @@ router = APIRouter()
 @router.get("/residents")
 def list_residents() -> list[dict]:
     """Unit overview (SPEC section 9): status chip and sparkline per resident."""
-    from . import api
-
     return [
-        {field: resident[field] for field in api._SUMMARY_FIELDS}
-        for resident in (api._tuned(resident) for resident in demo_residents())
+        {field: resident[field] for field in api_state._SUMMARY_FIELDS}
+        for resident in (api_state._tuned(resident) for resident in demo_residents())
     ]
 
 
@@ -45,9 +44,7 @@ def _resident_or_404(resident_id: str) -> dict:
 @router.get("/residents/{resident_id}")
 def get_resident(resident_id: str) -> dict:
     """Resident detail (SPEC section 9): sessions, care records and baseline."""
-    from . import api
-
-    return api._tuned(_resident_or_404(resident_id))
+    return api_state._tuned(_resident_or_404(resident_id))
 
 
 @router.get("/residents/{resident_id}/drift")

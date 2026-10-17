@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as SchemaValidationError
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch import handoff as handoff_module
 from routine_watch.alerts import build_alerts, distinct_clauses, normal_error_rate
 from routine_watch.api import app
@@ -51,11 +51,11 @@ NORMALLY = re.compile(r"vs \S+ normally over \S+ days")
 
 @pytest.fixture(autouse=True)
 def _nothing_reviewed():
-    """Each test starts with a clean feedback store: the API module keeps it global.
+    """Each test starts with a clean feedback store: `api_state` keeps it global.
     (`conftest._empty_log` already puts the session log back.)"""
-    api_module._feedback_store = FeedbackStore()
+    api_state.reset()
     yield
-    api_module._feedback_store = FeedbackStore()
+    api_state.reset()
 
 
 @pytest.fixture(autouse=True)
