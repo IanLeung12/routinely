@@ -7176,3 +7176,20 @@ Acceptance:
 - Before/after screenshots of Mrs. K's detail in the PR.
 - note: PARKED: split into T417, T418, T419, T420, T421, T422 so the chart kit runs in parallel (Ian).
 
+### T384 — Ghost replay: aria-label says what is being compared
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T19:41Z
+- pr: #375
+- rating: 5/5 clear
+
+What: The ghost replay SVG's label is the fixed "Today and usual skeleton replay"; a screen-reader user gets no information. Describe the comparison in words.
+Interface: read only web/src/evidence/GhostReplay.tsx and its test. Build the label from the props already passed (e.g. "Today's routine drawn over the usual routine, frame 12 of 40"); if a prop you'd need doesn't exist, keep to what's there. No new props from other files.
+Acceptance:
+- Test asserts the label changes with the frame and never contains "diagnos".
+- `cd web && npx vitest run src/evidence/GhostReplay` passes; `scripts/ci.sh` passes.
