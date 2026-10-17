@@ -94,25 +94,6 @@ Interface: read `pipeline/src/routine_watch/alerts.py` (`session_id_for`, `task_
 Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
-### T225 — LiveSession: CSS file instead of inline <style>
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: T220
-- area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:02Z
-- pr: #236
-- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T225-wip-1147: start from it (git switch task/T225-wip-1147 && git merge origin/main)
-- rating: 5/5 clear
-
-What: `web/src/live/LiveSession.tsx` (line ~140) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215). Waits for T220, which edits the same file.
-Interface: new `web/src/live/liveSession.css` imported by `LiveSession.tsx`; same class names, same rules.
-Acceptance:
-- no `<style>` element left in `LiveSession.tsx`; no visual or text change
-- `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
-
 ### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
 - status: todo
 - class: light
@@ -149,44 +130,6 @@ Acceptance:
 - a slow first render no longer fails the run; a dashboard that never renders still fails with the same message
 - `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
 
-### T233 — Test: de-flake DemoBanner reset test under load
-- status: done
-- class: light
-- priority: 1
-- kind: test
-- deps: —
-- area: web/src/ui/DemoBanner.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T11:07Z
-- pr: #219
-- rating: 5/5 clear
-
-What: PR #217 reported `DemoBanner.test.tsx` (reset cases from T218) failing intermittently in full `scripts/ci.sh` runs while passing alone. Make its async assertions wait instead of checking state right after a click/findBy.
-Interface: read `web/src/ui/DemoBanner.tsx` and `web/src/ui/DemoBanner.test.tsx` only. Wrap post-click assertions (disabled state, error text appearing/disappearing) in `await waitFor(...)` or use `findBy*`/`waitForElementToBeRemoved`; resolve fake `onReset` promises inside `act`.
-Acceptance:
-- No behaviour change in DemoBanner.tsx.
-- `cd web && for i in 1 2 3 4 5; do npm test -- --run DemoBanner || exit 1; done` passes, and `scripts/ci.sh` passes.
-
-### T234 — Unit overview: usable at phone width (375 px)
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/index.css (overview rules only: .unit-filter*, .resident-list, .resident-row, .resident-open*, .resident-identity/name/room/status/pattern), web/src/overview/overview.css (new), web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T11:12Z
-- pr: #225
-- rating: 5/5 clear
-
-What: Nurses check the board on a phone on the floor, but there are no responsive rules anywhere in web/ (no `@media` except reduced-motion). Move the overview's rules out of index.css into `overview/overview.css` (imported by UnitOverview.tsx) and add a `@media (max-width: 480px)` block so each resident row stacks name/room, status chip + top pattern, and sparkline without horizontal scroll.
-Interface: `web/src/overview/overview.css`; UnitOverview.tsx adds `import './overview.css'`. No markup or class name changes beyond what the stacking needs.
-Acceptance:
-- No horizontal scroll on the overview at 375 px wide; filter buttons wrap and stay ≥44 px tall tap targets.
-- Desktop layout unchanged (same rules, just moved).
-- Existing UnitOverview tests still pass; `scripts/ci.sh` passes.
-- PR body notes the viewport widths checked.
-
 ### T236 — Review: live session_end flag/alert_id can disagree with the resident's real status (alert 404)
 - status: done
 - class: standard
@@ -205,25 +148,6 @@ Interface: after `_record(...)`, compute `resident_name = _resident_flagged(resi
 Acceptance:
 - New test in `pipeline/tests/test_live.py`: for mrs-k after reset, `tea_kettle_twice` and `tea_no_kettle` each end with `alert_id` non-null iff `GET /alerts/{alert_id}` returns 200 (TestClient), and `flag` equals the resident's status == flagged.
 - Existing live/notify tests still pass; `scripts/ci.sh` passes.
-
-### T235 — Live screen and task map: usable at phone width (375 px)
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/live/liveScreen.css, web/src/live/taskMap.css
-- owner: ian-claude-standard
-- claimed: 2026-10-17T11:16Z
-- pr: #223
-- rating: 5/5 clear
-
-What: The live session view (routine picker, task map of steps, skeleton panel) has no responsive rules. Add `@media (max-width: 480px)` blocks to the two CSS files so the routine picker wraps, the task-map steps stack in one column and the skeleton panel scales to the screen width, so a nurse can follow a live session on a phone.
-Interface: CSS only, in the two listed files. Don't touch LiveSession.tsx / liveSession.css (T225, T230 work there).
-Acceptance:
-- No horizontal scroll on the live screen at 375 px; step labels and error times stay readable (no text below var(--text-sm)).
-- Desktop layout unchanged.
-- `scripts/ci.sh` passes; PR body notes the viewport widths checked.
 
 ### T237 — Test: de-flake AlertView "loading state for the evidence card" test under load
 - status: done
