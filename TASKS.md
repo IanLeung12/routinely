@@ -561,7 +561,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T359 — Test: guided tour copy uses flag-for-review wording
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -569,7 +569,8 @@ Acceptance:
 - area: web/src/tour/steps.test.ts
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T17:45Z
-- pr: —
+- pr: #343
+- rating: 5/5 clear
 
 What: Guard the demo tour text against diagnosis wording, since judges read it first.
 Interface: read only `web/src/tour/steps.ts` (exports `TOUR_STEPS: {title, body}[]`) and `web/src/wording.test.ts` (existing wording-guard style to copy). Create `web/src/tour/steps.test.ts`.
