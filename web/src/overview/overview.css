@@ -1,3 +1,12 @@
+.overview__demo-notice {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--error-amber-bg);
+  color: var(--error-amber-text);
+  font-size: 0.875rem;
+}
+
 .unit-filter {
   display: flex;
   gap: 0.5rem;
