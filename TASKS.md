@@ -131,14 +131,14 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T225 — LiveSession: CSS file instead of inline <style>
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T220
 - area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:44Z
 - pr: —
 
 What: `web/src/live/LiveSession.tsx` (line ~140) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215). Waits for T220, which edits the same file.
