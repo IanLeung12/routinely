@@ -598,14 +598,14 @@ Acceptance:
 - tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.
 
 ### T392 — Test: scripts/camera.sh argument handling (no camera needed)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_camera_script.py
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-17T19:39Z
 - pr: —
 - note: released by ian-claude-standard: run ended without progress; partial work on branch task/T392-wip-1934: start from it (git switch task/T392-wip-1934 && git merge origin/main)
 
