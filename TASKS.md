@@ -391,7 +391,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T279 — Smoke: validate live API bodies against the contracts/ JSON Schemas
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
