@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from routine_watch import api as api_module
+from routine_watch import feedback as feedback_module
 from routine_watch.api import app
 from routine_watch.change_detection import Baseline, flag_change
 from routine_watch.contracts import AlertFeedback, FeedbackVerdict
@@ -107,6 +108,41 @@ def test_still_flagged_residents_keep_their_alert(mrs_k_flagged):
 
     assert residents[MRS_K]["status"] == "flagged"
     assert [alert["resident_id"] for alert in alerts] == [MRS_K]
+
+
+def test_false_alarm_that_unflags_the_resident_still_lets_the_alert_be_read_and_answered(
+    mrs_k_flagged, monkeypatch
+):
+    """T182 regression: a false alarm big enough to tune mrs-k off `/alerts` must not
+    make her alert 404 - `GET /alerts/{id}` and the next feedback POST (the "what was
+    it?" cause) still need to find it, or a nurse can never correct a mistaken tap.
+
+    Mrs-k's margin is wide enough that the real `FALSE_ALARM_STEP`/`MAX_FACTOR` can
+    never clear her (`test_still_flagged_residents_keep_their_alert`), so this widens
+    both just for this test to simulate "a threshold step big enough to un-flag".
+    """
+    monkeypatch.setattr(feedback_module, "FALSE_ALARM_STEP", 2.0)
+    monkeypatch.setattr(feedback_module, "MAX_FACTOR", 5.0)
+
+    with TestClient(app) as client:
+        before = client.get("/alerts").json()
+        alert_id = next(a["alert_id"] for a in before if a["resident_id"] == MRS_K)
+
+        verdict = client.post(f"/alerts/{alert_id}/feedback", json={"verdict": "false_alarm"})
+        assert verdict.status_code == 200
+
+        after = [a["resident_id"] for a in client.get("/alerts").json()]
+        assert MRS_K not in after, "sanity check: the false alarm must un-flag her"
+
+        detail = client.get(f"/alerts/{alert_id}")
+        assert detail.status_code == 200
+
+        cause = client.post(
+            f"/alerts/{alert_id}/feedback",
+            json={"verdict": "false_alarm", "cause": "other"},
+        )
+        assert cause.status_code == 200
+        assert cause.json()["feedback"]["cause"] == "other"
 
 
 def test_status_for_flips_a_flagged_resident_once_the_tuned_threshold_clears_it():
