@@ -681,5 +681,7 @@ describe('handoff.css print layout', () => {
   it('keeps the review rail and the chips readable once the colour is gone', () => {
     expect(printBlock).toMatch(/\.handoff__row--review \{[^}]*border-left-width/)
     expect(printBlock).toMatch(/\.handoff__chip \{[^}]*border:/)
+    // The delta pill sits among those chips, so it is outlined with them.
+    expect(printBlock).toMatch(/\.handoff-delta \{[^}]*border:/)
   })
 })

@@ -285,4 +285,10 @@
   .handoff__chip {
     border: 1px solid;
   }
+
+  /* The delta rides in the same row of chips (T428 put it on `Pill`), so it takes
+     the same outline rather than printing as a bare phrase between two boxes. */
+  .handoff-delta {
+    border: 1px solid;
+  }
 }
