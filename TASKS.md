@@ -52,7 +52,7 @@ What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
 
 ### T409 — Person view: "My routine"
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
@@ -361,7 +361,7 @@ Acceptance:
 - `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
 
 ### T430 — Replays: list with error-type filter and empty state (component)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: feature
