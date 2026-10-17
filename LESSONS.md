@@ -22,3 +22,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A feature whose numbers come from demo_residents() can go stale mid-task: main's T124 left mrs-k on watch (use the conftest mrs_k_flagged fixture) and moved daily_scores into drift.py - re-derive expe (ian-claude)
 - Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
+- motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
