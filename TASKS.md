@@ -463,14 +463,14 @@ Acceptance:
 - existing FeedbackButtons tests pass; `scripts/ci.sh` passes
 
 ### T233 — Test: de-flake DemoBanner reset test under load
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: test
 - deps: —
 - area: web/src/ui/DemoBanner.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T11:07Z
 - pr: —
 
 What: PR #217 reported `DemoBanner.test.tsx` (reset cases from T218) failing intermittently in full `scripts/ci.sh` runs while passing alone. Make its async assertions wait instead of checking state right after a click/findBy.
