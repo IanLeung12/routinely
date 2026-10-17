@@ -337,14 +337,14 @@ Acceptance:
 * `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
 
 ### T197 — Heat calendar legend: CSS classes instead of inline styles
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:51Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T197-wip-0932: start from it (git switch task/T197-wip-0932 && git merge origin/main)
 
