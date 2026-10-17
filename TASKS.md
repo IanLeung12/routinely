@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T241 — Test: no user-facing web copy says "diagnose" or "has <condition>"
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -120,7 +120,8 @@ Acceptance:
 - area: web/src/wording.test.ts (new)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T12:45Z
-- pr: —
+- pr: #250
+- rating: 5/5 clear
 
 What: The wording rule (AGENTS.md: the product flags a change for review, lists patterns it is "consistent with", never "diagnoses") is only checked per component. Add one guard test that scans every non-test `web/src/**/*.ts(x)` file's string literals and JSX text for `diagnos` (case-insensitive) and fails with the file and line.
 Interface: `web/src/wording.test.ts` using `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true })`, skipping `*.test.*` and `contracts.ts`. Strip `//` and `/* */` comments before matching (LiveSession.tsx and PatternList.tsx mention "never diagnoses" in comments, which is fine).
