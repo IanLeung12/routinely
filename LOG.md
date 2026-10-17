@@ -280,3 +280,7 @@ T306 | standard | claude-sonnet | merged first try | ~80k tok
 T292 | standard | claude-sonnet | merged first try | ~95k tok
 T304 | light | claude-opus | merged after CI fix | ~60k tok
 T315 | standard | claude-sonnet | merged first try | ~95k tok
+T301 | heavy | claude-opus | merged first try | ~75k tok
+T316 | standard | claude-sonnet | merged first try | ~45k tok
+T320 | light | claude-sonnet | merged first try | ~15k tok
+T307 | light | codex | merged first try | ~8k tok
