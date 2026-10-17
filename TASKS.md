@@ -355,7 +355,7 @@ Acceptance:
 - `cd web && npm test -- Tour` and `scripts/ci.sh` pass
 
 ### T205 — Tour: Escape closes it, arrow keys step through
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -363,7 +363,8 @@ Acceptance:
 - area: web/src/tour/Tour.tsx, web/src/tour/Tour.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T10:04Z
-- pr: —
+- pr: #200
+- rating: 5/5 clear
 
 What: The presenter drives the `?tour=1` cue card from a keyboard on stage; today only mouse clicks work. Add Escape = Close, ArrowRight = Next, ArrowLeft = Back (respecting first/last bounds).
 Interface: `Tour` in web/src/tour/Tour.tsx adds one `keydown` listener on `window` in a `useEffect` (removed on unmount/close). No other files; do not edit steps.ts (T204 owns it).
