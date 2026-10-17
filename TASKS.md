@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1a3d1c7
+- last-reviewed: 4034062
 
 ## Tasks
 
@@ -429,7 +429,8 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T082 — Scenario: medication taken without water is an omission
-- status: todo
+- status: done
+- note: superseded by T041 (#59), which added tests/scenarios/meds_skip_water
 - class: light
 - priority: 2
 - kind: test
