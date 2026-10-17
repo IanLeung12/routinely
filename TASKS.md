@@ -409,7 +409,7 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T042 — Design system: tokens + shared UI primitives
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - deps: —
