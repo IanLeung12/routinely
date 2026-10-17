@@ -460,14 +460,14 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T142 — Pattern scenario: evening-only worsening
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/pattern_evening_worsening/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:17Z
 - pr: —
 
 What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `evening_worsening` so e2e proves the library ranks it top when errors cluster in evening sessions while mornings stay clean.
