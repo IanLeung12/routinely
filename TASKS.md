@@ -426,7 +426,7 @@ Acceptance:
 * New/updated test in `web/src/handoff/Handoff.test.tsx`; `scripts/ci.sh` passes.
 
 ### T181 — Alert screen: empty state when nothing is flagged
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -434,7 +434,8 @@ Acceptance:
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T09:08Z
-- pr: —
+- pr: #169
+- rating: 5/5 clear
 
 What: Check how the alert screen behaves when the alert fetch returns nothing (e.g. before the live session flags Mrs. K). It should show the shared `EmptyState` with nurse-readable copy ("No change flagged for review."), not a blank area or an endless spinner.
 Interface: Read only `web/src/alert/AlertView.tsx`, `web/src/alert/api.ts`, `web/src/ui/EmptyState.tsx` and `web/src/alert/AlertView.test.tsx`. If the list is rendered elsewhere, edit only that file and note it in the PR.
