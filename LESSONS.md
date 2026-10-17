@@ -30,3 +30,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - The privacy wording check (test_product_wording_flags_changes_for_review) also scans your own code comments for 'diagnos*', even inside web/src/*.ts files, not just user-facing copy. (ian-claude-standard)
 - Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
 - recogniser._in_hand reads hand landmarks as well as hand boxes, so adding poses/hands to a frame can silently change step recognition: keep generated landmarks inside the frame's existing hand box. (ian-claude)
+- A PR that adds a field to live.py's session_end must add it to live_camera.py's too: test_live_camera.py compares the camera path's messages to the scenario replay's one for one. (ian-claude)
