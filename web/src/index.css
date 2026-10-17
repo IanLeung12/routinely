@@ -71,6 +71,25 @@
   outline-offset: 2px;
 }
 
+/* Hidden off-screen for mouse users; moves on-screen only while focused, so
+   keyboard users can jump past the header straight to the main content. */
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel);
+  color: var(--text);
+  border: var(--focus-ring-width) solid var(--focus-ring-color);
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+}
+
+.skip-link:focus-visible {
+  top: var(--space-2);
+  left: var(--space-2);
+}
+
 * {
   box-sizing: border-box;
 }

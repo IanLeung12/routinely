@@ -198,6 +198,75 @@ else
   fail "GET /sessions/<id>/replay and /residents/<id>/normal_replay: no alert error to derive session/resident/time window from"
 fi
 
+demo_room="204"
+
+if body=$(get "$API_URL/monitoring"); then
+  if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert isinstance(data.get("paused_rooms"), list), "paused_rooms missing or not a list"
+' "$body" 2>/dev/null; then
+    pass "GET /monitoring -> $body"
+  else
+    fail "GET /monitoring: unexpected body $body"
+  fi
+else
+  fail "GET /monitoring: no response"
+fi
+
+if body=$(curl "${CURL_OPTS[@]}" -X PUT -H 'Content-Type: application/json' -d '{"on": false}' "$API_URL/rooms/$demo_room/monitoring" 2>/dev/null); then
+  pass "PUT /rooms/$demo_room/monitoring on=false -> $body"
+else
+  fail "PUT /rooms/$demo_room/monitoring on=false: no response"
+fi
+
+if body=$(get "$API_URL/monitoring"); then
+  if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert sys.argv[2] in (data.get("paused_rooms") or []), "room not in paused_rooms"
+' "$body" "$demo_room" 2>/dev/null; then
+    pass "GET /monitoring shows $demo_room paused"
+  else
+    fail "GET /monitoring: expected $demo_room in paused_rooms, got $body"
+  fi
+else
+  fail "GET /monitoring after pause: no response"
+fi
+
+if status=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: application/json' -d '{"on": false}' "$API_URL/rooms/not-a-real-room/monitoring" 2>/dev/null); then
+  fail "PUT /rooms/not-a-real-room/monitoring: expected failure (404), got 2xx"
+elif [ "$status" = "404" ]; then
+  pass "PUT /rooms/not-a-real-room/monitoring -> 404"
+else
+  fail "PUT /rooms/not-a-real-room/monitoring: expected 404, got ${status:-no response}"
+fi
+
+if body=$(curl "${CURL_OPTS[@]}" -X PUT -H 'Content-Type: application/json' -d '{"on": true}' "$API_URL/rooms/$demo_room/monitoring" 2>/dev/null); then
+  pass "PUT /rooms/$demo_room/monitoring on=true -> $body"
+else
+  fail "PUT /rooms/$demo_room/monitoring on=true: no response"
+fi
+
+if body=$(get "$API_URL/monitoring"); then
+  if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert sys.argv[2] not in (data.get("paused_rooms") or []), "room still in paused_rooms"
+' "$body" "$demo_room" 2>/dev/null; then
+    pass "GET /monitoring shows $demo_room resumed"
+  else
+    fail "GET /monitoring: expected $demo_room not in paused_rooms, got $body"
+  fi
+else
+  fail "GET /monitoring after resume: no response"
+fi
+
+# Always resume the demo room, even if a check above failed, so a broken pause
+# switch doesn't leave the room paused for whatever runs after this script.
+curl "${CURL_OPTS[@]}" -X PUT -H 'Content-Type: application/json' -d '{"on": true}' \
+  "$API_URL/rooms/$demo_room/monitoring" >/dev/null 2>&1 || true
+
 if body4=$(curl "${CURL_OPTS[@]}" -X POST "$API_URL/demo/reset" 2>/dev/null); then
   if python3 -c '
 import json, sys

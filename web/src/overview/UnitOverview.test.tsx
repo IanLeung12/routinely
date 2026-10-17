@@ -4,6 +4,21 @@ import { mockResidents } from '../mock/residents.ts'
 import overviewCss from './overview.css?raw'
 import { UnitOverview } from './UnitOverview.tsx'
 
+function stubFetch(residentsUrlJson: unknown, pausedRoomsResult: string[] | Error) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) => {
+      if (String(url).includes('/monitoring')) {
+        if (pausedRoomsResult instanceof Error) {
+          return Promise.reject(pausedRoomsResult)
+        }
+        return Promise.resolve({ ok: true, json: async () => ({ paused_rooms: pausedRoomsResult }) })
+      }
+      return Promise.resolve({ ok: true, json: async () => residentsUrlJson })
+    }),
+  )
+}
+
 function rowNames() {
   return screen
     .getAllByRole('listitem')
@@ -104,10 +119,10 @@ describe('UnitOverview', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { rerender } = render(<UnitOverview refreshKey={0} />)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
 
     rerender(<UnitOverview refreshKey={1} />)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
   })
 
   it('shows an empty state when there are no residents', async () => {
@@ -248,6 +263,42 @@ describe('UnitOverview', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
+  })
+
+  it('shows a "Monitoring paused" chip only on residents whose room is paused', async () => {
+    stubFetch(mockResidents, ['204'])
+
+    render(<UnitOverview />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const rows = screen.getAllByRole('listitem')
+    const byRoom = new Map(
+      rows.map((row) => [row.querySelector('.resident-room')?.textContent, row]),
+    )
+    const paused = byRoom.get('Room 204')
+    expect(paused?.querySelector('.resident-paused-chip')?.textContent).toBe('Monitoring paused')
+    expect(paused?.querySelector('button')?.getAttribute('aria-label')).toContain('Monitoring paused')
+
+    for (const [room, row] of byRoom) {
+      if (room !== 'Room 204') {
+        expect(row.querySelector('.resident-paused-chip')).toBeNull()
+      }
+    }
+  })
+
+  it('shows no paused chips when fetchPausedRooms fails, and still renders the list', async () => {
+    stubFetch(mockResidents, new Error('network down'))
+
+    render(<UnitOverview />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    expect(screen.queryByText('Monitoring paused')).toBeNull()
   })
 })
 

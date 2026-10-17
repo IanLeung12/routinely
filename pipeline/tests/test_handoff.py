@@ -222,6 +222,23 @@ def test_context_carries_one_line_per_paused_room() -> None:
     assert f"Room {mrs_k['room']} (Mrs. K) was paused, so no flags are expected from it" in context
 
 
+def test_pausing_a_quiet_room_drops_it_from_the_nothing_to_review_count() -> None:
+    """T259 added the paused line so a paused room stops reading as 'all quiet'; the
+    quiet count must drop by one too, or the paused resident is counted twice."""
+    mrs_ahmed = resident(STABLE_RESIDENT)
+
+    before = build_handoff(DEMO_NOW, 12)["summary"]
+    get_monitoring_store().set(mrs_ahmed["room"], False)
+    after = build_handoff(DEMO_NOW, 12)["summary"]
+
+    before_quiet = int(re.search(r"(\d+) residents? with nothing to review", before).group(1))
+    after_match = re.search(r"(\d+) residents? with nothing to review", after)
+    after_quiet = int(after_match.group(1)) if after_match else 0
+
+    assert after_quiet == before_quiet - 1
+    assert f"Room {mrs_ahmed['room']} (Mrs. Ahmed) was paused" in after
+
+
 def test_a_window_only_counts_what_happened_inside_it() -> None:
     """Mrs. K's bad session is about six hours before the demo's clock, so a four-hour
     window has not seen it yet and a shift-long one has."""
