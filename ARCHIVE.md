@@ -4550,3 +4550,42 @@ Interface: in `scripts/ci.sh` add `export LIVE_API=0` right after the `cd` line.
 Acceptance:
 - `LIVE_API=1 bash scripts/ci.sh` passes and makes no network calls.
 - `scripts/ci.sh` passes.
+
+### T262 — Monitoring audit trail: who paused/resumed a room and when
+- status: done
+- class: heavy
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T256
+- area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/about/monitoringApi.ts
+- owner: ian-claude
+- claimed: 2026-10-17T12:38Z
+- pr: #253
+- rating: 5/5 clear
+
+What: Rationale: SPEC §12 privacy accountability; judges see that pausing a camera is logged. Record each pause/resume (room, on/off, by, at) in memory and show the last 5 on resident detail under the monitoring switch.
+Interface: `MonitoringState.history(room) -> list[dict(on: bool, by: str, at: iso str)]`; PUT /rooms/{room}/monitoring accepts optional `by` (default "nurse"); GET /rooms/{room}/monitoring/history returns the list (newest first, max 20); `/demo/reset` clears it. Web: small "Recent changes" list under the switch, empty state "No changes this shift". Use the real file names after T256's refactor (adjust area paths in the PR if they differ).
+Acceptance:
+- pytest test covers pause → resume → history order and reset clearing it.
+- web test renders the list and the empty state.
+- `scripts/ci.sh` passes.
+
+### T263 — Contracts: JSON Schema for GET /alerts/{id} and the feedback POST body
+- status: done
+- class: heavy
+- priority: 2
+- kind: improvement
+- deps: T257
+- area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
+- owner: ian-claude
+- claimed: 2026-10-17T12:59Z
+- pr: #260
+- rating: 4/5 the area left out pipeline/src/routine_watch/api_alerts.py (where the feedback POST body is actually defined) and pipeline/tests/test_api_payload_contracts.py (where T257 put the 'real route vs schema' tests), and named web/src/contracts.ts, which is generated and ended up unchanged - the real hand-mirror is web/src/alert/api.ts
+
+What: Same pattern as T250/T257: the alert detail response and the feedback request are hand-mirrored in web/src/contracts.ts; generate schemas from pydantic so drift fails CI.
+Interface: `contracts/alert_detail.schema.json`, `contracts/feedback.schema.json` generated from contracts.py; a test validates real API responses (fakes only) against them and checks web/src/contracts.ts field names match.
+Acceptance:
+- schemas generated, README in contracts/ updated.
+- test fails if a field is added on one side only.
+- `scripts/ci.sh` passes.
