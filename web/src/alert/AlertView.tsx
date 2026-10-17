@@ -72,7 +72,10 @@ export function AlertView({
 
   useEffect(() => {
     let cancelled = false
-    fetchReplay(alertId).then((fetched) => {
+    if (loaded === null || loaded.alertId !== alertId || loaded.alert === null) {
+      return
+    }
+    fetchReplay(loaded.alert).then((fetched) => {
       if (!cancelled) {
         setReplay({ alertId, replay: fetched })
       }
@@ -80,7 +83,9 @@ export function AlertView({
     return () => {
       cancelled = true
     }
-  }, [alertId])
+    // Feedback updates the alert object without changing its replay evidence.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alertId, loaded?.alert?.alert_id])
 
   async function handleFeedback(verdict: FeedbackVerdict) {
     setFeedbackError(null)
