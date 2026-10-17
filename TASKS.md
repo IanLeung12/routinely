@@ -297,7 +297,7 @@ Acceptance:
 - existing live tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T324 — Shift handoff: "compared with the previous shift" per resident
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 3
 - kind: feature
@@ -306,7 +306,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_previous.py, pipeline/src/routine_watch/contracts.py, contracts/handoff.schema.json, contracts/examples/, web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.test.tsx, web/src/handoff/types.ts, web/src/contracts.ts
 - owner: ian-claude
 - claimed: 2026-10-17T16:46Z
-- pr: —
+- pr: #324
+- rating: 5/5 clear
 
 What: Rationale: a nurse coming on shift wants to know if things are getting better or worse, not just counts. Add each resident's `flags` for the previous window of the same length (`previous_flags`) to `/handoff`, and a small "up / down / same vs previous shift" indicator component.
 Interface: `build_handoff(now, hours)` adds `previous_flags: int` per resident (window `[now-2h, now-h)`); update `handoff.schema.json`, contracts.py and generated web types; new `HandoffDelta({flags, previousFlags})` component renders e.g. "2 more than last shift" / "same as last shift" with an accessible text (not colour only). Wiring it into `Handoff.tsx` is a follow-up task (keeps this off the files T203/T247 own). Wording: describes counts only, never a diagnosis.
