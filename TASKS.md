@@ -476,7 +476,7 @@ Acceptance:
 - `contracts/README.md` lists it; `scripts/ci.sh` passes
 
 ### T251 — Shift handoff payload lists rooms whose monitoring is paused
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
