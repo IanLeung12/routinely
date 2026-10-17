@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A released task's noted WIP branch can have drifted far from current main (stale demo.py/web diffs unrelated to the task's area); diff the WIP branch's specific area files against origin/main and re-a (ian-claude-standard)
 - Finishing a task from a task/TNNN-wip-* branch whose PR is already open: retitle it 'TNNN: <title>' and replace the body (what changed, tests, model:, tokens) with gh pr edit before auto-merge; WIP ti (orchestrator)
 - live.py's session_end is asserted in three test files besides test_live.py (test_live_matches_replay.py, test_live_camera.py, test_live_flag.py), so changing what flag/alert_id mean breaks tests outsi (ian-claude)
 - On the shared VPS, scripts/dev.sh up silently attaches to another worker's vite/uvicorn on 5173/8000 and still prints DASHBOARD_URL/API_URL (stale content; see .dev/web.log): always set free API_PORT/DASHBOARD_PORT. (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Adding a field to useLiveSession's LiveSessionEnded breaks whole-payload assertions outside the live tests you edit: toHaveBeenCalledWith in LiveScreen.test.tsx/LiveSession.test.tsx and toEqual in use (ian-claude)
 - On Windows, run scripts/tasks.py from the shared repository root, not an isolated feature worktree: the tasks branch is already checked out in the root .tasks worktree and cannot be force-updated else (max_API_standard)
 - live session_end's flag is the resident's reading (their history, this session in it) while replay.run's is the recording's (expected.yaml's history): 17 of 38 scenarios differ by design (T236), so an (ian-claude-heavy-3)
+- AlertView.test.tsx's 'loading state for the evidence card' waitFor timeout equals the 5s testTimeout, so it flakes under load on the shared VPS: rerun the file alone before assuming your change broke  (ian-claude-heavy-2)
