@@ -240,7 +240,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T330 — Heat calendar: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -248,8 +248,9 @@ Acceptance:
 - area: web/src/resident/heatCalendar.css
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T17:26Z
-- pr: —
+- pr: #337
 - note: re-queued by orch: previous attempt blocked only by local Windows env (rolldown EPERM / port clash, see LESSONS), not the fix; branch was never pushed, so redo the small CSS change from origin/main
+- rating: 4/5 clear, but acceptance criteria conflicted (0.6875rem shrink from a prior attempt violated the >=12px rule)
 
 What: Same series as T234/T239: at 375 px the heat calendar must fit without horizontal page scroll and keep readable cells.
 Interface: read `web/src/resident/heatCalendar.css`, `web/src/resident/HeatCalendar.tsx`, and the `@media` block in `web/src/overview/overview.css` for the breakpoint convention. CSS only.
