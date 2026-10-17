@@ -572,3 +572,54 @@ Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void }
 Acceptance:
 - Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T053 — Review: offline feedback fallback hides API rejections from the nurse
+- status: todo
+- class: light
+- priority: 1
+- deps: —
+- area: web/src/alert/api.ts, web/src/alert/api.test.ts
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `postFeedback` falls back to writing the verdict into the in-memory mock whenever `response.ok` is false, so a 404/422/500 from a reachable API reports success while the feedback is lost on refresh. Only a network failure (fetch throws) should fall back to the mock. Read only the files in `area`.
+Interface: keep the signature. If fetch throws → current mock fallback. If the response is not ok → throw `new Error(`Feedback not saved (${response.status})`)`. Leave `fetchAlerts`/`fetchAlert` as they are (read-only).
+Acceptance:
+- Vitest: a 500 response rejects and does not mutate `mockAlerts`; a network error still records locally; an ok response returns the API alert.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T054 — Review: task map and skeleton view ignore the dark design tokens
+- status: todo
+- class: light
+- priority: 1
+- deps: —
+- area: web/src/live/TaskMap.tsx, web/src/live/SkeletonView.tsx, web/src/index.css (add tokens/rules only), web/src/live/TaskMap.test.tsx
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `TaskMap.tsx` injects an inline `<style>` with light-theme hex colours (#f1f5f9 boxes, #dcfce7 done) that glare on the dark dashboard, and `SkeletonView.tsx` hard-codes stroke/fill hex values. Both must use the CSS variables in `web/src/index.css` (`--panel`, `--border`, `--text`, `--error-red-*`, `--error-amber-*`, `--status-normal-*`), like T048 does for the heat calendar. Read only the files in `area`.
+Interface: move TaskMap styles into `index.css` under `.task-map` using `var(--…)`; keep class names and the omission pulse. In SkeletonView replace hex literals with `var(--…)` (add `--skeleton-bone`, `--skeleton-box`, `--hand-left`, `--hand-right` to `:root`). No behaviour change.
+Acceptance:
+- `grep -n '#[0-9a-fA-F]\{3,6\}' web/src/live/TaskMap.tsx web/src/live/SkeletonView.tsx` returns nothing.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T055 — Review: session scoring duplicated in replay.py and live.py
+- status: todo
+- class: light
+- priority: 2
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/live.py, pipeline/tests/test_replay.py, pipeline/tests/test_live.py
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `replay.run` and `live.session_messages` each re-implement session_id selection, `assisted` (≥2 poses in any frame), error counting, `session_score` and `change_flag`, so the e2e verdict and the live demo can drift apart. Extract one helper used by both. Both also crash with IndexError on a scenario with no frames and no events; raise `ReplayError` instead.
+Interface: in `replay.py` add `session_id_of(scenario: Scenario) -> str` (raises `ReplayError` when empty) and `score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]` returning `(score, assisted, flag)`. `run` and `live.session_messages` use them; output unchanged.
+Acceptance:
+- New tests: empty scenario raises `ReplayError` from `run` and from `session_messages`.
+- `scripts/ci.sh` passes with no change to existing expected outputs.
