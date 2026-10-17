@@ -1,6 +1,7 @@
-/** The four screens in SPEC section 9. Each one is a later task. */
+import { UnitOverview } from './overview/UnitOverview.tsx'
+
+/** Screens 2-4 of SPEC section 9. Each one is a later task. */
 const screens = [
-  { name: 'Unit overview', detail: 'Residents, status chip, error-score sparkline' },
   { name: 'Resident detail', detail: 'Baseline chart, heat calendar, sessions, context' },
   { name: 'Live session', detail: 'Skeleton view beside the task-graph map' },
   { name: 'Alert evidence', detail: 'Summary, error list, ghost replay, suggested checks' },
@@ -16,6 +17,11 @@ export default function App() {
           nurse to review.
         </p>
       </header>
+
+      <section>
+        <h2>Unit overview</h2>
+        <UnitOverview />
+      </section>
 
       <ul className="screens">
         {screens.map((screen) => (
