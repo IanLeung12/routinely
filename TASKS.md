@@ -187,7 +187,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T268 — Test: GET /handoff window bounds
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -195,7 +195,8 @@ Acceptance:
 - area: pipeline/tests/test_handoff_window.py (new)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T13:53Z
-- pr: —
+- pr: #270
+- rating: 5/5 clear
 
 What: `GET /handoff?hours=` is declared `Query(ge=1, le=168)` in pipeline/src/routine_watch/api.py (read `shift_handoff`), but nothing tests the bounds.
 Interface: new pytest file using `fastapi.testclient.TestClient(routine_watch.api.app)`; read pipeline/tests/test_handoff.py for fixtures and fakes.
