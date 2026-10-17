@@ -522,7 +522,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T332 — Replay and ghost replay respect prefers-reduced-motion
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -530,7 +530,8 @@ Acceptance:
 - area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/GhostReplay.tsx, web/src/evidence/reducedMotion.ts, web/src/evidence/reducedMotion.test.ts, web/src/evidence/ReplayPlayer.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T16:36Z
-- pr: —
+- pr: #318
+- rating: 4/5 task assumed GhostReplay autoplays on its own but it is a static render driven by AlertView's fixed t prop; nothing to gate there
 
 What: Accessibility: when the OS asks for reduced motion, replays must not autoplay; they show the first (or flagged) frame and wait for Play.
 Interface: `prefersReducedMotion(): boolean` in `reducedMotion.ts` (matchMedia, safe when matchMedia is missing); ReplayPlayer and GhostReplay read it on mount. Manual Play still animates.
