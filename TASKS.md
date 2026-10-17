@@ -409,7 +409,7 @@ Acceptance:
 * Wording says "flags a change for review"; no "diagnose". No other file changed.
 
 ### T199 — Alert view: "Copy summary" for the chart note
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -418,7 +418,8 @@ Acceptance:
 - area: web/src/alert/AlertView.tsx, web/src/alert/alertText.ts, web/src/alert/alertText.test.ts, web/src/alert/AlertView.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:44Z
-- pr: —
+- pr: #189
+- rating: 5/5 clear
 
 What: Rationale: nurses chart what they saw; one tap copies the alert as plain text (like the handoff's Copy summary, T151) so the flag reaches the care record without retyping (Usefulness).
 Interface: `alertText(alert: Alert): string` in `alertText.ts`: resident, "Change flagged for review", the summary, errors with times, "Consistent with: …" pattern names, suggested checks. A `Copy summary` button in `AlertView` using `navigator.clipboard.writeText`, with a "Copied" status like `web/src/handoff/Handoff.tsx`.
