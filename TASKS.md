@@ -573,15 +573,15 @@ Acceptance:
 - `cd web && npx vitest run src/person/personNotes.test.ts` and `scripts/ci.sh` pass.
 
 ### T424 — Live screen: local camera preview component (toggle, video under skeleton, badge)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - source: orch (carved from T416)
 - deps: —
 - area: web/src/live/CameraPreview.tsx, web/src/live/CameraPreview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T20:47Z
 - pr: —
 
 What: A self-contained React component for T416's local-only camera preview. Not wired into any screen here (T416 does that).
