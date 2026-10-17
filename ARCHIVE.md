@@ -5602,3 +5602,82 @@ Acceptance:
 - Failure message names the scenario and the bad id (show it once locally, note in PR).
 - An existing scenario with a bad id is not fixed here: mark that case xfail with the reason and note it in the PR.
 - `scripts/ci.sh` passes.
+
+### T318 — Unit overview: sort residents by most recent change
+- status: done
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/overview/ResidentSort.tsx, web/src/overview/ResidentSort.test.tsx, web/src/overview/UnitOverview.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:22Z
+- pr: #313
+- rating: 5/5 clear
+
+What: Rationale: on a busy unit the nurse wants the newest flags first. Add a small sort control ("Default order" / "Most recent change first") to the unit overview; the default keeps today's order so the demo path is unchanged.
+Interface: `ResidentSort.tsx` exports the control and a pure `sortResidents(residents, mode)`; UnitOverview uses it. Read web/src/overview/UnitOverview.tsx for the resident fields (use the latest flag/alert time it already has; if none exists, sort by status urgency and say so in the PR). No API or contract changes.
+Acceptance:
+- Unit tests for `sortResidents` (both modes, stable ties) and one UI test switching the control by keyboard.
+- Default order identical to before (existing UnitOverview tests untouched and passing).
+- `scripts/ci.sh` passes.
+
+### T319 — Bug: integration check failing on main
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- owner: —
+- claimed: —
+- pr: —
+- source: integration
+- note: orch: scripts/integration.sh passes on main dc9a6ef (OK integration); transient at 08ab990
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 08ab990:
+  FAIL dashboard did not render (no 'Routine Watch' in DOM)
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T320 — Test: unit overview works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/UnitOverview.keyboard.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:05Z
+- pr: #307
+- rating: 5/5 clear
+
+What: Add a keyboard-only test for the unit overview, mirroring `web/src/about/PrivacyPanel.keyboard.test.tsx` and `web/src/alert/AlertView.keyboard.test.tsx`.
+Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/UnitOverview.test.tsx` (mocks/fixtures) and one existing `*.keyboard.test.tsx`. Create only `web/src/overview/UnitOverview.keyboard.test.tsx`.
+Acceptance:
+* Tab reaches every resident card/link in DOM order; Enter on a card opens that resident (assert the callback/route the existing tests use).
+* Every focusable element has an accessible name.
+* If a real bug is found, don't fix it; note it in the PR body.
+* `cd web && npm test -- UnitOverview.keyboard` passes; `scripts/ci.sh` passes.
+
+### T321 — Test: shift handoff works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.keyboard.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:16Z
+- pr: #311
+- rating: 5/5 clear
+
+What: Add a keyboard-only test for the shift handoff screen, mirroring `web/src/alert/AlertView.keyboard.test.tsx`.
+Interface: read `web/src/handoff/Handoff.tsx`, `web/src/handoff/Handoff.test.tsx`, `web/src/handoff/mockHandoff.ts` and one existing `*.keyboard.test.tsx`. Create only `web/src/handoff/Handoff.keyboard.test.tsx`.
+Acceptance:
+* Tab reaches each resident entry and each open-alert link/button in DOM order; Enter activates it (assert the callback/route the existing tests use).
+* Every focusable element has an accessible name.
+* If a real bug is found, don't fix it; note it in the PR body.
+* `cd web && npm test -- Handoff.keyboard` passes; `scripts/ci.sh` passes.
