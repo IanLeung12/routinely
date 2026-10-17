@@ -533,7 +533,7 @@ Acceptance:
 - `scripts/e2e.sh` passes including the new scenario; `scripts/ci.sh` passes.
 
 ### T083 — Docs: CODEMAP notes for the Claude explainer and Gemini verifier
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: docs
@@ -541,7 +541,7 @@ Acceptance:
 - area: docs/CODEMAP.md (notes only)
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T06:23Z
-- pr: —
+- pr: #77
 
 What: `docs/CODEMAP.md` notes don't mention `explain_claude.py` (T032) or how `get_explainer()` / `get_verifier()` choose the fake vs the real client. Add 2–4 lines: both default to offline fakes, real calls only with `LIVE_API=1` + key, through `api_cache.py`, models from `ANTHROPIC_MODEL` / `GEMINI_MODEL`. Read only `docs/CODEMAP.md`, the top docstrings of `explain_claude.py`, `verifier.py`, `api_cache.py`.
 Acceptance:
