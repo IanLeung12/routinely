@@ -503,14 +503,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T132 — Web tests: AlertView and PatternList time out under default parallelism
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/alert/AlertView.test.tsx, web/src/alert/PatternList.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:05Z
 - pr: —
 
 What: On a slower machine `npm test` (default workers) timed out in these two files while `--maxWorkers=2` passed (seen on T071). Make them fast and deterministic without changing what they assert. Read only those two test files, their components, and `.tasks/LESSONS.md`.
