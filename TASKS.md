@@ -540,14 +540,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T369 — Privacy panel: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.mobile.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:30Z
 - pr: —
 
 What: Make the privacy panel readable at 375 px (no horizontal scroll, controls stack, text wraps), like the other phone-width tasks.
