@@ -16,4 +16,5 @@ Do it end to end without asking anyone:
    If still failing after 2 tries: `python3 scripts/tasks.py set {{ID}} status=blocked note="<why>" --agent {{AGENT}}`.
 
 If the task is wrong or impossible as written, don't improvise a different task: set it to `blocked` with a clear note and stop.
+If you need something only a human can provide (API key, account, Roboflow training run, hardware, a product decision), use `status=blocked note="NEEDS HUMAN: <exactly what>"`, and still ship anything that can be done without it (mocks, stubs behind an interface).
 Finish with one line: `{{ID}} <done|in-review|blocked> PR #<N>`.

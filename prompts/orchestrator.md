@@ -36,3 +36,4 @@ Each run, in order. Be quick; skip steps with nothing to do.
    Testability: the tester (`prompts/tester.md`) needs `scripts/e2e.sh` + `tests/scenarios/<name>/{frames.jsonl,expected.yaml}` and `scripts/dev.sh up|down` early. Pipeline tasks must add or extend a scenario. `Bug:` tasks filed by the tester outrank feature work of the same priority; read `.tasks/TESTREPORT.md` each run.
 
 6. **Report.** If nothing notable happened, reply exactly `[SILENT]`. Otherwise reply with ≤6 short bullets (no tables): merges, reverts, blocked tasks needing a human, decisions you made. Mention Ian only if a human is actually needed.
+   **Blockers always get reported, even if nothing else happened:** any task whose note starts with `NEEDS HUMAN:`, `main` red for 2+ runs, a worker stuck, or a decision the spec doesn't cover. Put these first, as `BLOCKER: <task> — <what Ian must do>`. Don't repeat an unchanged blocker more than once every 3 hours.
