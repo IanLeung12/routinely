@@ -214,7 +214,7 @@ Acceptance:
 - `cd web && npx vitest run src/ui/DemoBanner` passes; `scripts/ci.sh` passes.
 
 ### T387 — Test: guided tour works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -222,7 +222,8 @@ Acceptance:
 - area: web/src/tour/Tour.keyboard.test.tsx
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T20:01Z
-- pr: —
+- pr: #380
+- rating: 5/5 clear
 
 What: The `?tour=1` presenter card (T360 just made it phone-width) has no keyboard test.
 Interface: read only web/src/tour/Tour.tsx, web/src/tour/steps.ts, web/src/tour/Tour.test.tsx and web/src/about/PrivacyPanel.keyboard.test.tsx (style). No production code changes.
