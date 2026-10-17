@@ -266,7 +266,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T444 — Review: routine builder shows a canned draft / fake save when the API refuses
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -275,8 +275,9 @@ Acceptance:
 - area: web/src/routines/api.ts, web/src/routines/api.test.ts, web/src/routines/RoutineBuilder.tsx, web/src/routines/RoutineBuilder.test.tsx
 - owner: ian-claude-standard-4
 - claimed: 2026-10-17T23:40Z
-- pr: —
+- pr: #427
 - note: released by max_API_light: run ended without progress
+- rating: 5/5 clear
 
 What: `web/src/routines/api.ts` falls back to the mock on any non-ok response (same pattern as T441). A person's clip refused with 400/413/422/502 by `POST /routines/draft` comes back as a canned "make tea" draft as if Gemini had read their clip, and a `POST /routines` 422 (bad graph) / 409 (built-in id or library full) is silently "saved" to localStorage while the server never kept it.
 Interface: fall back to mocks/localStorage only inside `catch` (fetch threw = API unreachable). If the API answered non-ok, throw `Error(detail)` using the JSON `detail` string (FastAPI `{detail: string}`), else a generic message. `RoutineBuilder.tsx` shows that message with the existing error UI from web/src/ui/ and keeps the user's draft/graph on screen.
