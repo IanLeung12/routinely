@@ -329,7 +329,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T047 — Bug: flaky web CI ("window is not defined" after App.test.tsx)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - deps: —
@@ -345,7 +345,7 @@ Acceptance:
 - No behaviour assertions change; only async handling.
 
 ### T048 — Bug: heat calendar ignores dark theme; dark text on dark-red cell unreadable
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
