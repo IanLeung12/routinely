@@ -18,8 +18,6 @@ set -euo pipefail
 TOOL=${TOOL:-claude}; CLASS=${CLASS:-light}; IDLE=${IDLE:-300}; BACKOFF=${BACKOFF:-900}; DONE_COUNT=0
 cd "$(git rev-parse --show-toplevel)"
 
-FLAGS=${FLAGS:-$(sed -n "s|^- $TOOL/$CLASS: ||p" MODELS.md)}
-MODEL="$TOOL $FLAGS"
 PROMPT_FILE=prompts/worker.md; [ "$CLASS" = light ] && PROMPT_FILE=prompts/light-worker.md
 
 SELF_SUM=$(cksum < scripts/worker.sh)
@@ -40,6 +38,11 @@ while true; do
     [ -n "${ONCE:-}" ] && { echo "no task"; exit 0; }
     echo "$(date -u +%H:%M) no claimable $CLASS task; sleeping ${IDLE}s"; sleep "$IDLE"; continue
   fi
+  EFFECTIVE_FLAGS=${FLAGS-$(sed -n "s|^- $TOOL/$CLASS: ||p" MODELS.md)}
+  if [ "$TOOL" = claude ] && [[ ! "$EFFECTIVE_FLAGS" =~ (^|[[:space:]])--disallowedTools(=|[[:space:]]|$) ]]; then
+    EFFECTIVE_FLAGS="$EFFECTIVE_FLAGS --disallowedTools Monitor ScheduleWakeup"
+  fi
+  MODEL="$TOOL $EFFECTIVE_FLAGS"
   ID=$(printf '%s\n' "$TASK" | sed -n '1s/^### \(T[0-9]*\).*/\1/p')
   echo "$(date -u +%H:%M) $AGENT took $ID ($MODEL)"
   PROMPT=$(TASK="$TASK" ID="$ID" AGENT="$AGENT" CLASS="$CLASS" MODEL="$MODEL" python3 - "$PROMPT_FILE" <<'PY'
@@ -76,9 +79,9 @@ PY
   LOG=".worker-logs/$ID-$(date -u +%m%d-%H%M).log"
   # shellcheck disable=SC2086
   if [ "$TOOL" = codex ]; then
-    codex exec --dangerously-bypass-approvals-and-sandbox $FLAGS "$PROMPT" 2>&1 | tee "$LOG" || true
+    codex exec --dangerously-bypass-approvals-and-sandbox $EFFECTIVE_FLAGS "$PROMPT" 2>&1 | tee "$LOG" || true
   else
-    claude -p --dangerously-skip-permissions $FLAGS "$PROMPT" 2>&1 | tee "$LOG" || true
+    claude -p --dangerously-skip-permissions $EFFECTIVE_FLAGS "$PROMPT" 2>&1 | tee "$LOG" || true
   fi
   git switch -q --detach origin/main 2>/dev/null || true
   # No progress (still 'claimed', no PR)? Release the task and back off: usually a usage limit.
