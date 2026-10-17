@@ -484,7 +484,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T077 — Tests for the offline fallbacks in overview/api.ts and resident/api.ts
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
