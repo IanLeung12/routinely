@@ -281,13 +281,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_drift.py -q` and `scripts/ci.sh` pass.
 
 ### T034 — More step-level scenarios
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: tests/scenarios/tea_sequence_error/, tests/scenarios/tea_substitution/, tests/scenarios/tea_unclear_not_error/, tests/scenarios/tea_single_bad_no_flag/
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:08Z
 - pr: —
 
 What: Widen e2e coverage of SPEC §7. Read only `tests/scenarios/README.md`, every file in `tests/scenarios/tea_normal/` and `tests/scenarios/tea_skip_teabag_pour_twice/` (copy their style), `pipeline/src/routine_watch/tasks/tea.yaml` and `contracts/step_event.schema.json`. Add four `steps.jsonl` + `expected.yaml` scenarios, each with a header comment saying what it proves. Do not edit any code.
