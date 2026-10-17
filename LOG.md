@@ -286,3 +286,8 @@ T320 | light | claude-sonnet | merged first try | ~15k tok
 T307 | light | codex | merged first try | ~8k tok
 T314 | light | claude-sonnet | merged after CI fix | ~55k tok
 T321 | light | claude-sonnet | merged first try | ~30k tok
+T312 | standard | claude-sonnet | merged first try | ~45k tok
+T313 | standard | claude-sonnet | merged first try | ~29k tok
+T318 | standard | claude-sonnet | merged first try | ~40k tok
+T322 | light | claude-sonnet | merged first try | ~15k tok
+T327 | standard | claude-sonnet | merged first try | ~55k tok

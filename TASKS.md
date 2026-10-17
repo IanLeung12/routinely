@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: dc9a6ef
+- last-reviewed: af2e93a
 
 ## Tasks
 
@@ -610,3 +610,57 @@ Acceptance:
 - new test: a scenario built in-test with >40% `unclear` or sub-threshold events gets `flag: False`, `score: 0.0`, `quality: "unclear"`
 - every existing scenario in `tests/scenarios/` still matches its expected.yaml (replay tests / `scripts/e2e.sh` pass)
 - `scripts/ci.sh` passes
+
+### T337 — Unit overview: remember filter and sort for the session
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/overviewPrefs.ts, web/src/overview/overviewPrefs.test.ts, web/src/overview/UnitOverview.prefs.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: A nurse who picks "Flagged" or "Most recent change first", opens a resident and comes back loses the choice. Store filter + sort mode in `sessionStorage` so they survive navigation and reload within the tab.
+Interface: `overviewPrefs.ts` exports `loadOverviewPrefs(): { filter: UnitFilter; sort: SortMode }` and `saveOverviewPrefs(prefs)`; key `rw.overview.prefs`; unknown/corrupt stored values fall back to `{ filter: 'all', sort: 'default' }`. `UnitOverview.tsx` initialises its state from it and saves on change (move the `UnitFilter` type into `overviewPrefs.ts` or `types.ts` if needed).
+Acceptance:
+- unit tests: round trip, corrupt JSON, unknown values → defaults, sessionStorage throwing → defaults
+- component test: choose Flagged + recent sort, unmount, remount → both still selected (`aria-pressed`)
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T338 — Test: unit overview sort combined with filters
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/ResidentSort.filter.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T318 added "Most recent change first" but tests cover sort alone. Add a test that sort and filter compose correctly.
+Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/ResidentSort.tsx`, `web/src/overview/ResidentSort.test.tsx` (copy its fetch mocking). New file only.
+Acceptance:
+- with 4 residents (mixed status, different latest `scores[].ts`): Watch filter + recent sort shows only watch residents, newest first; switching back to Default order restores flagged→watch→normal order; All filter + recent sort shows all four newest first
+- a resident with empty `scores` sorts last under recent
+- `cd web && npx vitest run src/overview/ResidentSort.filter.test.tsx` passes
+
+### T339 — Test: /residents returns each resident's scores oldest-first
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_residents_order.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The dashboard's "Most recent change first" sort (T318, `web/src/overview/ResidentSort.tsx`) assumes `scores` is oldest-first with ISO `ts`. Pin that contract on the API side so a backend change can't silently break the sort.
+Interface: read `pipeline/src/routine_watch/api_residents.py`, `api_state.py`, and an existing API test (e.g. `pipeline/tests/test_feedback_reset.py`) for the client fixture. New test file only.
+Acceptance:
+- after demo reset, every resident in `GET /residents` has `scores` sorted ascending by `ts`, every `ts` parses as ISO 8601
+- after a live session completes (use the existing fake/replay path, no real APIs), that resident's newest score is last
+- `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
