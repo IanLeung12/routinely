@@ -331,7 +331,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_replay.py -q` and `scripts/ci.sh` pass.
 
 ### T021 — Alerts + feedback API
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T012, T015, T016, T018
