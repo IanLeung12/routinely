@@ -483,14 +483,14 @@ Acceptance:
 - Only docs/DEMO.md changes; `scripts/ci.sh` passes.
 
 ### T189 — Demo banner: "Reset demo" button
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:23Z
 - pr: —
 
 What: Presenters need a one-click way to undo a rehearsal's flag and feedback. Add a "Reset demo" button to the demo banner that POSTs `/demo/reset` and then reloads the page.
