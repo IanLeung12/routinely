@@ -633,7 +633,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T127 — Review: CORS_ORIGINS undocumented and ignores dev.sh's DASHBOARD_PORT
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
