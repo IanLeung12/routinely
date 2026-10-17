@@ -19,6 +19,7 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
 
   return (
     <div>
+      <div className="heat-grid-scroll">
       <div role="grid" aria-label="Daily error scores (Monday first)" className="heat-grid">
         {WEEKDAY_LABELS.map((label, index) => (
           <div
@@ -55,6 +56,7 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
             </div>
           )
         })}
+      </div>
       </div>
       <p>
         <span aria-hidden="true" className="heat-swatch heat-swatch--low" />{' '}
