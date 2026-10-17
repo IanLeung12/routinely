@@ -59,7 +59,7 @@ describe('App', () => {
   it('opens the mock alert evidence and returns to the overview', async () => {
     await act(async () => { render(<App />) })
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'mrs-k: Change flagged for review' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Mrs. K: Change flagged for review' }))
     })
     expect(await screen.findByText(/^Flagged for review:/)).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Suggested checks' })).toBeTruthy()
@@ -70,7 +70,7 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('button', { name: /Back/ }))
     })
     expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'mrs-k: Change flagged for review' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeTruthy()
   })
 
   it('opens the shift handoff from the header and returns to the overview', async () => {
@@ -103,6 +103,13 @@ describe('App', () => {
     expect(await screen.findByText(/^Flagged for review:/)).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Suggested checks' })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'Shift handoff' })).toBeNull()
+
+    // The alert was opened from the handoff, so Back returns there, not the overview.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Back/ }))
+    })
+    expect(screen.getByRole('heading', { name: 'Shift handoff' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Unit overview' })).toBeNull()
   })
 
   it('refetches residents and alerts when the live session ends with a flag', async () => {
@@ -112,16 +119,19 @@ describe('App', () => {
     const flaggedResident: ResidentSummary = { ...watchResident, status: 'flagged' }
     const flaggedAlert: Alert = { ...mockAlerts[0], alert_id: 'alert-mrs-k' }
 
+    // Keyed off the shift, not the call count: the overview and App each fetch
+    // residents, so which of the two calls lands first isn't guaranteed.
+    let flagged = false
     let residentCalls = 0
     let alertCalls = 0
     vi.stubGlobal('fetch', vi.fn((url: string) => {
       if (url.includes('/residents')) {
         residentCalls += 1
-        return Promise.resolve({ ok: true, json: async () => [residentCalls === 1 ? watchResident : flaggedResident] })
+        return Promise.resolve({ ok: true, json: async () => [flagged ? flaggedResident : watchResident] })
       }
       if (url.includes('/alerts')) {
         alertCalls += 1
-        return Promise.resolve({ ok: true, json: async () => (alertCalls === 1 ? [] : [flaggedAlert]) })
+        return Promise.resolve({ ok: true, json: async () => (flagged ? [flaggedAlert] : []) })
       }
       return Promise.reject(new Error(`unexpected fetch: ${url}`))
     }))
@@ -130,17 +140,30 @@ describe('App', () => {
     await act(async () => { render(<App />) })
 
     expect(await screen.findByLabelText('Open Mrs. K, room 204, watch')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'mrs-k: Change flagged for review' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeNull()
 
     const socket = FakeWebSocket.latest()
+    flagged = true
     await act(async () => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-mrs-k' })
     })
 
-    await waitFor(() => expect(residentCalls).toBe(2))
+    // The overview and App each fetch residents, so one refresh doubles the count.
+    await waitFor(() => expect(residentCalls).toBe(4))
     await waitFor(() => expect(alertCalls).toBe(2))
 
     expect(await screen.findByLabelText('Open Mrs. K, room 204, flagged')).toBeTruthy()
-    expect(await screen.findByRole('button', { name: 'mrs-k: Change flagged for review' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeTruthy()
+  })
+
+  it('hides the guided tour without ?tour=1 and shows it with the param', async () => {
+    await act(async () => { render(<App />) })
+    expect(screen.queryByRole('dialog', { name: 'Guided demo tour' })).toBeNull()
+    cleanup()
+
+    window.history.pushState({}, '', '?tour=1')
+    await act(async () => { render(<App />) })
+    expect(screen.getByRole('dialog', { name: 'Guided demo tour' })).toBeTruthy()
+    window.history.pushState({}, '', '/')
   })
 })

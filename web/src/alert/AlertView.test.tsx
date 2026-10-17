@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiUrl } from '../config.ts'
 import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
+import { alertText } from './alertText.ts'
 import { AlertView } from './AlertView.tsx'
 
 const MRS_K = mockAlerts[0]
@@ -36,6 +37,25 @@ describe('AlertView', () => {
     expect(screen.getByText('Run a CAM delirium screen')).toBeTruthy()
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(document.body.textContent?.toLowerCase()).not.toContain('diagnos')
+  })
+
+  it('copies the alert summary and announces success for two seconds', async () => {
+    offline()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText(MRS_K.summary)
+    vi.useFakeTimers()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
+    })
+
+    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K))
+    expect(screen.getByText('Copied').getAttribute('role')).toBe('status')
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(screen.queryByText('Copied')).toBeNull()
+    vi.useRealTimers()
   })
 
   it('shows a recent care record from the resident near the alert', async () => {

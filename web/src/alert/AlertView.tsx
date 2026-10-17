@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
@@ -14,6 +15,7 @@ import { fetchResident } from '../resident/api.ts'
 import type { CareRecord } from '../resident/types.ts'
 import { fetchAlert, postFeedback } from './api.ts'
 import { AlertContext } from './AlertContext.tsx'
+import { alertText } from './alertText.ts'
 import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
@@ -51,6 +53,7 @@ export function AlertView({
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [replay, setReplay] = useState<{ alertId: string; replay: EvidenceReplay | null } | null>(null)
   const [careRecords, setCareRecords] = useState<{ alertId: string; records: CareRecord[] | null } | null>(null)
+  const [copyStatus, setCopyStatus] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -96,6 +99,27 @@ export function AlertView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alertId, loaded?.alert?.alert_id])
 
+  useEffect(() => {
+    if (copyStatus !== 'Copied') return
+    const timeout = window.setTimeout(() => setCopyStatus(''), 2000)
+    return () => window.clearTimeout(timeout)
+  }, [copyStatus])
+
+  /** One tap to copy the flag into the care record, so it reaches the chart without
+   * retyping (SPEC section 9, like the handoff's "Copy summary", T151). */
+  async function copySummary(alert: Alert) {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        setCopyStatus('Copy not available')
+        return
+      }
+      await navigator.clipboard.writeText(alertText(alert))
+      setCopyStatus('Copied')
+    } catch {
+      setCopyStatus('Copy not available')
+    }
+  }
+
   /** Posts the verdict and, when the nurse has answered "what was it?", the cause with
    * it (SPEC section 5, MVP 8). The saved alert comes back from the API, so what the
    * buttons show is always what was stored. Answering the verdict again clears the
@@ -124,6 +148,10 @@ export function AlertView({
         <p className="alert-view__threshold">
           Current threshold: {alert.baseline.threshold.toFixed(1)}
         </p>
+        <Button variant="secondary" onClick={() => { void copySummary(alert) }}>
+          Copy summary
+        </Button>
+        {copyStatus && <p role="status">{copyStatus}</p>}
 
         {careRecords !== null && careRecords.alertId === alertId && careRecords.records !== null && (
           <Card>

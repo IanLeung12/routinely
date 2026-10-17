@@ -16,7 +16,9 @@ each resident's own answers to "what was it?" also re-weight her pattern ranking
 `session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` are public
 because the shift handoff (`routine_watch.handoff`) writes its own summary from the
 same evidence: a nurse reads both about the same session, so both must name the same
-steps, at the same times, against the same baseline.
+steps, at the same times, against the same baseline. `top_pattern_for` is public for
+the same reason: the overview's pattern chip (`routine_watch.api`) must name the
+pattern this resident's alert leads with, feedback weights and all.
 """
 
 from __future__ import annotations
@@ -225,6 +227,24 @@ def _patterns(resident: dict, feedback: FeedbackStore | None) -> list[PatternMat
         weights=feedback.pattern_weights(resident["id"]),
         answers=feedback.pattern_answers(resident["id"]),
     )
+
+
+def top_pattern_for(resident: dict, feedback: FeedbackStore | None = None) -> dict | None:
+    """The one pattern the unit overview names for this resident (SPEC section 9
+    screen 1), as `demo.py` writes the `top_pattern` field, or `None` when nothing
+    clears the threshold - a real answer, not a missing one.
+
+    Ranked by `_patterns`, the same ranking this resident's own alert lists, so the
+    overview chip and the alert can never name different patterns for the same change.
+    `demo.py` fills the field from the unweighted ranking, which agrees with this until
+    a nurse answers "what was it?"; from then on only this keeps the two together
+    (`api._tuned`, SPEC Nice to have 8).
+    """
+    matches = _patterns(resident, feedback)
+    if not matches:
+        return None
+    top = matches[0]
+    return {"pattern_id": top.pattern_id, "name": top.name, "urgency": top.urgency.value}
 
 
 def _build_alert(resident: dict, feedback: FeedbackStore | None = None) -> Alert:

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
@@ -8,8 +9,21 @@ import type { ResidentSummary, ResidentStatus } from './types.ts'
 
 const STATUS_ORDER: Record<ResidentStatus, number> = { flagged: 0, watch: 1, normal: 2 }
 
+type UnitFilter = 'all' | 'flagged' | 'watch'
+
+const FILTERS: { id: UnitFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'flagged', label: 'Flagged' },
+  { id: 'watch', label: 'Watch' },
+]
+
 function sortResidents(residents: ResidentSummary[]): ResidentSummary[] {
   return [...residents].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+}
+
+function applyFilter(residents: ResidentSummary[], filter: UnitFilter): ResidentSummary[] {
+  if (filter === 'all') return residents
+  return residents.filter((resident) => resident.status === filter)
 }
 
 function summarize(residents: ResidentSummary[]): string {
@@ -40,6 +54,7 @@ export function UnitOverview({
   refreshKey?: number | string
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
+  const [filter, setFilter] = useState<UnitFilter>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -61,35 +76,60 @@ export function UnitOverview({
     return <EmptyState message="No residents on this unit yet." />
   }
 
+  const filtered = applyFilter(residents, filter)
+
   return (
     <>
       <p role="status" className="resident-summary">
         {summarize(residents)}
       </p>
-      <ul className="resident-list">
-        {sortResidents(residents).map((resident) => (
-          <li key={resident.id} className="resident-row">
-            <button
-              type="button"
-              className="resident-open"
-              onClick={() => onSelect?.(resident.id)}
-              aria-label={`Open ${resident.name}, room ${resident.room}, ${resident.status}`}
-            >
-              <span className="resident-identity">
-                <span className="resident-name">{resident.name}</span>
-                <span className="resident-room">Room {resident.room}</span>
-              </span>
-              <span className="resident-status">
-                <StatusChip status={resident.status} />
-                {resident.top_pattern && (
-                  <span className="resident-pattern">{resident.top_pattern.name}</span>
-                )}
-              </span>
-              <Sparkline scores={resident.scores} />
-            </button>
-          </li>
+      <div className="unit-filter" role="group" aria-label="Filter residents">
+        {FILTERS.map(({ id, label }) => (
+          <Button
+            key={id}
+            variant="secondary"
+            className="unit-filter__button"
+            aria-pressed={filter === id}
+            onClick={() => setFilter(id)}
+          >
+            {label}
+          </Button>
         ))}
-      </ul>
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState
+          message={
+            filter === 'flagged'
+              ? 'No residents flagged for review.'
+              : 'No residents to watch.'
+          }
+        />
+      ) : (
+        <ul className="resident-list">
+          {sortResidents(filtered).map((resident) => (
+            <li key={resident.id} className="resident-row">
+              <button
+                type="button"
+                className="resident-open"
+                onClick={() => onSelect?.(resident.id)}
+                aria-label={`Open ${resident.name}, room ${resident.room}, ${resident.status}`}
+              >
+                <span className="resident-identity">
+                  <span className="resident-name">{resident.name}</span>
+                  <span className="resident-room">Room {resident.room}</span>
+                </span>
+                <span className="resident-status">
+                  <StatusChip status={resident.status} />
+                  {resident.top_pattern && (
+                    <span className="resident-pattern">{resident.top_pattern.name}</span>
+                  )}
+                </span>
+                <Sparkline scores={resident.scores} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   )
 }

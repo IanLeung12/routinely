@@ -3,6 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockResidents } from '../mock/residents.ts'
 import { UnitOverview } from './UnitOverview.tsx'
 
+function rowNames() {
+  return screen
+    .getAllByRole('listitem')
+    .map((row) => row.querySelector('.resident-name')?.textContent)
+}
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -120,11 +126,126 @@ describe('UnitOverview', () => {
 
     render(<UnitOverview />)
 
-    const flagged = await screen.findByText('Flagged')
+    const flagged = await screen.findByText('Flagged', { selector: '.status-chip' })
     expect(flagged.className).toContain('status-chip--flagged')
-    const [watch] = await screen.findAllByText('Watch')
+    const [watch] = await screen.findAllByText('Watch', { selector: '.status-chip' })
     expect(watch.className).toContain('status-chip--watch')
-    const [normal] = await screen.findAllByText('Normal')
+    const [normal] = await screen.findAllByText('Normal', { selector: '.status-chip' })
     expect(normal.className).toContain('status-chip--normal')
+  })
+
+  it('defaults to the All filter showing every resident', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
+    expect(screen.getByRole('button', { name: 'Watch' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
+  })
+
+  it('filters to only flagged residents', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    screen.getByRole('button', { name: 'Flagged' }).click()
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mrs. K'])
+    })
+    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+  })
+
+  it('filters to only watch residents', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    screen.getByRole('button', { name: 'Watch' }).click()
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
+    })
+  })
+
+  it('shows "No residents flagged for review." when the flagged filter is empty', async () => {
+    const noneFlagged = mockResidents.map((resident) =>
+      resident.status === 'flagged' ? { ...resident, status: 'normal' as const } : resident,
+    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => noneFlagged }))
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(noneFlagged.length)
+    })
+
+    screen.getByRole('button', { name: 'Flagged' }).click()
+
+    expect(await screen.findByText('No residents flagged for review.')).toBeTruthy()
+    expect(screen.queryByRole('list')).toBeNull()
+  })
+
+  it('shows "No residents to watch." when the watch filter is empty', async () => {
+    const noneWatch = mockResidents.map((resident) =>
+      resident.status === 'watch' ? { ...resident, status: 'normal' as const } : resident,
+    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => noneWatch }))
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(noneWatch.length)
+    })
+
+    screen.getByRole('button', { name: 'Watch' }).click()
+
+    expect(await screen.findByText('No residents to watch.')).toBeTruthy()
+    expect(screen.queryByRole('list')).toBeNull()
+  })
+
+  it('returns to showing every resident when All is clicked again', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    screen.getByRole('button', { name: 'Flagged' }).click()
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mrs. K'])
+    })
+
+    screen.getByRole('button', { name: 'All' }).click()
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
   })
 })
