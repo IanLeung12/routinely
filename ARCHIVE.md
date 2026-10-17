@@ -3139,3 +3139,80 @@ What: Since T167, `_alerts_by_id()` builds alerts only from `_flagged_residents(
 Acceptance:
 * Test: flagged resident, POST false_alarm with a threshold step big enough to un-flag; `/alerts` no longer lists it, but `GET /alerts/{id}` is 200 and a second POST with `cause` is 200 and stores the cause.
 * `scripts/ci.sh` passes.
+
+### T155 — Bug: alert opened after the live session shows other errors than the live session made
+- status: done
+- class: heavy
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/session_log.py, pipeline/tests/
+- source: tester
+- owner: ian-claude
+- claimed: 2026-10-17T09:36Z
+- pr: #192
+- rating: 4/5 clear repro and interface; the step id is teabag_in_cup not add_teabag, and the fix needs evidence.known_session (outside the listed area) or 'Open evidence' 404s on the live session's errors
+
+What: On stage the live session (default demo scenario) flags "skipped Put the teabag in the cup · 1:10" and "repeated Pour the water · 1:30". Clicking "Open alert" then shows `alert-mrs-k` with errors "skipped fill kettle 0:51, repeated boil 1:42, skipped fill kettle 0:33, repeated boil 1:06" (sessions mrs-k-22, mrs-k-23): the recorded live session's score is merged into Mrs. K's history, but its actual errors are not; the alert's errors for that session are synthetic. The summary also says "4 errors this session" for errors spread over two sessions.
+Interface: the session recorded by `routine_watch.live` (via `session_log`) must carry its real `ErrorEvent`s into the resident's newest session, so `build_alerts` lists them (with their real step ids and times) for that session; the summary should count errors per session or say "across 2 sessions".
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, wait ~90 s for the live session to finish, click "Open alert"; compare the alert's Errors list with the live session's Errors list. Or `curl localhost:8000/alerts/alert-mrs-k` after the live session.
+Acceptance:
+- test: after playing the demo live scenario through the pipeline, `/alerts/alert-mrs-k` contains its omission of `add_teabag` and perseveration of `pour` with the live session's session_id.
+- summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T183 — Review: overview/handoff top pattern ignores nurse-feedback weights
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: T182
+- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_api_residents.py
+- owner: ian-claude
+- claimed: 2026-10-17T09:23Z
+- pr: #185
+- rating: 5/5 clear - the fix, the helper and the acceptance test were all named exactly; only unstated bit was that alerts.py is outside the listed area
+
+What: `/residents` shows `top_pattern` from `demo.py` (`score_patterns` with no weights), while the alert's `patterns[0]` is re-weighted by `FeedbackStore.pattern_weights` (T130). After a nurse answers "what was it?", the overview chip and the alert can name different patterns for the same resident. `handoff.build_handoff` also calls `build_alerts(residents)` without `feedback=`. Fix: in `api._tuned`, when the resident has pattern weights, recompute `top_pattern` with `score_patterns(features, weights=..., answers=...)` (reuse `alerts._patterns` or expose a small helper) and pass the store into `build_alerts` in handoff.
+Acceptance:
+* Test: confirm an alert with a cause that reorders the ranking; `/residents` top_pattern id equals `/alerts/{id}` `patterns[0].pattern_id`.
+* `scripts/ci.sh` passes.
+
+### T184 — Test: status_for with the raw threshold gives each resident's own status
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_status_for.py (new)
+- owner: max_API_light
+- claimed: 2026-10-17T09:13Z
+- pr: #172
+- rating: 5/5 clear
+
+What: T167 (PR #163) added `demo.status_for(resident, threshold)`, which repeats the flag rule from `demo_residents()`. Pin that the two agree, so `/residents` can't drift from the demo's own status when no feedback has been given.
+Interface: Read only `pipeline/src/routine_watch/demo.py` (`status_for`, `demo_residents`), `pipeline/tests/conftest.py` (autouse `session_log.reset`) and `pipeline/tests/test_live_flag.py` (how a live session is recorded). New file only.
+Acceptance:
+* For every resident in `demo_residents()`, `status_for(r, r["baseline"]["threshold"]) == r["status"]`.
+* Same check after recording Mrs. K's live tea session the way `test_live_flag.py` does (she becomes flagged).
+* `status_for(r, 1e9)` is never "flagged".
+* `scripts/ci.sh` passes.
+
+### T185 — demo.py: one flag rule shared by demo_residents and status_for
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: T184
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:21Z
+- pr: #180
+- rating: 5/5 clear
+
+What: `demo_residents()` and `status_for()` each build `timestamped`, call `flag_change` and `_watch`, then `_status` (the second copy calls `_watch(sessions, sessions, ...)` instead of `(history, sessions, ...)`, which only works because live sessions fall after the baseline cutoff). Pull this into one private helper both call, with no behaviour change.
+Interface: one private helper (e.g. `_status_from(history, sessions, scores, baseline: Baseline) -> str`); `status_for` signature unchanged; `api.py` untouched.
+Acceptance:
+* `flag_change(` and `_watch(` are each called once in `demo.py`.
+* T184's test and `pipeline/tests/test_demo*.py` pass unchanged.
+* `scripts/ci.sh` passes.
