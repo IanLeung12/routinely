@@ -204,14 +204,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T273 — CI: run the first-load bundle budget check after the web build
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/ci.sh
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T14:12Z
 - pr: —
 
 What: T260 (#251) added `npm run check:bundle` in web/ but nothing runs it, so the budget never fails a PR. Wire it into CI right after the build.
