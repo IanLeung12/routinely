@@ -35,7 +35,7 @@ The messages, in the order a session produces them:
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
 ``session_end``  The session's `score`, whether it raised a `flag`, and the
-                 `alert_id` that flag belongs to.
+                 `alert_id` of the resident's alert that flag shows up in.
 ===============  ===========================================================
 
 Two things follow from classifying an unfinished session, and both are deliberate:
@@ -51,12 +51,24 @@ Two things follow from classifying an unfinished session, and both are deliberat
   `ended=True` and scores that, which is the number the resident's baseline is fed
   (`routine_watch.scoring`), not a tally of everything that flickered on the way.
 
+* **The finished session becomes one of the resident's.** The point of making tea on
+  stage is that it counts (SPEC section 10, step 4), so the last thing a session does
+  is record itself against `resident_id` - the demo resident unless the caller says
+  otherwise - in `routine_watch.session_log`. From there `routine_watch.demo` merges
+  it into that resident's history, which is what makes their sparkline spike and,
+  when it is the second qualifying session inside the window, puts the flag and its
+  alert on the next `/residents` and `/alerts`. A session that is cut short - the
+  dashboard closing the socket - is never recorded, because it never finished.
+
 **What is still the scenario's and not the camera's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
 alerts), and a scenario carries its own history in `expected.yaml`, so that is what
-the flag here is judged against. The frames to steps stage is whichever one
-`routine_watch.replay` uses, the stub included, so a live replay and `scripts/e2e.sh`
-always agree about what a recording means.
+the `flag` in `session_end` is judged against: it is this recording's verdict, sent
+the moment the session ends. The resident's own flag is a separate reading, over
+their own history with this session now in it, and the dashboard gets it from
+`/residents` and `/alerts` rather than from here. The frames to steps stage is
+whichever one `routine_watch.replay` uses, the stub included, so a live replay and
+`scripts/e2e.sh` always agree about what a recording means.
 """
 
 from __future__ import annotations
@@ -65,12 +77,15 @@ import asyncio
 import re
 from collections.abc import AsyncIterator, Iterable, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError
+from . import session_log
+from .contracts import CaptureFrame, ErrorType, Session, StepEvent, TaskError
+from .demo import DEMO_NOW, DEMO_RESIDENT
 from .errors import classify_errors
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
 from .tasks import TaskGraph
@@ -153,12 +168,14 @@ def as_json(message: dict[str, Any]) -> dict[str, Any]:
 
 
 async def session_messages(
-    scenario_dir: Path | str, speed: float = 1.0
+    scenario_dir: Path | str, speed: float = 1.0, resident_id: str = DEMO_RESIDENT
 ) -> AsyncIterator[dict[str, Any]]:
     """Play one recorded scenario through the pipeline as a live session.
 
     `speed` is how much faster than recorded: `1.0` is the demo's pace, `1000` makes a
-    test instant. Raises :class:`routine_watch.replay.ReplayError` on the first step if
+    test instant. `resident_id` is whose session this is: once it finishes it is one of
+    theirs (`routine_watch.session_log`), and the demo resident is who makes tea on
+    stage. Raises :class:`routine_watch.replay.ReplayError` on the first step if
     `scenario_dir` is not a scenario, and ``ValueError`` if `speed` is not positive.
     """
     if speed <= 0:
@@ -219,17 +236,49 @@ async def session_messages(
     for message in reading(final):
         yield message
 
-    score, _, flag = score_session(scenario, final)
+    score, assisted, flag = score_session(scenario, final)
+    _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
     yield {
         "type": "session_end",
         "score": score,
         "flag": flag,
-        # The id the alert this session raised will carry. Building that alert needs
-        # the session attached to a resident and their care records, which is
-        # `routine_watch.alerts` and a task that has not landed: until it does, a
-        # dashboard has an id to show and an alert to go and fetch later.
-        "alert_id": f"alert-{session_id}" if flag else None,
+        # The alert this session shows up in, which is the resident's own
+        # (`routine_watch.alerts` builds one alert per flagged resident) rather than
+        # one per session: the nurse is being told about a change in a person.
+        "alert_id": f"alert-{resident_id}" if flag else None,
     }
+
+
+def _record(
+    resident_id: str,
+    session_id: str,
+    graph: TaskGraph,
+    errors: Sequence[TaskError],
+    *,
+    score: float,
+    assisted: bool,
+    seconds: float,
+) -> None:
+    """Make the finished session one of this resident's (SPEC section 10, step 4).
+
+    A recording has no date of its own, only seconds since it started, and the
+    dashboard's clock is the demo's fixed today until a real store lands, so the
+    session is placed where it belongs on that clock: ending now, having taken as long
+    as it took. That is what puts it inside the 24-48 h window the flag is read over.
+    """
+    session_log.record(
+        resident_id,
+        Session(
+            session_id=session_id,
+            resident_id=resident_id,
+            task_id=graph.id,
+            started_at=DEMO_NOW - timedelta(seconds=seconds),
+            ended_at=DEMO_NOW,
+            assisted=assisted,
+            score=score,
+        ),
+        errors,
+    )
 
 
 @dataclass
