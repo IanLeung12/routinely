@@ -337,7 +337,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T289 — Alert view: print-friendly layout
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: improvement
@@ -411,7 +411,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T293 — Test: api_state.reset() clears feedback without replacing the store
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
