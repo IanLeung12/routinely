@@ -15,6 +15,7 @@ change for review on the next `/residents` and `/alerts` (SPEC section 10, step 
 """
 
 from collections import Counter
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from . import session_log
@@ -112,6 +113,35 @@ def _live_sessions(resident_id: str) -> list[dict]:
     return sessions
 
 
+def _early_history(history: list[dict]) -> list[dict]:
+    """This resident's earliest `BASELINE_DAYS` of sessions: what they were like
+    before whatever is being flagged now (SPEC §8 beat 6)."""
+    cutoff = DEMO_NOW - timedelta(days=DEMO_DAYS - BASELINE_DAYS)
+    return [
+        session for session in history if datetime.fromisoformat(session["ts"]) < cutoff
+    ]
+
+
+def _usual(history: list[dict]) -> dict[str, float]:
+    """How long a session of this resident's normally runs and how many errors it
+    normally has, over the same early window the watch bar is measured against.
+
+    The live screen reads these back as "usually ~Xs / ~N errors" when a session ends,
+    so they have to mean this resident's *old* normal: averaged over the whole history
+    they would include the very days being flagged and quietly excuse them (SPEC §8
+    beat 6). Assisted sessions are somebody else's hands as much as theirs, so they are
+    left out. Both keys are absent for a resident with no early sessions of their own -
+    the screen then leaves the "usually" half out rather than showing a guess.
+    """
+    own = [session for session in _early_history(history) if not session["assisted"]]
+    if not own:
+        return {}
+    return {
+        "usual_duration_s": sum(s["duration_s"] for s in own) / len(own),
+        "usual_errors": sum(sum(s["errors"].values()) for s in own) / len(own),
+    }
+
+
 def _watch(history: list[dict], sessions: list[dict], scores: list[float]) -> bool:
     score_points = [
         {"ts": session["ts"], "score": score}
@@ -121,12 +151,7 @@ def _watch(history: list[dict], sessions: list[dict], scores: list[float]) -> bo
     # right along with a slow drift and so never gets crossed - are what "worth
     # watching" measures against (SPEC §8 beat 6). Duration catches the motor
     # pattern, which barely touches error counts by design (SPEC §7.5).
-    baseline_cutoff = DEMO_NOW - timedelta(days=DEMO_DAYS - BASELINE_DAYS)
-    early_history = [
-        session
-        for session in history
-        if datetime.fromisoformat(session["ts"]) < baseline_cutoff
-    ]
+    early_history = _early_history(history)
     duration_points = [
         {"ts": session["ts"], "score": session["duration_s"]} for session in sessions
     ]
@@ -165,6 +190,19 @@ def _status_from(
     return _status(flagged, watch)
 
 
+def baseline_of(resident: dict) -> Baseline:
+    """The flag baseline inside a resident payload.
+
+    That payload's `baseline` also carries this resident's usual duration and error
+    count (`_usual`), which `change_detection.Baseline` has no field for, so it is read
+    key by key rather than splatted.
+    """
+    payload = resident["baseline"]
+    return Baseline(
+        mean=payload["mean"], std=payload["std"], threshold=payload["threshold"]
+    )
+
+
 def status_for(resident: dict, threshold: float) -> str:
     """`resident`'s status if its flag threshold were `threshold` instead of its own
     baseline's (SPEC MVP 7): the same flag rule `demo_residents` uses, so a
@@ -177,9 +215,7 @@ def status_for(resident: dict, threshold: float) -> str:
     """
     sessions = resident["sessions"]
     scores = [point["score"] for point in resident["scores"]]
-    tuned_baseline = Baseline(
-        mean=resident["baseline"]["mean"], std=resident["baseline"]["std"], threshold=threshold
-    )
+    tuned_baseline = replace(baseline_of(resident), threshold=threshold)
     return _status_from(sessions, sessions, scores, tuned_baseline)
 
 
@@ -226,6 +262,7 @@ def demo_residents() -> list[dict]:
                     "mean": baseline.mean,
                     "std": baseline.std,
                     "threshold": baseline.threshold,
+                    **_usual(history),
                 },
             }
         )

@@ -515,3 +515,8 @@ h1 {
 .ghost-replay__caption--usual {
   color: var(--ghost-usual);
 }
+
+.ghost-replay__disclaimer {
+  color: var(--muted);
+  font-size: 0.85em;
+}
