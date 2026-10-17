@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 2b94bf9
-- next-area: web
+- last-reviewed: 13032a4
+- next-area: pipeline
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -25,3 +25,4 @@
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
 - (noted) API resident/handoff payloads have no contracts/ schema; web types hand-mirrored
 - T222 alertText says "Change flagged" for trend alerts
+- T230 live summary "usually" averages whole history (drift), not early baseline

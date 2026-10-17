@@ -489,3 +489,22 @@ Interface: read `web/src/alert/PatternList.test.tsx` only. Give the second fixtu
 Acceptance:
 - `cd web && npx vitest run src/alert/PatternList.test.tsx 2>&1 | grep -c "same key"` prints 0; all tests pass
 - `scripts/ci.sh` passes
+
+### T230 — Review: live summary's "usually ~" averages the resident's whole history, drift included
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: T220
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, web/src/live/LiveSession.tsx, web/src/resident/types.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `useResidentBaseline` in `web/src/live/LiveSession.tsx` averages `duration_s` and error totals over *every* non-assisted session of mrs-k, including the recent bad days that triggered her flag. So the end-of-session "usually ~Xs / ~N errors" is inflated by exactly the change we're flagging, and disagrees with the pipeline's baseline, which is anchored to the earliest `BASELINE_DAYS` (demo.py, SPEC §8 beat 6). It also re-implements baseline logic in the web.
+Interface: in `demo.py`, where the resident baseline is built from the early window, also compute `usual_duration_s` and `usual_errors` (mean over the same early, non-assisted sessions) and serve them inside `baseline` from `GET /residents/{id}`. Add both as optional fields to `Baseline` in `web/src/resident/types.ts`; have `LiveSession.tsx` read them instead of averaging `sessions`, and delete `average`/`sessionErrorTotal`.
+Acceptance:
+- pytest: mrs-k's `baseline.usual_errors` equals the mean over her first `BASELINE_DAYS` own sessions, and is lower than the whole-history mean
+- `LiveSession.test.tsx` shows the "usually" values from the mocked `baseline`, not from `sessions`
+- `scripts/ci.sh` passes
