@@ -136,6 +136,30 @@ describe('LiveSession', () => {
     expect(screen.getByRole('status').textContent).toBe('Flagged for review')
   })
 
+  it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {
+    const onOpenAlert = vi.fn()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={onOpenAlert} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
+    })
+
+    screen.getByRole('button', { name: 'Open alert' }).click()
+    expect(onOpenAlert).toHaveBeenCalledWith('alert-1')
+  })
+
+  it('shows no Open alert button when the session is clear', () => {
+    render(<LiveSession scenario="tea_normal" onOpenAlert={vi.fn()} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    expect(screen.queryByRole('button', { name: 'Open alert' })).toBeNull()
+  })
+
   it('shows a clear banner when session_end is not flagged', () => {
     render(<LiveSession scenario="tea_normal" />)
     const socket = FakeWebSocket.latest()
