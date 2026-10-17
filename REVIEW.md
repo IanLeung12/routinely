@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 5fb35ad
-- next-area: pipeline
+- last-reviewed: 6b93111
+- next-area: contracts+api
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
@@ -35,3 +35,4 @@
 - T389 PrivacyPanel mobile test asserts nothing about phone CSS
 - T425 handoff summary counts unclear-camera rooms as quiet
 - (noted) REPLAY_DIR unset in compose (volume unused); demo replays reseed after restart if on disk
+- T436 preview.mjpg ACAO * lets any site read camera frames
