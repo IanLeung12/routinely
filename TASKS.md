@@ -621,7 +621,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T093 — Heat calendar: weekday headers and a legend
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -629,7 +629,7 @@ Acceptance:
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:37Z
-- pr: —
+- pr: #83
 
 What: The heat calendar grid has no weekday labels and no key, so a nurse can't tell which column is Monday or what a darker cell means. Read only the two files in `area` and `web/src/index.css` (tokens).
 Interface: keep `export default function HeatCalendar({ days })`. Add a header row of seven `role="columnheader"` cells (`Mon` … `Sun`) above the day cells (shift day rows down by one), and below the grid a one-line legend `<p>`: "Darker = more errors that day. Grey = no session." CSS vars only.
