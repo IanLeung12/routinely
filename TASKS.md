@@ -600,3 +600,20 @@ Fix: in `_context()`, add one line per resident with `unclear_sessions > 0` (e.g
 Acceptance:
 - Test in `test_handoff_unclear.py`: with one unclear session recorded for a quiet resident's room, the explainer context mentions the camera line and the quiet count drops by one.
 - `scripts/ci.sh` passes.
+
+### T426 — Bug: integration check still flaky ("dashboard did not render" on a cold start)
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- source: ian
+- deps: —
+- area: scripts/integration.sh, scripts/dev.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T367 didn't fully fix it. The hourly integration check and the tester both see `FAIL dashboard did not render (no 'Routine Watch' in DOM)` on the first run after `dev.sh up`, then pass on a re-run: Vite's cold dependency optimisation finishes after headless Chrome's 8 s budget.
+Why: a red integration check the morning of the demo (due 13:00 UTC) hides real breakage.
+Interface: in `scripts/integration.sh`, warm the dev server before the render check (fetch `/`, `/src/main.tsx` and wait until a second fetch of the page is fast) and retry the DOM check up to 3 times with a longer budget; or render against `vite preview` of a built `dist/` instead of the dev server. Don't weaken the check (it must still fail if the app really doesn't render).
+Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a row from cold; breaking `web/src/main.tsx` on purpose makes it fail.
