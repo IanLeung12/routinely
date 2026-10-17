@@ -1,0 +1,4 @@
+{"event_id":"abandoned-1","session_id":"tea-abandoned-1","step_id":"fill_kettle","objects":["kettle"],"t_start":1,"t_end":6,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-2","session_id":"tea-abandoned-1","step_id":"get_cup","objects":["cup"],"t_start":8,"t_end":13,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-3","session_id":"tea-abandoned-1","step_id":"boil","objects":["kettle"],"t_start":15,"t_end":20,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-4","session_id":"tea-abandoned-1","step_id":"teabag_in_cup","objects":["teabag","cup"],"t_start":151,"t_end":156,"confidence":0.95,"source":"rule"}

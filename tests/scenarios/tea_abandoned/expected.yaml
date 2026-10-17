@@ -1,0 +1,20 @@
+# The resident begins tea, leaves a 131-second silence with required steps left,
+# then returns only to add the teabag. The unfinished routine flags for review
+# alongside a second bad session in the preceding 48 hours.
+task: tea
+steps: [fill_kettle, get_cup, boil, teabag_in_cup]
+errors:
+  - { type: omission, step: pour }
+  - { type: omission, step: remove_teabag }
+  - { type: omission, step: stir }
+  - { type: abandonment }
+score: 11.0
+history:
+  - { hours_ago: 192, score: 0.0 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, score: 5.0 }
+flag: true
