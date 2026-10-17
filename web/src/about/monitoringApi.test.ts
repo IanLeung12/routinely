@@ -65,6 +65,43 @@ describe('setRoomMonitoring', () => {
 
     await expect(setRoomMonitoring('101', true)).rejects.toThrow()
   })
+
+  it('dispatches monitoring-changed on a successful PUT, paused the opposite of on', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ on: false }) }))
+    const handler = vi.fn()
+    window.addEventListener('monitoring-changed', handler)
+
+    await setRoomMonitoring('101', false)
+
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect((handler.mock.calls[0][0] as CustomEvent).detail).toEqual({ room: '101', paused: true })
+    window.removeEventListener('monitoring-changed', handler)
+  })
+
+  it('does not dispatch monitoring-changed when the PUT fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }),
+    )
+    const handler = vi.fn()
+    window.addEventListener('monitoring-changed', handler)
+
+    await expect(setRoomMonitoring('101', true)).rejects.toThrow()
+
+    expect(handler).not.toHaveBeenCalled()
+    window.removeEventListener('monitoring-changed', handler)
+  })
+
+  it('does not dispatch monitoring-changed on a network error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    const handler = vi.fn()
+    window.addEventListener('monitoring-changed', handler)
+
+    await expect(setRoomMonitoring('101', true)).rejects.toThrow()
+
+    expect(handler).not.toHaveBeenCalled()
+    window.removeEventListener('monitoring-changed', handler)
+  })
 })
 
 describe('fetchMonitoringHistory', () => {

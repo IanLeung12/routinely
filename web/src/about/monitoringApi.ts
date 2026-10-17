@@ -10,7 +10,9 @@ export async function fetchPausedRooms(): Promise<string[]> {
   return body.paused_rooms
 }
 
-/** Pause or resume monitoring for one room (SPEC §12). */
+/** Pause or resume monitoring for one room (SPEC §12). Fires `monitoring-changed` on
+ * `window` after a successful PUT, so a live panel already open for this room can react
+ * right away instead of waiting for a remount or "Check again" (T275). */
 export async function setRoomMonitoring(room: string, on: boolean): Promise<void> {
   const response = await fetch(`${apiUrl}/rooms/${encodeURIComponent(room)}/monitoring`, {
     method: 'PUT',
@@ -20,6 +22,7 @@ export async function setRoomMonitoring(room: string, on: boolean): Promise<void
   if (!response.ok) {
     throw new Error(`setRoomMonitoring failed: ${response.status}`)
   }
+  window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room, paused: !on } }))
 }
 
 /** One logged change to a room's monitoring switch (SPEC §12): `on` false is a pause,

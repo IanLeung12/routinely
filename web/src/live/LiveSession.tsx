@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './liveSession.css'
 import { fetchResident } from '../resident/api.ts'
-import type { Baseline } from '../resident/types.ts'
+import type { Resident } from '../resident/types.ts'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
@@ -20,27 +20,27 @@ import { useLiveSession } from './useLiveSession.ts'
  * this screen tells it otherwise. */
 const DEMO_RESIDENT_ID = 'mrs-k'
 
-/** This resident's own normal, as the pipeline measures it: `GET /residents/{id}`
- * serves the duration and error count their sessions usually have, averaged over the
- * early window their baseline is anchored to (`routine_watch.demo`). Averaging their
- * recorded sessions here instead would fold in the recent bad days this screen is
- * flagging and quietly excuse them. Null until it loads, and when nobody - live or
- * offline - has that resident. */
-function useResidentBaseline(residentId: string): Baseline | null {
-  const [baseline, setBaseline] = useState<Baseline | null>(null)
+/** This resident's own record, as `GET /residents/{id}` serves it: their baseline (the
+ * duration and error count their sessions usually have, averaged over the early window
+ * it's anchored to in `routine_watch.demo` - averaging their recorded sessions here
+ * instead would fold in the recent bad days this screen is flagging and quietly excuse
+ * them) and their room, so the panel knows which room's pause/resume toggle is its own
+ * (T275). Null until it loads, and when nobody - live or offline - has that resident. */
+function useResident(residentId: string): Resident | null {
+  const [resident, setResident] = useState<Resident | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetchResident(residentId).then((resident) => {
+    fetchResident(residentId).then((loaded) => {
       if (cancelled) return
-      setBaseline(resident?.baseline ?? null)
+      setResident(loaded)
     })
     return () => {
       cancelled = true
     }
   }, [residentId])
 
-  return baseline
+  return resident
 }
 
 function formatClock(seconds: number): string {
@@ -115,10 +115,54 @@ export type LiveSessionProps = {
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, stepSpan, ended, paused, source, retry } = useLiveSession(scenario, speed)
+  const { steps, frame, states, errors, stepSpan, ended, paused: wsPaused, source, retry } = useLiveSession(
+    scenario,
+    speed,
+  )
   const announcement = useAnnouncement(steps, states, errors, source)
-  const baseline = useResidentBaseline(DEMO_RESIDENT_ID)
+  const resident = useResident(DEMO_RESIDENT_ID)
+  const baseline = resident?.baseline ?? null
   const handledEnded = useRef<LiveSessionEnded | null>(null)
+
+  // A pause/resume toggled from the resident's page while this panel is open (SPEC
+  // section 12, T275): `setRoomMonitoring` fires `monitoring-changed` on `window` after
+  // a successful PUT. Pausing shows the message right away - the toggle itself is
+  // authoritative, no need to wait for the socket - but resuming reopens the socket
+  // (the same path "Check again" uses, below) since only a fresh connection can say
+  // what is actually playing now. Refs, not state, carry the latest room/retry into
+  // the listener so it's only attached once and removed on unmount.
+  const [pausedOverride, setPausedOverride] = useState<{ room: string } | null>(null)
+  const paused = pausedOverride ?? wsPaused
+
+  function recheck() {
+    setPausedOverride(null)
+    retryRef.current()
+  }
+
+  const ownRoomRef = useRef<string | null>(null)
+  const retryRef = useRef(retry)
+  const recheckRef = useRef(recheck)
+  useEffect(() => {
+    ownRoomRef.current = resident?.room ?? paused?.room ?? null
+    retryRef.current = retry
+    recheckRef.current = recheck
+  })
+
+  useEffect(() => {
+    function handleMonitoringChanged(event: Event) {
+      const { room, paused: nowPaused } = (event as CustomEvent<{ room: string; paused: boolean }>).detail
+      if (room !== ownRoomRef.current) {
+        return
+      }
+      if (nowPaused) {
+        setPausedOverride({ room })
+      } else {
+        recheckRef.current()
+      }
+    }
+    window.addEventListener('monitoring-changed', handleMonitoringChanged)
+    return () => window.removeEventListener('monitoring-changed', handleMonitoringChanged)
+  }, [])
 
   useEffect(() => {
     if (ended && ended !== handledEnded.current) {
@@ -150,7 +194,7 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
             <p className="live-session__paused-hint">
               Turn it back on from the resident's page to watch their routines again.
             </p>
-            <Button onClick={retry}>Check again</Button>
+            <Button onClick={recheck}>Check again</Button>
           </div>
         </Card>
       ) : (
