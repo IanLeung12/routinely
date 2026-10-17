@@ -418,7 +418,7 @@ Acceptance:
 - `scripts/ci.sh` passes without network.
 
 ### T438 — Routine builder UI: describe it or upload a setup clip → editable task map → save
-- status: todo
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
