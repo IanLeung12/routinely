@@ -1,0 +1,610 @@
+"""Scenario replay: the whole pipeline, offline, against a recorded capture stream.
+
+A scenario is one directory under `tests/scenarios/`:
+
+    <name>/frames.jsonl   capture records, the one per-frame format (SPEC section 16)
+    <name>/steps.jsonl    step events, for a scenario written at step level instead
+    <name>/expected.yaml  what the pipeline should make of it
+
+Replaying one runs capture -> steps -> task graph -> errors -> session score -> change
+flag with no camera, no network and no clock of its own, so the same directory always
+gives the same result. That is what makes it usable as a test, and it is how the tester
+checks a change end to end before anybody trusts a demo to it::
+
+    python -m routine_watch.replay tests/scenarios/tea_normal   # print the result
+    python -m routine_watch.replay --check                      # PASS/FAIL every one
+    scripts/e2e.sh                                              # the same, from CI
+
+Scenario authoring, and what the stubs below cannot express yet:
+`tests/scenarios/README.md`.
+
+**Stubs.** Two stages of the pipeline are placeholders today, so this module stands in
+for them. Each is marked `STUB` where it is defined, and each goes away when its task
+lands; the scenarios and their expectations do not change when it does.
+
+* :func:`steps_from_frames` stands in for `routine_watch.recogniser`: it reads a step
+  off the objects a hand is on, instead of state rules plus the Gemini verifier.
+* :func:`find_errors` stands in for `routine_watch.task_graph` plus
+  `routine_watch.errors`: it finds five of the six error types in SPEC section 7
+  (everything but hesitation) by walking the step events against the task graph.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from math import isclose
+from pathlib import Path
+from typing import Any, TypeVar
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from .change_detection import Baseline, build_baseline, flag_change
+from .contracts import (
+    BoundingBox,
+    CaptureFrame,
+    ErrorType,
+    EvidenceKind,
+    EvidenceRef,
+    ObjectLabel,
+    StepEvent,
+    StepSource,
+    TaskError,
+    repo_root,
+)
+from .scoring import session_score
+from .tasks import TaskGraph, TaskGraphError, load_task
+
+STAGE = "replay"
+
+#: Scenarios live at the repo root, beside the rest of the shared test material.
+SCENARIOS_DIR = repo_root() / "tests" / "scenarios"
+
+#: A replay has no wall clock, so prior sessions are placed `hours_ago` before this
+#: fixed instant. Same scenario, same flag, whenever it runs.
+REPLAY_EPOCH = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
+
+#: Confidence the stub recogniser reports. Comfortably above
+#: `recogniser.MIN_STEP_CONFIDENCE`: a scenario that wants a low-confidence or
+#: `unclear` moment writes the step event itself, in `steps.jsonl`.
+STUB_CONFIDENCE = 0.9
+
+#: No events for this long, with required steps still to do, is abandonment
+#: (SPEC section 7, "no events for N minutes"). Hand-set for the MVP.
+ABANDON_GAP_S = 300.0
+
+
+#: Any contract read out of a scenario file.
+_Record = TypeVar("_Record", bound=BaseModel)
+
+
+class ReplayError(ValueError):
+    """A scenario is missing, unreadable, or not a scenario."""
+
+
+# ------------------------------------------------------------------- the scenario
+
+
+class _Strict(BaseModel):
+    """A typo in a scenario file is a failure, not a silently ignored key."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ExpectedError(_Strict):
+    """One error the scenario expects. `step` is null when no single step applies."""
+
+    type: ErrorType
+    step: str | None = None
+
+
+class HistorySession(_Strict):
+    """A prior session of this resident, `hours_ago` before the replayed one.
+
+    History is what gives the resident a baseline to be measured against, so it is
+    what lets a scenario expect `flag: true`. Give a session a `score`, or give the
+    `errors` it held and let the scoring weights work it out.
+    """
+
+    hours_ago: float = Field(ge=0.0)
+    score: float | None = Field(default=None, ge=0.0)
+    errors: dict[ErrorType, int] = {}
+    self_corrected: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def _scored_one_way(self) -> HistorySession:
+        if self.score is not None and (self.errors or self.self_corrected):
+            raise ValueError("a history session has a score or its errors, not both")
+        return self
+
+    @property
+    def score_value(self) -> float:
+        """This session's score, however the scenario chose to write it down."""
+        if self.score is not None:
+            return self.score
+        counts = {str(error_type): count for error_type, count in self.errors.items()}
+        return session_score(counts, self.self_corrected)
+
+
+class Expected(_Strict):
+    """`expected.yaml`: the outcome half of a scenario."""
+
+    #: The task graph to replay against: the stem of a `tasks/<name>.yaml` file.
+    task: str = "tea"
+    #: Every step event, in order, including any marked `unclear`.
+    steps: list[str]
+    #: Every error, in no particular order.
+    errors: list[ExpectedError]
+    #: Whether these errors, against this history, flag a change for review.
+    flag: bool
+    #: Optional extra assertions, checked only when the file sets them.
+    score: float | None = None
+    assisted: bool | None = None
+    #: Prior sessions, oldest or newest first, it makes no difference.
+    history: list[HistorySession] = []
+
+
+@dataclass(frozen=True)
+class Scenario:
+    """One loaded scenario directory, ready to run."""
+
+    name: str
+    path: Path
+    expected: Expected
+    graph: TaskGraph
+    #: Capture records, empty when the scenario is written at step level.
+    frames: tuple[CaptureFrame, ...]
+    #: Step events, either read from `steps.jsonl` or recognised from the frames.
+    events: tuple[StepEvent, ...]
+
+    @property
+    def source(self) -> str:
+        """Which level the scenario was written at: ``frames`` or ``steps``."""
+        return "frames" if self.frames else "steps"
+
+
+def load_scenario(path: Path | str) -> Scenario:
+    """Read one scenario directory. Raises :class:`ReplayError` if it is not one."""
+    path = Path(path)
+    if not path.is_dir():
+        raise ReplayError(f"{path} is not a scenario directory")
+
+    expected_path = path / "expected.yaml"
+    if not expected_path.is_file():
+        raise ReplayError(f"{path}: no expected.yaml")
+    try:
+        expected = Expected.model_validate(yaml.safe_load(expected_path.read_text("utf-8")))
+    except (ValidationError, yaml.YAMLError) as exc:
+        raise ReplayError(f"{expected_path}: {exc}") from exc
+
+    try:
+        graph = load_task(expected.task)
+    except TaskGraphError as exc:
+        raise ReplayError(f"{expected_path}: {exc}") from exc
+
+    frames_path, steps_path = path / "frames.jsonl", path / "steps.jsonl"
+    if frames_path.is_file() == steps_path.is_file():
+        raise ReplayError(f"{path}: needs exactly one of frames.jsonl or steps.jsonl")
+    if frames_path.is_file():
+        frames = tuple(_load_jsonl(frames_path, CaptureFrame))
+        events = tuple(steps_from_frames(frames, graph))
+    else:
+        frames, events = (), tuple(_load_jsonl(steps_path, StepEvent))
+
+    return Scenario(
+        name=path.name, path=path, expected=expected, graph=graph, frames=frames, events=events
+    )
+
+
+def _load_jsonl(path: Path, model: type[_Record]) -> list[_Record]:
+    """Every line of a JSONL file as `model`, with the line number in any complaint."""
+    records: list[_Record] = []
+    for number, line in enumerate(path.read_text("utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            records.append(model.model_validate_json(line))
+        except ValidationError as exc:
+            raise ReplayError(f"{path}:{number}: {exc}") from exc
+    if not records:
+        raise ReplayError(f"{path}: no records")
+    return records
+
+
+# ------------------------------------------------------------- STUB: the recogniser
+
+
+def touched_objects(frame: CaptureFrame) -> frozenset[str]:
+    """The objects a hand is on in this frame (SPEC section 16: steps are hand-object
+    interactions).
+
+    A hand is either MediaPipe hand landmarks or a box from the detector's `hand`
+    class, so a synthetic scenario can use whichever is less tedious to write.
+    """
+    hand_boxes = [d.box for d in frame.objects if d.label is ObjectLabel.HAND]
+    points = [(mark.x, mark.y) for hand in frame.hands for mark in hand.landmarks]
+    return frozenset(
+        str(detection.label)
+        for detection in frame.objects
+        if detection.label is not ObjectLabel.HAND
+        and (
+            any(_overlaps(detection.box, box) for box in hand_boxes)
+            or any(_holds(detection.box, point) for point in points)
+        )
+    )
+
+
+def _overlaps(one: BoundingBox, other: BoundingBox) -> bool:
+    """True if the two boxes share any area. Touching edges do not count."""
+    return (
+        one.x1 < other.x2 and other.x1 < one.x2 and one.y1 < other.y2 and other.y1 < one.y2
+    )
+
+
+def _holds(box: BoundingBox, point: tuple[float, float]) -> bool:
+    x, y = point
+    return box.x1 <= x <= box.x2 and box.y1 <= y <= box.y2
+
+
+def steps_from_frames(frames: Sequence[CaptureFrame], graph: TaskGraph) -> list[StepEvent]:
+    """STUB. Capture frames -> step events, standing in for `routine_watch.recogniser`.
+
+    The rule: a frame shows a step when the objects a hand is on are exactly that
+    step's objects, and a run of consecutive frames showing the same step is one step
+    event. A frame that touches nothing, or nothing the task knows about, ends the run.
+
+    That is a crude version of what the recogniser will do with state rules and the
+    verifier, and it is deliberately literal: it never consults the task's dependencies,
+    so a scenario can still show a step happening in the wrong order. Two limits follow
+    from reading objects alone, and both are why a scenario may prefer `steps.jsonl`:
+
+    * Two steps done with the same objects cannot be told apart (in the tea graph,
+      `fill_kettle` and `boil` are both done with the kettle). A frame that matches
+      more than one step raises :class:`ReplayError` rather than guessing.
+    * Confidence, `unclear` and the verifier have no frame-level meaning here: every
+      event it makes is a confident rule event.
+    """
+    by_objects: dict[frozenset[str], list[str]] = {}
+    for step in graph.steps:
+        by_objects.setdefault(frozenset(str(label) for label in step.objects), []).append(step.id)
+
+    events: list[StepEvent] = []
+    #: The run of consecutive frames showing the step we are in the middle of.
+    step_id: str | None = None
+    run: list[CaptureFrame] = []
+
+    def close() -> None:
+        """Turn the run of frames we have been collecting into one step event."""
+        nonlocal step_id, run
+        if step_id is not None:
+            events.append(
+                StepEvent(
+                    event_id=f"{run[0].session_id}:s{len(events)}",
+                    session_id=run[0].session_id,
+                    step_id=step_id,
+                    objects=list(graph.step(step_id).objects),
+                    t_start=run[0].t,
+                    t_end=run[-1].t,
+                    confidence=STUB_CONFIDENCE,
+                    source=StepSource.RULE,
+                )
+            )
+        step_id, run = None, []
+
+    for frame in sorted(frames, key=lambda f: (f.seq, f.t)):
+        touched = touched_objects(frame)
+        matches = by_objects.get(touched, [])
+        if len(matches) > 1:
+            raise ReplayError(
+                f"frame {frame.seq}: {sorted(touched)} is {' and '.join(matches)}; "
+                "the stub recogniser cannot tell them apart, write this one as steps.jsonl"
+            )
+        showing = matches[0] if matches else None
+        if showing != step_id:
+            close()
+        if showing is not None:
+            step_id = showing
+            run.append(frame)
+    close()
+    return events
+
+
+# ------------------------------------------------- STUB: task graph and error types
+
+
+def find_errors(
+    graph: TaskGraph,
+    events: Sequence[StepEvent],
+    *,
+    session_id: str,
+    session_end: float,
+    abandon_gap_s: float = ABANDON_GAP_S,
+) -> list[TaskError]:
+    """STUB. Step events against the task graph, standing in for
+    `routine_watch.task_graph` plus `routine_watch.errors` (SPEC section 7).
+
+    Five of the six error types, by the rules in the spec's table:
+
+    * **omission** - a required step never happens at all.
+    * **sequence** - a step happens before a dependency that is then done later.
+    * **perseveration** - a once-only step happens again, with other steps in between.
+    * **substitution** - a step is done with an object not on its allowed list.
+    * **abandonment** - no events for `abandon_gap_s`, with required steps still to do.
+
+    Not here: **hesitation**, which is a step or gap more than 2.5 standard deviations
+    above this resident's own average, so it needs per-step baselines that no scenario
+    carries yet. A scenario cannot expect one until the baseline stage lands.
+
+    Also from the spec: events marked `unclear` are never errors, and an unclear step
+    still counts as having happened, so it cannot be reported as an omission either.
+    """
+    errors: list[TaskError] = []
+
+    def add(
+        error_type: ErrorType,
+        step_id: str | None,
+        t_start: float,
+        t_end: float,
+        evidence: list[EvidenceRef],
+    ) -> None:
+        errors.append(
+            TaskError(
+                error_id=f"{session_id}:x{len(errors)}",
+                session_id=session_id,
+                type=error_type,
+                step_id=step_id,
+                t_start=t_start,
+                t_end=t_end,
+                evidence=evidence,
+            )
+        )
+
+    counted = [event for event in events if not event.unclear]
+    done: list[str] = []
+    for index, event in enumerate(counted):
+        try:
+            step = graph.step(event.step_id)
+        except KeyError as exc:
+            raise ReplayError(f"{event.event_id}: {exc}") from exc
+        here = [
+            EvidenceRef(
+                kind=EvidenceKind.STEP_EVENT,
+                t_start=event.t_start,
+                t_end=event.t_end,
+                event_id=event.event_id,
+            )
+        ]
+
+        previous = counted[index - 1] if index else None
+        if (
+            previous is not None
+            and event.t_start - previous.t_end > abandon_gap_s
+            and not set(done).issuperset(graph.required_steps)
+        ):
+            add(
+                ErrorType.ABANDONMENT,
+                None,
+                previous.t_end,
+                event.t_start,
+                [_replay_ref(previous.t_end, event.t_start)],
+            )
+
+        if any(str(label) not in step.allowed_objects for label in event.objects):
+            add(ErrorType.SUBSTITUTION, step.id, event.t_start, event.t_end, here)
+
+        undone = step.deps - set(done)
+        if undone & {later.step_id for later in counted[index + 1 :]}:
+            add(ErrorType.SEQUENCE, step.id, event.t_start, event.t_end, here)
+
+        if step.once_only and step.id in done and done[-1] != step.id:
+            add(ErrorType.PERSEVERATION, step.id, event.t_start, event.t_end, here)
+
+        done.append(step.id)
+
+    happened = {event.step_id for event in events}
+    for step_id in graph.required_steps:
+        if step_id not in happened:
+            add(ErrorType.OMISSION, step_id, 0.0, session_end, [_replay_ref(0.0, session_end)])
+
+    return errors
+
+
+def _replay_ref(t_start: float, t_end: float) -> EvidenceRef:
+    """The skeleton replay over a span: what a nurse sees when there is no event to
+    point at (SPEC section 8: never a video clip)."""
+    return EvidenceRef(kind=EvidenceKind.SKELETON_REPLAY, t_start=t_start, t_end=t_end)
+
+
+# ----------------------------------------------------------------------- the replay
+
+
+def change_flag(
+    score: float, history: Sequence[HistorySession], *, now: datetime = REPLAY_EPOCH
+) -> tuple[bool, Baseline | None]:
+    """Does this session, against this history, flag a change for review?
+
+    Two rules keep this quiet (SPEC section 7): a single bad session never alerts, and
+    a resident with fewer than three prior sessions has no baseline to be measured
+    against at all. Returns the flag and the baseline it was judged against, if any.
+    """
+    scores = [session.score_value for session in history]
+    if len(scores) < 3:
+        return False, None
+    baseline = build_baseline(scores)
+    sessions = [(now - timedelta(hours=s.hours_ago), s.score_value) for s in history]
+    sessions.append((now, score))
+    return flag_change(sessions, baseline, now), baseline
+
+
+def run(scenario: Scenario) -> dict[str, Any]:
+    """Run one loaded scenario through the pipeline and return the result as JSON data."""
+    events = scenario.events
+    if scenario.frames:
+        session_id = scenario.frames[0].session_id
+        session_end = max(frame.t for frame in scenario.frames)
+    else:
+        session_id = events[0].session_id
+        session_end = max(event.t_end for event in events)
+
+    # Two people in frame means somebody is helping: the session is excluded from the
+    # baseline and scores zero (SPEC section 7).
+    assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)
+
+    errors = find_errors(
+        scenario.graph, events, session_id=session_id, session_end=session_end
+    )
+    counts = Counter(str(error.type) for error in errors if not error.self_corrected)
+    self_corrected = sum(1 for error in errors if error.self_corrected)
+    score = session_score(counts, self_corrected, assisted)
+    flag, baseline = change_flag(score, scenario.expected.history)
+
+    return {
+        "scenario": scenario.name,
+        "task": scenario.graph.id,
+        "session_id": session_id,
+        "source": scenario.source,
+        "frames": len(scenario.frames),
+        "steps": [event.step_id for event in events],
+        "unclear": sum(1 for event in events if event.unclear),
+        "assisted": assisted,
+        "errors": [
+            {
+                "type": str(error.type),
+                "step": error.step_id,
+                "t_start": error.t_start,
+                "t_end": error.t_end,
+                "self_corrected": error.self_corrected,
+            }
+            for error in sorted(errors, key=lambda e: (e.t_start, str(e.type), e.step_id or ""))
+        ],
+        "score": score,
+        "flag": flag,
+        "baseline": None
+        if baseline is None
+        else {
+            "mean": round(baseline.mean, 4),
+            "std": round(baseline.std, 4),
+            "threshold": round(baseline.threshold, 4),
+        },
+    }
+
+
+def replay(path: Path | str) -> dict[str, Any]:
+    """Load and run one scenario directory."""
+    return run(load_scenario(path))
+
+
+# ------------------------------------------------------------------ expected vs got
+
+
+def compare(expected: Expected, result: Mapping[str, Any]) -> list[str]:
+    """What the scenario expected against what it got. No lines means it passed."""
+    diffs: list[str] = []
+    if list(expected.steps) != list(result["steps"]):
+        diffs.append(f"steps:    expected {_as_list(expected.steps)}")
+        diffs.append(f"          got      {_as_list(result['steps'])}")
+
+    want = Counter((str(error.type), error.step) for error in expected.errors)
+    got = Counter((error["type"], error["step"]) for error in result["errors"])
+    for label, difference in (("missing   ", want - got), ("unexpected", got - want)):
+        if difference:
+            diffs.append(f"errors:   {label} {_as_list(_named(difference))}")
+
+    if expected.flag != result["flag"]:
+        diffs.append(f"flag:     expected {_yes(expected.flag)}, got {_yes(result['flag'])}")
+    if expected.score is not None and not isclose(expected.score, result["score"]):
+        diffs.append(f"score:    expected {expected.score}, got {result['score']}")
+    if expected.assisted is not None and expected.assisted != result["assisted"]:
+        helped = _yes(result["assisted"])
+        diffs.append(f"assisted: expected {_yes(expected.assisted)}, got {helped}")
+    return diffs
+
+
+def check(path: Path | str) -> list[str]:
+    """Replay one scenario and compare it with its `expected.yaml`."""
+    scenario = load_scenario(path)
+    return compare(scenario.expected, run(scenario))
+
+
+def _named(errors: Counter[tuple[str, str | None]]) -> list[str]:
+    """``{('omission', 'boil'): 1}`` -> ``['omission/boil']``, repeats spelled out."""
+    return sorted(
+        f"{error_type}/{step or '-'}"
+        for (error_type, step), count in errors.items()
+        for _ in range(count)
+    )
+
+
+def _as_list(items: Sequence[str]) -> str:
+    return "[" + ", ".join(items) + "]"
+
+
+def _yes(value: bool) -> str:
+    """``true``/``false``, the way the scenario file spells them."""
+    return "true" if value else "false"
+
+
+# ------------------------------------------------------------------------- the CLI
+
+
+def scenario_dirs(root: Path = SCENARIOS_DIR) -> list[Path]:
+    """Every scenario directory under `root`, in a stable order."""
+    if not root.is_dir():
+        return []
+    return sorted(path for path in root.iterdir() if path.is_dir())
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m routine_watch.replay",
+        description="Replay recorded scenarios through the pipeline, offline.",
+    )
+    parser.add_argument(
+        "scenarios",
+        nargs="*",
+        type=Path,
+        help=f"scenario directories (default: every one in {SCENARIOS_DIR})",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare each result with its expected.yaml: PASS/FAIL and a diff",
+    )
+    args = parser.parse_args(argv)
+
+    paths = args.scenarios or scenario_dirs()
+    if not paths:
+        print(f"no scenarios in {SCENARIOS_DIR}", file=sys.stderr)
+        return 1
+
+    if not args.check:
+        try:
+            results = [replay(path) for path in paths]
+        except ReplayError as exc:
+            print(exc, file=sys.stderr)
+            return 1
+        print(json.dumps(results[0] if len(results) == 1 else results, indent=2))
+        return 0
+
+    failed = 0
+    for path in paths:
+        try:
+            diffs = check(path)
+        except ReplayError as exc:
+            diffs = [f"error:    {exc}"]
+        failed += bool(diffs)
+        print(f"{'FAIL' if diffs else 'PASS'} {path.name}")
+        for line in diffs:
+            print(f"  {line}")
+    print(f"{len(paths) - failed}/{len(paths)} scenarios passed")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
