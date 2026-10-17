@@ -12,7 +12,7 @@ import { Loading } from '../ui/Loading.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { fetchHandoff } from './api.ts'
 import type { HandoffResult } from './api.ts'
-import type { Handoff as HandoffData, HandoffResident } from './types.ts'
+import type { Handoff as HandoffData, HandoffResident, PausedRoom } from './types.ts'
 import './handoff.css'
 
 /** Windows a nurse picks between: an eight or twelve hour shift, a day, a weekend. */
@@ -25,7 +25,7 @@ type Chip = {
   key: string
   label: string
   /** `handoff__chip--` modifier: carries the colour, never the meaning. */
-  tone: 'flagged' | 'pending' | 'trending' | 'quiet'
+  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused'
   /** Decorative, so the row is scannable without reading; the label says it in words. */
   glyph: string
 }
@@ -61,6 +61,9 @@ function chipsFor(resident: HandoffResident): Chip[] {
   if (resident.trending) {
     chips.push({ key: 'trending', label: 'Error score trending up', tone: 'trending', glyph: '↗' })
   }
+  if (resident.monitoring_paused) {
+    chips.push({ key: 'paused', label: 'Monitoring paused', tone: 'paused', glyph: '⏸' })
+  }
   if (chips.length === 0) {
     chips.push({ key: 'quiet', label: 'No change flagged', tone: 'quiet', glyph: '✓' })
   }
@@ -91,6 +94,14 @@ function baselineLine(mean: number | null | undefined): string | null {
   return `Usually ${formatScore(mean)} errors a session`
 }
 
+/** One line naming every paused room, or null when nothing was paused (SPEC section
+ * 12): a nurse reads this above the rows, so a quiet paused room reads as "nobody was
+ * watching" rather than "all quiet". */
+function pausedLine(paused: PausedRoom[] | undefined): string | null {
+  if (!paused || paused.length === 0) return null
+  return `Monitoring paused: ${paused.map((room) => `${room.name} (room ${room.room})`).join(', ')}`
+}
+
 /** The one line a nurse reads first, before any row. */
 function headline(residents: HandoffResident[], hours: number): string {
   if (residents.length === 0) return `Nothing to hand over for the last ${hours} hours`
@@ -100,8 +111,10 @@ function headline(residents: HandoffResident[], hours: number): string {
 }
 
 export function handoffText(h: HandoffData): string {
+  const paused = pausedLine(h.paused)
   return [
     h.summary,
+    ...(paused ? [paused] : []),
     ...h.residents.map((resident) =>
       `${resident.name}, Room unavailable: ${plural(resident.flags, 'flagged session')}, `
       + `${plural(resident.pending_review, 'unreviewed alert')}, `
@@ -218,6 +231,9 @@ export function Handoff({
           </Button>
           {copyStatus && <p role="status">{copyStatus}</p>}
         </Card>
+        {pausedLine(handoff.paused) && (
+          <p className="handoff__paused">{pausedLine(handoff.paused)}</p>
+        )}
         {handoff.residents.length === 0 ? (
           <EmptyState message="No residents on this unit yet." />
         ) : (

@@ -55,6 +55,7 @@ const served: HandoffData = {
     { resident_id: 'mr-chen', name: 'Mr. Chen', flags: 0, pending_review: 0, trending: true },
     { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', flags: 0, pending_review: 0, trending: false },
   ],
+  paused: [],
   summary: 'Flagged for review: 2 errors this session vs 0.58 normally over 14 days.',
 }
 
@@ -156,6 +157,7 @@ describe('Handoff', () => {
     serve({
       window_hours: 12,
       residents: [{ resident_id: 'mrs-k', name: 'Mrs. K', flags: 0, pending_review: 0, trending: false }],
+      paused: [],
       summary: 'No errors this session vs 0.58 normally over 14 days.',
     })
 
@@ -166,7 +168,7 @@ describe('Handoff', () => {
   })
 
   it('shows an empty state for a unit with no residents', async () => {
-    serve({ window_hours: 12, residents: [], summary: 'Nothing to report.' })
+    serve({ window_hours: 12, residents: [], paused: [], summary: 'Nothing to report.' })
 
     render(<Handoff onBack={() => {}} />)
 
@@ -278,6 +280,53 @@ describe('Handoff', () => {
     fireEvent.click(screen.getByRole('button', { name: /Back/ }))
 
     expect(onBack).toHaveBeenCalledOnce()
+  })
+
+  it('shows no paused line or chip when nothing is paused', async () => {
+    serve(served)
+
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+
+    expect(screen.queryByText(/Monitoring paused/)).toBeNull()
+  })
+
+  it('shows the paused room above the rows and a chip on its resident', async () => {
+    serve({
+      ...served,
+      residents: [
+        { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
+        {
+          resident_id: 'mr-chen',
+          name: 'Mr. Chen',
+          flags: 0,
+          pending_review: 0,
+          trending: false,
+          monitoring_paused: true,
+        },
+      ],
+      paused: [{ room: '4', resident_id: 'mr-chen', name: 'Mr. Chen' }],
+    })
+
+    render(<Handoff onBack={() => {}} />)
+
+    expect(await screen.findByText('Monitoring paused: Mr. Chen (room 4)')).toBeTruthy()
+    const chenRow = (await screen.findByText('Mr. Chen')).closest('li')
+    expect(chenRow?.textContent).toContain('Monitoring paused')
+    // Mrs. K's row is unaffected: the chip is per resident, not unit-wide.
+    const kRow = screen.getByText('Mrs. K').closest('li')
+    expect(kRow?.textContent).not.toContain('Monitoring paused')
+  })
+
+  it('includes the paused room in the copied handoff text', () => {
+    const data: HandoffData = {
+      ...mockHandoff,
+      paused: [{ room: '4', resident_id: 'mr-chen', name: 'Mr. Chen' }],
+    }
+
+    const text = handoffText(data)
+
+    expect(text).toContain('Monitoring paused: Mr. Chen (room 4)')
   })
 
   it('keeps review wording and theme tokens, offline and online', async () => {
