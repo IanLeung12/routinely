@@ -307,7 +307,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T377 — Review: DEMO.md shift-handoff step is after "Close" (out of run order)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
