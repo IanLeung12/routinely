@@ -76,7 +76,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T343 — Live: session_end says when a session was too unclear to score
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
