@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: fc53209
+- last-reviewed: d3b5941
 
 ## Tasks
 
@@ -545,3 +545,21 @@ Acceptance:
 - tests: fake client replying "three errors" with observed=2 → template fallback; "two errors" with observed=2 → Claude reply kept; "someone" / "once" are not treated as numbers.
 - owner: —
 - `cd pipeline && uv run pytest -q` passes.
+
+### T106 — Evidence replay: stop fetching the alert twice
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/alert/AlertView.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T080 (#84), `AlertView` loads the alert with `fetchAlert`, then `fetchReplay(alertId)` calls `fetchAlert` again for the same alert. Change `fetchReplay` to take the already-loaded `Alert` so the screen makes one alert request.
+Interface: `fetchReplay(alert: Alert): Promise<EvidenceReplay | null>` in `web/src/evidence/api.ts`; in `AlertView.tsx`, run the replay effect once the alert has loaded (keyed on alert id). Read only these three files plus `web/src/alert/AlertView.test.tsx`.
+Acceptance:
+- `api.test.ts` updated to pass an `Alert`; no `fetchAlert` call inside `evidence/api.ts`.
+- AlertView still shows Loading / Empty / replay states as before (existing tests pass unchanged in behaviour).
+- `cd web && npm test` and `scripts/ci.sh` pass.

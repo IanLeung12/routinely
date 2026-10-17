@@ -81,3 +81,4 @@ T078 | light | claude-sonnet | merged first try | ~?k tok
 T072 | heavy | claude-opus | ci fixes: 5 | ~200k tok
 T091 | light | claude-opus | merged first try | ~50k tok
 T093 | light | claude-sonnet | merged first try | ~18k tok
+T080 | standard | claude-sonnet | merged first try | ~95k tok
