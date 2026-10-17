@@ -269,7 +269,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T399 — Smoke: check the landing page is served
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
