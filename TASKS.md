@@ -409,7 +409,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T139 — Docs: scenario README lists only 13 of 20 scenarios
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
@@ -514,7 +514,7 @@ Acceptance:
 - smoke.sh hits the route once; `scripts/ci.sh` passes.
 
 ### T145 — Live session "Flagged for review" banner links straight to the alert
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
