@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -17,8 +17,9 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - source: proposed
 - owner: ian-claude-standard
 - claimed: 2026-10-17T11:25Z
-- pr: —
+- pr: #226
 - note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T149-wip-1051: start from it (git switch task/T149-wip-1051 && git merge origin/main)
+- rating: 4/5 clear, except the WIP branch noted in the task had drifted far from main (unrelated demo.py/web diffs) and needed re-applying just the api.py/test slice onto fresh main
 
 What: Expose the T148 store so the dashboard's pause switch is real. While a room is paused, `/ws/live` for a scenario whose resident is in that room sends one `{"type": "paused", "room": ...}` message and closes instead of streaming frames (no camera data processed).
 Interface: `GET /monitoring` → `{"paused_rooms": [...]}`; `PUT /rooms/{room}/monitoring` body `{"on": bool}` → `{"room": str, "on": bool}`; uses `monitoring.get_monitoring_store()`. Room→resident comes from `demo.demo_residents()`; unknown room → 404.
