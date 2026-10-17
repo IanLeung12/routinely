@@ -689,3 +689,22 @@ Interface: read only web/src/tour/Tour.tsx, web/src/tour/steps.ts, web/src/tour/
 Acceptance:
 - Tab reaches Next/Back/Close in a sensible order; Enter advances a step; the last step's control closes or finishes the tour as the component defines.
 - `cd web && npx vitest run src/tour` passes; `scripts/ci.sh` passes.
+
+### T388 — Bug: integration.sh can't run next to a dev stack and kills it
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: scripts/integration.sh, scripts/dev.sh
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: `scripts/integration.sh` says it "uses its own ports (API 8100, dashboard 5273) so it can run next to a dev stack", but `dev.sh` keys "already running" off the shared `.dev/api.pid` / `.dev/web.pid`, so with `scripts/dev.sh up` already running it skips starting anything, then times out on :8100; its EXIT trap then runs `scripts/dev.sh down`, which stops the developer's :8000/:5173 stack too.
+Repro (main @ 8c81e18): `scripts/dev.sh up && scripts/integration.sh` → `FAIL dev.sh up: API already running (pid N) dashboard already running (pid M) timed out waiting for API at http://localhost:8100/health`; afterwards `curl localhost:5173` refuses.
+Interface: make dev.sh's pid/log files port-scoped (or let integration.sh set a separate `DEV_DIR`), so integration's up/down only touch its own processes.
+Acceptance:
+- With `scripts/dev.sh up` running, `scripts/integration.sh` prints OK and the :8000/:5173 stack still answers afterwards.
+- `scripts/integration.sh` alone still prints OK; `scripts/dev.sh down` still stops the default stack; `scripts/ci.sh` passes.
