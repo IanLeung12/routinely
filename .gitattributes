@@ -1,0 +1,6 @@
+# Keep LF everywhere so scripts run in WSL/Linux even from a Windows checkout
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.onnx binary
+*.pt binary

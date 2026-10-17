@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import './App.css'
 import { fetchAlerts } from './alert/api.ts'
 import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
-import { fetchResidents } from './overview/api.ts'
+import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
 import { MyRoutine } from './people/MyRoutine.tsx'
@@ -11,9 +12,9 @@ import { RoleChooser } from './people/RoleChooser.tsx'
 import { RoleSwitch } from './people/RoleSwitch.tsx'
 import type { RoleId } from './people/types.ts'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
-import { Button } from './ui/Button.tsx'
 import { DemoBanner, resetDemoData } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
+import { Pill } from './ui/Pill.tsx'
 import { useDocumentTitle } from './ui/useDocumentTitle.ts'
 
 /** Off the main demo path (SPEC demo beat is overview → live → alert), so these
@@ -27,6 +28,18 @@ const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour }
 /** Where an alert was opened from, so its Back button can return there instead of
  * always landing on the overview. */
 type AlertOrigin = 'overview' | 'handoff' | 'live'
+
+/** The app shell's three top-level destinations, for the floating nav dock. A
+ * resident's detail or an open alert are drill-ins reached from the overview, so
+ * they still count as 'overview' for which dock item is current. Supervisor-only:
+ * a person has just the one "My routine" screen, and the role chooser has none. */
+type MainScreen = 'overview' | 'handoff' | 'patterns'
+
+const MAIN_SCREENS: { id: MainScreen; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'handoff', label: 'Shift handoff' },
+  { id: 'patterns', label: 'Pattern library' },
+]
 
 /** What the app is, in the words of whoever is reading it (SPEC section 17). "Nurse"
  * belongs to the care-home case only, so the shared line never says it. */
@@ -61,7 +74,10 @@ export default function App() {
   /** The pattern library is a read-only reference screen, off the main demo path. */
   const [openPatternLibrary, setOpenPatternLibrary] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
-  const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidents>>>([])
+  const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidentsWithSource>>['residents']>([])
+  /** Whether the last residents fetch reached the real API or fell back to demo
+   * data, for the top bar's compact offline indicator. */
+  const [residentsSource, setResidentsSource] = useState<ResidentsSource>('api')
   /** Bumped when a live session ends, so the overview and alerts list refetch
    * without a page reload (SPEC demo beat "alert appears after the second bad session"). */
   const [refreshKey, setRefreshKey] = useState(0)
@@ -78,8 +94,11 @@ export default function App() {
   useEffect(() => {
     if (role !== 'supervisor') return
     let cancelled = false
-    fetchResidents().then(result => {
-      if (!cancelled) setResidents(result)
+    fetchResidentsWithSource().then(result => {
+      if (!cancelled) {
+        setResidents(result.residents)
+        setResidentsSource(result.source)
+      }
     })
     return () => { cancelled = true }
   }, [refreshKey, role])
@@ -146,6 +165,21 @@ export default function App() {
       return
     }
     setShowingPeople(true)
+  }
+
+  /** The dock's current screen: a resident's detail, an open alert or the people
+   * list are drill-ins reached from the overview, so they don't get their own
+   * dock item. */
+  const currentScreen: MainScreen = openHandoff ? 'handoff' : openPatternLibrary ? 'patterns' : 'overview'
+
+  /** Jumps straight to one of the three main screens, closing whatever drill-in
+   * (a resident's detail, an open alert, the people list) was on top of it. */
+  function goToScreen(screen: MainScreen) {
+    setOpenResident(null)
+    setOpenAlert(null)
+    setShowingPeople(false)
+    setOpenHandoff(screen === 'handoff')
+    setOpenPatternLibrary(screen === 'patterns')
   }
 
   useDocumentTitle(documentTitle())
@@ -220,31 +254,35 @@ export default function App() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
-      <main id="main" className="app">
+      <main id="main" className={role === 'supervisor' ? 'app app--with-dock' : 'app'}>
         {showTour && (
           <Suspense fallback={<Loading label="Loading tour…" />}>
             <Tour />
           </Suspense>
         )}
         <DemoBanner onReset={resetDemo} />
-        <header>
-          <h1>Routine Watch</h1>
-          <p className="tagline">
-            {role === null
-              ? 'Watches an everyday routine, like making a cup of tea, and flags a change for review.'
-              : TAGLINE[role]}
-          </p>
-          {role !== null && <RoleSwitch role={role} onChange={chooseRole} />}
-          {role === 'supervisor' && !openHandoff && !openPatternLibrary && (
-            <>
-              {supported.length > 1 && (
-                <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
-              )}
-              <Button variant="secondary" onClick={() => setOpenPatternLibrary(true)}>
-                Pattern library
-              </Button>
-            </>
-          )}
+        <header className="app-topbar">
+          <div className="app-topbar__brand">
+            <h1 className="app-topbar__name">Routine Watch</h1>
+            <p className="app-topbar__tagline">
+              {role === null
+                ? 'Watches an everyday routine, like making a cup of tea, and flags a change for review.'
+                : TAGLINE[role]}
+            </p>
+          </div>
+          <div className="app-topbar__actions">
+            {role === 'supervisor' && (
+              <>
+                <span className="app-topbar__unit">
+                  {residents.length} resident{residents.length === 1 ? '' : 's'}
+                </span>
+                <Pill tone={residentsSource === 'demo' ? 'watch' : 'positive'} className="app-topbar__status">
+                  {residentsSource === 'demo' ? 'Offline — demo data' : 'Live'}
+                </Pill>
+              </>
+            )}
+            {role !== null && <RoleSwitch role={role} onChange={chooseRole} />}
+          </div>
         </header>
 
         {role === null ? (
@@ -272,6 +310,22 @@ export default function App() {
           />
         ) : (
           supervisorHome
+        )}
+
+        {role === 'supervisor' && (
+          <nav className="app-dock" aria-label="Main screens">
+            {MAIN_SCREENS.filter(({ id }) => id !== 'handoff' || supported.length > 1).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className="app-dock__item"
+                aria-current={currentScreen === id ? 'page' : undefined}
+                onClick={() => goToScreen(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
         )}
       </main>
     </>

@@ -1,59 +1,54 @@
 .overview__demo-notice {
-  margin: 0 0 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background: var(--error-amber-bg);
-  color: var(--error-amber-text);
-  font-size: 0.875rem;
+  margin: 0 var(--space-5) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-watch-tint);
+  color: var(--status-watch);
+  font-size: var(--text-sm);
 }
 
-.unit-filter {
+.resident-summary {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.unit-overview__head {
   display: flex;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--hairline);
 }
 
-.unit-filter__button[aria-pressed='true'] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  font-weight: 600;
-}
-
-.unit-sort {
+.unit-overview__controls {
   display: flex;
-  gap: 0.5rem;
-  margin: 0 0 1rem;
-}
-
-.unit-sort__button[aria-pressed='true'] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  font-weight: 600;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .resident-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin: 1rem 0 2.5rem;
-  padding: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
   list-style: none;
 }
 
-.resident-row {
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--panel);
+.resident-row + .resident-row {
+  border-top: 1px solid var(--hairline);
 }
 
 .resident-open {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  padding: var(--space-3) var(--space-2);
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-xs);
   background: none;
   color: inherit;
   font: inherit;
@@ -62,7 +57,7 @@
 }
 
 .resident-open:hover {
-  background: #ffffff0a;
+  background: var(--surface-raised);
 }
 
 .resident-open:focus-visible {
@@ -74,6 +69,7 @@
   display: flex;
   flex-direction: column;
   min-width: 10rem;
+  flex-shrink: 0;
 }
 
 .resident-name {
@@ -81,8 +77,8 @@
 }
 
 .resident-room {
-  font-size: 0.8125rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 .resident-open .status-chip {
@@ -93,53 +89,55 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.25rem;
+  gap: var(--space-1);
   flex-shrink: 0;
 }
 
 .resident-pattern {
-  font-size: 0.8125rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
-.resident-open svg {
+.resident-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   margin-left: auto;
+}
+
+.resident-score {
+  flex-shrink: 0;
 }
 
 .resident-paused-chip {
   display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--error-grey-bg);
-  color: var(--error-grey-text);
-  font-size: 0.75rem;
+  padding: 0.1rem var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--status-neutral-tint);
+  color: var(--status-neutral);
+  font-size: var(--text-xs);
 }
 
 /* Nurses check the board on a phone on the floor (T234): below 480px, stack each
-   row's name/room, status + top pattern, and sparkline instead of squeezing them
+   row's name/room, status + top pattern, and trend instead of squeezing them
    onto one line and forcing horizontal scroll. */
 @media (max-width: 480px) {
-  .unit-filter {
+  .unit-overview__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .unit-overview__controls .segmented {
     flex-wrap: wrap;
   }
 
-  .unit-filter__button {
+  .unit-overview__controls .segmented__option {
     min-height: 2.75rem;
-    flex: 1 1 auto;
-  }
-
-  .unit-sort {
-    flex-wrap: wrap;
-  }
-
-  .unit-sort__button {
-    min-height: 2.75rem;
-    flex: 1 1 auto;
   }
 
   .resident-open {
     flex-wrap: wrap;
-    row-gap: 0.5rem;
+    row-gap: var(--space-2);
   }
 
   .resident-identity {
@@ -153,8 +151,9 @@
     flex-shrink: 1;
   }
 
-  .resident-open svg {
-    flex-basis: 100%;
+  .resident-trend {
+    width: 100%;
     margin-left: 0;
+    justify-content: space-between;
   }
 }
