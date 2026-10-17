@@ -375,3 +375,6 @@ T429 | light | codex | merged first try | ~?k tok
 T427 | light | codex | merged first try | ~5k tok
 T403 | standard | claude-sonnet | merged first try | ~?k tok
 T407 | standard | claude-opus | merged first try | ~190k tok
+T431 | light | claude-sonnet | merged first try | ~?k tok
+T409 | standard | claude-opus | merged first try | ~?k tok
+T430 | light | codex | merged first try | ~7k tok
