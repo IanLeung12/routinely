@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 8ee2cef
+- last-reviewed: dc9a6ef
 
 ## Tasks
 
@@ -501,3 +501,148 @@ Acceptance:
 - covers at least: flat history (no drift); slow downward trend; sudden change; evening-only worsening; a sedating care record inside its window appears in the context and an old one doesn't; empty sessions don't crash
 - deterministic (fixed `now`, no wall clock)
 - `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
+
+### T328 — Test: /ws/live WebSocket routes in api_live.py
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_live_ws.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `api_live.py` has no direct test file. Add WebSocket tests with FastAPI `TestClient` for the live route.
+Interface: read `pipeline/src/routine_watch/api_live.py`, `pipeline/src/routine_watch/api_state.py`, `pipeline/src/routine_watch/monitoring.py` and one existing API test in `pipeline/tests/` for the client fixture. Call `api_state.reset()` before each test.
+Acceptance:
+- covers: a normal run sends at least one message then a session-end message; a paused room gets the "paused" message and no step events; an unknown scenario/room gets a clear error or close (whatever the code does today, asserted)
+- offline only, no LIVE_API calls
+- `scripts/ci.sh` passes
+
+### T329 — Test: resident routes return 404 for an unknown resident
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_residents_404.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Every `/residents/{id}/...` route in `api_residents.py` should answer an unknown id with 404, not 500 or an empty 200.
+Interface: read `pipeline/src/routine_watch/api_residents.py` and `pipeline/src/routine_watch/api.py` (router wiring). Parametrise over every GET route under `/residents/{id}` found in `api_residents.py`.
+Acceptance:
+- one parametrised pytest; each route with id `nobody` returns 404 with a JSON `detail`
+- if a route returns something else, don't change product code: mark that case `xfail(strict=True)` with reason and mention it in the PR body
+- `scripts/ci.sh` passes
+
+### T330 — Heat calendar: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/heatCalendar.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same series as T234/T239: at 375 px the heat calendar must fit without horizontal page scroll and keep readable cells.
+Interface: read `web/src/resident/heatCalendar.css`, `web/src/resident/HeatCalendar.tsx`, and the `@media` block in `web/src/overview/overview.css` for the breakpoint convention. CSS only.
+Acceptance:
+- `@media (max-width: 480px)` rules: cells shrink or the grid scrolls inside its own card (not the page); labels stay ≥ 12 px
+- dark theme tokens still used (no hard-coded colours)
+- PR body has a 375 px screenshot from `scripts/dev.sh up` (or states why not)
+- `scripts/ci.sh` passes
+
+### T331 — Test: heat calendar cells have accessible names
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/HeatCalendar.a11y.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Colour alone must not carry meaning. Assert each heat calendar cell exposes its date and error count to screen readers.
+Interface: read `web/src/resident/HeatCalendar.tsx` and `web/src/resident/HeatCalendar.test.tsx` (fixture). Use Testing Library `getAllByRole`/`getByLabelText`.
+Acceptance:
+- every rendered day cell has an accessible name containing the date and the count (e.g. "17 Oct: 2 errors"); zero-error days say "no errors"
+- if the component lacks this today, mark the test `it.fails` and say so in the PR body (no product change in this task)
+- `scripts/ci.sh` passes
+
+### T332 — Replay and ghost replay respect prefers-reduced-motion
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/GhostReplay.tsx, web/src/evidence/reducedMotion.ts, web/src/evidence/reducedMotion.test.ts, web/src/evidence/ReplayPlayer.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Accessibility: when the OS asks for reduced motion, replays must not autoplay; they show the first (or flagged) frame and wait for Play.
+Interface: `prefersReducedMotion(): boolean` in `reducedMotion.ts` (matchMedia, safe when matchMedia is missing); ReplayPlayer and GhostReplay read it on mount. Manual Play still animates.
+Acceptance:
+- tests mock `matchMedia` both ways: autoplay unchanged when false; no autoplay + Play button focused-able when true
+- existing ReplayPlayer keyboard tests still pass
+- `scripts/ci.sh` passes
+
+### T333 — Resident detail: print-friendly layout
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/resident/residentPrint.css, web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.print.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: nurses bring a resident's summary to care conferences/family meetings; matches the alert (T289) and handoff (T203) print layouts. Add a Print button and `@media print` styles for resident detail.
+Interface: `residentPrint.css` imported by `ResidentDetail.tsx`; a "Print" button calling `window.print()`; print hides nav, buttons and the replay, shows name, consent line, baseline chart, heat calendar, drift card and feedback history on white. Follow the approach of `web/src/alert/alert.css` print rules.
+Acceptance:
+- test: Print button exists, is keyboard reachable, calls `window.print` (mocked)
+- no new wording that diagnoses; screen layout unchanged
+- `scripts/ci.sh` passes
+
+### T334 — Test: pattern checks and summaries never use diagnosis wording
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_wording_guard.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard SPEC's wording rule in code: every pattern name, description, rule-out check and generated summary says "consistent with"/"check", never "diagnos", "has <condition>", or treatment advice.
+Interface: read `pipeline/src/routine_watch/patterns_library.py`, `pipeline/src/routine_watch/checks.py`, `pipeline/src/routine_watch/explain.py` (offline/fake path). Iterate every pattern and the offline explanation for each scenario alert you can build cheaply (use `demo.py` data).
+Acceptance:
+- case-insensitive banned list: `diagnos`, `has delirium`, `has dementia`, `suffers from`, `prescribe`, `dose`; test fails with the offending string
+- offline only; `scripts/ci.sh` passes
+
+### T335 — Test: dashboard source has no diagnosis wording
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/wording.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same rule as T334 for the dashboard: a vitest that reads every non-test `.ts`/`.tsx` under `web/src/` and fails on banned user-facing wording.
+Interface: use `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', eager: true })` (or node `fs`), skip `*.test.*` and `contracts.ts`.
+Acceptance:
+- banned (case-insensitive): `diagnos`, `suffers from`, `has delirium`, `has dementia`; failure message names file + line
+- passes on current main (if not, list hits in PR body and leave the fix to a follow-up bug task)
+- `scripts/ci.sh` passes
