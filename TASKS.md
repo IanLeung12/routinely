@@ -521,14 +521,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T364 — Scenario: meds_late_start_normal (long idle before the first step is not an error)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/meds_late_start_normal/, pipeline/tests/test_scenarios_meds_late_start.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T18:12Z
 - pr: —
 
 What: Medication twin of T362: a resident idles a long time before picking up the pill bottle, then completes the routine correctly; must produce zero errors and no flag.
