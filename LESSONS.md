@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
 - motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
 - On this Windows worker, use uv run python -m pytest from pipeline: the default python belongs to another project and lacks pytest. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
 - App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
 - In Vitest jsdom, new URL(cssPath, import.meta.url) may resolve to an HTTP URL; for fs.readFileSync CSS assertions use a path relative to the web package working directory. (max_API_light)
+- Claude CLI --disallowedTools is variadic: put it before other flags, never right before the prompt, or the prompt is eaten as tool names (ian)
