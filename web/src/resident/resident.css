@@ -1,52 +1,106 @@
-/* Phone layout for the resident detail screen (SPEC section 9, screen 2). Rules for
-   .panel/.session-row/.context-record etc. still live in index.css (T234 owns moving
-   shared rules out of it); these are overrides only, scoped to this screen's classes.
-   Selectors are prefixed with .resident-detail (not just the bare class) because
-   index.css loads after this file in the dev module graph (main.tsx imports App, whose
-   tree imports this, before its own `./index.css`) - without the extra specificity
-   these rules lose the cascade to index.css's same-weight selectors. */
+/* Resident detail: stock-detail hierarchy on the shared Fey surfaces. Scoped
+   selectors win over legacy resident rules in index.css. */
+.resident-detail .resident-detail__header {
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
+.resident-detail .resident-detail__title-row {
+  gap: var(--space-3);
+}
+
+.resident-detail__title-row .btn {
+  margin-left: auto;
+}
+
+.resident-detail .resident-room {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.resident-detail__pattern {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
 .resident-detail__monitoring-message {
   margin: 0;
-  color: var(--error-red-text);
+  color: var(--status-flagged);
   font-size: var(--text-sm);
 }
 
 .resident-detail__consent {
   margin: 0;
-  color: var(--muted);
-  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
 }
 
-/* The room's monitoring switch with the trail of who last changed it underneath
-   (SPEC §12), as one item in the header's flex row. */
 .resident-detail__monitoring {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--hairline);
+}
+
+.resident-detail .resident-panels {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.resident-detail .section-header {
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.resident-detail .feedback-history h3,
+.resident-detail .section-header__title {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.resident-detail .section-header__caption {
+  margin-left: 0;
+  overflow-wrap: anywhere;
+}
+
+.resident-detail__hero .baseline-chart > [role='group'] {
+  align-self: flex-end;
+}
+
+/* T422's calendar supplies its own dark surface. */
+.resident-detail .heat-calendar {
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .resident-detail .resident-panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
-  /* .resident-panels normally keeps a 19rem minimum column so panels don't get too
-     cramped, but that minimum is wider than the viewport below ~352px and pushes the
-     whole page into horizontal scroll. One column always fits. */
   .resident-detail .resident-panels {
     grid-template-columns: 1fr;
   }
 
   .resident-detail .resident-detail__header {
     flex-wrap: wrap;
-    row-gap: 0.5rem;
   }
 
-  /* Session rows and care records are a single flex line of fixed-width timestamp +
-     flexible text; a long note (e.g. "new sedating medication started") doesn't wrap
-     in time and instead forces the whole list to scroll sideways. Wrapping the row and
-     giving the free-text pieces their own line fixes that without changing anything
-     above 480px. */
+  .resident-detail .card {
+    padding: var(--space-4);
+  }
+
   .resident-detail .session-row,
   .resident-detail .context-record {
     flex-wrap: wrap;
-    row-gap: 0.25rem;
+    row-gap: var(--space-2);
   }
 
   .resident-detail .session-detail,
