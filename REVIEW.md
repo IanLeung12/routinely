@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: a6fa605
-- next-area: pipeline
+- last-reviewed: 602d205
+- next-area: contracts+api
 
 ## Known issues filed
 - T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
@@ -28,3 +28,5 @@
 - T261 ci.sh/pytest don't force LIVE_API=0
 - T271 handoff quiet count includes paused residents
 - T272 duplicate scenario README test (tests/ + pipeline/tests/)
+- T284 api_* routers do `from . import api` (cycle); move shared state to api_state.py
+- (noted) LiveSession room ownership hard-coded to mrs-k; Paused(n) counts rooms not residents
