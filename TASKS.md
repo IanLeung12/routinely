@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: a1b6bcc
+- last-reviewed: 495a460
 
 ## Tasks
 
@@ -530,3 +530,37 @@ Interface: read `pipeline/src/routine_watch/evidence.py` (`_with_skeleton`), `pi
 Acceptance:
 - parametrized over all frame scenarios; fails if a stand-in landmark changes any error
 - `cd pipeline && python -m pytest tests/test_stick_figure.py -q` and `scripts/ci.sh` pass
+
+### T228 — Bug: flaky "moves focus to the h1" tests turn main CI red
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: web/src/alert/AlertView.test.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `main` CI failed on f679686 and 495a460 (and a rerun) in `AlertView.test.tsx > moves focus to the h1 once the alert loads` (T213, #202); the same race shows locally in `ResidentDetail.test.tsx > moves focus to the h1 once the resident loads` (T217, #208). The tests check `document.activeElement` right after `findByRole('heading')` resolves, but focus is set in an effect that can land a tick later under CI load. Also seen once: `shows a loading state for the evidence card…` timing out on `findByText('No replay available')` at the 1 s default.
+Interface: read only the two test files. In both focus tests, replace the bare `expect(document.activeElement).toBe(heading)` with `await waitFor(() => expect(document.activeElement).toBe(heading))`. In AlertView's evidence loading-state test, wrap `releases.forEach(...)` in `await act(async () => { ... })` before the `findByText`. Do not change component code or loosen any other assertion.
+Acceptance:
+- `cd web && for i in 1 2 3 4 5; do npx vitest run || break; done` passes all 5 full runs
+- `scripts/ci.sh` passes
+
+### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/PatternList.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `PatternList.test.tsx > never uses diagnostic wording` renders two `pattern()` fixtures that both have `pattern_id: 'delirium'`, so React logs "Encountered two children with the same key" in every CI run, hiding real warnings.
+Interface: read `web/src/alert/PatternList.test.tsx` only. Give the second fixture a different `pattern_id` (e.g. `pattern({ pattern_id: 'infection', urgency: 'urgent' })`); fix any other test in the file that renders duplicate ids the same way.
+Acceptance:
+- `cd web && npx vitest run src/alert/PatternList.test.tsx 2>&1 | grep -c "same key"` prints 0; all tests pass
+- `scripts/ci.sh` passes

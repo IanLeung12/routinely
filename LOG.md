@@ -192,3 +192,7 @@ T213 | standard | claude-sonnet | merged first try | ~65k tok
 T215 | light | claude-sonnet | merged first try | ~15k tok
 T210 | standard | claude-sonnet | merged first try | ~75k tok
 T207 | standard | claude-opus | merged first try | ~200k tok
+T216 | light | claude-sonnet | merged first try | ~15k tok
+T218 | light | claude-sonnet | merged first try | ~15k tok
+T217 | standard | claude-sonnet | merged first try | ~60k tok
+T206 | light | claude-sonnet | merged first try | ~15k tok
