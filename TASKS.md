@@ -486,14 +486,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T131 — Push alert fires once when a live session flags a resident
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:04Z
 - pr: —
 
 What: SPEC §5 Nice to have 3. `notify.py` (FakeNotifier default, SupabaseNotifier when LIVE_API=1) is built but nothing calls it. When a live session's end flips a resident to flagged, send that alert through `get_notifier()` exactly once.
