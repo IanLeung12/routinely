@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T152 — Shift handoff rows open the resident's alert
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
