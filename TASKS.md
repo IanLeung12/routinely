@@ -574,14 +574,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T344 — Scenario: tea_session_unclear_no_flag (whole session too unclear to score)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_session_unclear_no_flag/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T17:05Z
 - pr: —
 
 What: #322 added an optional `quality:` assertion to `expected.yaml`, but no scenario uses it. Add one where most tea steps come through low-confidence/unclear (bad lighting), with history that would otherwise flag, so replay must report `quality: unclear`, `score: 0.0`, `flag: false`.
