@@ -169,7 +169,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T105 — Review: Claude summary guard lets spelled-out numbers through
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: bug
@@ -181,7 +181,8 @@ What: `_passes_guard` only checks digit tokens (`_NUMBER_RE`), so a reply like "
 Interface: in `explain_claude.py`, map number words `one`..`twenty` (whole-word, case-insensitive) to digits before the allowed-number check, so they must also be in `_allowed_numbers`. Nothing else changes.
 Acceptance:
 - tests: fake client replying "three errors" with observed=2 → template fallback; "two errors" with observed=2 → Claude reply kept; "someone" / "once" are not treated as numbers.
-- owner: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:43Z
 - `cd pipeline && uv run pytest -q` passes.
 
 ### T106 — Evidence replay: stop fetching the alert twice
