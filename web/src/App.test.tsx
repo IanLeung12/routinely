@@ -73,6 +73,15 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeTruthy()
   })
 
+  it('renders the shift handoff screen once it lazy-loads', async () => {
+    await act(async () => { render(<App />) })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Shift handoff' }))
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Shift handoff' })).toBeTruthy()
+  })
+
   it('opens the shift handoff from the header and returns to the overview', async () => {
     await act(async () => { render(<App />) })
     await act(async () => {
@@ -183,7 +192,7 @@ describe('App', () => {
 
     window.history.pushState({}, '', '?tour=1')
     await act(async () => { render(<App />) })
-    expect(screen.getByRole('dialog', { name: 'Guided demo tour' })).toBeTruthy()
+    expect(await screen.findByRole('dialog', { name: 'Guided demo tour' })).toBeTruthy()
     window.history.pushState({}, '', '/')
   })
 })
