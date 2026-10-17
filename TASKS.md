@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T133 — tasks.py: stop reading fields at the task body
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -17,6 +17,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - source: retro
 - owner: max_API_light
 - claimed: 2026-10-17T07:55Z
+- pr: #118
+- rating: 5/5 clear
 
 What: `parse()` treats every `- word: value` line in a task as a field, including acceptance bullets. On T071 an acceptance bullet `- mockLiveStream: emits ...` became a field, so `set note=...` inserted the note in the middle of the acceptance list. An acceptance bullet starting `- status:` would hijack the status. Fields are only the bullet block right after the `### T…` heading; stop collecting fields at the first blank line.
 Acceptance:
