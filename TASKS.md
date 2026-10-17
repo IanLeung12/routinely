@@ -443,7 +443,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
 
 ### T232 — Bug: alert feedback buttons (Confirmed / False alarm / cause) render unstyled
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
