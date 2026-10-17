@@ -208,7 +208,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T112 — AlertContext: care-record context next to the alert (component only)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -216,7 +216,7 @@ Acceptance:
 - area: web/src/alert/AlertContext.tsx (new), web/src/alert/AlertContext.test.tsx (new)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:47Z
-- pr: —
+- pr: #111
 
 What: SPEC §5 Nice to have 5: show care-record context (new meds, temperature, fluids) beside an alert. Build a small component that shows only the records from the 72 h before the alert time, newest first; not wired into AlertView yet.
 Interface: `AlertContext({ records: CareRecord[], alertTs: string, windowHours?: number })`. Read only `web/src/resident/types.ts` (CareRecord), `web/src/resident/ContextTimeline.tsx` (copy its formatting; reuse its helpers if exported) and `web/src/ui/EmptyState.tsx`. Empty window → EmptyState "No care-record changes in the last 3 days".
