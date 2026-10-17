@@ -44,21 +44,21 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T071 — Tests for useLiveSession and mockLiveStream
-- status: blocked
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/live/useLiveSession.test.ts, web/src/live/mockLiveStream.test.ts
-- owner: max_API_light
-- claimed: 2026-10-17T07:39Z
+- owner: —
+- claimed: —
 - pr: —
 
 What: The live screen's state hook and mock stream are untested. Read only `web/src/live/useLiveSession.ts`, `web/src/live/mockLiveStream.ts`, `web/src/live/LiveSession.test.tsx` (how it fakes the socket) and `.tasks/LESSONS.md` (pending effects after teardown break CI).
 Interface: new test files only; use `vi.useFakeTimers()` and a fake WebSocket; no real network.
 Acceptance:
 - mockLiveStream: emits messages in order, ends with a session-ended message, and the returned stop function stops further messages.
-- note: Tests committed locally on task/T071-live-tests. Web lint/test/build passed twice with --maxWorkers=2 (235 tests); scripts/ci.sh Python passed but default-parallel web suite timed out in existing AlertView and PatternList tests. New tests pass. No push: required full CI did not pass.
+- note: Earlier attempt left tests on an unpushed local branch; full web suite timed out locally in AlertView/PatternList (T132 tracks that). Write the tests, push and let GitHub CI decide.
 - useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
