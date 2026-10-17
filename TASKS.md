@@ -462,7 +462,7 @@ Acceptance:
 - `demo_residents()` body is shorter by ≥15 lines; `scripts/ci.sh` passes.
 
 ### T136 — Test: demo_residents() is stable across repeated calls
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
