@@ -85,9 +85,19 @@
   border-left-color: var(--accent);
 }
 
-.handoff__name {
+.handoff__identity {
+  display: flex;
+  flex-direction: column;
   min-width: 10rem;
+}
+
+.handoff__name {
   font-weight: 600;
+}
+
+.handoff__baseline {
+  color: var(--muted);
+  font-size: var(--text-xs);
 }
 
 .handoff__chips {
