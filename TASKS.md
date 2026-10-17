@@ -394,7 +394,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T315 — Refactor: shared fake WebSocket helper for live tests
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -402,7 +402,8 @@ Acceptance:
 - area: web/src/live/testWebSocket.ts, web/src/live/LiveSession.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T16:03Z
-- pr: —
+- pr: #306
+- rating: 5/5 clear
 
 What: web/src/live/LiveSession.test.tsx is 625 lines, much of it hand-rolled WebSocket mocking. Move the fake socket and message helpers into `web/src/live/testWebSocket.ts` and use them from LiveSession.test.tsx, with no change to what is tested.
 Interface: `testWebSocket.ts` exports a fake socket class/installer and a helper to push server messages; test-only (never imported by app code).
