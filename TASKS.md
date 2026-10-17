@@ -129,7 +129,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T248 — Test: live session_end flag matches /residents for every scenario
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
