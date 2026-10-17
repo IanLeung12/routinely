@@ -479,3 +479,40 @@ Interface: read `web/src/ui/DemoBanner.tsx` and `web/src/ui/DemoBanner.test.tsx`
 Acceptance:
 - No behaviour change in DemoBanner.tsx.
 - `cd web && for i in 1 2 3 4 5; do npm test -- --run DemoBanner || exit 1; done` passes, and `scripts/ci.sh` passes.
+
+### T234 — Unit overview: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/index.css (overview rules only: .unit-filter*, .resident-list, .resident-row, .resident-open*, .resident-identity/name/room/status/pattern), web/src/overview/overview.css (new), web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses check the board on a phone on the floor, but there are no responsive rules anywhere in web/ (no `@media` except reduced-motion). Move the overview's rules out of index.css into `overview/overview.css` (imported by UnitOverview.tsx) and add a `@media (max-width: 480px)` block so each resident row stacks name/room, status chip + top pattern, and sparkline without horizontal scroll.
+Interface: `web/src/overview/overview.css`; UnitOverview.tsx adds `import './overview.css'`. No markup or class name changes beyond what the stacking needs.
+Acceptance:
+- No horizontal scroll on the overview at 375 px wide; filter buttons wrap and stay ≥44 px tall tap targets.
+- Desktop layout unchanged (same rules, just moved).
+- Existing UnitOverview tests still pass; `scripts/ci.sh` passes.
+- PR body notes the viewport widths checked.
+
+### T235 — Live screen and task map: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/liveScreen.css, web/src/live/taskMap.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: The live session view (routine picker, task map of steps, skeleton panel) has no responsive rules. Add `@media (max-width: 480px)` blocks to the two CSS files so the routine picker wraps, the task-map steps stack in one column and the skeleton panel scales to the screen width, so a nurse can follow a live session on a phone.
+Interface: CSS only, in the two listed files. Don't touch LiveSession.tsx / liveSession.css (T225, T230 work there).
+Acceptance:
+- No horizontal scroll on the live screen at 375 px; step labels and error times stay readable (no text below var(--text-sm)).
+- Desktop layout unchanged.
+- `scripts/ci.sh` passes; PR body notes the viewport widths checked.
