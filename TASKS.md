@@ -396,7 +396,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T313 — Scenarios: meds_two_errors_one_session and meds_pill_substitution
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -404,7 +404,8 @@ Acceptance:
 - area: tests/scenarios/meds_two_errors_one_session/, tests/scenarios/meds_pill_substitution/, tests/scenarios/README.md
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T15:56Z
-- pr: —
+- pr: #305
+- rating: 5/5 clear
 
 What: Meds still lacks two cases tea has. Add a meds session with two different errors in one session (e.g. skipped water plus pill taken twice), and a substitution case mirroring `tea_substitution` if the meds graph (pipeline/src/routine_watch/tasks/meds.yaml) allows one; otherwise pick another error type tea covers and meds doesn't, and say which in the PR.
 Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/meds_pill_twice/` and `tests/scenarios/tea_substitution/`; add both to the README list. No pipeline code changes; if a scenario exposes a pipeline bug, keep the correct expected behaviour, mark it known-failing as tests/scenarios/README.md describes, and say so in the PR.
