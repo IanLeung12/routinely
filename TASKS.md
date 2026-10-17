@@ -75,25 +75,6 @@ Acceptance:
 - Three cases, each asserting the exact title the app sets (read it from the code, e.g. "Mrs. K — Routine Watch").
 - `scripts/ci.sh` passes.
 
-### T343 — Live: session_end says when a session was too unclear to score
-- status: done
-- class: heavy
-- priority: 1
-- kind: feature
-- deps: T342
-- area: pipeline/src/routine_watch/contracts.py, contracts/live_message.schema.json, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, web/src/contracts.ts, web/src/live/SessionSummary.tsx, web/src/live/SessionSummary.test.tsx, web/src/live/mockLiveStream.ts, pipeline/tests/test_live_quality.py
-- owner: ian-claude
-- claimed: 2026-10-17T19:21Z
-- pr: #373
-- rating: 4/5 area list left out web/src/live/useLiveSession.ts and LiveSession.tsx (the field cannot reach SessionSummary without them) and listed web/src/contracts.ts, which the live protocol never generates into
-
-What: SPEC §12 says low-confidence capture (walker, bad lighting) is "unclear", never an error. Today the nurse just sees score 0 with no explanation. Add `quality: "ok" | "unclear"` to `LiveSessionEnd`, send it from both `live.py` and `live_camera.py` (`session_quality(events)`), and have `SessionSummary` show "Capture unclear — this session wasn't scored" with one line on why (lighting, view blocked, walker) instead of the score.
-Interface: `LiveSessionEnd.quality: Quality` (required; regenerate `contracts/live_message.schema.json` the way the repo does it and update web types + mock stream in the same PR).
-Acceptance:
-- pipeline test: unclear session → `session_end.quality == "unclear"`, clean → `"ok"`, for both `live` and `live_camera` paths; schema validates
-- web test: SessionSummary renders the unclear copy and no score for `quality: "unclear"`; unchanged for `"ok"`; no diagnosis wording
-- `scripts/ci.sh` passes
-
 ### T348 — Docs: CODEMAP note that unclear sessions are never scored
 - status: todo
 - class: light
@@ -164,23 +145,6 @@ What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard
 Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
-
-### T370 — Alert time-of-day strip: usable at phone width (375 px)
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/alert/TimeOfDayStrip.css, web/src/alert/TimeOfDayStrip.mobile.test.tsx
-- owner: max_API_light
-- claimed: 2026-10-17T18:48Z
-- pr: #364
-
-What: The morning/afternoon/evening strip on the alert view must fit 375 px: the three buckets stay readable (stack or shrink), labels never truncate.
-Interface: read `web/src/alert/TimeOfDayStrip.tsx` and `TimeOfDayStrip.css`; follow `web/src/resident/DriftCard.mobile.test.tsx`. CSS-only change plus the test; don't change the component's props.
-Acceptance:
-- new `TimeOfDayStrip.mobile.test.tsx` renders at 375 px and finds all three bucket labels
-- `scripts/ci.sh` passes
 
 ### T371 — Test: error list and suggested checks have accessible names
 - status: done
