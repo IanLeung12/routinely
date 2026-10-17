@@ -424,7 +424,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T170 — Test: dashboard error wording matches explain.py
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -494,7 +494,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T174 — Test: demo top_pattern is set only for watch/flagged residents
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
