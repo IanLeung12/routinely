@@ -456,14 +456,14 @@ Acceptance:
 - `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
 
 ### T430 — Replays: list with error-type filter and empty state (component)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: feature
 - deps: —
 - area: web/src/replays/ReplayList.tsx, web/src/replays/ReplayList.test.tsx, web/src/replays/replayList.css
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T21:43Z
 - pr: —
 
 What: Carved from T413 (Ian's replays library). A presentational list of a person's replays that T413's screen will drop in. No fetching, no routing.
