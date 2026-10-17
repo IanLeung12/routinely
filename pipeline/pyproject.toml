@@ -1,0 +1,35 @@
+[project]
+name = "routine-watch-pipeline"
+version = "0.1.0"
+description = "Routine Watch: capture, step recogniser, task graph, errors, baseline and API."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.9",
+    "uvicorn>=0.32",
+]
+
+[project.optional-dependencies]
+# Installed by scripts/ci.sh via `uv sync --all-extras`.
+dev = [
+    "httpx2>=2.13",  # fastapi.testclient needs an http client
+    "pytest>=8.3",
+    "ruff>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/routine_watch"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
