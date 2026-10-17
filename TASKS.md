@@ -675,7 +675,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T087 — Synthetic history: motor slowing after a sedating medication
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -683,7 +683,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/synth/history.py, pipeline/src/routine_watch/synth/care_records.py, pipeline/tests/test_history.py, pipeline/tests/test_care_records.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:12Z
-- pr: —
+- pr: #72
 
 What: SPEC §7.5/§8 motor slowing pattern: after a new sedating med (e.g. diphenhydramine) ~5 days before the end, step durations and gaps rise while sequencing errors stay rare. Sessions need a duration signal for T084's feature extractor.
 Interface: new `"motor"` scenario in `generate_history` and `generate_care_records`. Add a per-session `duration_s` (total task seconds) to every generated session (all scenarios; normal ≈ 150–200 s), and for `"motor"` raise it ~40–60 % after the med start with mostly `hesitation` errors. Care records: a `medication` entry for the sedating med on the start day. Keep existing keys unchanged so `demo.py` keeps working.
