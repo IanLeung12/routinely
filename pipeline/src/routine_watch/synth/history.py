@@ -15,6 +15,13 @@ EVENING_RECENT_DAYS = 7
 #: "motor" scenario (SPEC §7.5: motor slowing after a medication change).
 MOTOR_MED_START_DAYS_BEFORE_END = 5
 
+#: How close to the end of the window the "spike" scenario's seeded bad session
+#: sits. Tight enough that only the single most recent session qualifies as a
+#: change inside `change_detection.flag_change`'s window - the point of the demo
+#: is that a live session played on stage is the *second* qualifying one, so the
+#: seeded history must leave exactly one (SPEC section 10 beats 2-4).
+SPIKE_RECENT_HOURS = 10
+
 
 def generate_history(
     resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal"
@@ -97,7 +104,7 @@ def _session_errors(
         return errors, self_corrected
 
     if scenario == "spike":
-        if hours_until_end <= 36:
+        if hours_until_end <= SPIKE_RECENT_HOURS:
             return {"omission": 1, "perseveration": 1}, 0
         errors = {}
         self_corrected = 0

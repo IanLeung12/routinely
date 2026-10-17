@@ -1,6 +1,10 @@
 import pytest
 
-from routine_watch.synth.history import MOTOR_MED_START_DAYS_BEFORE_END, generate_history
+from routine_watch.synth.history import (
+    MOTOR_MED_START_DAYS_BEFORE_END,
+    SPIKE_RECENT_HOURS,
+    generate_history,
+)
 
 
 def test_deterministic_for_seed():
@@ -28,13 +32,17 @@ def test_normal_mostly_zero_errors():
         assert s["self_corrected"] <= 1
 
 
-def test_spike_last_36h_has_omission_and_perseveration():
-    sessions = generate_history("r1", days=14, seed=2, scenario="spike")
+def test_spike_last_recent_hours_has_omission_and_perseveration():
+    # Seed 1: the last day's evening session lands inside SPIKE_RECENT_HOURS. Not
+    # every seed does - a day can land on its 8am-only session instead - so this
+    # is also the seed `demo.py` pins mrs-k to.
+    sessions = generate_history("r1", days=14, seed=1, scenario="spike")
     from datetime import UTC, datetime, timedelta
 
     end = datetime(2026, 1, 1, tzinfo=UTC)
-    early = [s for s in sessions if end - datetime.fromisoformat(s["ts"]) > timedelta(hours=36)]
-    late = [s for s in sessions if end - datetime.fromisoformat(s["ts"]) <= timedelta(hours=36)]
+    cutoff = timedelta(hours=SPIKE_RECENT_HOURS)
+    early = [s for s in sessions if end - datetime.fromisoformat(s["ts"]) > cutoff]
+    late = [s for s in sessions if end - datetime.fromisoformat(s["ts"]) <= cutoff]
     assert late
     for s in late:
         assert s["errors"].get("omission") == 1

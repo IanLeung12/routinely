@@ -348,7 +348,7 @@ def test_no_history_says_nothing():
 # ---------------------------------------------------------------------------- the alert
 
 
-def test_the_flagged_demo_resident_gets_ranked_patterns():
+def test_the_flagged_demo_resident_gets_ranked_patterns(mrs_k_flagged):
     alert = build_alerts(demo_residents())[0]
 
     assert alert.patterns[0].pattern_id == "sudden_change"
