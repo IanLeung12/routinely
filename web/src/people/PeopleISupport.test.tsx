@@ -5,6 +5,7 @@ import { PeopleISupport } from './PeopleISupport.tsx'
 import type { Person } from './types.ts'
 
 const MRS_K: Person = { id: 'mrs-k', name: 'Mrs. K', context: 'Room 204, care home' }
+const MR_D: Person = { id: 'mr-d', name: 'Mr. D', context: 'Lives alone' }
 
 beforeEach(() => {
   localStorage.clear()
@@ -32,6 +33,19 @@ describe('PeopleISupport', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open Mrs. K' }))
 
     expect(onOpen).toHaveBeenCalledWith('mrs-k')
+  })
+
+  it('lists several people, each with their own context', () => {
+    const onOpen = vi.fn()
+    render(<PeopleISupport people={[MRS_K, MR_D]} onOpen={onOpen} />)
+
+    expect(screen.getByText('Mrs. K')).toBeTruthy()
+    expect(screen.getByText('Room 204, care home')).toBeTruthy()
+    expect(screen.getByText('Mr. D')).toBeTruthy()
+    expect(screen.getByText('Lives alone')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Mr. D' }))
+    expect(onOpen).toHaveBeenCalledWith('mr-d')
   })
 
   it('adds a person from their invite code', () => {
