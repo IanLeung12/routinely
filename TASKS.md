@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: ce4748f
+- last-reviewed: 7a7a2c9
 
 ## Tasks
 
@@ -45,7 +45,7 @@ Acceptance:
 - class: standard
 - priority: 1
 - deps: T001
-- area: pipeline/routine_watch/tasks/, pipeline/tests/
+- area: pipeline/src/routine_watch/tasks/, pipeline/tests/test_tea_graph.py
 - owner: —
 - claimed: —
 - pr: —
@@ -77,7 +77,7 @@ Acceptance:
 - class: heavy
 - priority: 1
 - deps: T002, T003
-- area: scripts/e2e.sh, tests/scenarios/, pipeline/routine_watch/replay.py, pipeline/tests/test_replay.py
+- area: scripts/e2e.sh, tests/scenarios/, pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
 - owner: —
 - claimed: —
 - pr: —
@@ -102,3 +102,53 @@ What: One command to bring the whole local stack up and down, used by humans and
 Interface: `scripts/dev.sh up` starts API + dashboard in the background (logs to `.dev/`), waits until healthy, prints `DASHBOARD_URL=...` and `API_URL=...`; `scripts/dev.sh down` stops everything; `scripts/dev.sh status`. Works with no API keys (`OFFLINE_MODE=true`, mock data).
 Acceptance:
 - `up` then `curl` both URLs return 200, `down` leaves no processes on those ports. Idempotent (`up` twice is fine).
+
+### T007 — Session score weights
+- status: todo
+- class: light
+- priority: 1
+- deps: —
+- area: pipeline/src/routine_watch/scoring.py, pipeline/tests/test_scoring.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Turn per-session error counts into one session score (weighted sum, hand-set weights). Read only the files in `area`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`. Do not edit errors.py.
+Interface: `WEIGHTS: dict[str, float]` = omission 3.0, substitution 3.0, sequence 2.0, perseveration 2.0, abandonment 2.0, hesitation 1.0; `SELF_CORRECTED_WEIGHT = 0.5`; `session_score(counts: Mapping[str, int], self_corrected: int = 0, assisted: bool = False) -> float`. Assisted sessions return 0.0 (they are excluded). Unknown error type raises `ValueError`.
+Acceptance:
+- `set(WEIGHTS) == set(ERROR_TYPES)`; omission and substitution weigh the most, hesitation the least.
+- Tests: empty counts → 0.0; `{"omission": 1, "perseveration": 1}` → 5.0; self-corrected slips add 0.5 each; assisted → 0.0; unknown type raises.
+- `cd pipeline && uv run pytest tests/test_scoring.py -q` and `scripts/ci.sh` pass.
+
+### T008 — Per-resident baseline and change flag
+- status: todo
+- class: light
+- priority: 1
+- deps: —
+- area: pipeline/src/routine_watch/change_detection.py, pipeline/tests/test_change_detection.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Pure functions that build a resident's baseline from past session scores and decide whether recent sessions flag a change for review. Read only the files in `area`, `pipeline/src/routine_watch/baseline.py` (import `FLAG_MIN_SESSIONS`; do not edit it) and `pipeline/pyproject.toml`.
+Interface: `@dataclass(frozen=True) class Baseline: mean: float; std: float; threshold: float`; `build_baseline(scores: list[float], k: float = 2.0, min_std: float = 0.5) -> Baseline` (threshold = mean + k * max(std, min_std); raises `ValueError` on fewer than 3 scores); `flag_change(sessions: list[tuple[datetime, float]], baseline: Baseline, now: datetime, window_h: float = 48.0, min_sessions: int = FLAG_MIN_SESSIONS) -> bool` (True when at least `min_sessions` sessions within `window_h` hours before `now` score above the threshold).
+Acceptance:
+- Tests: one bad session never flags; two bad sessions 30 h apart flag; two bad sessions 60 h apart do not; sessions at or below threshold never count; all-zero history still gives threshold 1.0 (min_std floor).
+- `cd pipeline && uv run pytest tests/test_change_detection.py -q` and `scripts/ci.sh` pass.
+
+### T009 — Synthetic session history generator
+- status: todo
+- class: light
+- priority: 2
+- deps: T004
+- area: pipeline/src/routine_watch/synth/history.py, pipeline/tests/test_history.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Fake ~14 days of tea-making sessions per demo resident, used to build baselines (SPEC §8: most residents normal, one sudden spike, one slow drift). Read only the files in `area`, `pipeline/src/routine_watch/synth/__init__.py`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`.
+Interface: `generate_history(resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal") -> list[dict]`, one or two sessions per day, sorted by time. Each dict: `{"resident_id", "ts" (ISO 8601 UTC), "task": "tea", "errors": {error_type: count}, "self_corrected": int, "duration_s": float, "assisted": bool}`. `"normal"`: mostly zero errors, at most one hesitation or self-corrected slip on ~20% of sessions. `"spike"`: normal until the last 36 h, then every session has an omission plus a perseveration. `"drift"`: total errors per session trend upward across the whole window, with at most one error per session in the first 3 days.
+Acceptance:
+- Deterministic for a given seed; unknown scenario raises `ValueError`.
+- Tests check each scenario's property above.
+- `cd pipeline && uv run pytest tests/test_history.py -q` and `scripts/ci.sh` pass.
