@@ -44,6 +44,16 @@ def test_never_mentions_diagnosis_or_unstated_facts():
     assert "diagnos" not in result.lower()
 
 
+def test_abandonment_with_no_single_step_does_not_crash():
+    """`step_id` is null when no single step applies (`TaskError`, SPEC section 7's
+    abandonment): the template must not assume a step name."""
+    errors = [{"type": "abandonment", "step_id": None, "t_start": 20}]
+    baseline = {"observed": 1, "baseline_mean": 0.2, "baseline_days": 14}
+    result = TemplateExplainer().summarise(errors, baseline, [])
+
+    assert "stopped before finishing at 0:20" in result
+
+
 def test_empty_errors_gives_no_errors_sentence():
     baseline = {"observed": 0, "baseline_mean": 0.2, "baseline_days": 14}
     result = TemplateExplainer().summarise([], baseline, [])

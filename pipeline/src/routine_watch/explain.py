@@ -34,7 +34,8 @@ _PHRASES = {
 
 
 def _format_error(error: dict) -> str:
-    step = error["step_id"].replace("_", " ")
+    step_id = error["step_id"]
+    step = "finishing" if step_id is None else step_id.replace("_", " ")
     template = _PHRASES.get(error["type"])
     if template is None:
         error_type = error["type"].replace("_", " ")
