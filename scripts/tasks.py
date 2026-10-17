@@ -54,6 +54,7 @@ def parse(text):
     """Return (lines, tasks). tasks: id -> {start, end, fields{name: line_idx}, vals}."""
     lines = text.split("\n")
     tasks, cur = {}, None
+    in_fields = False
     for i, ln in enumerate(lines):
         m = HEAD.match(ln)
         if m or ln.startswith("## "):
@@ -62,8 +63,11 @@ def parse(text):
             cur = None
         if m:
             cur = tasks[m.group(1)] = {"start": i, "end": len(lines), "fields": {}, "vals": {}}
+            in_fields = True
             continue
-        if cur:
+        if not ln.strip():
+            in_fields = False
+        if cur and in_fields:
             f = FIELD.match(ln)
             if f and f.group(1) not in cur["fields"]:
                 cur["fields"][f.group(1)] = i
