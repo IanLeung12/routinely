@@ -198,6 +198,30 @@ def test_pausing_a_room_does_not_change_flag_or_pending_counts(mrs_k_flagged) ->
     assert before["monitoring_paused"] is False
 
 
+def test_summary_names_a_paused_room_instead_of_reading_all_quiet() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    get_monitoring_store().set(mrs_k["room"], False)
+
+    summary = build_handoff(DEMO_NOW, 12)["summary"]
+
+    assert f"Room {mrs_k['room']} (Mrs. K) was paused" in summary
+    assert "no flags are expected from it" in summary
+    assert "diagnos" not in summary.lower()
+
+
+def test_summary_is_unchanged_when_nothing_is_paused() -> None:
+    assert "paused" not in build_handoff(DEMO_NOW, 12)["summary"].lower()
+
+
+def test_context_carries_one_line_per_paused_room() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    get_monitoring_store().set(mrs_k["room"], False)
+
+    (_, _, context) = explainer_call()
+
+    assert f"Room {mrs_k['room']} (Mrs. K) was paused, so no flags are expected from it" in context
+
+
 def test_a_window_only_counts_what_happened_inside_it() -> None:
     """Mrs. K's bad session is about six hours before the demo's clock, so a four-hour
     window has not seen it yet and a shift-long one has."""
