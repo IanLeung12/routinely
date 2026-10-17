@@ -385,15 +385,16 @@ Acceptance:
 - existing tests pass (selectors only); `cd web && npx vitest run src/tour && npm run lint`.
 
 ### T435 — Redesign follow-up: privacy panel + monitoring toggle on the Fey system
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T401
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.test.tsx, web/src/about/PrivacyPanel.keyboard.test.tsx, web/src/about/PrivacyPanel.mobile.test.tsx, web/src/about/MonitoringToggle.test.tsx, web/src/about/MonitoringToggle.keyboard.test.tsx
-- owner: ian-laptop-standard
-- claimed: 2026-10-17T22:28Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-laptop-standard: run ended without progress
 
 What: Move the supervisor-side privacy panel and the pause-monitoring toggle onto the new tokens and primitives (`Card`, `SectionHeader`, `Row` for each "what's stored" line, `Button` for the toggle). Don't edit `monitoringApi.ts` or `ResidentDetail.tsx` (T404 owns it). Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
 Why: privacy (skeletons only, no video) is a judging talking point; the panel that says so is still in the old style.
