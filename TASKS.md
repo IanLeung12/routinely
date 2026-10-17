@@ -394,7 +394,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T070 — Tests for Sparkline and SessionList
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -402,7 +402,7 @@ Acceptance:
 - area: web/src/overview/Sparkline.test.tsx, web/src/resident/SessionList.test.tsx
 - owner: max-codex-light-2
 - claimed: 2026-10-17T06:00Z
-- pr: —
+- pr: #68
 
 What: Both components have no tests. Read only `web/src/overview/Sparkline.tsx`, `web/src/resident/SessionList.tsx`, `web/src/resident/types.ts`, `web/src/resident/format.ts` and `web/src/resident/DriftCard.test.tsx` (test style).
 Interface: new test files only; do not change the components.
