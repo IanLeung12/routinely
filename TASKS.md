@@ -111,24 +111,6 @@ Acceptance:
 - No horizontal scroll on the pattern library at 375 px; desktop unchanged.
 - `scripts/ci.sh` passes.
 
-### T241 — Test: no user-facing web copy says "diagnose" or "has <condition>"
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: web/src/wording.test.ts (new)
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:45Z
-- pr: #250
-- rating: 5/5 clear
-
-What: The wording rule (AGENTS.md: the product flags a change for review, lists patterns it is "consistent with", never "diagnoses") is only checked per component. Add one guard test that scans every non-test `web/src/**/*.ts(x)` file's string literals and JSX text for `diagnos` (case-insensitive) and fails with the file and line.
-Interface: `web/src/wording.test.ts` using `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true })`, skipping `*.test.*` and `contracts.ts`. Strip `//` and `/* */` comments before matching (LiveSession.tsx and PatternList.tsx mention "never diagnoses" in comments, which is fine).
-Acceptance:
-- Test passes on current main; temporarily adding `'Diagnosed with X'` to any component makes it fail with that file named (say so in the PR body).
-- `scripts/ci.sh` passes.
-
 ### T245 — Smoke: check GET /monitoring and a PUT round-trip
 - status: claimed
 - class: light
@@ -197,44 +179,6 @@ Acceptance:
 - one parametrized test per scenario; fakes only, no real API calls
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
-### T251 — Shift handoff payload lists rooms whose monitoring is paused
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- deps: —
-- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T12:03Z
-- pr: #238
-- rating: 5/5 clear
-
-What: A nurse taking over a shift must know which rooms aren't being watched; a paused room silently produces no flags, so today the handoff can read "all quiet" for a resident nobody was monitoring (SPEC §12).
-Interface: `build_handoff(...)` adds `"paused": [{"room": str, "resident_id": str, "name": str}]` to its result, read from `get_monitoring_store().paused_rooms()` (`monitoring.py`) and the room→resident config the API already uses for `/ws/live`; empty list when nothing is paused. Each resident row whose room is paused gets `"monitoring_paused": true` (else false). Don't change `api.py` (the endpoint returns `build_handoff` as-is) or anything in `web/`.
-Acceptance:
-- Tests in `pipeline/tests/test_handoff.py`: nothing paused → `paused == []`, all rows false; pause one room → that resident listed once, its row true; resume → back to empty. Reset the monitoring store between tests.
-- Summary/flag counts unchanged by pausing.
-- `scripts/ci.sh` passes.
-
-### T252 — Web: lazy-load the secondary screens to shrink the first-load bundle
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/App.tsx, web/src/App.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T12:04Z
-- pr: #237
-- rating: 5/5 clear
-
-What: The demo opens on the unit overview, but `App.tsx` statically imports every screen (pattern library, shift handoff, tour, live screen, alert view). Load the screens not shown on first paint with `React.lazy` + `Suspense` so the overview appears faster on a phone.
-Interface: In `App.tsx` only, `lazy(() => import(...))` for `PatternLibrary`, `Handoff` and `Tour` (named exports: map to `{ default: m.X }`); wrap each in `<Suspense fallback={...}>` using an existing `web/src/ui/` loading/empty component. Keep the overview, resident detail, live and alert screens static (demo path). No behaviour or copy changes.
-Acceptance:
-- Existing `App.test.tsx` tests pass (use `findBy*` where a lazy screen now resolves async); add one test that opening "Shift handoff" still renders it.
-- PR body gives the main JS chunk size from `cd web && npm run build` before and after.
-- `scripts/ci.sh` passes.
-
 ### T253 — Shift handoff screen: show the rooms whose monitoring is paused
 - status: todo
 - class: light
@@ -251,25 +195,6 @@ Interface: Read `web/src/handoff/types.ts`, `Handoff.tsx`, `mockHandoff.ts` and 
 Acceptance:
 - Tests: no line when `paused` is empty or missing; line + chip when one room is paused; `handoffText` includes it.
 - `scripts/ci.sh` passes.
-
-### T254 — Demo residents carry a consent record (who opted in, when)
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- source: proposed
-- deps: —
-- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo_consent.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T12:10Z
-- pr: #239
-- rating: 5/5 clear
-
-What: SPEC §12 says the resident or their substitute decision-maker opts in per room, but nothing shows that consent exists. Add a seeded consent record per demo resident so judges see consent is part of the design (Responsible design / Usefulness).
-Interface: In `demo.py`, add to each `_RESIDENTS` entry and to every `demo_residents()` dict a `consent: {"given_by": str, "on": "YYYY-MM-DD"}` field, e.g. `{"given_by": "Resident", ...}` or `{"given_by": "Substitute decision-maker (daughter)", ...}`; dates before the 14-day history starts, deterministic. `GET /residents` and `/residents/{id}` already return these dicts, so no `api.py` change.
-Acceptance:
-- New `pipeline/tests/test_demo_consent.py`: every demo resident has `consent.given_by` (non-empty) and `consent.on` (ISO date before its first session); `GET /residents/mrs-k` includes `consent`.
-- Existing demo/stability tests unchanged; `scripts/ci.sh` passes.
 
 ### T255 — Resident detail: show who consented to monitoring
 - status: todo
