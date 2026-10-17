@@ -354,7 +354,7 @@ Acceptance:
 - `scripts/e2e.sh tests/scenarios/meds_abandoned` prints PASS; `scripts/ci.sh` passes
 
 ### T202 — Scenario: medication slip corrected inside the window is not flagged
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -362,7 +362,8 @@ Acceptance:
 - area: tests/scenarios/meds_self_corrected/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:55Z
-- pr: —
+- pr: #197
+- rating: 5/5 clear
 
 What: meds counterpart of tea_self_corrected: a sequence slip the resident corrects within the self-correction window, so the reduced weight is pinned for the second task too.
 Interface: read tests/scenarios/README.md, tests/scenarios/tea_self_corrected/ and tests/scenarios/meds_pill_before_water/. Write steps.jsonl + expected.yaml only.
