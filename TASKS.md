@@ -372,7 +372,7 @@ Acceptance:
 * Wording says "flags a change for review"; no "diagnose". No other file changed.
 
 ### T199 — Alert view: "Copy summary" for the chart note
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
