@@ -3,13 +3,10 @@
 Two halves. The first replays every scenario in the repo and checks it against its
 own `expected.yaml`, which is the same thing `scripts/e2e.sh` does, so a broken
 pipeline fails here as well as in e2e. The second pins the rules the scenarios rely
-on but do not all exercise: what the stub recogniser makes of a frame, and when a
-session flags. SPEC section 7's error types themselves are `routine_watch.errors`'s
-to pin (`tests/test_errors.py`); this module just wires the real classifier in.
-
-The recogniser is a stub on purpose (`tests/scenarios/README.md`). These tests
-describe what it does today so that replacing it with the real one is a visible
-change rather than a quiet one.
+on but do not all exercise: the score and the change flag. The recogniser's own rules
+are `routine_watch.recogniser`'s to pin (`tests/test_recogniser.py`); SPEC section 7's
+error types are `routine_watch.errors`'s (`tests/test_errors.py`); this module just
+wires the real recogniser and classifier in.
 """
 
 from __future__ import annotations
@@ -20,14 +17,11 @@ from pathlib import Path
 import pytest
 
 from routine_watch.contracts import (
-    HAND_LANDMARK_COUNT,
     POSE_LANDMARK_COUNT,
     BoundingBox,
     CaptureFrame,
     CaptureSource,
     ErrorType,
-    Handedness,
-    HandLandmarks,
     Landmark,
     ObjectDetection,
     ObjectLabel,
@@ -47,10 +41,7 @@ from routine_watch.replay import (
     main,
     replay,
     scenario_dirs,
-    steps_from_frames,
-    touched_objects,
 )
-from routine_watch.tasks import TaskGraph, load_task
 
 SESSION = "test-session"
 
@@ -59,11 +50,6 @@ REQUIRED_SCENARIOS = ("tea_normal", "tea_skip_teabag_pour_twice")
 
 #: A scenario directory holds these and nothing else. Never a clip (SPEC section 8).
 ALLOWED_FILES = {"expected.yaml", "frames.jsonl", "steps.jsonl", "README.md"}
-
-
-@pytest.fixture(scope="module")
-def tea() -> TaskGraph:
-    return load_task("tea")
 
 
 # ---------------------------------------------------------------------- helpers
@@ -100,10 +86,9 @@ def frame(
     t: float,
     objects: list[tuple[str, BoundingBox]],
     *,
-    hands: list[HandLandmarks] | None = None,
     people: int = 0,
 ) -> CaptureFrame:
-    """One capture record: object boxes, optional hand landmarks, optional people."""
+    """One capture record: object boxes and optional people."""
     landmarks = [Landmark(x=0.5, y=0.5, z=0.0, visibility=0.9) for _ in range(POSE_LANDMARK_COUNT)]
     return CaptureFrame(
         session_id=SESSION,
@@ -111,20 +96,11 @@ def frame(
         t=t,
         source=CaptureSource.SYNTHETIC,
         poses=[Pose(landmarks=landmarks, score=0.9) for _ in range(people)],
-        hands=hands or [],
+        hands=[],
         objects=[
             ObjectDetection(label=ObjectLabel(label), confidence=0.9, box=at)
             for label, at in objects
         ],
-    )
-
-
-def hand_at(x: float, y: float) -> HandLandmarks:
-    """MediaPipe hand landmarks, all on one point: the hand is on whatever is there."""
-    return HandLandmarks(
-        handedness=Handedness.RIGHT,
-        score=0.9,
-        landmarks=[Landmark(x=x, y=y, z=0.0) for _ in range(HAND_LANDMARK_COUNT)],
     )
 
 
@@ -203,77 +179,6 @@ def test_scenario_frames_are_valid_capture_records() -> None:
     assert all("image" not in json.loads(line) for line in lines)
 
 
-# ---------------------------------------------------------- STUB: the recogniser
-
-
-def test_a_hand_touches_what_its_box_overlaps() -> None:
-    touched = touched_objects(
-        frame(
-            0,
-            0.0,
-            [
-                ("cup", box(0.40, 0.44, 0.50, 0.58)),
-                ("kettle", box(0.66, 0.26, 0.84, 0.54)),
-                ("hand", box(0.44, 0.50, 0.54, 0.62)),
-            ],
-        )
-    )
-    assert touched == {"cup"}
-
-
-def test_a_hand_touches_what_its_landmarks_are_inside() -> None:
-    """MediaPipe hands work as well as the detector's hand class (SPEC section 16)."""
-    touched = touched_objects(
-        frame(
-            0,
-            0.0,
-            [("cup", box(0.40, 0.44, 0.50, 0.58)), ("spoon", box(0.20, 0.60, 0.38, 0.66))],
-            hands=[hand_at(0.45, 0.50)],
-        )
-    )
-    assert touched == {"cup"}
-
-
-def test_consecutive_frames_of_one_step_are_one_event(tea: TaskGraph) -> None:
-    on_cup = [("cup", box(0.40, 0.44, 0.50, 0.58)), ("hand", box(0.44, 0.50, 0.54, 0.62))]
-    events = steps_from_frames([frame(i, i * 0.5, on_cup) for i in range(4)], tea)
-    assert [(event.step_id, event.t_start, event.t_end) for event in events] == [
-        ("get_cup", 0.0, 1.5)
-    ]
-    assert events[0].source is StepSource.RULE
-    assert not events[0].unclear
-
-
-def test_a_frame_touching_nothing_ends_the_step(tea: TaskGraph) -> None:
-    """Which is what lets a scenario show the same step happening twice."""
-    cup = ("cup", box(0.40, 0.44, 0.50, 0.58))
-    on_cup = [cup, ("hand", box(0.44, 0.50, 0.54, 0.62))]
-    away = [cup, ("hand", box(0.04, 0.70, 0.14, 0.82))]
-    frames = [frame(0, 0.0, on_cup), frame(1, 0.5, away), frame(2, 1.0, on_cup)]
-    assert [event.step_id for event in steps_from_frames(frames, tea)] == ["get_cup", "get_cup"]
-
-
-def test_two_steps_with_the_same_objects_are_refused_not_guessed(tea: TaskGraph) -> None:
-    """`fill_kettle` and `boil` are both "the kettle": the stub says so and stops."""
-    on_kettle = [
-        ("kettle", box(0.66, 0.26, 0.84, 0.54)),
-        ("hand", box(0.60, 0.30, 0.70, 0.42)),
-    ]
-    with pytest.raises(ReplayError, match="fill_kettle and boil"):
-        steps_from_frames([frame(0, 0.0, on_kettle)], tea)
-
-
-def test_frames_are_read_in_sequence_order(tea: TaskGraph) -> None:
-    on_cup = [("cup", box(0.40, 0.44, 0.50, 0.58)), ("hand", box(0.44, 0.50, 0.54, 0.62))]
-    on_spoon_in_cup = [
-        ("cup", box(0.40, 0.44, 0.50, 0.58)),
-        ("spoon", box(0.43, 0.38, 0.47, 0.56)),
-        ("hand", box(0.42, 0.34, 0.52, 0.46)),
-    ]
-    shuffled = [frame(1, 0.5, on_spoon_in_cup), frame(0, 0.0, on_cup)]
-    assert [event.step_id for event in steps_from_frames(shuffled, tea)] == ["get_cup", "stir"]
-
-
 # --------------------------------------------------------------- score and flag
 
 
@@ -317,8 +222,10 @@ def test_a_session_with_staff_in_frame_is_assisted_and_scores_zero(tmp_path: Pat
 
     Only a frame-level scenario can show this, because only frames carry the poses.
     """
-    on_cup = [("cup", box(0.40, 0.44, 0.50, 0.58)), ("hand", box(0.44, 0.50, 0.54, 0.62))]
-    frames = [frame(0, 0.0, on_cup, people=2), frame(1, 0.5, on_cup, people=2)]
+    # The cup travels while held, which is what the recogniser's `get_cup` rule reads.
+    carried_from = [("cup", box(0.10, 0.70, 0.20, 0.82)), ("hand", box(0.12, 0.72, 0.18, 0.80))]
+    carried_to = [("cup", box(0.40, 0.44, 0.50, 0.58)), ("hand", box(0.42, 0.46, 0.48, 0.56))]
+    frames = [frame(0, 0.0, carried_from, people=2), frame(1, 0.5, carried_to, people=2)]
     path = write_scenario(
         tmp_path / "assisted",
         "steps: [get_cup]\nerrors: []\nflag: false\n",
