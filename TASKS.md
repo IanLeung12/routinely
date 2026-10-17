@@ -262,14 +262,14 @@ Acceptance:
 - `scripts/ci.sh` + `scripts/e2e.sh` pass.
 
 ### T427 — Replays data layer: API client + mock fixture for the replays library
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: feature
 - deps: T412
 - area: web/src/replays/api.ts, web/src/replays/api.test.ts, web/src/mock/replays.ts
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T21:11Z
 - pr: —
 
 What: The fetch layer T413's Replays screen will consume, carved out of T413 so the screen task only builds UI. Backend routes landed in T412.
