@@ -515,7 +515,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T128 — Bug: smoke.sh finds no alert since mrs-k is only flagged after her live session
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
