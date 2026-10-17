@@ -314,7 +314,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T167 — Review: nurse feedback tunes the threshold in /handoff and alert payload but not /residents status or /alerts
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
@@ -477,7 +477,7 @@ Acceptance:
 - `cd web && npx vitest run src/live/LiveSession.test.tsx` and `scripts/ci.sh` pass
 
 ### T176 — Docs: scenarios README explains session duration_s
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
