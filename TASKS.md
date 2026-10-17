@@ -426,7 +426,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T276 — Unit overview: "Paused" filter
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -434,7 +434,8 @@ Acceptance:
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T13:23Z
-- pr: —
+- pr: #262
+- rating: 5/5 clear
 
 What: T246 added a "Monitoring paused" chip; add a "Paused (N)" button to the existing filter group so a nurse can list paused rooms in one tap.
 Interface: extend `UnitFilter` with `'paused'`; `applyFilter` uses the `pausedRooms` state already fetched via `fetchPausedRooms`. Hide the button (or show 0) when the fetch failed; never break the list.
