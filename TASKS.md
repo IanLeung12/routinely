@@ -129,7 +129,7 @@ Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
 
 ### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
