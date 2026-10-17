@@ -62,27 +62,6 @@ Why: the task map is the centrepiece of the live demo shot; a flow canvas makes 
 Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layout (topological levels left→right) computed from deps; same props and data as today's TaskMap; keyboard/screen-reader: nodes are a list with state in their accessible names.
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
 
-### T433 — Redesign follow-up: pattern library onto the Fey system
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- deps: T442
-- area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.css, web/src/patterns/urgencyFilter.css, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/PatternLibrary.filters.test.tsx, web/src/patterns/PatternLibrary.keyboard.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T22:41Z
-- pr: #410
-- rating: 5/5 clear
-- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
-
-What: The pattern library still uses the pre-redesign tokens (`--panel`, `--border`, `--muted`, `--accent`) and its own boxes. Rebuild its markup on the ui primitives (`Card`, `SectionHeader`, `Row`, `Pill`, `SegmentedControl` for the urgency filter) and the new tokens only. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
-Why: judges click into "consistent with" patterns from the alert; it's the one demo screen that still looks like the old app.
-Interface: same exports/props as today; same data from `web/src/patterns/api.ts` and `mockPatterns.ts` (don't edit those).
-Acceptance:
-- no legacy tokens (`--panel`, `--border`, `--muted`, `--bg`) and no hex/px literals in the two CSS files;
-- wording unchanged ("consistent with", never "diagnose");
-- existing tests pass (update selectors only, keep behaviour); `cd web && npx vitest run src/patterns && npm run lint`.
-
 ### T434 — Redesign follow-up: guided tour card on the Fey system
 - status: done
 - class: light
