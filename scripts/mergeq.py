@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Home-made merge queue (GitHub's merge queue needs an org-owned repo).
 
-`main` requires PR branches to be up to date before merging, so two green PRs can't
-combine into a broken `main`. This script, run every ~2 min from cron on the host, keeps
-that moving without workers waiting on each other:
+Run every ~2 min from cron on the host. If `main` requires up-to-date branches (ruleset
+"strict"), it serialises updates; with strict off it mainly unsticks auto-merge and routes
+merge conflicts back to the board:
 
   * If any auto-merge PR has CI running, wait (one PR is "in flight" at a time).
   * Otherwise update the oldest auto-merge PR that is BEHIND main (its CI re-runs on
@@ -68,6 +68,16 @@ def main():
                 gh("pr", "comment", str(p["number"]), "--body", f"mergeq: {msg}.")
                 state["conflicts"].append(p["number"])
     state["conflicts"] = [n for n in state["conflicts"] if any(p["number"] == n and p["mergeStateStatus"] == "DIRTY" for p in prs)]
+
+    # Auto-merge sometimes doesn't fire after a rule change or a re-run; merge clean, green PRs directly.
+    for p in sorted(prs, key=lambda p: p["number"]):
+        if p["mergeStateStatus"] == "CLEAN" and checks_state(p) == "green":
+            rc, out2, _ = gh("pr", "view", str(p["number"]), "--json", "mergeStateStatus", "--jq", ".mergeStateStatus")
+            if out2.strip() != "CLEAN":
+                continue
+            print(f"merging #{p['number']} {p['title']} (clean + green, auto-merge stuck)")
+            if not DRY:
+                gh("pr", "merge", str(p["number"]), "--squash", "--delete-branch")
 
     if any(checks_state(p) == "running" for p in prs):
         pass  # something is in flight; let it finish
