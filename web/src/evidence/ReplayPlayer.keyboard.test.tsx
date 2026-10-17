@@ -10,12 +10,14 @@ const frames: CaptureFrame[] = [60, 61, 62].map((t, seq) => ({
   objects: [],
 }))
 
-afterEach(() => cleanup())
+afterEach(() => {
+  cleanup()
+})
 
 describe('ReplayPlayer keyboard access', () => {
   it('toggles play/pause on the Play button with Tab + Enter', async () => {
     const user = userEvent.setup()
-    render(<ReplayPlayer frames={frames} />)
+    render(<ReplayPlayer frames={frames} fps={0.01} />)
 
     await user.tab()
     await user.tab()
@@ -23,15 +25,29 @@ describe('ReplayPlayer keyboard access', () => {
     expect(document.activeElement).toBe(playButton)
 
     await user.keyboard('{Enter}')
-    expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Pause' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByLabelText('Replay time').textContent).toBe('1:00')
 
-    await user.keyboard('{Enter}')
+    await user.keyboard(' ')
+    expect(screen.getByRole('button', { name: 'Play' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByLabelText('Replay time').textContent).toBe('1:00')
+  })
+
+  it('tabs to the player and toggles playback with Space', async () => {
+    const user = userEvent.setup()
+    render(<ReplayPlayer frames={frames} fps={0.01} />)
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('group', { name: /Skeleton replay/ }))
+    await user.keyboard(' ')
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy()
+    await user.keyboard(' ')
     expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
   })
 
   it('tabs to the scrub slider', async () => {
     const user = userEvent.setup()
-    render(<ReplayPlayer frames={frames} />)
+    render(<ReplayPlayer frames={frames} fps={0.01} />)
 
     await user.tab()
     await user.tab()
