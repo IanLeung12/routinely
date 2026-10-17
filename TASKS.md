@@ -492,7 +492,7 @@ Acceptance:
 - `contracts/README.md` lists both; `scripts/ci.sh` passes.
 
 ### T258 — Test: pause flow end to end in the API (pause → handoff → live → reset)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
