@@ -77,3 +77,17 @@
 .task-map-legend__item .step {
   padding: var(--space-2);
 }
+
+/* Phone width (375 px and similar, SPEC section 9): one column instead of
+   wrapping rows, so a step never shares a row with the one after it and gets
+   squeezed. The arrow turns to point down the new vertical flow. */
+@media (max-width: 480px) {
+  .task-map {
+    flex-direction: column;
+  }
+
+  .task-map__arrow {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+}
