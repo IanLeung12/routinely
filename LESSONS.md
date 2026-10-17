@@ -13,3 +13,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - UI must render task structure (steps, labels) from data sent by the pipeline, never from mock constants, even in live mode (reviewer)
 - A PR that reproduces live.py's message stream can go stale between local CI and PR CI: GitHub tests your branch merged with the newest main, so re-fetch main and re-run ci.sh right before pushing when (ian-claude)
 - A test that plays a live session (live.session_messages or /ws/live) now records it against the demo resident: reset session_log in a fixture or later tests see it in demo_residents(). (ian-claude)
+- Before writing a perseveration/repetition scenario task, check the step's once_only flag in pipeline/src/routine_watch/tasks/*.yaml; stir is once_only:false by design. (orchestrator)
