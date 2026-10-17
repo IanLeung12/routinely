@@ -503,7 +503,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T344 — Scenario: tea_session_unclear_no_flag (whole session too unclear to score)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
