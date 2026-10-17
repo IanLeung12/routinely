@@ -4969,3 +4969,79 @@ Acceptance:
 - integration.sh fails with a clear message if the paused message is missing or the resumed session doesn't stream.
 - Room is resumed even when a check fails.
 - `scripts/integration.sh` passes locally on main (paste its last line in the PR); `scripts/ci.sh` passes.
+
+### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
+- status: done
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:57Z
+- pr: #290
+- rating: 5/5 clear
+
+What: T166 (PR #159) made `alerts.session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` public so `handoff.py` writes its summary from the same evidence as the alert, against that resident's own baseline. CODEMAP notes don't say so.
+Interface: Read only `docs/CODEMAP.md`, `git show e4f8fe1 --stat` and the module docstrings of `pipeline/src/routine_watch/alerts.py` and `handoff.py`. Edit notes only, not the generated file list.
+Acceptance:
+* 2-4 line note next to the existing handoff/alert notes naming the four shared functions and why (same steps, same times, same baseline).
+* Also one line that handoff rows open the resident's alert by looking up the id in `GET /alerts` (T152, `web/src/handoff/Handoff.tsx` `alertByResident`).
+* No other file changed.
+
+### T283 — Resident detail: "What nurses said" — past feedback answers and the pattern ranking they changed
+- status: done
+- class: heavy
+- priority: 2
+- kind: feature
+- deps: T278
+- area: pipeline/src/routine_watch/feedback.py, pipeline/src/routine_watch/api_residents.py, pipeline/tests/test_feedback_history.py, web/src/resident/FeedbackHistory.tsx, web/src/resident/FeedbackHistory.test.tsx, web/src/resident/feedbackHistory.css, web/src/resident/ResidentDetail.tsx, web/src/resident/api.ts, web/src/resident/types.ts
+- source: proposed
+- owner: ian-claude
+- claimed: 2026-10-17T14:36Z
+- pr: #287
+- rating: 4/5 clear on the interface and the acceptance; it didn't say where the pattern *name* for the card's copy comes from (the store returns a cause id, so the route needed a pattern_names map), and the demo only ever has one alert per resident, so 'answers' can only hold one row per resident today
+
+What: Rationale: the feedback loop (T130, Nice-to-have 8) re-weights patterns silently; judges and nurses can't see the AI learning. Expose a resident's recorded answers and current pattern weights and show them as a small card on the resident detail screen.
+Interface: `FeedbackStore.history(resident_id) -> list[{alert_id, verdict, cause, at}]` (newest first) plus existing `pattern_weights()`; route `GET /residents/{id}/feedback` → `{"answers": [...], "pattern_weights": {pattern_id: float}}` (404 for unknown resident) in the residents routes module from T278. Web: `fetchFeedbackHistory(id)` in resident/api.ts, `<FeedbackHistory>` card under the session list: "Confirmed · consistent with <pattern name> · 13:40" rows and "Ranking now favours: <pattern>" when weights exist; empty state "No nurse answers yet". Don't add a contracts/ schema here (contracts/ is busy with T269/T280); note it in the PR for a follow-up.
+Acceptance:
+- pytest: answers recorded via the feedback POST appear newest-first; `/demo/reset` empties them; unknown resident → 404.
+- Vitest: rows, empty state, fetch error state ("Couldn't load feedback"); copy uses "consistent with", never "diagnos".
+- `scripts/ci.sh` passes.
+
+### T284 — Review: move shared API state out of api.py to end the `from . import api` cycle
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: T278
+- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_state.py, pipeline/src/routine_watch/api_residents.py, pipeline/src/routine_watch/api_alerts.py, pipeline/src/routine_watch/api_live.py, docs/CODEMAP.md
+- source: reviewer
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T14:08Z
+- pr: #277
+- rating: 5/5 clear
+
+What: After T278, `api_residents.py`, `api_alerts.py` (and `api_live.py`) reach back into `api.py` with function-level `from . import api` to get `_tuned`, `_SUMMARY_FIELDS`, `_feedback_store`, `_flagged_residents`. That's a circular import hidden inside every handler; each new router copies the pattern. Move that shared state/helpers into a new `api_state.py` (no FastAPI app import), have `api.py` and all routers import from it at module top, and keep test resets working by mutating the store in place (e.g. `api_state.reset()`), not rebinding a module global.
+Acceptance:
+- No `from . import api` left in `pipeline/src/routine_watch/api_*.py` (`grep` it in the PR).
+- `/demo/reset` and existing test resets still clear feedback across all routes (existing pytest passes unchanged).
+- CODEMAP note for `api_state.py`; `scripts/ci.sh` passes.
+
+### T285 — Docs: DEMO.md walks through pausing a room, the consent line and the audit trail
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:16Z
+- pr: #276
+- rating: 5/5 clear
+
+What: DEMO.md never mentions the monitoring switch, so presenters skip the privacy story judges ask about. Add one short demo step after the Mrs. K resident detail.
+Interface: Read `docs/DEMO.md`, `web/src/resident/ResidentDetail.tsx` and `web/src/about/MonitoringToggle.tsx` for the exact on-screen copy. Step: open Mrs. K → point at the "Consent: ..." line → flip the switch to Paused ("No camera data is processed while paused", "Recent changes: Paused by nurse") → show the unit overview "Monitoring paused" chip and the shift handoff naming the paused room → resume (or `/demo/reset`).
+Acceptance:
+  * One new numbered step (≤10 lines) quoting the real UI copy; no "diagnose" wording
+  * `scripts/ci.sh` passes
