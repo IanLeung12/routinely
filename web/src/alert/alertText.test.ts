@@ -32,11 +32,17 @@ describe('alertText', () => {
     }
   })
 
-  it('names the resident by display name, not the raw id', () => {
+  it('names the resident by the name it is given, not one guessed from the id', () => {
+    const text = alertText(mockAlerts[0], 'Mrs. Kowalski')
+
+    expect(text).toContain('Resident: Mrs. Kowalski')
+    expect(text).not.toMatch(/Resident: mrs-k/)
+  })
+
+  it('falls back to the raw id when no resident name is given', () => {
     const text = alertText(mockAlerts[0])
 
-    expect(text).toContain('Resident: Mrs. K')
-    expect(text).not.toMatch(/Resident: mrs-k/)
+    expect(text).toContain(`Resident: ${mockAlerts[0].resident_id}`)
   })
 
   it('works with zero patterns', () => {
