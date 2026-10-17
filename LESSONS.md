@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
 - recogniser._in_hand reads hand landmarks as well as hand boxes, so adding poses/hands to a frame can silently change step recognition: keep generated landmarks inside the frame's existing hand box. (ian-claude)
 - A PR that adds a field to live.py's session_end must add it to live_camera.py's too: test_live_camera.py compares the camera path's messages to the scenario replay's one for one. (ian-claude)
 - In web tests, assert focus (document.activeElement) inside await waitFor(...), never right after findBy*: focus is set in an effect and lands late under CI load (T228). (orchestrator)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Phone-width (375 px) tests: jsdom ignores @media and window.innerWidth, so asserting labels exist proves nothing. Assert the mobile CSS rule itself (read the stylesheet text for the @media block/selec (orchestrator)
 - After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
+- On Windows set PYTHONUTF8=1 before scripts/ci.sh so subprocess output decodes UTF-8 preflight symbols correctly. (Max_codex_light)
