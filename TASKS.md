@@ -288,7 +288,7 @@ What: Split from T402. `BaselineChart` → `LineChart` with the personal baselin
 Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
 
 ### T422 — Restyle: HeatCalendar in the Fey palette
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: improvement
