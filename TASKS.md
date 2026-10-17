@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: a825bee
+- last-reviewed: d00137f
 
 ## Tasks
 
@@ -441,3 +441,72 @@ Interface: `web/src/wording.test.ts` using `import.meta.glob('./**/*.{ts,tsx}', 
 Acceptance:
 - Test passes on current main; temporarily adding `'Diagnosed with X'` to any component makes it fail with that file named (say so in the PR body).
 - `scripts/ci.sh` passes.
+
+### T242 — Web: monitoring API client (GET /monitoring, PUT /rooms/{room}/monitoring)
+- status: todo
+- class: light
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: T149 (#226) added the pipeline endpoints behind the room pause switch, but the web has no client for them. Add a small typed client; no UI changes.
+Interface: read `pipeline/src/routine_watch/api.py` (search `monitoring`) and `web/src/config.ts` (`apiUrl`), copy the fetch style of `web/src/resident/api.ts`. Export `fetchPausedRooms(): Promise<string[]>` (GET `${apiUrl}/monitoring`, returns `paused_rooms`) and `setRoomMonitoring(room: string, on: boolean): Promise<void>` (PUT `${apiUrl}/rooms/${encodeURIComponent(room)}/monitoring` with the JSON body the endpoint expects). Both throw on network error or non-ok response.
+Acceptance:
+- tests with a stubbed `fetch` cover: URL + method + body, parsed result, throws on `ok: false`, throws on network error
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T243 — Resident detail: monitoring switch reads and writes the real pause state
+- status: todo
+- class: standard
+- priority: 1
+- kind: feature
+- deps: T242
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `ResidentDetail` keeps the monitoring switch in local `useState(true)`, so pausing a room does nothing on the server (SPEC §12). Load the initial state from `fetchPausedRooms()` and call `setRoomMonitoring()` on toggle (T242).
+Interface: consume `web/src/about/monitoringApi.ts`; `MonitoringToggle` props unchanged. Optimistic toggle; if the PUT fails, revert the switch and show a short inline message ("Couldn't change monitoring. Try again."). If the GET fails (API down / mock mode), keep today's local-only behaviour, no error shown.
+Acceptance:
+- tests: initial state reflects a paused room; toggle sends PUT; failed PUT reverts + shows message; GET failure falls back to "on"
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T244 — Live screen: show "Monitoring paused" when /ws/live sends {"type":"paused"}
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: since T149 (#226), `/ws/live` sends one `{"type": "paused", "room": "<room>"}` and closes if the demo resident's room is paused. `useLiveSession` counts that as data received, ignores the unknown type, and the live screen sits empty with no explanation. Handle it explicitly.
+Interface: add a `paused` message to the hook's `LiveMessage` union (web-side type only; don't touch `contracts/`) and a `paused: { room: string } | null` field to its state; do not fall back to mock data when paused. `LiveScreen` renders the `EmptyState` from `web/src/ui/` with "Monitoring is paused for room <room>" and a hint that it can be turned back on from the resident's page.
+Acceptance:
+- hook test: a fake socket sending `paused` then closing yields `paused.room`, no mock fallback
+- LiveScreen test: paused state shows the message, no skeleton/task map
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T245 — Smoke: check GET /monitoring and a PUT round-trip
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: T192
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: `scripts/smoke.sh` doesn't exercise the monitoring endpoints added in T149 (#226). Add checks so the tester catches a broken pause switch.
+Interface: read `scripts/smoke.sh` (copy the `curl "${CURL_OPTS[@]}"` + `pass`/`fail` pattern) and `pipeline/src/routine_watch/api.py` (search `monitoring`). Before the final `/demo/reset` block: GET `/monitoring` returns JSON with `paused_rooms`; PUT pause on the demo resident's room, GET shows it paused, PUT resume, GET shows it gone; PUT on an unknown room returns 404. Always resume the room even if a check fails.
+Acceptance:
+- `scripts/dev.sh up && scripts/smoke.sh` passes with the new checks; `scripts/dev.sh down`
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass

@@ -211,3 +211,6 @@ T235 | light | claude-sonnet | merged first try | ~65k tok
 T230 | standard | claude-opus | merged first try | ~250k tok
 T226 | light | claude-sonnet | merged from WIP branch | ~8k tok
 T227 | light | claude-sonnet | merged from WIP branch | ~15k tok
+T149 | standard | claude-sonnet | merged first try | ~65k tok
+T234 | standard | claude-sonnet | merged first try | ~65k tok
+T237 | light | claude-sonnet | merged first try | ~10k tok
