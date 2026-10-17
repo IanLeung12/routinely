@@ -267,13 +267,13 @@ Acceptance:
 - class: standard
 - priority: 1
 - kind: improvement
-- deps: T401, T402
+- deps: T401
 - area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
 - owner: —
 - claimed: —
 - pr: —
 
-What: Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
+What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
 Acceptance: keyboard nav and existing behaviour unchanged (tests updated for structure only); flagged resident still understood in 10 s; before/after screenshot in PR; `scripts/ci.sh` passes.
 
 ### T404 — Redesign 4/6: resident detail
@@ -295,13 +295,13 @@ Acceptance: same data and states (loading/empty/error) as now; before/after scre
 - class: standard
 - priority: 1
 - kind: improvement
-- deps: T401, T402
+- deps: T401
 - area: web/src/alert/, web/src/evidence/, web/src/patterns/
 - owner: —
 - claimed: —
 - pr: —
 
-What: The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
+What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
 Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T406 — Redesign 6/6: live session + handoff
@@ -309,13 +309,13 @@ Acceptance: readable in 10 s (one glance: what changed, how sure, what to check)
 - class: standard
 - priority: 2
 - kind: improvement
-- deps: T401, T402
+- deps: T401
 - area: web/src/live/, web/src/handoff/
 - owner: —
 - claimed: —
 - pr: —
 
-What: Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
+What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T407 — Redesign: landing page onto the Fey-inspired system
