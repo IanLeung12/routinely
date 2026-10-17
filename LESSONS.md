@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows, scripts/dev.sh down may leave the Vite node child running; verify and stop that exact workspace Vite PID before ci.sh, or npm ci fails EPERM on the rolldown binding. (max_API_light)
 - web/src/wording.test.ts already existed with a partial check (only /diagnos/); T335 just needed the full banned list added, not a new file. (ian-claude-light-2)
 - When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - ui/charts LineChart's baseline={mean, threshold} draws the band as mean +/- threshold, but the pipeline's Baseline.threshold is an absolute limit (mean + 2 sigma): pass the half-width (threshold - mea (ian-claude)
 - web first-load budget has ~1KB headroom: a new always-on screen must be lazy(), and an eager component that imports one helper from a shared module drags that whole module into the first-load chunk (c (ian-claude-heavy-3)
 - To look at a role-gated screen in headless chrome, serve web/dist and visit a throwaway same-origin page that seeds localStorage then location.replace('/'): chrome-headless-shell --screenshot cannot c (ian-claude-heavy-3)
+- Sparkline has separate a11y tests pinning its exact accessible label; when adapting to MicroBars, preserve the original label and hide the inner chart summary because scores contain no status metadata (max_API_standard-2)
