@@ -63,7 +63,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 3
 - kind: feature
@@ -71,7 +71,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/feedback.py, pipeline/tests/test_pattern_feedback.py
 - owner: ian-claude
 - claimed: 2026-10-17T08:32Z
-- pr: —
+- pr: #151
+- rating: 5/5 clear
 
 What: SPEC §5 Nice to have 8. Causes a nurse confirmed for a resident nudge that pattern's weight up for her next alerts (and a false alarm on a top pattern nudges it down), bounded so one answer can't flip the ranking alone.
 Interface: `FeedbackStore.pattern_weights(resident_id) -> dict[str, float]` (default 1.0, clamped e.g. 0.7–1.3); `score_patterns(..., weights=None)` multiplies confidence before the threshold/sort; `build_alerts` passes the resident's weights. Evidence line notes "weighted by N past nurse answers" when weight ≠ 1.
