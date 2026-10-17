@@ -490,3 +490,20 @@ Files to read: `web/src/ui/Button.tsx`, `web/src/ui/Card.tsx`, `web/src/ui/Secti
 Acceptance:
 - Vitest: notes in order with author + time, add flow calls `onAdd` with trimmed text and the given author, button disabled on blank input, `canAdd=false` hides the form, empty text shown.
 - `cd web && npx vitest run src/replays/ReplayNotes` and `scripts/ci.sh` pass.
+
+### T432 — Task map as a Postman Flows–style node graph
+- status: todo
+- class: standard
+- priority: 0
+- kind: improvement
+- source: ian
+- deps: T406
+- area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx, web/src/live/taskMap.css, web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants the task map to look like **Postman Flows** (node-graph canvas). Use the mobbin MCP (`search_screens` / `search_flows` "Postman Flows") to study 2–3 references first and name them in the PR. Render the task graph (steps + deps from the task YAML, already sent over /ws/live) as rounded node cards on a dotted canvas, connected by smooth curved edges with small ports; parallel branches side by side (e.g. fill kettle ∥ get cup), optional steps dashed. Live state on each node: pending (muted), done (green check), current (glow/pulse), error (red, with the error type pill: omission/sequence/repeat/substitution), unclear (grey). Edges into an errored step turn red/amber. Fits the Fey-style tokens from `docs/DESIGN.md`.
+Why: the task map is the centrepiece of the live demo shot; a flow canvas makes "dependencies, not a fixed order" obvious at a glance.
+Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layout (topological levels left→right) computed from deps; same props and data as today's TaskMap; keyboard/screen-reader: nodes are a list with state in their accessible names.
+Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
