@@ -185,7 +185,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T029 — Live session WebSocket (scenario-driven)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - deps: T020
