@@ -113,6 +113,22 @@ def test_normal_replay_frames_come_from_a_different_session_id() -> None:
     assert {frame.session_id for frame in frames} == {f"{MRS_K}-normal"}
 
 
+def test_normal_replay_frames_are_not_just_the_alert_replay_with_a_new_id() -> None:
+    """The ghost overlay must show a different session, not today's traced over
+    (regression for the bug where both scenarios were `tea_no_kettle`)."""
+    window = {"t_start": 0.0, "t_end": SESSION_T_END}
+    alert_frames = replay_frames(LATEST_SESSION, **window)
+    normal_frames = normal_replay_frames(MRS_K, **window)
+
+    def landmarks(frames: list) -> list:
+        return [
+            [obj.model_dump(exclude={"confidence"}) for obj in frame.objects]
+            for frame in frames
+        ]
+
+    assert landmarks(alert_frames) != landmarks(normal_frames)
+
+
 def test_every_demo_resident_has_a_known_latest_session() -> None:
     for resident in demo_residents():
         session_id = f"{resident['id']}-{len(resident['sessions']) - 1}"

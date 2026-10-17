@@ -85,10 +85,10 @@ carry the per-step history needed to exercise it.
 
 | Scenario | Level | What it is for |
 |---|---|---|
-| `tea_normal` | steps | A good session. Everything that is *not* an error: either order of filling the kettle and fetching the cup, sugar skipped because it is optional. Catches a classifier that has become too eager. |
+| `tea_normal` | frames | A good session. Everything that is *not* an error: either order of filling the kettle and fetching the cup, sugar skipped because it is optional. Catches a classifier that has become too eager; also `routine_watch.evidence`'s normal-session replay, distinct from `tea_no_kettle`'s. |
 | `tea_abandoned` | steps | A 131-second silence after starting tea, followed by one last step and an unfinished routine. Abandonment and remaining omissions flag with another recent bad session. |
 | `tea_skip_teabag_pour_twice` | steps | The demo's bad session: the teabag is never put in (omission) and the water is poured twice with a stir in between (perseveration). With one bad session already 30 hours ago, it flags. |
-| `tea_no_kettle` | frames | Cold water: the kettle is never filled or boiled, so two omissions. The one scenario that goes through the capture format and the real recogniser. One bad session on its own never flags. |
+| `tea_no_kettle` | frames | Cold water: the kettle is never filled or boiled, so two omissions. One bad session on its own never flags. Also `routine_watch.evidence`'s alert-session replay. |
 | `tea_sequence_error` | steps | Pouring before adding the teabag produces exactly one sequence error. |
 | `tea_single_bad_no_flag` | steps | One bad session after quiet history produces errors without flagging a change. |
 | `tea_substitution` | steps | Stirring with milk instead of a spoon produces exactly one substitution error. |
