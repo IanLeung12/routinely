@@ -502,7 +502,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T077 — Tests for the offline fallbacks in overview/api.ts and resident/api.ts
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -510,7 +510,7 @@ Acceptance:
 - area: web/src/overview/api.test.ts, web/src/resident/api.test.ts
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T06:11Z
-- pr: —
+- pr: #71
 
 What: The demo relies on the web app falling back to mock data when the pipeline API is down (SPEC §10 fallback), but `fetchResidents`, `fetchResident` and `fetchDrift` are untested. Add tests with a stubbed `fetch` (`vi.stubGlobal`); do not change the source files.
 Interface: read only web/src/overview/api.ts, web/src/resident/api.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, and web/src/alert/api.test.ts (for the fetch-stub pattern).
