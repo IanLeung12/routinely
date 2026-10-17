@@ -1,7 +1,39 @@
-import { act, cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchResident } from '../resident/api.ts'
+import type { Resident } from '../resident/types.ts'
 import type { LiveMessage } from './useLiveSession.ts'
 import { LiveSession } from './LiveSession.tsx'
+
+vi.mock('../resident/api.ts', () => ({
+  fetchResident: vi.fn(),
+}))
+
+/** Mrs. K as `GET /residents/{id}` serves her: her baseline carries the usual
+ * duration and error count the pipeline averaged over her early days, and her
+ * recorded sessions are the bad ones that put her on watch. The two disagree on
+ * purpose - the screen must read the baseline, not average the sessions. */
+const MRS_K: Resident = {
+  id: 'mrs-k',
+  name: 'Mrs. K',
+  room: '204',
+  status: 'watch',
+  top_pattern: null,
+  scores: [],
+  sessions: [
+    {
+      resident_id: 'mrs-k',
+      ts: '2026-01-01T08:00:00+00:00',
+      task: 'tea',
+      errors: { omission: 2, perseveration: 2 },
+      self_corrected: 0,
+      duration_s: 600,
+      assisted: false,
+    },
+  ],
+  care_records: [],
+  baseline: { mean: 1, std: 0.5, threshold: 2, usual_duration_s: 170, usual_errors: 1 },
+}
 
 /** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
  * `emit`/`fail` on the latest instance instead of opening a real socket. */
@@ -43,6 +75,7 @@ class FakeWebSocket {
 beforeEach(() => {
   FakeWebSocket.instances = []
   vi.stubGlobal('WebSocket', FakeWebSocket)
+  vi.mocked(fetchResident).mockResolvedValue(null)
 })
 
 afterEach(() => {
@@ -59,7 +92,7 @@ describe('LiveSession', () => {
     const legend = screen.getByRole('list', { name: 'Task map legend' })
     expect(map.nextElementSibling).toBe(legend)
     expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      'not yet', 'done', 'missed step', 'repeated step', 'out of order',
+      'not yet', '✓ done', '✕ missed step', '↻ repeated step', '⇄ out of order',
     ])
   })
 
@@ -136,6 +169,107 @@ describe('LiveSession', () => {
     expect(screen.getByRole('status').textContent).toBe('Flagged for review')
   })
 
+  it('shows an end-of-session summary above the flag banner, timed from the first and last step', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'step',
+        event: {
+          event_id: 'e1',
+          session_id: 'live-session',
+          step_id: 'fill_kettle',
+          objects: [],
+          t_start: 0,
+          t_end: 1,
+          confidence: 0.9,
+          source: 'rule',
+        },
+      })
+      socket.emit({
+        type: 'step',
+        event: {
+          event_id: 'e2',
+          session_id: 'live-session',
+          step_id: 'pour',
+          objects: [],
+          t_start: 219,
+          t_end: 220,
+          confidence: 0.9,
+          source: 'rule',
+        },
+      })
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    const summary = screen.getByText('Session summary').closest('.card') as HTMLElement
+    expect(within(summary).getByText('Finished in 3m 40s · 0 errors')).toBeTruthy()
+    expect(summary.nextElementSibling?.getAttribute('role')).toBe('status')
+  })
+
+  it("shows the resident's usual duration and errors from the baseline, not their recent sessions", async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    // The baseline's 170 s and 1 error, not the 600 s and 4 errors of the bad
+    // session she is being flagged for (T230).
+    await waitFor(() => {
+      expect(document.querySelector('.session-summary__line')?.textContent).toBe(
+        'Finished in 0s (usually ~2m 50s) · 0 errors (usually ~1)',
+      )
+    })
+  })
+
+  it('leaves the "usually" comparison out when the baseline carries no usual values', async () => {
+    vi.mocked(fetchResident).mockResolvedValue({
+      ...MRS_K,
+      baseline: { mean: 1, std: 0.5, threshold: 2 },
+    })
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    // Flush the resident fetch, so this asserts the loaded baseline rather than
+    // the blank one the screen renders before it arrives.
+    await act(async () => {})
+    expect(document.querySelector('.session-summary__line')?.textContent).toBe(
+      'Finished in 0s · 0 errors',
+    )
+  })
+
+  it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {
+    const onOpenAlert = vi.fn()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={onOpenAlert} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
+    })
+
+    screen.getByRole('button', { name: 'Open alert' }).click()
+    expect(onOpenAlert).toHaveBeenCalledWith('alert-1')
+  })
+
+  it('shows no Open alert button when the session is clear', () => {
+    render(<LiveSession scenario="tea_normal" onOpenAlert={vi.fn()} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    expect(screen.queryByRole('button', { name: 'Open alert' })).toBeNull()
+  })
+
   it('shows a clear banner when session_end is not flagged', () => {
     render(<LiveSession scenario="tea_normal" />)
     const socket = FakeWebSocket.latest()
@@ -175,6 +309,211 @@ describe('LiveSession', () => {
     expect(screen.getByText('Pour the water').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(
       'repeat',
     )
+  })
+
+  it('says monitoring is paused instead of showing a session, with no mock fallback', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    // The API's answer for a paused room (SPEC section 12): one `paused` message, then
+    // the socket closes without a session.
+    act(() => {
+      socket.emit({ type: 'paused', room: '204' })
+      socket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(
+      screen.getByText("Turn it back on from the resident's page to watch their routines again."),
+    ).toBeTruthy()
+
+    // Nothing was watched, so there is no skeleton view, task map or error ticker to
+    // show - and a pause is not a lost connection, so no mock session either.
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+    expect(screen.queryByText('Skeleton view')).toBeNull()
+    expect(screen.queryByText('Errors')).toBeNull()
+    expect(screen.queryByText('Mock data')).toBeNull()
+
+    // Let the resident fetch settle before the test ends, so no state update lands
+    // after jsdom is torn down.
+    await act(async () => {})
+  })
+
+  it('reconnects and clears the paused panel when "Check again" finds the room unpaused', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+
+    act(() => {
+      screen.getByRole('button', { name: 'Check again' }).click()
+    })
+
+    const secondSocket = FakeWebSocket.latest()
+    expect(secondSocket).not.toBe(firstSocket)
+
+    act(() => {
+      secondSocket.emit({
+        type: 'session_start',
+        session_id: 'live-session-2',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+      secondSocket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
+    })
+
+    expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
+    expect(screen.getByText('Fill the kettle').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(
+      'done',
+    )
+
+    await act(async () => {})
+  })
+
+  it('stays on the paused panel, with no mock fallback, when a retry finds the room still paused', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    act(() => {
+      screen.getByRole('button', { name: 'Check again' }).click()
+    })
+    const secondSocket = FakeWebSocket.latest()
+
+    act(() => {
+      secondSocket.emit({ type: 'paused', room: '204' })
+      secondSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(screen.queryByText('Mock data')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+
+    await act(async () => {})
+  })
+
+  it('shows the paused message right away when a monitoring-changed event pauses its own room', async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+
+    // Let the resident fetch resolve so the panel knows its own room is 204 (T275): the
+    // toggle on the resident's page fires this without the socket ever saying so.
+    await act(async () => {})
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '204', paused: true } }))
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+  })
+
+  it('reconnects when a monitoring-changed event resumes its own room, same path as "Check again"', async () => {
+    vi.useFakeTimers()
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '204', paused: false } }))
+    })
+
+    const secondSocket = FakeWebSocket.latest()
+    expect(secondSocket).not.toBe(firstSocket)
+    expect(firstSocket.closed).toBe(true)
+
+    act(() => {
+      secondSocket.emit({
+        type: 'session_start',
+        session_id: 'live-session-2',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+
+    expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
+    expect(screen.getByText('Fill the kettle')).toBeTruthy()
+
+    await act(async () => {})
+  })
+
+  it('ignores a monitoring-changed event for another room', async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+    await act(async () => {})
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '101', paused: true } }))
+    })
+
+    expect(screen.queryByText(/Monitoring is paused/)).toBeNull()
+    expect(screen.getByText('Fill the kettle')).toBeTruthy()
+  })
+
+  it('removes the monitoring-changed listener on unmount', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener')
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const { unmount } = render(<LiveSession scenario="tea_normal" />)
+
+    expect(addSpy).toHaveBeenCalledWith('monitoring-changed', expect.any(Function))
+
+    unmount()
+
+    expect(removeSpy).toHaveBeenCalledWith('monitoring-changed', expect.any(Function))
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
   })
 
   it('announces step completions and raised flags through a polite live region', () => {
@@ -225,6 +564,46 @@ describe('LiveSession', () => {
     })
 
     expect(announcer.textContent).toBe('Connection lost. Showing offline demo data.')
+  })
+
+  it('calls onSessionEnd once with the ended payload when flagged, not again on re-render', () => {
+    const onSessionEnd = vi.fn()
+    const { rerender } = render(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
+    })
+
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1' })
+
+    rerender(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onSessionEnd once when the session is clear', () => {
+    const onSessionEnd = vi.fn()
+    render(<LiveSession scenario="tea_normal" onSessionEnd={onSessionEnd} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    expect(onSessionEnd).toHaveBeenCalledTimes(1)
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null })
+  })
+
+  it('does not throw when onSessionEnd is omitted', () => {
+    render(<LiveSession scenario="tea_normal" />)
+    const socket = FakeWebSocket.latest()
+
+    expect(() => {
+      act(() => {
+        socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+      })
+    }).not.toThrow()
   })
 
   it('does not fall back to mock if the socket closes after already receiving data', () => {

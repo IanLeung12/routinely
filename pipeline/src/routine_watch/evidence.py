@@ -11,18 +11,27 @@ until a frames recording exists for the demo's actual bad session
     from routine_watch.evidence import replay_frames
     replay_frames("mrs-k-22", t_start=10.0, t_end=14.0, fps=10)
 
-A session id is a demo resident id and that resident's session index, `mrs-k-22`,
-the same shape `routine_watch.alerts` builds a `TaskError.session_id` from.
+Both recordings were written as object boxes with no landmarks, so each frame served
+from here is given a stand-in body reaching into the hand box the recording already
+tracks (`routine_watch.stick_figure`): made up like the frames around it, and the only
+way the ghost layer has a skeleton to lay over anything.
+
+A session id is a demo resident id and that resident's session index, `mrs-k-22`, the
+shape `routine_watch.alerts` builds a `TaskError.session_id` from - or, for a session
+played live this run, the id it was recorded with (`routine_watch.session_log`), which
+it keeps into the alert and so into the replay asked for here.
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from functools import lru_cache
 
-from .contracts import CaptureFrame
+from .contracts import CaptureFrame, ObjectLabel
 from .demo import demo_residents
 from .replay import SCENARIOS_DIR, load_scenario
+from .stick_figure import REST, reaching_for, reaching_into
 
 #: No recorded frames are faster than this, live camera included (`routine_watch.live`).
 MAX_REPLAY_FPS = 10.0
@@ -74,12 +83,24 @@ def known_resident(resident_id: str) -> bool:
 
 
 def known_session(session_id: str) -> bool:
-    """Whether `session_id` is a real index into a demo resident's sessions."""
+    """Whether `session_id` is one of a demo resident's sessions.
+
+    Either shape counts: the `resident-index` id the synthetic history is given
+    (`alerts.session_id_for`), or the id a live session was recorded with, which it
+    keeps all the way into its alert's evidence (T155) and which is nobody's index.
+    """
+    residents = demo_residents()
+    if any(
+        session.get("session_id") == session_id
+        for resident in residents
+        for session in resident["sessions"]
+    ):
+        return True
     parsed = _parse_session_id(session_id)
     if parsed is None:
         return False
     resident_id, index = parsed
-    for resident in demo_residents():
+    for resident in residents:
         if resident["id"] == resident_id:
             return 0 <= index < len(resident["sessions"])
     return False
@@ -95,7 +116,27 @@ def _parse_session_id(session_id: str) -> tuple[str, int] | None:
 
 @lru_cache
 def _scenario_frames(name: str) -> tuple[CaptureFrame, ...]:
-    return load_scenario(SCENARIOS_DIR / name).frames
+    return tuple(_with_skeleton(frame) for frame in load_scenario(SCENARIOS_DIR / name).frames)
+
+
+def _with_skeleton(frame: CaptureFrame) -> CaptureFrame:
+    """The frame with a stand-in body skeleton in it, if it has none of its own.
+
+    The frame-level scenarios were written as object boxes only - they are what the
+    recogniser is tested against, and it reads boxes - so the evidence view had no
+    skeleton to replay and the ghost layer, which draws poses and nothing else, drew
+    nothing at all (T207). The figure reaches into the frame's own `hand` box, the
+    hand the recording already tracks, so the skeleton moves with the recorded hand
+    instead of inventing a second one somewhere else, and its landmarks stay inside
+    that box: a frame read by the recogniser still says exactly what it did before.
+    """
+    if frame.poses or frame.hands:
+        return frame  # a real recording brings its own landmarks
+    hand_box = next(
+        (found.box for found in frame.objects if found.label is ObjectLabel.HAND), None
+    )
+    pose, hand = reaching_into(hand_box) if hand_box else reaching_for(REST)
+    return frame.model_copy(update={"poses": [pose], "hands": [hand]})
 
 
 def _windowed(
@@ -109,11 +150,44 @@ def _windowed(
     if not frames:
         return []
     capped_fps = min(fps, MAX_REPLAY_FPS) if fps > 0 else MAX_REPLAY_FPS
-    lo = max(frames[0].t, t_start - PAD_S)
-    hi = min(frames[-1].t, t_end + PAD_S)
-    in_window = [frame for frame in frames if lo <= frame.t <= hi]
+    session_lo, session_hi = frames[0].t, frames[-1].t
+    padded_lo, padded_hi = t_start - PAD_S, t_end + PAD_S
+    if padded_lo <= session_hi and padded_hi >= session_lo:
+        lo = max(session_lo, padded_lo)
+        hi = min(session_hi, padded_hi)
+        in_window = [frame for frame in frames if lo <= frame.t <= hi]
+    else:
+        # The requested window (e.g. an alert's real error window) sits entirely
+        # outside the stand-in recording's own timestamps: tile the recording,
+        # one copy every `session_hi - session_lo`, so the window still gets
+        # frames, with `t` landing inside the requested window rather than the
+        # recording's native range.
+        in_window = _tiled(frames, session_lo, session_hi, padded_lo, padded_hi)
     sampled = _downsample(in_window, capped_fps)
     return [frame.model_copy(update={"session_id": session_id}) for frame in sampled]
+
+
+def _tiled(
+    frames: Sequence[CaptureFrame],
+    session_lo: float,
+    session_hi: float,
+    lo: float,
+    hi: float,
+) -> list[CaptureFrame]:
+    period = session_hi - session_lo
+    if period <= 0:
+        return []
+    first_cycle = math.floor((lo - session_lo) / period)
+    last_cycle = math.floor((hi - session_lo) / period)
+    tiled: list[CaptureFrame] = []
+    for cycle in range(first_cycle, last_cycle + 1):
+        shift = cycle * period
+        for frame in frames:
+            t = frame.t + shift
+            if lo <= t <= hi:
+                tiled.append(frame.model_copy(update={"t": t}))
+    tiled.sort(key=lambda frame: frame.t)
+    return tiled
 
 
 def _downsample(frames: Sequence[CaptureFrame], fps: float) -> list[CaptureFrame]:

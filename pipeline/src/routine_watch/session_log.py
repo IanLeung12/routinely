@@ -46,6 +46,11 @@ def record(resident_id: str, session: Session, errors: Iterable[TaskError] = ())
     carries, because a live session learns its resident from whoever started it rather
     than from the recording it was played out of.
 
+    `errors` is load-bearing, not a tally: they are the evidence this session's alert
+    lists (`demo._live_sessions` carries them into the resident's history and
+    `alerts.task_errors` reads them), so a session recorded without them is a session
+    whose alert has to invent a step and a time for each of its errors (T155).
+
     Recording the same `session_id` again replaces it, the way
     `store.MemoryStore.add_session` does: a session seen twice is one session, not two
     bad sessions in the window that between them would flag a change on their own.

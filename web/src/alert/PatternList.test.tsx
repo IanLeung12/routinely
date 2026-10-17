@@ -1,10 +1,12 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { PatternList, type PatternView } from './PatternList.tsx'
+import type { PatternMatch } from '../contracts.ts'
+import patternListCss from './PatternList.css?raw'
+import { PatternList } from './PatternList.tsx'
 
 afterEach(cleanup)
 
-function pattern(overrides: Partial<PatternView> = {}): PatternView {
+function pattern(overrides: Partial<PatternMatch> = {}): PatternMatch {
   return {
     pattern_id: 'delirium',
     name: 'Sudden change (delirium)',
@@ -86,7 +88,20 @@ describe('PatternList', () => {
   })
 
   it('never uses diagnostic wording', () => {
-    const { container } = render(<PatternList patterns={[pattern(), pattern({ urgency: 'urgent' })]} />)
+    const { container } = render(
+      <PatternList patterns={[pattern(), pattern({ pattern_id: 'infection', urgency: 'urgent' })]} />,
+    )
     expect(container.textContent?.toLowerCase()).not.toContain('diagnos')
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (T238, same approach as T234's overview.css test). */
+describe('PatternList.css phone layout', () => {
+  it('stacks the pattern name and confidence chip below 480px', () => {
+    const mobileBlock = patternListCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+    expect(mobileBlock).toBeTruthy()
+
+    expect(mobileBlock).toMatch(/\.pattern__header\s*\{[^}]*flex-direction:\s*column/)
   })
 })

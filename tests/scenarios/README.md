@@ -37,15 +37,19 @@ flag: false          # does this session flag a change for a nurse to review?
 
 score: 6.0           # optional: assert the session score too
 assisted: false      # optional: assert whether somebody was helping
+top_pattern: sudden_change   # optional: the pattern (SPEC §7.5) the flag should score
+                              # highest, or "none" if it should match no pattern
 
 history:             # optional: prior sessions of this resident
   - { hours_ago: 48, score: 0.0 }
   - { hours_ago: 30, errors: { omission: 1 } }   # or spell out the errors
 ```
 
-`steps`, `errors` and `flag` are always checked; `score` and `assisted` only when the
-file sets them. An unknown key is an error, so a typo fails the scenario rather than
-being quietly ignored.
+`steps`, `errors` and `flag` are always checked; `score`, `assisted` and `top_pattern`
+only when the file sets them. An unknown key is an error, so a typo fails the scenario
+rather than being quietly ignored. `top_pattern` needs error-breakdown `history:`
+entries (not just a bare `score:`) to score anything: the pattern scorer reads a
+session's own error types, not an opaque score.
 
 **History and the flag.** A resident needs at least three prior sessions before they
 have a baseline, and two sessions above their own threshold within 48 hours before
@@ -53,6 +57,20 @@ anything flags (SPEC §7). A scenario with no `history:` therefore never flags, 
 bad the session is. `hours_ago` is measured back from the replayed session, which
 happens at a fixed instant (`replay.REPLAY_EPOCH`), so a scenario gives the same answer
 today and next month.
+
+### Session durations
+
+In `expected.yaml`, set the optional `duration_s` (positive seconds) on the replayed
+session and its history sessions to exercise duration-based patterns like `motor_slowing`:
+
+```yaml
+duration_s: 450       # replayed session
+history:
+  - { hours_ago: 72, score: 0.0, duration_s: 300 }
+  # Add more history sessions to establish the usual duration.
+```
+
+Leaving durations unset keeps `duration_ratio` unset.
 
 ### steps.jsonl
 
@@ -95,6 +113,21 @@ carry the per-step history needed to exercise it.
 | `tea_unclear_not_error` | steps | An unclear, low-confidence teabag observation must not produce an error. |
 | `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
+| `meds_abandoned` | steps | The pill comes out but the water steps never happen after a 131-second silence: abandonment plus the remaining omissions, mirroring `tea_abandoned`. |
+| `meds_pill_twice` | steps | A double dose: the pill is taken out of the organiser a second time with `drink_water` in between, a perseveration error. Flags with another recent bad session. |
+| `pattern_sudden_change` | steps | The demo's bad session on a resident whose own history has only scattered single-type slips: `top_pattern` checks the flag is consistent with `sudden_change` (SPEC §7.5). |
+| `pattern_slow_drift` | steps | Cold water, no stir, after three weeks of hesitation climbing night after night: `top_pattern` checks `slow_drift` (SPEC §7.5). |
+| `pattern_executive` | steps | The teabag goes in three times (perseveration) with the order otherwise intact, building over about a week: `top_pattern` checks `executive_pattern` (SPEC §7.5). |
+| `pattern_evening_worsening` | steps | A clean session, but six straight evenings of long pauses with mornings staying clean: `top_pattern` checks `evening_worsening` (SPEC §7.5). |
+| `pattern_none` | steps | A substitution error against a resident with one earlier substitution: flags a change, but `top_pattern` checks it matches no pattern in the library. |
+| `pattern_motor_slowing` | steps | A clean session, but it and two recent sessions run 450s against this resident's usual 300s with a touch of hesitation: `top_pattern` checks `motor_slowing` (SPEC §7.5). |
+| `meds_pill_before_water` | steps | Taking the pill before filling the glass is fine, but drinking before filling is a sequence error; does not flag. |
+| `tea_bad_sessions_far_apart` | steps | Two bad sessions more than 48 hours apart must not flag; guards the 48h window. |
+| `tea_kettle_twice` | steps | Boiling the kettle again after getting a cup is perseveration on a once-only step; flags with another recent bad session. |
+| `tea_milk_sugar` | steps | A clean tea routine with both optional steps, milk and sugar, taken; never flags. |
+| `tea_self_corrected` | steps | A sequence slip corrected within 15 seconds counts at reduced weight, so the session stays under the flag threshold despite one earlier bad session. |
+| `tea_teabag_three_times` | steps | Putting the teabag in three times produces two perseveration errors on the once-only step; does not flag. |
+| `meds_self_corrected` | steps | The meds counterpart of `tea_self_corrected`: a sequence slip on `take_pill` corrected within 15 seconds pins the reduced weight for the second task too. |
 
 ## Adding one
 

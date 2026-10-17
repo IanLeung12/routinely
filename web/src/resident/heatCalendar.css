@@ -1,0 +1,65 @@
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.heat-grid__header {
+  grid-column: var(--col);
+  grid-row: 1;
+  color: var(--muted);
+  padding: 8px;
+  text-align: center;
+}
+
+.heat-cell {
+  grid-column: var(--col);
+  grid-row: var(--row);
+  padding: 8px;
+  color: var(--error-grey-text);
+}
+
+.heat-cell--none {
+  background-color: var(--error-grey-bg);
+}
+
+.heat-cell--scored {
+  background-color: color-mix(in srgb, var(--error-red-bg) var(--heat), var(--panel));
+}
+
+.heat-cell--light-text {
+  color: var(--text);
+}
+
+.heat-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+.heat-swatch--low {
+  background-color: color-mix(in srgb, var(--error-red-bg) 20%, var(--panel));
+}
+
+.heat-swatch--high {
+  background-color: var(--error-red-bg);
+}
+
+.heat-swatch--none {
+  background-color: var(--error-grey-bg);
+}
+
+@media (max-width: 480px) {
+  /* 1fr tracks still enforce a content-based minimum width (the "Mon"/"Sun" labels),
+     which can be wider than a phone's seven-column budget; minmax(0, 1fr) lets them
+     shrink to fit the card instead of pushing the page into horizontal scroll. */
+  .heat-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .heat-grid__header,
+  .heat-cell {
+    padding: 4px;
+    font-size: 0.6875rem;
+  }
+}

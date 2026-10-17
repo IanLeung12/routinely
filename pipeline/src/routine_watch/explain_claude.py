@@ -20,7 +20,7 @@ import os
 import re
 
 from .api_cache import cached_call, live_api_enabled
-from .explain import Explainer, TemplateExplainer
+from .explain import Explainer, TemplateExplainer, scope_phrase
 
 #: Haiku for dev; the env var lets the demo switch to Sonnet without a code change.
 DEFAULT_MODEL = "claude-haiku-4-5"
@@ -34,6 +34,34 @@ _SYSTEM_PROMPT = (
 
 #: A bare number, an m:ss timestamp, or a decimal - whichever a sentence states.
 _NUMBER_RE = re.compile(r"\d+:\d{2}|\d+\.\d+|\d+")
+
+#: Spelled-out numbers must be caught too (SPEC section 6.4); whole-word only, so
+#: "someone" or "once" are never mistaken for a number.
+_NUMBER_WORDS = {
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+    "eleven": "11",
+    "twelve": "12",
+    "thirteen": "13",
+    "fourteen": "14",
+    "fifteen": "15",
+    "sixteen": "16",
+    "seventeen": "17",
+    "eighteen": "18",
+    "nineteen": "19",
+    "twenty": "20",
+}
+_NUMBER_WORD_RE = re.compile(
+    r"\b(" + "|".join(_NUMBER_WORDS) + r")\b", re.IGNORECASE
+)
 
 #: Claude must never diagnose (SPEC section 6.4). Split across two literals so this
 #: guard's own source line never spells out the banned word contiguously.
@@ -99,8 +127,11 @@ def _ask_claude(
 
 
 def _build_prompt(errors: list[dict], baseline: dict, context: list[str]) -> str:
+    # The same scope the template states (`explain.scope_phrase`): an alert's errors
+    # often span two sessions, and Claude must not be told they are all from one.
+    scope = scope_phrase(baseline.get("sessions", 1))
     lines = [
-        f"Observed {baseline['observed']} errors this session vs "
+        f"Observed {baseline['observed']} errors {scope} vs "
         f"{baseline['baseline_mean']} normally over {baseline['baseline_days']} days."
     ]
     if errors:
@@ -110,7 +141,7 @@ def _build_prompt(errors: list[dict], baseline: dict, context: list[str]) -> str
             for error in errors
         )
     else:
-        lines.append("No errors this session.")
+        lines.append(f"No errors {scope}.")
     if context:
         lines.append("Context: " + "; ".join(context))
     return "\n".join(lines)
@@ -123,12 +154,16 @@ def _passes_guard(reply: str, errors: list[dict], baseline: dict, fallback: str)
     if not sentences or len(sentences) > 3:
         return False
     allowed = _allowed_numbers(errors, baseline, fallback)
-    return all(token in allowed for token in _NUMBER_RE.findall(reply))
+    tokens = _NUMBER_RE.findall(reply)
+    tokens.extend(
+        _NUMBER_WORDS[word.lower()] for word in _NUMBER_WORD_RE.findall(reply)
+    )
+    return all(token in allowed for token in tokens)
 
 
 def _allowed_numbers(errors: list[dict], baseline: dict, fallback: str) -> set[str]:
     allowed = set(_NUMBER_RE.findall(fallback))
-    for key in ("observed", "baseline_mean", "baseline_days"):
+    for key in ("observed", "sessions", "baseline_mean", "baseline_days"):
         if key in baseline:
             allowed.add(str(baseline[key]))
     for error in errors:

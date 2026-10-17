@@ -1,0 +1,7 @@
+{"event_id": "pattern_evening_worsening:s0", "session_id": "pattern_evening_worsening", "step_id": "fill_kettle", "objects": ["kettle"], "t_start": 0.0, "t_end": 4.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s1", "session_id": "pattern_evening_worsening", "step_id": "get_cup", "objects": ["cup"], "t_start": 6.0, "t_end": 10.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s2", "session_id": "pattern_evening_worsening", "step_id": "boil", "objects": ["kettle"], "t_start": 12.0, "t_end": 16.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s3", "session_id": "pattern_evening_worsening", "step_id": "teabag_in_cup", "objects": ["teabag", "cup"], "t_start": 18.0, "t_end": 22.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s4", "session_id": "pattern_evening_worsening", "step_id": "pour", "objects": ["kettle", "cup"], "t_start": 26.0, "t_end": 31.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s5", "session_id": "pattern_evening_worsening", "step_id": "stir", "objects": ["spoon", "cup"], "t_start": 34.0, "t_end": 38.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "pattern_evening_worsening:s6", "session_id": "pattern_evening_worsening", "step_id": "remove_teabag", "objects": ["teabag", "spoon"], "t_start": 40.0, "t_end": 44.0, "confidence": 0.93, "source": "rule"}

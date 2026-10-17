@@ -1,0 +1,6 @@
+{"event_id": "meds-self-corrected:s0", "session_id": "meds-self-corrected", "step_id": "get_glass", "objects": ["glass"], "t_start": 2.0, "t_end": 7.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-self-corrected:s1", "session_id": "meds-self-corrected", "step_id": "take_pill", "objects": ["pill_bottle"], "t_start": 9.0, "t_end": 14.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-self-corrected:s2", "session_id": "meds-self-corrected", "step_id": "open_organiser", "objects": ["pill_bottle"], "t_start": 16.0, "t_end": 20.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-self-corrected:s3", "session_id": "meds-self-corrected", "step_id": "take_pill", "objects": ["pill_bottle"], "t_start": 22.0, "t_end": 27.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-self-corrected:s4", "session_id": "meds-self-corrected", "step_id": "fill_glass", "objects": ["water_jug", "glass"], "t_start": 29.0, "t_end": 35.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-self-corrected:s5", "session_id": "meds-self-corrected", "step_id": "drink_water", "objects": ["glass"], "t_start": 37.0, "t_end": 41.0, "confidence": 0.93, "source": "rule"}

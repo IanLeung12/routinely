@@ -1,14 +1,47 @@
 import { useEffect, useRef, useState } from 'react'
+import './liveSession.css'
+import { fetchResident } from '../resident/api.ts'
+import type { Resident } from '../resident/types.ts'
+import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
+import { SessionSummary } from './SessionSummary.tsx'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
-import type { LiveStep, StepState } from './useLiveSession.ts'
+import type { LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
+
+/** `routine_watch.demo.DEMO_RESIDENT`: whoever is on camera, the live WS always
+ * records the session against this resident unless told otherwise, and nothing on
+ * this screen tells it otherwise. */
+const DEMO_RESIDENT_ID = 'mrs-k'
+
+/** This resident's own record, as `GET /residents/{id}` serves it: their baseline (the
+ * duration and error count their sessions usually have, averaged over the early window
+ * it's anchored to in `routine_watch.demo` - averaging their recorded sessions here
+ * instead would fold in the recent bad days this screen is flagging and quietly excuse
+ * them) and their room, so the panel knows which room's pause/resume toggle is its own
+ * (T275). Null until it loads, and when nobody - live or offline - has that resident. */
+function useResident(residentId: string): Resident | null {
+  const [resident, setResident] = useState<Resident | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchResident(residentId).then((loaded) => {
+      if (cancelled) return
+      setResident(loaded)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [residentId])
+
+  return resident
+}
 
 function formatClock(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
@@ -71,28 +104,75 @@ function useAnnouncement(
 export type LiveSessionProps = {
   scenario: string
   speed?: number
+  onOpenAlert?: (alertId: string) => void
+  /** Called once per `session_end`, so the overview and alerts list can refetch
+   * without a page reload (the dashboard has no other source of truth for them). */
+  onSessionEnd?: (ended: LiveSessionEnded) => void
 }
 
 /** Screen 3 (SPEC section 9): skeleton view next to the task-graph map. Steps turn green
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
-export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
-  const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
+export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
+  const { steps, frame, states, errors, stepSpan, ended, paused: wsPaused, source, retry } = useLiveSession(
+    scenario,
+    speed,
+  )
   const announcement = useAnnouncement(steps, states, errors, source)
+  const resident = useResident(DEMO_RESIDENT_ID)
+  const baseline = resident?.baseline ?? null
+  const handledEnded = useRef<LiveSessionEnded | null>(null)
+
+  // A pause/resume toggled from the resident's page while this panel is open (SPEC
+  // section 12, T275): `setRoomMonitoring` fires `monitoring-changed` on `window` after
+  // a successful PUT. Pausing shows the message right away - the toggle itself is
+  // authoritative, no need to wait for the socket - but resuming reopens the socket
+  // (the same path "Check again" uses, below) since only a fresh connection can say
+  // what is actually playing now. Refs, not state, carry the latest room/retry into
+  // the listener so it's only attached once and removed on unmount.
+  const [pausedOverride, setPausedOverride] = useState<{ room: string } | null>(null)
+  const paused = pausedOverride ?? wsPaused
+
+  function recheck() {
+    setPausedOverride(null)
+    retryRef.current()
+  }
+
+  const ownRoomRef = useRef<string | null>(null)
+  const retryRef = useRef(retry)
+  const recheckRef = useRef(recheck)
+  useEffect(() => {
+    ownRoomRef.current = resident?.room ?? paused?.room ?? null
+    retryRef.current = retry
+    recheckRef.current = recheck
+  })
+
+  useEffect(() => {
+    function handleMonitoringChanged(event: Event) {
+      const { room, paused: nowPaused } = (event as CustomEvent<{ room: string; paused: boolean }>).detail
+      if (room !== ownRoomRef.current) {
+        return
+      }
+      if (nowPaused) {
+        setPausedOverride({ room })
+      } else {
+        recheckRef.current()
+      }
+    }
+    window.addEventListener('monitoring-changed', handleMonitoringChanged)
+    return () => window.removeEventListener('monitoring-changed', handleMonitoringChanged)
+  }, [])
+
+  useEffect(() => {
+    if (ended && ended !== handledEnded.current) {
+      handledEnded.current = ended
+      onSessionEnd?.(ended)
+    }
+  }, [ended, onSessionEnd])
 
   return (
     <section className="live-session">
-      <style>{`
-        .live-session__layout { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-bottom: var(--space-4); }
-        .live-session__mock-badge { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--error-grey-bg); color: var(--error-grey-text); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-        .live-session__banner { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-weight: 600; }
-        .live-session__banner--flagged { background: var(--status-flagged-bg); color: var(--status-flagged-text); }
-        .live-session__banner--clear { background: var(--status-normal-bg); color: var(--status-normal-text); }
-        .live-session__error-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
-        .live-session__announcer { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-      `}</style>
-
       <p className="live-session__announcer" aria-live="polite">
         {announcement}
       </p>
@@ -102,41 +182,73 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
         action={source === 'mock' ? <span className="live-session__mock-badge">Mock data</span> : null}
       />
 
-      {ended && (
-        <p
-          role="status"
-          className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
-        >
-          {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
-        </p>
+      {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
+          `paused` message and closes without playing anything, so say so instead of
+          showing an empty skeleton view and task map. "Check again" reopens the socket,
+          which is how the screen recovers once a nurse turns monitoring back on, without
+          needing a full reload (T266). */}
+      {paused ? (
+        <Card>
+          <div role="status">
+            <EmptyState message={`Monitoring is paused for room ${paused.room}`} />
+            <p className="live-session__paused-hint">
+              Turn it back on from the resident's page to watch their routines again.
+            </p>
+            <Button onClick={recheck}>Check again</Button>
+          </div>
+        </Card>
+      ) : (
+        <>
+          {ended && (
+            <>
+              <SessionSummary
+                durationS={stepSpan ? stepSpan.end - stepSpan.start : 0}
+                errorCount={errors.length}
+                usualDurationS={baseline?.usual_duration_s}
+                usualErrors={baseline?.usual_errors}
+              />
+              <p
+                role="status"
+                className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
+              >
+                {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+                {ended.flag && ended.alert_id && onOpenAlert && (
+                  <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
+                    Open alert
+                  </button>
+                )}
+              </p>
+            </>
+          )}
+
+          <div className="live-session__layout">
+            <Card>
+              <SectionHeader title="Skeleton view" />
+              <SkeletonView frame={frame} />
+            </Card>
+            <Card>
+              <SectionHeader title="Task map" />
+              <TaskMap steps={steps} states={states} />
+              <TaskMapLegend />
+            </Card>
+          </div>
+
+          <Card>
+            <SectionHeader title="Errors" />
+            {errors.length === 0 ? (
+              <EmptyState message="No errors yet." />
+            ) : (
+              <ul className="live-session__error-list">
+                {errors.map((error) => (
+                  <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
+                    {errorText(steps, error)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </>
       )}
-
-      <div className="live-session__layout">
-        <Card>
-          <SectionHeader title="Skeleton view" />
-          <SkeletonView frame={frame} />
-        </Card>
-        <Card>
-          <SectionHeader title="Task map" />
-          <TaskMap steps={steps} states={states} />
-          <TaskMapLegend />
-        </Card>
-      </div>
-
-      <Card>
-        <SectionHeader title="Errors" />
-        {errors.length === 0 ? (
-          <EmptyState message="No errors yet." />
-        ) : (
-          <ul className="live-session__error-list">
-            {errors.map((error) => (
-              <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
-                {errorText(steps, error)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </section>
   )
 }

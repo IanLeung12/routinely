@@ -1,0 +1,27 @@
+# The resident puts the teabag in the cup, pours, puts it in again, stirs twice,
+# then puts the teabag in a third time before removing it.
+#
+# teabag_in_cup is once_only in tea.yaml, so the 2nd and 3rd occurrences are each
+# perseveration (intact order, step repeated after other steps happened). Stirring
+# twice is not an error: stir is once_only:false by design.
+
+task: tea
+
+steps:
+  - fill_kettle
+  - boil
+  - get_cup
+  - teabag_in_cup
+  - pour
+  - teabag_in_cup # again, perseveration
+  - stir
+  - stir # again, not an error (stir is once_only:false)
+  - teabag_in_cup # again, perseveration
+  - remove_teabag
+
+errors:
+  - { type: perseveration, step: teabag_in_cup }
+  - { type: perseveration, step: teabag_in_cup }
+score: 4.0 # perseveration 2.0 x2
+
+flag: false

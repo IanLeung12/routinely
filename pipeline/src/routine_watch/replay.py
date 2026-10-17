@@ -42,6 +42,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from .change_detection import Baseline, build_baseline, flag_change
 from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError, repo_root
 from .errors import classify_errors
+from .patterns import extract_features, score_patterns
+from .patterns_library import BY_ID
 from .recogniser import recognise
 from .scoring import session_score
 from .tasks import TaskGraph, TaskGraphError, load_task
@@ -57,6 +59,9 @@ REPLAY_EPOCH = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
 
 #: Brief passers-by or stray pose detections must not suppress a session's score.
 ASSISTED_MIN_S = 2.0
+
+#: `top_pattern`'s value when a scenario expects no pattern to clear the threshold.
+NO_PATTERN = "none"
 
 
 #: Any contract read out of a scenario file.
@@ -89,12 +94,18 @@ class HistorySession(_Strict):
     History is what gives the resident a baseline to be measured against, so it is
     what lets a scenario expect `flag: true`. Give a session a `score`, or give the
     `errors` it held and let the scoring weights work it out.
+
+    `duration_s` is optional: set it on this session and on `Expected.duration_s` to
+    give a scenario a `duration_ratio` (SPEC §7.5), for example ~10 history sessions
+    at 300s and a replayed session at 450s to reach `motor_slowing`. Leave it unset
+    and `duration_ratio` stays `None`, exactly as before.
     """
 
     hours_ago: float = Field(ge=0.0)
     score: float | None = Field(default=None, ge=0.0)
     errors: dict[ErrorType, int] = {}
     self_corrected: int = Field(default=0, ge=0)
+    duration_s: float | None = Field(default=None, gt=0.0)
 
     @model_validator(mode="after")
     def _scored_one_way(self) -> HistorySession:
@@ -125,8 +136,22 @@ class Expected(_Strict):
     #: Optional extra assertions, checked only when the file sets them.
     score: float | None = None
     assisted: bool | None = None
+    #: Which pattern (SPEC §7.5) the session should score highest, or `"none"` if the
+    #: flag is expected to match no pattern. Unset scenarios are unaffected.
+    top_pattern: str | None = None
+    #: This session's duration, in seconds. Optional: set it alongside a `duration_s`
+    #: on each `HistorySession` to give the scenario a `duration_ratio` (SPEC §7.5).
+    #: Left unset, `duration_ratio` stays `None`, exactly as before.
+    duration_s: float | None = Field(default=None, gt=0.0)
     #: Prior sessions, oldest or newest first, it makes no difference.
     history: list[HistorySession] = []
+
+    @model_validator(mode="after")
+    def _known_pattern(self) -> Expected:
+        if self.top_pattern is not None and self.top_pattern != NO_PATTERN:
+            if self.top_pattern not in BY_ID:
+                raise ValueError(f"top_pattern: unknown pattern {self.top_pattern!r}")
+        return self
 
 
 @dataclass(frozen=True)
@@ -251,6 +276,47 @@ def score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[floa
     return score, assisted, flag
 
 
+def top_pattern_of(
+    history: Sequence[HistorySession],
+    baseline: Baseline | None,
+    errors: Sequence[TaskError],
+    assisted: bool,
+    *,
+    duration_s: float | None = None,
+    now: datetime = REPLAY_EPOCH,
+) -> str:
+    """The best-scoring pattern (SPEC §7.5) this session, against this history, is
+
+    consistent with - or `NO_PATTERN` when nothing clears the threshold, or there is
+    no baseline to measure a change against at all.
+    """
+    if baseline is None:
+        return NO_PATTERN
+    counts = Counter(str(error.type) for error in errors if not error.self_corrected)
+    self_corrected = sum(1 for error in errors if error.self_corrected)
+    sessions = [
+        {
+            "ts": (now - timedelta(hours=session.hours_ago)).isoformat(),
+            "errors": {str(error_type): count for error_type, count in session.errors.items()},
+            "self_corrected": session.self_corrected,
+            "duration_s": session.duration_s,
+        }
+        for session in history
+    ]
+    sessions.append(
+        {
+            "ts": now.isoformat(),
+            "errors": dict(counts),
+            "self_corrected": self_corrected,
+            "assisted": assisted,
+            "duration_s": duration_s,
+        }
+    )
+    features = extract_features(sessions, baseline, [], now=now)
+    matches = score_patterns(features)
+    return matches[0].pattern_id if matches else NO_PATTERN
+
+
 def run(scenario: Scenario) -> dict[str, Any]:
     """Run one loaded scenario through the pipeline and return the result as JSON data."""
     events = scenario.events
@@ -259,6 +325,13 @@ def run(scenario: Scenario) -> dict[str, Any]:
     score, assisted, flag = score_session(scenario, errors)
     # Offline output also includes the baseline's display statistics.
     _, baseline = change_flag(score, scenario.expected.history)
+    top_pattern = top_pattern_of(
+        scenario.expected.history,
+        baseline,
+        errors,
+        assisted,
+        duration_s=scenario.expected.duration_s,
+    )
 
     return {
         "scenario": scenario.name,
@@ -281,6 +354,7 @@ def run(scenario: Scenario) -> dict[str, Any]:
         ],
         "score": score,
         "flag": flag,
+        "top_pattern": top_pattern,
         "baseline": None
         if baseline is None
         else {
@@ -314,6 +388,10 @@ def compare(expected: Expected, result: Mapping[str, Any]) -> list[str]:
 
     if expected.flag != result["flag"]:
         diffs.append(f"flag:     expected {_yes(expected.flag)}, got {_yes(result['flag'])}")
+    if expected.top_pattern is not None and expected.top_pattern != result["top_pattern"]:
+        diffs.append(
+            f"pattern:  expected {expected.top_pattern}, got {result['top_pattern']}"
+        )
     if expected.score is not None and not isclose(expected.score, result["score"]):
         diffs.append(f"score:    expected {expected.score}, got {result['score']}")
     if expected.assisted is not None and expected.assisted != result["assisted"]:

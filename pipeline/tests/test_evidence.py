@@ -7,17 +7,21 @@ import pytest
 from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 
+from routine_watch import evidence
 from routine_watch.api import app
-from routine_watch.contracts import repo_root
+from routine_watch.contracts import CaptureFrame, ObjectLabel, repo_root
 from routine_watch.demo import demo_residents
 from routine_watch.evidence import (
     MAX_REPLAY_FPS,
+    PAD_S,
     EvidenceError,
     known_resident,
     known_session,
     normal_replay_frames,
     replay_frames,
 )
+from routine_watch.recogniser import recognise
+from routine_watch.replay import SCENARIOS_DIR, load_scenario
 
 MRS_K = "mrs-k"
 #: The flagged resident's latest session (`routine_watch.alerts._qualifying_sessions`).
@@ -129,6 +133,24 @@ def test_normal_replay_frames_are_not_just_the_alert_replay_with_a_new_id() -> N
     assert landmarks(alert_frames) != landmarks(normal_frames)
 
 
+def test_replay_frames_window_past_the_stand_in_length_is_not_empty() -> None:
+    """Regression for T154: real alert error windows (e.g. 33-107s, since T121) sit
+    well past tea_no_kettle's 0-12s recording; the window must still get frames."""
+    frames = replay_frames(LATEST_SESSION, t_start=102.1, t_end=107.1)
+
+    assert frames
+    for frame in frames:
+        assert 102.1 - PAD_S <= frame.t <= 107.1 + PAD_S
+
+
+def test_normal_replay_frames_window_past_the_stand_in_length_is_not_empty() -> None:
+    frames = normal_replay_frames(MRS_K, t_start=102.1, t_end=107.1)
+
+    assert frames
+    for frame in frames:
+        assert 102.1 - PAD_S <= frame.t <= 107.1 + PAD_S
+
+
 def test_every_demo_resident_has_a_known_latest_session() -> None:
     for resident in demo_residents():
         session_id = f"{resident['id']}-{len(resident['sessions']) - 1}"
@@ -192,3 +214,72 @@ def test_normal_replay_route_404s_for_an_unknown_resident() -> None:
         )
 
     assert response.status_code == 404
+
+
+# ------------------------------------------------------------------ the skeleton
+
+
+@pytest.mark.parametrize("layer", ["today", "usual"])
+def test_replayed_frames_carry_a_skeleton_and_not_just_boxes(layer: str) -> None:
+    """Regression for T207: both stand-in recordings were written as object boxes with
+    no landmarks, so the evidence view replayed boxes and the ghost layer - which draws
+    poses and nothing else - drew nothing at all."""
+    frames = (
+        replay_frames(LATEST_SESSION, t_start=0.0, t_end=SESSION_T_END)
+        if layer == "today"
+        else normal_replay_frames(MRS_K, t_start=0.0, t_end=SESSION_T_END)
+    )
+
+    assert frames
+    for frame in frames:
+        assert len(frame.poses) == 1
+        assert len(frame.hands) == 1
+        for landmark in [*frame.poses[0].landmarks, *frame.hands[0].landmarks]:
+            assert 0.0 <= landmark.x <= 1.0
+            assert 0.0 <= landmark.y <= 1.0
+
+
+def test_the_skeleton_moves_through_the_replay() -> None:
+    frames = replay_frames(LATEST_SESSION, t_start=0.0, t_end=SESSION_T_END)
+
+    wrists = {(frame.hands[0].landmarks[0].x, frame.hands[0].landmarks[0].y) for frame in frames}
+    assert len(wrists) > 1
+
+
+def test_the_ghost_layer_is_a_different_skeleton_from_todays() -> None:
+    """The point of the ghost replay (SPEC nice-to-have 1) is the difference between
+    the two, so the usual session's body must not trace today's."""
+    window = {"t_start": 0.0, "t_end": SESSION_T_END}
+
+    def skeletons(frames: list[CaptureFrame]) -> list[list[tuple[float, float]]]:
+        return [
+            [(landmark.x, landmark.y) for landmark in frame.poses[0].landmarks]
+            for frame in frames
+        ]
+
+    assert skeletons(replay_frames(LATEST_SESSION, **window)) != skeletons(
+        normal_replay_frames(MRS_K, **window)
+    )
+
+
+def test_the_hand_lands_in_the_hand_box_the_recording_tracks() -> None:
+    """The skeleton is laid into the recording's own hand box, not next to it, so the
+    figure reaches for whatever the recording says the hand was on."""
+    for frame in replay_frames(LATEST_SESSION, t_start=0.0, t_end=SESSION_T_END):
+        box = next(found.box for found in frame.objects if found.label is ObjectLabel.HAND)
+        for landmark in frame.hands[0].landmarks:
+            assert box.x1 <= landmark.x <= box.x2
+            assert box.y1 <= landmark.y <= box.y2
+
+
+@pytest.mark.parametrize("scenario", ["tea_no_kettle", "tea_normal"])
+def test_the_skeleton_does_not_change_what_the_recogniser_reads(scenario: str) -> None:
+    """The stand-in frames are the recogniser's own fixtures (`scripts/e2e.sh` replays
+    them), and it reads hand landmarks as well as hand boxes, so adding a skeleton must
+    leave every step event exactly where it was."""
+    recorded = load_scenario(SCENARIOS_DIR / scenario)
+    with_skeleton = evidence._scenario_frames(scenario)
+
+    before = recognise(recorded.frames, recorded.graph, session_id="before")
+    after = recognise(with_skeleton, recorded.graph, session_id="before")
+    assert after == before

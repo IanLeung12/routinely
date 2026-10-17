@@ -20,10 +20,10 @@ describe('GhostReplay', () => {
     const layers = container.querySelectorAll('[data-layer]')
     expect(layers[0].getAttribute('data-layer')).toBe('normal')
     expect(layers[0].getAttribute('opacity')).toBe('0.4')
-    expect(layers[0].getAttribute('fill')).toBe('grey')
+    expect(layers[0].getAttribute('fill')).toBe('var(--ghost-usual)')
     expect(layers[0].querySelectorAll('circle')).toHaveLength(33)
     expect(layers[0].querySelectorAll('line')).toHaveLength(8)
-    expect(layers[1].getAttribute('fill')).toBe('blue')
+    expect(layers[1].getAttribute('fill')).toBe('var(--ghost-today)')
     expect(layers[1].querySelectorAll('circle')).toHaveLength(66)
     expect(layers[1].querySelectorAll('line')).toHaveLength(16)
     expect(screen.getByText('Today')).toBeTruthy()
@@ -57,5 +57,10 @@ describe('GhostReplay', () => {
   it('names the drawing for screen readers', () => {
     render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
     expect(screen.getByRole('img', { name: 'Today and usual skeleton replay' })).toBeTruthy()
+  })
+
+  it('warns that the body is a stand-in, not tracked motion', () => {
+    render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
+    expect(screen.getByText('Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box.')).toBeTruthy()
   })
 })

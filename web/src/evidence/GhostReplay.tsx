@@ -22,7 +22,7 @@ export default function GhostReplay({ today, normal, t, width = 480, height = 36
         {(['normal', 'today'] as const).map(layer => {
           const frame = nearest(layer === 'normal' ? normal : today, t)
           if (!frame) return null
-          const color = layer === 'normal' ? 'grey' : 'blue'
+          const color = layer === 'normal' ? 'var(--ghost-usual)' : 'var(--ghost-today)'
           return (
             <g key={layer} data-layer={layer} opacity={layer === 'normal' ? 0.4 : 1} fill={color} stroke={color}>
               {frame.poses.map((pose, poseIndex) => (
@@ -41,7 +41,8 @@ export default function GhostReplay({ today, normal, t, width = 480, height = 36
           )
         })}
       </svg>
-      <figcaption><span style={{ color: 'blue' }}>Today</span> / <span style={{ color: 'grey' }}>Usual</span></figcaption>
+      <figcaption><span className="ghost-replay__caption--today">Today</span> / <span className="ghost-replay__caption--usual">Usual</span></figcaption>
+      <p className="ghost-replay__disclaimer">Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box.</p>
     </figure>
   )
 }

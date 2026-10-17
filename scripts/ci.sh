@@ -3,9 +3,10 @@
 # Runs whatever exists; tasks extend this as the stack lands.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+export LIVE_API=0
 
 echo "== repo tooling"
-python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py
+python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py scripts/metrics.py
 bash -n scripts/integration.sh
 python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh

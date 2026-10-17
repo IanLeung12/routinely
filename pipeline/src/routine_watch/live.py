@@ -27,15 +27,21 @@ The messages, in the order a session produces them:
                  is the map going red and amber mid-session (SPEC section 10).
 ``frame``        One `CaptureFrame`: skeletons, hand landmarks and object
                  boxes, never an image (SPEC section 8). Capped at
-                 `MAX_FRAME_FPS`, and absent altogether for a scenario
-                 written at step level, which has no frames to send.
+                 `MAX_FRAME_FPS`; a scenario written at step level has no
+                 recorded frames, so it is sent made-up ones that move the
+                 way a recording would (`_synthetic_frames`).
 ``step``         One `StepEvent`, sent when the step is over.
 ``error``        One `TaskError`. Errors are classified again after every step
                  (`classify_errors(..., ended=False)`), so a session flashes
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
-``session_end``  The session's `score`, whether it raised a `flag`, and the
-                 `alert_id` of the resident's alert that flag shows up in.
+``session_end``  The session's `errors`, its `score`, whether the resident is
+                 `flag`ged now that this session is one of theirs, and the
+                 `alert_id` of the alert that flag shows up in. `errors` is the
+                 finished session's whole list,
+                 each `TaskError` serialised the way the `error` message's is:
+                 the list to settle on once the session is over, which the
+                 `error` messages above are every reading on the way to.
 ===============  ===========================================================
 
 Two things follow from classifying an unfinished session, and both are deliberate:
@@ -47,9 +53,13 @@ Two things follow from classifying an unfinished session, and both are deliberat
   keep both, because an error already shown to a nurse is not unsaid; `step_state` is
   always the current reading, so the step that turned out not to be missing goes back
   to `done`.
-* **The score is the finished session's.** `session_end` re-classifies with
-  `ended=True` and scores that, which is the number the resident's baseline is fed
-  (`routine_watch.scoring`), not a tally of everything that flickered on the way.
+* **The end is the finished session's.** `session_end` re-classifies with
+  `ended=True`, and that list is both its `errors` and what it scores: the number the
+  resident's baseline is fed (`routine_watch.scoring`), not a tally of everything that
+  flickered on the way. So a streamed `error` is **provisional** - what the session
+  looked like at that moment - and `session_end.errors` is authoritative: the same
+  errors `routine_watch.replay` (and so `scripts/e2e.sh`) ends on, which is what lets
+  a screen that has been showing the stream settle on the right answer.
 
 * **The finished session becomes one of the resident's.** The point of making tea on
   stage is that it counts (SPEC section 10, step 4), so the last thing a session does
@@ -60,15 +70,22 @@ Two things follow from classifying an unfinished session, and both are deliberat
   alert on the next `/residents` and `/alerts`. A session that is cut short - the
   dashboard closing the socket - is never recorded, because it never finished.
 
-**What is still the scenario's and not the camera's.** A session only flags against
+**The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
-alerts), and a scenario carries its own history in `expected.yaml`, so that is what
-the `flag` in `session_end` is judged against: it is this recording's verdict, sent
-the moment the session ends. The resident's own flag is a separate reading, over
-their own history with this session now in it, and the dashboard gets it from
-`/residents` and `/alerts` rather than from here. The frames to steps stage is
-whichever one `routine_watch.replay` uses, the stub included, so a live replay and
-`scripts/e2e.sh` always agree about what a recording means.
+alerts), and there are two histories it could be read over. A scenario carries its own
+in `expected.yaml`, which is the recording's verdict and what `routine_watch.replay`
+(and so `scripts/e2e.sh`) checks it against; the resident has theirs, with this session
+now in it, which is the reading `/residents` and `/alerts` give a nurse. `session_end`
+sends the second (`_resident_flagged`), because the live screen sits next to the
+dashboard: a flag here means that resident's row has gone red, and `alert_id` names an
+alert `/alerts` actually has, so "View alert" opens something (T236 - judging the
+scenario's history instead said "flagged" with nothing to open, and said nothing was
+flagged while her row was red). The `score` stays the recording's, to the decimal
+`routine_watch.replay` scores it: that is the number the resident's baseline is fed, and
+the frames to steps stage is whichever one `replay` uses, the stub included, so a live
+replay and `scripts/e2e.sh` always agree about what a recording means.
+`routine_watch.live_camera` has no resident to read a history over at all, so a camera
+session's `flag` is false until one is attached.
 """
 
 from __future__ import annotations
@@ -78,16 +95,28 @@ import re
 from collections.abc import AsyncIterator, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from . import session_log
-from .contracts import CaptureFrame, ErrorType, Session, StepEvent, TaskError
-from .demo import DEMO_NOW, DEMO_RESIDENT
+from .contracts import (
+    BoundingBox,
+    CaptureFrame,
+    ErrorType,
+    ObjectDetection,
+    ObjectLabel,
+    Session,
+    StepEvent,
+    TaskError,
+)
+from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents
 from .errors import classify_errors
+from .notify import Notifier, get_notifier
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
+from .stick_figure import HAND_SPAN, REST, Point, centre_of, reaching_for
 from .tasks import TaskGraph
 
 STAGE = "live"
@@ -160,15 +189,29 @@ def step_states(
 
 
 def as_json(message: dict[str, Any]) -> dict[str, Any]:
-    """One message as JSON data, ready for `WebSocket.send_json`."""
-    return {
-        key: value.model_dump(mode="json") if isinstance(value, BaseModel) else value
-        for key, value in message.items()
-    }
+    """One message as JSON data, ready for `WebSocket.send_json`.
+
+    A message's values are contracts (`error`), lists of them (`session_end`'s
+    `errors`) or JSON already (`score`, `states`), so only the contracts are dumped.
+    """
+    return {key: _as_json(value) for key, value in message.items()}
+
+
+def _as_json(value: Any) -> Any:
+    """One message value as JSON data: a contract dumped, a list of them dumped
+    item by item, anything else left as it is."""
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    if isinstance(value, list):
+        return [_as_json(item) for item in value]
+    return value
 
 
 async def session_messages(
-    scenario_dir: Path | str, speed: float = 1.0, resident_id: str = DEMO_RESIDENT
+    scenario_dir: Path | str,
+    speed: float = 1.0,
+    resident_id: str = DEMO_RESIDENT,
+    notifier: Notifier | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Play one recorded scenario through the pipeline as a live session.
 
@@ -177,12 +220,19 @@ async def session_messages(
     theirs (`routine_watch.session_log`), and the demo resident is who makes tea on
     stage. Raises :class:`routine_watch.replay.ReplayError` on the first step if
     `scenario_dir` is not a scenario, and ``ValueError`` if `speed` is not positive.
+
+    `notifier` is the seam tests use in place of `routine_watch.notify.get_notifier()`'s
+    default: if this session's end flips `resident_id` from not-flagged to flagged
+    (SPEC Nice-to-have 3), one push alert goes out through it, never more than once per
+    session and never for a session that leaves the resident flagged already or still
+    not flagged.
     """
     if speed <= 0:
         raise ValueError(f"speed must be positive, not {speed}")
     scenario = load_scenario(scenario_dir)
     graph = scenario.graph
-    frames, recorded = scenario.frames, scenario.events
+    recorded = scenario.events
+    frames = scenario.frames or _synthetic_frames(recorded, session_id_of(scenario))
     session_id = session_id_of(scenario)
 
     seen: set[str] = set()  # error ids already sent, so each error is sent once
@@ -236,17 +286,49 @@ async def session_messages(
     for message in reading(final):
         yield message
 
-    score, assisted, flag = score_session(scenario, final)
+    was_flagged = _resident_flagged(resident_id)
+    score, assisted, _recording_flag = score_session(scenario, final)
     _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
+    # One reading of the resident, taken once this session is one of theirs: it is both
+    # what a push alert goes out for and what `session_end` reports, so the live screen
+    # cannot say anything the dashboard does not (see "the `flag` is the resident's").
+    resident_name = _resident_flagged(resident_id)
+    if not was_flagged and resident_name:
+        (notifier or get_notifier()).send(
+            {
+                "alert_id": f"alert-{resident_id}",
+                "resident_id": resident_id,
+                "summary": f"A session just flagged a change for {resident_name} to review.",
+                "created_at": DEMO_NOW,
+            }
+        )
     yield {
         "type": "session_end",
+        # The finished session's errors, which is the list to show once it is over:
+        # the `error` messages are every reading this session went through, this is
+        # the reading it ended on (see "the end is the finished session's" above).
+        "errors": final,
         "score": score,
-        "flag": flag,
-        # The alert this session shows up in, which is the resident's own
+        # Whether this resident is flagged now, over their own history (SPEC section 7),
+        # which is the flag `/residents` shows: this session's own verdict against the
+        # scenario's history is `routine_watch.replay`'s business, not a nurse's.
+        "flag": resident_name is not None,
+        # The alert that flag shows up in, which is the resident's own
         # (`routine_watch.alerts` builds one alert per flagged resident) rather than
-        # one per session: the nurse is being told about a change in a person.
-        "alert_id": f"alert-{resident_id}" if flag else None,
+        # one per session: the nurse is being told about a change in a person. Not
+        # flagged, no alert - `/alerts` would 404 on one.
+        "alert_id": f"alert-{resident_id}" if resident_name else None,
     }
+
+
+def _resident_flagged(resident_id: str) -> str | None:
+    """The resident's display name if flagged right now (SPEC section 7: over their own
+    history, the same reading `/residents` and `/alerts` give a nurse), so a push
+    alert goes out exactly when a session's end turns this from absent to present."""
+    resident = next(
+        (resident for resident in demo_residents() if resident["id"] == resident_id), None
+    )
+    return resident["name"] if resident and resident["status"] == "flagged" else None
 
 
 def _record(
@@ -318,6 +400,141 @@ def _beats(
     beats += [(event.t_end, 1, event) for event in events]
     beats.sort(key=lambda beat: beat[:2])  # stable: never compares two records
     return beats
+
+
+#: Fixed, made-up positions for the skeleton view when a scenario is written at step
+#: level and has no real capture frames to show (SPEC section 8: boxes only, never
+#: video, so these are as good as real ones for the dashboard's purposes). Both tasks'
+#: objects, because the live view plays either routine (`web/src/live/LiveScreen.tsx`).
+_PLACEHOLDER_BOXES: dict[str, BoundingBox] = {
+    "cup": BoundingBox(x1=0.05, y1=0.75, x2=0.15, y2=0.87),
+    "kettle": BoundingBox(x1=0.66, y1=0.26, x2=0.84, y2=0.54),
+    "teabag": BoundingBox(x1=0.16, y1=0.3, x2=0.23, y2=0.37),
+    "spoon": BoundingBox(x1=0.22, y1=0.6, x2=0.38, y2=0.66),
+    "milk": BoundingBox(x1=0.86, y1=0.6, x2=0.96, y2=0.72),
+    "sugar": BoundingBox(x1=0.86, y1=0.3, x2=0.96, y2=0.42),
+    "glass": BoundingBox(x1=0.06, y1=0.74, x2=0.17, y2=0.88),
+    "water_jug": BoundingBox(x1=0.62, y1=0.22, x2=0.82, y2=0.52),
+    "pill_organiser": BoundingBox(x1=0.2, y1=0.28, x2=0.36, y2=0.4),
+    "pill_bottle": BoundingBox(x1=0.86, y1=0.28, x2=0.95, y2=0.46),
+}
+
+#: How often a scenario written at step level gets a made-up frame, in frames per
+#: second of session time: the rate the frame-level recordings were written at
+#: (`tests/scenarios/tea_normal`), which is fast enough for the stand-in figure to
+#: move and slow enough to keep the socket light.
+SYNTHETIC_FPS = 2.0
+
+
+def _synthetic_frames(events: Sequence[StepEvent], session_id: str) -> list[CaptureFrame]:
+    """Made-up frames for a scenario written at step level (no `frames.jsonl`), so the
+    skeleton view has something to show (SPEC section 10, step 3) rather than staying
+    on "waiting for camera" the whole session.
+
+    One frame every `1 / SYNTHETIC_FPS` seconds, from the start of the session to the
+    end of its last step. Each carries the objects this session's steps are done with,
+    where `_PLACEHOLDER_BOXES` puts them, and a stand-in figure
+    (`routine_watch.stick_figure`) whose hand travels to the object of the step being
+    done and back to its rest spot in between: a recording of nobody, shaped like a
+    recording of somebody, which is what the skeleton view knows how to draw.
+    """
+    if not events:
+        return []
+    steps = sorted(events, key=lambda event: (event.t_start, event.t_end))
+    objects = [
+        ObjectDetection(label=label, confidence=1.0, box=box)
+        for label in dict.fromkeys(label for step in steps for label in step.objects)
+        if (box := _PLACEHOLDER_BOXES.get(str(label))) is not None
+    ]
+    track = _hand_track(steps)
+    frames: list[CaptureFrame] = []
+    for seq, t in enumerate(_ticks(steps[-1].t_end)):
+        point = _hand_at(track, t)
+        pose, hand = reaching_for(point)
+        frames.append(
+            CaptureFrame(
+                session_id=session_id,
+                seq=seq,
+                t=t,
+                source="synthetic",
+                poses=[pose],
+                hands=[hand],
+                objects=[*objects, _hand_box(point)],
+            )
+        )
+    return frames
+
+
+def _ticks(end: float) -> list[float]:
+    """Every moment a made-up frame is written for: 0 to `end`, `SYNTHETIC_FPS` apart."""
+    gap = 1.0 / SYNTHETIC_FPS
+    return [index * gap for index in range(int(end / gap) + 1)]
+
+
+def _hand_track(steps: Sequence[StepEvent]) -> list[tuple[Point, float]]:
+    """Where the stand-in hand is through the session, as (point, t) keyframes.
+
+    At rest until the first step, on the object that step is done with from its start
+    to its end, then back at rest halfway through the gap to the next step. Steps that
+    overlap in time just leave their keyframes in time order, which is all the track
+    is read in.
+    """
+    track: list[tuple[Point, float]] = [(REST, 0.0)]
+    for index, step in enumerate(steps):
+        point = _step_anchor(step)
+        track.append((point, step.t_start))
+        track.append((point, step.t_end))
+        following = steps[index + 1] if index + 1 < len(steps) else None
+        if following is not None and following.t_start > step.t_end:
+            track.append((REST, (step.t_end + following.t_start) / 2.0))
+    track.sort(key=lambda keyframe: keyframe[1])
+    return track
+
+
+def _step_anchor(step: StepEvent) -> Point:
+    """Where the hand goes for this step: the first of its objects that is on the
+    counter, or the rest spot for a step done with nothing `_PLACEHOLDER_BOXES` knows.
+
+    A step event lists the object that was in the hand first (both the recogniser's
+    rules and the hand-written `steps.jsonl` files do), so that is the one to reach
+    for: the kettle of a pour rather than the cup it is poured into.
+    """
+    for label in step.objects:
+        box = _PLACEHOLDER_BOXES.get(str(label))
+        if box is not None:
+            return centre_of(box)
+    return REST
+
+
+def _hand_at(track: Sequence[tuple[Point, float]], t: float) -> Point:
+    """The hand's place at `t`: evenly between the keyframes on either side of it."""
+    for (start, t0), (end, t1) in pairwise(track):
+        if t <= t1:
+            if t1 <= t0:
+                return end
+            share = min(1.0, max(0.0, (t - t0) / (t1 - t0)))
+            return (
+                start[0] + share * (end[0] - start[0]),
+                start[1] + share * (end[1] - start[1]),
+            )
+    return track[-1][0]
+
+
+def _hand_box(point: Point, span: float = HAND_SPAN) -> ObjectDetection:
+    """The hand as the detector would have reported it: a box around the landmarks the
+    figure's hand is drawn from, the way the frame-level recordings carry one."""
+    x, y = point
+    half = span / 2.0
+    return ObjectDetection(
+        label=ObjectLabel.HAND,
+        confidence=1.0,
+        box=BoundingBox(
+            x1=max(0.0, x - half),
+            y1=max(0.0, y - half),
+            x2=min(1.0, x + half),
+            y2=min(1.0, y + half),
+        ),
+    )
 
 
 def _downsampled(

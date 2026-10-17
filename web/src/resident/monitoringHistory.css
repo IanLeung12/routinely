@@ -1,0 +1,32 @@
+/* The audit trail under a room's monitoring switch (SPEC §12). Small and quiet: the
+   switch is the control, this is the record of who last used it. */
+.monitoring-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.monitoring-history__title {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.monitoring-history__empty,
+.monitoring-history__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.monitoring-history__what--paused {
+  color: var(--error-amber-text);
+}
+
+.monitoring-history__what--on {
+  color: var(--status-normal-text);
+}

@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "CareRecord": {
+      "additionalProperties": false,
+      "description": "One line of the care record the unit already keeps (SPEC section 6.4).",
+      "properties": {
+        "resident_id": {
+          "minLength": 1,
+          "title": "Resident Id",
+          "type": "string"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CareRecordKind"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "The reading for a temperature or a fluid intake; the drug for a med_change.",
+          "title": "Value"
+        },
+        "note": {
+          "description": "Free text from whoever wrote the record. Often empty.",
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resident_id",
+        "ts",
+        "kind",
+        "value",
+        "note"
+      ],
+      "title": "CareRecord",
+      "type": "object"
+    },
+    "CareRecordKind": {
+      "description": "A line of the care record the unit already keeps (SPEC section 6.4): the two\nreadings a pattern is read against, and a medication change.",
+      "enum": [
+        "temperature",
+        "fluid_intake",
+        "med_change"
+      ],
+      "title": "CareRecordKind",
+      "type": "string"
+    },
+    "ConsentRecord": {
+      "additionalProperties": false,
+      "description": "Who opted this resident in to being monitored, and when (SPEC section 12).",
+      "properties": {
+        "given_by": {
+          "description": "The resident themself, or a substitute decision-maker.",
+          "minLength": 1,
+          "title": "Given By",
+          "type": "string"
+        },
+        "on": {
+          "description": "The day consent was given, always before the history it covers.",
+          "format": "date",
+          "title": "On",
+          "type": "string"
+        }
+      },
+      "required": [
+        "given_by",
+        "on"
+      ],
+      "title": "ConsentRecord",
+      "type": "object"
+    },
+    "ErrorCounts": {
+      "additionalProperties": false,
+      "description": "How many errors of each type one session had (SPEC section 7).\n\nOne optional field per `ErrorType`: a type the session had none of is left out\nrather than sent as a zero, so `{}` is a clean session. Self-corrected slips are\ncounted by `ResidentSession.self_corrected` instead, not here.",
+      "properties": {
+        "omission": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Omission",
+          "type": "integer"
+        },
+        "sequence": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "perseveration": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Perseveration",
+          "type": "integer"
+        },
+        "substitution": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Substitution",
+          "type": "integer"
+        },
+        "hesitation": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Hesitation",
+          "type": "integer"
+        },
+        "abandonment": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Abandonment",
+          "type": "integer"
+        }
+      },
+      "title": "ErrorCounts",
+      "type": "object"
+    },
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "description": "What a piece of evidence points at. Never a video clip (SPEC section 8).",
+      "enum": [
+        "step_event",
+        "skeleton_replay"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A pointer to evidence already stored: a step event, or a span of the skeleton\nreplay. Never a video clip (SPEC section 8).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "t_start": {
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when kind is step_event: the StepEvent it refers to.",
+          "title": "Event Id"
+        }
+      },
+      "required": [
+        "kind",
+        "t_start",
+        "t_end"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "PatternUrgency": {
+      "description": "How soon a pattern wants a human to look (SPEC section 7.5).",
+      "enum": [
+        "routine",
+        "next_round",
+        "same_shift",
+        "urgent"
+      ],
+      "title": "PatternUrgency",
+      "type": "string"
+    },
+    "ResidentBaseline": {
+      "additionalProperties": false,
+      "description": "What this resident is normally like, and the bar a session is held to.\n\n`mean`, `std` and `threshold` are the flag baseline (`change_detection.Baseline`)\nbuilt from this resident's own history and nobody else's (SPEC section 7). The\ntwo `usual_` fields are what the live screen reads back when a session ends, taken\nover the resident's earliest days so the very change being flagged cannot quietly\nraise them (SPEC section 8, beat 6); both are absent for a resident with no early\nsessions of their own.",
+      "properties": {
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "std": {
+          "minimum": 0.0,
+          "title": "Std",
+          "type": "number"
+        },
+        "threshold": {
+          "description": "Error score above which a session qualifies.",
+          "title": "Threshold",
+          "type": "number"
+        },
+        "usual_duration_s": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usual Duration S"
+        },
+        "usual_errors": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usual Errors"
+        }
+      },
+      "required": [
+        "mean",
+        "std",
+        "threshold"
+      ],
+      "title": "ResidentBaseline",
+      "type": "object"
+    },
+    "ResidentSession": {
+      "additionalProperties": false,
+      "description": "One attempt at one task in a resident's history (`routine_watch.demo`).\n\nGenerated history and a session played live this run are written the same way, so\neverything downstream reads both alike; the two fields only a watched session can\nfill - `session_id` and the errors the classifier really found in it - are absent\nfrom a generated one. Not `Session`: that is the record the pipeline stores, this\nis the row the dashboard draws a history from.",
+      "properties": {
+        "resident_id": {
+          "minLength": 1,
+          "title": "Resident Id",
+          "type": "string"
+        },
+        "ts": {
+          "description": "When the session started (wall clock).",
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "task": {
+          "description": "The task graph that was followed, e.g. 'tea'.",
+          "minLength": 1,
+          "title": "Task",
+          "type": "string"
+        },
+        "errors": {
+          "$ref": "#/$defs/ErrorCounts"
+        },
+        "self_corrected": {
+          "description": "Slips the resident put right straight away, which score less.",
+          "minimum": 0,
+          "title": "Self Corrected",
+          "type": "integer"
+        },
+        "duration_s": {
+          "description": "How long the session took.",
+          "minimum": 0.0,
+          "title": "Duration S",
+          "type": "number"
+        },
+        "assisted": {
+          "default": false,
+          "description": "A second person was in frame. Excluded from the baseline.",
+          "title": "Assisted",
+          "type": "boolean"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Absent on a generated session: only a watched one has an id.",
+          "title": "Session Id"
+        },
+        "error_events": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TaskError"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The errors this session really had, with their steps and times. Absent on a generated session, which only knows how many of each type there were.",
+          "title": "Error Events"
+        }
+      },
+      "required": [
+        "resident_id",
+        "ts",
+        "task",
+        "errors",
+        "self_corrected",
+        "duration_s"
+      ],
+      "title": "ResidentSession",
+      "type": "object"
+    },
+    "ResidentStatus": {
+      "description": "The chip on a resident's overview row (SPEC section 9, screen 1): nothing to\nsay, worth a look, or a change flagged for review.",
+      "enum": [
+        "normal",
+        "watch",
+        "flagged"
+      ],
+      "title": "ResidentStatus",
+      "type": "string"
+    },
+    "ScorePoint": {
+      "additionalProperties": false,
+      "description": "One point of a resident's sparkline: a session's score, and when it ran.",
+      "properties": {
+        "ts": {
+          "description": "When the session started (wall clock).",
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "score": {
+          "description": "Weighted sum of that session's errors.",
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ts",
+        "score"
+      ],
+      "title": "ScorePoint",
+      "type": "object"
+    },
+    "TaskError": {
+      "additionalProperties": false,
+      "description": "One everyday-action error found in a session (SPEC section 7).",
+      "properties": {
+        "error_id": {
+          "minLength": 1,
+          "title": "Error Id",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ErrorType"
+        },
+        "step_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The step the error is about. Null only when no single step applies.",
+          "title": "Step Id"
+        },
+        "t_start": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "self_corrected": {
+          "default": false,
+          "description": "The resident fixed it straight away: a weaker signal, not a full error.",
+          "title": "Self Corrected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "error_id",
+        "session_id",
+        "type",
+        "t_start",
+        "t_end",
+        "evidence"
+      ],
+      "title": "TaskError",
+      "type": "object"
+    },
+    "TopPattern": {
+      "additionalProperties": false,
+      "description": "The pattern chip on a resident's row (SPEC section 9, screen 1).\n\nThe best-scoring `PatternMatch` for this resident's change, cut down to what a\nrow shows: what it is consistent with and how soon somebody should look.",
+      "properties": {
+        "pattern_id": {
+          "description": "The pattern in the library, e.g. 'sudden_change'.",
+          "minLength": 1,
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "How the pattern is shown to a nurse.",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "urgency": {
+          "$ref": "#/$defs/PatternUrgency"
+        }
+      },
+      "required": [
+        "pattern_id",
+        "name",
+        "urgency"
+      ],
+      "title": "TopPattern",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One resident in full (`GET /residents/{id}`, SPEC section 9, screen 2).\n\nThe overview's row plus everything the detail screen draws: the consent this\nmonitoring rests on, every session and care record, and the baseline they are\nread against. It inherits `ResidentSummary` because the row really is this\npayload's first six fields and nothing else, which is how `/residents` builds it.\nSynthetic for now (`routine_watch.demo`) - the shape is what the dashboard is held\nto, not where the numbers come from.",
+  "properties": {
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "room": {
+      "minLength": 1,
+      "title": "Room",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ResidentStatus"
+    },
+    "top_pattern": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TopPattern"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Null for a normal resident, and for a change no pattern fits: an empty answer is a real one (SPEC section 7.5)."
+    },
+    "scores": {
+      "description": "One point per session, oldest first.",
+      "items": {
+        "$ref": "#/$defs/ScorePoint"
+      },
+      "title": "Scores",
+      "type": "array"
+    },
+    "consent": {
+      "$ref": "#/$defs/ConsentRecord"
+    },
+    "sessions": {
+      "description": "Every session, oldest first.",
+      "items": {
+        "$ref": "#/$defs/ResidentSession"
+      },
+      "title": "Sessions",
+      "type": "array"
+    },
+    "care_records": {
+      "items": {
+        "$ref": "#/$defs/CareRecord"
+      },
+      "title": "Care Records",
+      "type": "array"
+    },
+    "baseline": {
+      "$ref": "#/$defs/ResidentBaseline"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "room",
+    "status",
+    "top_pattern",
+    "scores",
+    "consent",
+    "sessions",
+    "care_records",
+    "baseline"
+  ],
+  "title": "Resident",
+  "type": "object"
+}

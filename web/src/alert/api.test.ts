@@ -50,6 +50,24 @@ describe('alerts API', () => {
     })
   })
 
+  it('sends the picked cause, and null once it is cleared', async () => {
+    const updated = { ...mockAlerts[0], summary: 'Server response' }
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => updated })
+    vi.stubGlobal('fetch', fetch)
+
+    await postFeedback('alert-1', 'confirmed', undefined, 'sudden_change')
+    expect(fetch).toHaveBeenLastCalledWith(`${apiUrl}/alerts/alert-1/feedback`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verdict: 'confirmed', cause: 'sudden_change' }),
+    })
+
+    await postFeedback('alert-1', 'confirmed', undefined, null)
+    expect(fetch).toHaveBeenLastCalledWith(`${apiUrl}/alerts/alert-1/feedback`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verdict: 'confirmed', cause: null }),
+    })
+  })
+
   it.each([404, 422, 500])('rejects HTTP %s without mutating local alerts', async status => {
     const before = structuredClone(mockAlerts)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status }))

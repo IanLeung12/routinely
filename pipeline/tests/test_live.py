@@ -22,13 +22,16 @@ from fastapi.testclient import TestClient
 from routine_watch import live
 from routine_watch.api import app
 from routine_watch.contracts import (
+    BoundingBox,
     CaptureFrame,
     CaptureSource,
+    ObjectLabel,
     StepEvent,
     StepSource,
     TaskError,
     repo_root,
 )
+from routine_watch.demo import DEMO_RESIDENT
 from routine_watch.errors import classify_errors
 from routine_watch.live import (
     MAX_FRAME_FPS,
@@ -45,6 +48,15 @@ from routine_watch.tasks import load_task
 BAD = "tea_skip_teabag_pour_twice"
 GOOD = "tea_normal"
 FRAMES = "tea_no_kettle"
+
+#: Pouring before the teabag goes in: the session whose error list heals, because the
+#: dependency reported missing mid-session is done later on.
+SEQUENCE = "tea_sequence_error"
+
+#: The two recordings whose own verdict and whose effect on Mrs. K disagree (T236):
+#: against its own history `tea_kettle_twice` flags and `tea_no_kettle` does not, while
+#: her history, with the session now in it, reads them the other way round.
+ONE_SIDED = ("tea_kettle_twice", FRAMES)
 
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
@@ -176,6 +188,25 @@ def test_normal_session_reports_nothing() -> None:
     assert (end["score"], end["flag"], end["alert_id"]) == (0.0, False, None)
 
 
+@pytest.mark.parametrize("scenario", [*ONE_SIDED, BAD, GOOD])
+def test_session_end_says_what_the_dashboard_says(scenario: str) -> None:
+    """The verdict a live session ends on is the resident's, the same reading
+    `/residents` and `/alerts` give a nurse (T236).
+
+    Judging the recording against the scenario's own history instead could say either
+    thing the dashboard does not: "flagged" with an `alert_id` `/alerts` 404s on, so
+    "View alert" dead-ends, or "nothing flagged" while her row has gone red.
+    """
+    end = played(scenario_path(scenario))[-1]
+    with TestClient(app) as client:
+        status = client.get(f"/residents/{DEMO_RESIDENT}").json()["status"]
+        alert = client.get(f"/alerts/alert-{DEMO_RESIDENT}")
+
+    assert end["flag"] == (status == "flagged")
+    assert (end["alert_id"] is not None) == (alert.status_code == 200)
+    assert end["alert_id"] in (None, f"alert-{DEMO_RESIDENT}")
+
+
 @pytest.mark.parametrize("scenario", ["", "nope", "../../pipeline/src", "Tea_Normal"])
 def test_unknown_scenario_closes_4404(scenario: str) -> None:
     with TestClient(app) as client, pytest.raises(WebSocketDisconnect) as closed:
@@ -208,9 +239,58 @@ def test_frames_scenario_sends_skeleton_frames() -> None:
     assert reported(messages) == [("omission", "boil"), ("omission", "fill_kettle")]
 
 
-def test_step_scenario_sends_no_frames() -> None:
-    """A scenario written at step level has no frames to send, so it sends none."""
-    assert of_type(live_session(BAD), "frame") == []
+def test_step_scenario_sends_synthetic_frames() -> None:
+    """A scenario written at step level has no recorded frames, so the skeleton view
+    gets made-up ones instead of staying empty the whole session: one every
+    `1 / SYNTHETIC_FPS` seconds, from the start of the session to its last step."""
+    events = load_scenario(scenario_path(BAD)).events
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    assert [f.seq for f in frames] == list(range(len(frames)))
+    assert frames[0].t == 0.0
+    assert frames[-1].t == pytest.approx(max(event.t_end for event in events))
+    gaps = {round(later.t - earlier.t, 6) for earlier, later in pairwise(frames)}
+    assert gaps == {round(1.0 / live.SYNTHETIC_FPS, 6)}
+
+
+def test_synthetic_frames_carry_a_skeleton_and_not_just_boxes() -> None:
+    """The bug this is a regression for: every made-up frame had `poses=[]`, so the
+    live skeleton view (SPEC section 10, step 3) drew labelled boxes and no body."""
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    assert frames
+    for frame in frames:
+        assert len(frame.poses) == 1  # one person, so the session is not "assisted"
+        assert len(frame.hands) == 1
+        for landmark in [*frame.poses[0].landmarks, *frame.hands[0].landmarks]:
+            assert 0.0 <= landmark.x <= 1.0
+            assert 0.0 <= landmark.y <= 1.0
+
+
+def test_the_synthetic_hand_travels_between_the_objects_of_the_steps() -> None:
+    """A still skeleton is barely better than no skeleton: the hand has to be on the
+    object of the step being done, and somewhere else between steps."""
+    events = load_scenario(scenario_path(BAD)).events
+    frames = [CaptureFrame.model_validate(m["frame"]) for m in of_type(live_session(BAD), "frame")]
+
+    for event in events:
+        middle = min(frames, key=lambda f: abs(f.t - (event.t_start + event.t_end) / 2.0))
+        target = next(o for o in middle.objects if str(o.label) == str(event.objects[0]))
+        assert _overlaps(_hand_box(middle), target.box), f"{event.step_id} at {middle.t}"
+
+    places = {(f.hands[0].landmarks[0].x, f.hands[0].landmarks[0].y) for f in frames}
+    assert len(places) > len(events)  # it moves between the steps, not only at them
+
+
+def _hand_box(frame: CaptureFrame) -> BoundingBox:
+    """The box the detector would put around the hand in this frame."""
+    return next(found.box for found in frame.objects if found.label is ObjectLabel.HAND)
+
+
+def _overlaps(one: BoundingBox, other: BoundingBox) -> bool:
+    return (
+        one.x1 <= other.x2 and other.x1 <= one.x2 and one.y1 <= other.y2 and other.y1 <= one.y2
+    )
 
 
 @pytest.mark.parametrize(
@@ -237,6 +317,8 @@ def test_every_message_is_a_contract() -> None:
         StepEvent.model_validate(message["event"])
     for message in of_type(messages, "error"):
         TaskError.model_validate(message["error"])
+    for error in messages[-1]["errors"]:  # `session_end` carries a list of them
+        TaskError.model_validate(error)
     assert {m["type"] for m in messages} <= {
         "session_start", "frame", "step", "step_state", "error", "session_end"
     }
@@ -248,7 +330,12 @@ def test_every_message_is_a_contract() -> None:
 @pytest.mark.parametrize("path", scenario_dirs(), ids=lambda path: path.name)
 def test_live_session_says_what_the_replay_says(path: Path) -> None:
     """A live replay and `scripts/e2e.sh` must never disagree about a recording: same
-    steps, same errors at the end, same score and the same flag."""
+    steps, same errors at the end and the same score.
+
+    Not the same flag: `session_end`'s is the resident's reading, over their own history
+    with this session in it, and the recording's own is the offline replay's
+    (`test_session_end_says_what_the_dashboard_says`, T236).
+    """
     scenario = load_scenario(path)
     messages = played(path)
     result = run(scenario)
@@ -256,10 +343,12 @@ def test_live_session_says_what_the_replay_says(path: Path) -> None:
     assert [m["event"].step_id for m in of_type(messages, "step")] == list(
         scenario.expected.steps
     )
+    want = Counter((e["type"], e["step"]) for e in result["errors"])
     sent = Counter((m["error"].type, m["error"].step_id) for m in of_type(messages, "error"))
-    assert sent >= Counter((e["type"], e["step"]) for e in result["errors"])
+    ended = Counter((error.type, error.step_id) for error in messages[-1]["errors"])
+    assert sent >= want  # the stream also keeps what healed on the way
+    assert ended == want  # the end is exactly the offline replay's reading
     assert messages[-1]["score"] == result["score"]
-    assert messages[-1]["flag"] == result["flag"]
 
 
 def test_each_error_is_sent_once() -> None:
@@ -268,6 +357,16 @@ def test_each_error_is_sent_once() -> None:
     ids = [m["error"].error_id for m in of_type(played(scenario_path(BAD)), "error")]
 
     assert len(ids) == len(set(ids))
+
+
+def test_session_end_carries_the_errors_the_session_ended_on() -> None:
+    """A streamed error is provisional; `session_end`'s `errors` is the list to settle
+    on, so the screen ends up showing the errors `expected.yaml` (and so
+    `scripts/e2e.sh`) has for this recording rather than the gap that healed."""
+    messages = live_session(SEQUENCE)
+
+    assert reported(messages) == [("omission", "teabag_in_cup"), ("sequence", "pour")]
+    assert [(e["type"], e["step_id"]) for e in messages[-1]["errors"]] == [("sequence", "pour")]
 
 
 def test_a_step_that_turns_out_not_to_be_missing_goes_back_to_done() -> None:

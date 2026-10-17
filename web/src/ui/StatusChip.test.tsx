@@ -21,4 +21,20 @@ describe('StatusChip', () => {
       cleanup()
     }
   })
+
+  it('describes what each status means for hover and screen readers', () => {
+    const cases = [
+      ['normal', 'Within their usual range'],
+      ['watch', 'Worth watching: trending away from their usual routine'],
+      ['flagged', 'Change flagged for review'],
+    ] as const
+
+    for (const [status, description] of cases) {
+      render(<StatusChip status={status} />)
+      const chip = screen.getByLabelText(description)
+      expect(chip.title).toBe(description)
+      expect(description.toLowerCase()).not.toContain('diagnos')
+      cleanup()
+    }
+  })
 })

@@ -6,10 +6,24 @@ const LABELS: Record<ResidentStatus, string> = {
   flagged: 'Flagged',
 }
 
+const DESCRIPTIONS: Record<ResidentStatus, string> = {
+  normal: 'Within their usual range',
+  watch: 'Worth watching: trending away from their usual routine',
+  flagged: 'Change flagged for review',
+}
+
 /** Colour-coded status chip (SPEC section 9): a nurse should read it at a glance,
  * no reading required beyond the colour and the word. */
 export function StatusChip({ status }: { status: ResidentStatus }) {
-  return <span className={`status-chip status-chip--${status}`}>{LABELS[status]}</span>
+  return (
+    <span
+      className={`status-chip status-chip--${status}`}
+      title={DESCRIPTIONS[status]}
+      aria-label={DESCRIPTIONS[status]}
+    >
+      {LABELS[status]}
+    </span>
+  )
 }
 
 export default StatusChip

@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from routine_watch.drift import Drift, drift
+from routine_watch.drift import Drift, daily_scores, drift
 
 
 def series(scores):
@@ -51,3 +51,33 @@ def test_custom_thresholds_and_same_date_observations():
     assert drift(series([0.0, 1.0]), min_days=2, min_slope=1.0).trending
     assert not drift(series([0.0, 1.0]), min_days=2, min_slope=1.1).trending
     assert drift([(date(2026, 1, 1), 1.0)] * 7) == Drift(0.0, 1, False)
+
+
+def test_daily_scores_averages_multiple_sessions_per_day():
+    scores = [
+        {"ts": "2026-01-01T08:00:00", "score": 1.0},
+        {"ts": "2026-01-01T20:00:00", "score": 3.0},
+    ]
+    assert daily_scores(scores) == [(date(2026, 1, 1), 2.0)]
+
+
+def test_daily_scores_sorted_by_date_even_when_input_is_not():
+    scores = [
+        {"ts": "2026-01-03T08:00:00", "score": 3.0},
+        {"ts": "2026-01-01T08:00:00", "score": 1.0},
+        {"ts": "2026-01-02T08:00:00", "score": 2.0},
+    ]
+    assert daily_scores(scores) == [
+        (date(2026, 1, 1), 1.0),
+        (date(2026, 1, 2), 2.0),
+        (date(2026, 1, 3), 3.0),
+    ]
+
+
+def test_daily_scores_empty_input_gives_empty_list():
+    assert daily_scores([]) == []
+
+
+def test_daily_scores_parses_utc_offset_timestamps():
+    scores = [{"ts": "2026-01-01T08:00:00+00:00", "score": 5.0}]
+    assert daily_scores(scores) == [(date(2026, 1, 1), 5.0)]

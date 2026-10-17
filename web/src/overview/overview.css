@@ -1,0 +1,130 @@
+.unit-filter {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.unit-filter__button[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
+.resident-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0 2.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.resident-row {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.resident-open {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resident-open:hover {
+  background: #ffffff0a;
+}
+
+.resident-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.resident-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+}
+
+.resident-name {
+  font-weight: 600;
+}
+
+.resident-room {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.resident-open .status-chip {
+  flex-shrink: 0;
+}
+
+.resident-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.resident-pattern {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.resident-open svg {
+  margin-left: auto;
+}
+
+.resident-paused-chip {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--error-grey-bg);
+  color: var(--error-grey-text);
+  font-size: 0.75rem;
+}
+
+/* Nurses check the board on a phone on the floor (T234): below 480px, stack each
+   row's name/room, status + top pattern, and sparkline instead of squeezing them
+   onto one line and forcing horizontal scroll. */
+@media (max-width: 480px) {
+  .unit-filter {
+    flex-wrap: wrap;
+  }
+
+  .unit-filter__button {
+    min-height: 2.75rem;
+    flex: 1 1 auto;
+  }
+
+  .resident-open {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .resident-identity {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .resident-status {
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .resident-open svg {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}

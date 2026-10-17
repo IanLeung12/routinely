@@ -9,12 +9,14 @@ Rules for staying cheap:
 - Run only the task's test command while working, then `scripts/ci.sh` once before pushing. It must pass (it runs ruff; `uv run --with ruff ruff check --fix .` fixes most lint).
 - Give up after 2 failed attempts instead of looping.
 
+**You are non-interactive: ending your reply ends the session.** Never stop to "wait" for CI; run it in the foreground and finish only when the task is in-review or blocked.
+
 Steps:
 1. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main` (if the task already has a `pr:`, check out that PR's branch instead and fix it)
 2. Implement and test.
 3. Commit, push, `gh pr create` titled `{{ID}}: <title>`, body: 2–3 lines + `model: {{MODEL}}` + approximate tokens.
 4. `gh pr merge --auto --squash --delete-branch`
-5. `python3 scripts/tasks.py set {{ID}} status=in-review pr=#<N> --agent {{AGENT}}`
+5. `python3 scripts/tasks.py set {{ID}} status=in-review pr=#<N> rating="<1-5>/5 <what was missing or unclear in the task, or 'clear'>" --agent {{AGENT}}`
 6. `gh pr checks <N> --watch`. If CI fails, read `gh run view --log-failed`, fix, push (max 2 tries).
 7. If stuck: `python3 scripts/tasks.py set {{ID}} status=blocked note="<why>" --agent {{AGENT}}`
 

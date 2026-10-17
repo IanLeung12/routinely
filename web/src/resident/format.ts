@@ -1,6 +1,6 @@
 import type { ErrorType } from '../contracts.ts'
 import { ERROR_TYPE_LABEL } from '../ui/errorTypes.ts'
-import type { SessionErrors } from './types.ts'
+import type { CareRecord, SessionErrors } from './types.ts'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -53,4 +53,24 @@ export function formatErrors(errors: SessionErrors): string {
     .filter(([, count]) => (count ?? 0) > 0)
     .map(([type, count]) => `${ERROR_TYPE_LABEL[type as ErrorType] ?? type} ×${count}`)
   return parts.join(' · ')
+}
+
+/** 'Temperature 36.8 °C', used by both the resident timeline and the alert context. */
+export function describeCareRecord(record: CareRecord): string {
+  switch (record.kind) {
+    case 'temperature':
+      return `Temperature ${record.value} °C`
+    case 'fluid_intake':
+      return `Fluid intake ${record.value} ml`
+    case 'med_change':
+      return `Medication change: ${record.value}`
+    default:
+      return `${record.kind}: ${record.value}`
+  }
+}
+
+/** Epoch ms for sorting care records newest first; 0 (not NaN) for an unparseable `ts`. */
+export function recordTime(ts: string): number {
+  const parsed = Date.parse(ts)
+  return Number.isNaN(parsed) ? 0 : parsed
 }

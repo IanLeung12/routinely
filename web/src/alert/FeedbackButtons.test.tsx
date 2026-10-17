@@ -55,6 +55,8 @@ describe('FeedbackButtons', () => {
     render(<FeedbackButtons value="confirmed" onChange={() => {}} causeOptions={CAUSE_OPTIONS} />)
 
     const group = screen.getByRole('group', { name: 'What was it? (optional)' })
+    // The question is on the screen, not only in the group's accessible name.
+    expect(within(group).getByText('What was it? (optional)')).toBeTruthy()
     expect(within(group).getAllByRole('button').map((button) => button.textContent)).toEqual([
       'UTI',
       'Fatigue',

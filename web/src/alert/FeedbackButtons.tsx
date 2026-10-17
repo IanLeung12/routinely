@@ -1,4 +1,6 @@
+import { useId } from 'react'
 import type { FeedbackVerdict } from '../contracts.ts'
+import { Button } from '../ui/Button.tsx'
 
 const OPTIONS: { verdict: FeedbackVerdict; label: string }[] = [
   { verdict: 'confirmed', label: 'Confirmed' },
@@ -7,7 +9,13 @@ const OPTIONS: { verdict: FeedbackVerdict; label: string }[] = [
 
 const OTHER_CAUSE = 'other'
 
-/** Lets a nurse record whether a flagged alert was real, so the threshold can learn from it. */
+const CAUSE_LABEL = 'What was it? (optional)'
+
+/** Lets a nurse record whether a flagged alert was real, so the threshold can learn from it.
+ *
+ * Once an alert is confirmed, `causeOptions` (the patterns this change was flagged as being
+ * consistent with) turns into the "what was it?" picker from SPEC section 5, MVP 8: the
+ * nurse's answer is reported through `onCauseChange` and stored with the feedback. */
 export function FeedbackButtons({
   value,
   onChange,
@@ -21,36 +29,38 @@ export function FeedbackButtons({
   cause?: string | null
   onCauseChange?: (id: string) => void
 }) {
+  const causeLabelId = useId()
   return (
     <div className="feedback-buttons">
       <div role="group" aria-label="Nurse feedback">
         {OPTIONS.map((option) => (
-          <button
+          <Button
             key={option.verdict}
-            type="button"
             className="feedback-button"
             aria-pressed={value === option.verdict}
             onClick={() => onChange(option.verdict)}
           >
             {option.label}
-          </button>
+          </Button>
         ))}
         <p role="status" aria-live="polite">
           {value === 'confirmed' ? 'Marked as confirmed' : value === 'false_alarm' ? 'Marked as false alarm' : ''}
         </p>
       </div>
       {value === 'confirmed' && causeOptions && (
-        <div role="group" aria-label="What was it? (optional)" className="feedback-buttons__cause">
+        <div role="group" aria-labelledby={causeLabelId} className="feedback-buttons__cause">
+          <p className="feedback-buttons__cause-label" id={causeLabelId}>
+            {CAUSE_LABEL}
+          </p>
           {[...causeOptions, { id: OTHER_CAUSE, label: 'Other' }].map((option) => (
-            <button
+            <Button
               key={option.id}
-              type="button"
               className="feedback-button"
               aria-pressed={cause === option.id}
               onClick={() => onCauseChange?.(option.id)}
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}

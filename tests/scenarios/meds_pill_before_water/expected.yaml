@@ -1,0 +1,6 @@
+# Taking the pill out before filling is allowed; drinking before filling is not.
+task: meds
+steps: [get_glass, open_organiser, take_pill, drink_water, fill_glass, close_organiser]
+errors:
+  - { type: sequence, step: drink_water }
+flag: false
