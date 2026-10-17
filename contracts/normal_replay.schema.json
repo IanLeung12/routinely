@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "An axis-aligned box, normalised to the frame: top-left to bottom-right, 0..1.",
+      "properties": {
+        "x1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y1",
+          "type": "number"
+        },
+        "x2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X2",
+          "type": "number"
+        },
+        "y2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y2",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CaptureFrame": {
+      "additionalProperties": false,
+      "description": "The single per-frame JSONL record (SPEC section 16).\n\nThe live camera, the pre-recorded fallback, tests and scenarios all feed the\npipeline through this one format. The frame itself is dropped after processing.",
+      "properties": {
+        "schema_version": {
+          "default": 1,
+          "description": "routine_watch.capture.FRAME_SCHEMA_VERSION when the record was written.",
+          "minimum": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Frame counter within the session, from 0.",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "t": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T",
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$defs/CaptureSource"
+        },
+        "poses": {
+          "description": "One per person in frame. Two or more means somebody is assisting.",
+          "items": {
+            "$ref": "#/$defs/Pose"
+          },
+          "title": "Poses",
+          "type": "array"
+        },
+        "hands": {
+          "items": {
+            "$ref": "#/$defs/HandLandmarks"
+          },
+          "title": "Hands",
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ObjectDetection"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": [
+        "session_id",
+        "seq",
+        "t",
+        "source",
+        "poses",
+        "hands",
+        "objects"
+      ],
+      "title": "CaptureFrame",
+      "type": "object"
+    },
+    "CaptureSource": {
+      "description": "Where a capture frame came from. All three produce the same record.",
+      "enum": [
+        "camera",
+        "video",
+        "synthetic"
+      ],
+      "title": "CaptureSource",
+      "type": "string"
+    },
+    "HandLandmarks": {
+      "additionalProperties": false,
+      "description": "One hand. Steps are hand-object interactions (SPEC section 16).",
+      "properties": {
+        "handedness": {
+          "$ref": "#/$defs/Handedness"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "landmarks": {
+          "description": "The 21 MediaPipe hand landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 21,
+          "minItems": 21,
+          "title": "Landmarks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "handedness",
+        "score",
+        "landmarks"
+      ],
+      "title": "HandLandmarks",
+      "type": "object"
+    },
+    "Handedness": {
+      "description": "Which hand MediaPipe thinks it is looking at.",
+      "enum": [
+        "left",
+        "right"
+      ],
+      "title": "Handedness",
+      "type": "string"
+    },
+    "Landmark": {
+      "additionalProperties": false,
+      "description": "One MediaPipe landmark, normalised to the frame: x and y in 0..1, z relative.",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pose landmarks only; hand landmarks do not report it.",
+          "title": "Visibility"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Landmark",
+      "type": "object"
+    },
+    "ObjectDetection": {
+      "additionalProperties": false,
+      "description": "One object box in one frame, from the local detector (SPEC section 6.1).\n\nThe detector always runs locally from downloaded weights, never hosted inference.",
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/ObjectLabel"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "box": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "track_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stable across frames while the tracker holds the object.",
+          "title": "Track Id"
+        }
+      },
+      "required": [
+        "label",
+        "confidence",
+        "box"
+      ],
+      "title": "ObjectDetection",
+      "type": "object"
+    },
+    "ObjectLabel": {
+      "description": "Classes the local detector reports (SPEC section 6.1).\n\nMaking tea first, then taking medication with water (SPEC nice-to-have 4), then\nthe two classes every task shares. A task graph says which of these count for\nwhich step, so a new task adds classes here and a `tasks/<name>.yaml` file and\nnothing else. A class the running weights were not trained on is simply never\nreported, and `routine_watch.detector.label_for` drops a class it does not know,\nso the two lists may land one training run apart.",
+      "enum": [
+        "kettle",
+        "cup",
+        "teabag",
+        "spoon",
+        "milk",
+        "sugar",
+        "pill_bottle",
+        "pill_organiser",
+        "glass",
+        "water_jug",
+        "hand",
+        "pouring"
+      ],
+      "title": "ObjectLabel",
+      "type": "string"
+    },
+    "Pose": {
+      "additionalProperties": false,
+      "description": "One person's body skeleton.",
+      "properties": {
+        "landmarks": {
+          "description": "The 33 MediaPipe pose landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 33,
+          "minItems": 33,
+          "title": "Landmarks",
+          "type": "array"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        }
+      },
+      "required": [
+        "landmarks"
+      ],
+      "title": "Pose",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The ghost layer beside `SessionReplay` (`GET /residents/{id}/normal_replay`).\n\nThe same window from one of this resident's normal sessions, for the evidence\nview to lay their usual routine under the session being reviewed (SPEC section 9,\nscreen 4). Asked about the resident rather than a session, because the point is\nwhat they normally do and not one attempt; the frames come back under a normal\nsession's own id (`routine_watch.evidence`), never the reviewed session's.",
+  "properties": {
+    "resident_id": {
+      "minLength": 1,
+      "title": "Resident Id",
+      "type": "string"
+    },
+    "frames": {
+      "description": "The window's frames from a normal session, oldest first. Skeletons, boxes and timestamps only, like `SessionReplay.frames`.",
+      "items": {
+        "$ref": "#/$defs/CaptureFrame"
+      },
+      "title": "Frames",
+      "type": "array"
+    }
+  },
+  "required": [
+    "resident_id",
+    "frames"
+  ],
+  "title": "NormalReplay",
+  "type": "object"
+}

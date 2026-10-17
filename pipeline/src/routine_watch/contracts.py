@@ -13,7 +13,8 @@ the copies other languages read cannot drift:
 Four kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
 `oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
-with: a resident, the overview's row for one, a shift handoff, an alert in full, the
+with: a resident, the overview's row for one, their slow trend, a shift handoff, an
+alert in full, an entry of the pattern library, a window of skeleton replay, the
 rooms whose monitoring is paused. `REQUESTS` are what the dashboard sends back: a
 nurse's feedback on an alert. The last three get a schema but no TypeScript, because
 the dashboard reads the socket and those routes through its own types.
@@ -57,6 +58,9 @@ Confidence = Annotated[float, Field(ge=0.0, le=1.0)]
 
 #: An identifier: non-empty, otherwise opaque.
 Id = Annotated[str, Field(min_length=1)]
+
+#: A number of days, never negative.
+Days = Annotated[float, Field(ge=0.0)]
 
 
 class _Contract(BaseModel):
@@ -727,6 +731,32 @@ class Resident(ResidentSummary):
     baseline: ResidentBaseline
 
 
+class ResidentDrift(_Contract):
+    """One resident's slow trend (`GET /residents/{id}/drift`, SPEC section 8).
+
+    What the drift card on the resident screen draws: how fast this resident's daily
+    error score is rising, over how many days of their own history, read with a
+    robust slope so one bad day cannot tilt it (`routine_watch.drift`). A slow drift
+    is flagged for review on its own terms, separately from a sudden change
+    (SPEC section 7.5); `trending` is the whole judgement, and it is about the
+    trend, never about the resident.
+    """
+
+    resident_id: Id
+    slope_per_day: float = Field(
+        description="Daily error score gained per day. Negative means improving."
+    )
+    days: int = Field(
+        ge=0,
+        description="Days this resident has sessions on. Counted, not spanned: a gap "
+        "cannot satisfy the minimum history a trend needs.",
+    )
+    trending: bool = Field(
+        description="A rise worth a look: enough days of history and a slope above "
+        "`routine_watch.drift.drift`'s minimum. False is a real answer, not 'unknown'."
+    )
+
+
 class HandoffResident(_Contract):
     """One resident's line of the shift handoff (SPEC section 9).
 
@@ -804,6 +834,106 @@ class AlertDetail(Alert):
     feedback: AlertFeedback | None = Field(
         description="What the care team said, or null when nobody has answered yet. Always "
         "present: the route reads it from the feedback store for every alert it sends."
+    )
+
+
+class PatternTimeProfile(_Contract):
+    """How long a change of this kind takes to show up (SPEC section 7.5).
+
+    `routine_watch.patterns_library.TimeProfile` as `GET /patterns` serves it: a step
+    change over days and a drift over weeks are different patterns, so the window a
+    change has been building for is part of what the library says to look for.
+    """
+
+    onset_days: tuple[Days, Days] = Field(
+        description="The onset window in days, earliest first: how long a change of this "
+        "kind is expected to have been building."
+    )
+    tolerance_days: Days = Field(
+        description="How far outside the onset window still counts for anything."
+    )
+    note: str = Field(
+        min_length=1,
+        description="The phrase a nurse reads, kept next to the numbers it describes, e.g. "
+        "'a step change within 1-3 days'.",
+    )
+
+    @model_validator(mode="after")
+    def _window_is_ordered(self) -> PatternTimeProfile:
+        if self.onset_days[1] < self.onset_days[0]:
+            raise ValueError("onset_days must run earliest to latest")
+        return self
+
+
+class PatternLibraryEntry(_Contract):
+    """One entry of the pattern library (`GET /patterns`, SPEC section 7.5).
+
+    The library held as data (`routine_watch.patterns_library.LIBRARY`) as the route
+    reads it out: what the rule looks for and how much each signal counts, the time
+    profile it follows, what to rule out, how soon somebody should look, and where
+    the pattern comes from. A cited rules library anybody can audit, and nothing
+    about a resident - the scored answer for one change is `PatternMatch`.
+
+    The scoring machinery stays behind the route: which signals a pattern is defined
+    by, the care-record context that raises or lowers it, its confidence ceiling.
+    `routine_watch.patterns` owns all of that, so a reader gets the rule rather than
+    the arithmetic.
+    """
+
+    pattern_id: Id = Field(description="The pattern in the library, e.g. 'sudden_change'.")
+    name: str = Field(min_length=1, description="How the pattern is shown to a nurse.")
+    signals: dict[str, float] = Field(
+        min_length=1,
+        description="Signal name -> weight: what the rule looks for and how much each "
+        "signal counts. The names are `routine_watch.patterns.SIGNALS`.",
+    )
+    time_profile: PatternTimeProfile
+    checks: list[SuggestedCheck | Annotated[str, Field(min_length=1)]] = Field(
+        description="What to rule out: a shared SuggestedCheck where one fits, otherwise "
+        "the pattern's own wording, exactly as `PatternMatch.checks` carries it."
+    )
+    urgency: PatternUrgency
+    source: str = Field(
+        min_length=1,
+        description="Where the pattern comes from: a SPEC section, a clinical screen, a "
+        "citation. Never empty - an uncited rule is not a pattern (SPEC section 7.5).",
+    )
+
+
+class SessionReplay(_Contract):
+    """One window of one session's skeleton replay (`GET /sessions/{id}/replay`).
+
+    What "open evidence" plays beside an alert (SPEC section 8): the capture frames
+    around the moment an error happened - poses, hand landmarks, object boxes and
+    their timestamps, never video. The window asked for is padded, clipped to the
+    session and thinned to the requested frame rate (`routine_watch.evidence`), so
+    what comes back is whatever frames fall inside it rather than the window itself.
+    """
+
+    session_id: Id = Field(
+        description="The session asked about. Every frame carries it too, so a player "
+        "holding frames alone still knows what it is showing."
+    )
+    frames: list[CaptureFrame] = Field(
+        description="The window's frames, oldest first. Skeletons, boxes and timestamps "
+        "only: the image each was read from was dropped when it was processed."
+    )
+
+
+class NormalReplay(_Contract):
+    """The ghost layer beside `SessionReplay` (`GET /residents/{id}/normal_replay`).
+
+    The same window from one of this resident's normal sessions, for the evidence
+    view to lay their usual routine under the session being reviewed (SPEC section 9,
+    screen 4). Asked about the resident rather than a session, because the point is
+    what they normally do and not one attempt; the frames come back under a normal
+    session's own id (`routine_watch.evidence`), never the reviewed session's.
+    """
+
+    resident_id: Id
+    frames: list[CaptureFrame] = Field(
+        description="The window's frames from a normal session, oldest first. Skeletons, "
+        "boxes and timestamps only, like `SessionReplay.frames`."
     )
 
 
@@ -912,16 +1042,22 @@ PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
 #: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
 #: for the same reason as the protocols above - the dashboard mirrors these by hand
-#: in `web/src/overview/types.ts`, `web/src/handoff/types.ts` and
-#: `web/src/about/monitoringApi.ts`, or reads them through a record's own type
-#: (`AlertDetail` through `Alert`), so the schema is what the two sides are held to.
+#: in `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+#: `web/src/resident/api.ts`, `web/src/patterns/types.ts`,
+#: `web/src/evidence/api.ts` and `web/src/about/monitoringApi.ts`, or reads them
+#: through a record's own type (`AlertDetail` through `Alert`, a replay's frames
+#: through `CaptureFrame`), so the schema is what the two sides are held to.
 #: `pipeline/tests/test_api_payload_contracts.py` validates the real routes against
 #: them.
 PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentSummary,
     Resident,
+    ResidentDrift,
     Handoff,
     AlertDetail,
+    PatternLibraryEntry,
+    SessionReplay,
+    NormalReplay,
     Monitoring,
     RoomMonitoring,
     RoomMonitoringHistory,
