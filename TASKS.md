@@ -346,7 +346,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T331 — Test: heat calendar cells have accessible names
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -354,7 +354,8 @@ Acceptance:
 - area: web/src/resident/HeatCalendar.a11y.test.tsx
 - owner: Max_codex_light
 - claimed: 2026-10-17T16:56Z
-- pr: —
+- pr: #327
+- rating: 5/5 clear
 
 What: Colour alone must not carry meaning. Assert each heat calendar cell exposes its date and error count to screen readers.
 Interface: read `web/src/resident/HeatCalendar.tsx` and `web/src/resident/HeatCalendar.test.tsx` (fixture). Use Testing Library `getAllByRole`/`getByLabelText`.
