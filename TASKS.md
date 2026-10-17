@@ -500,7 +500,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T381 — scripts/preflight.sh: one command that says "ready to demo"
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: improvement
