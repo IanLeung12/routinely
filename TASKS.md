@@ -100,14 +100,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T106 — Evidence replay: stop fetching the alert twice
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: improvement
 - deps: —
 - area: web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/alert/AlertView.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:23Z
 - pr: —
 
 What: Since T080 (#84), `AlertView` loads the alert with `fetchAlert`, then `fetchReplay(alertId)` calls `fetchAlert` again for the same alert. Change `fetchReplay` to take the already-loaded `Alert` so the screen makes one alert request.
