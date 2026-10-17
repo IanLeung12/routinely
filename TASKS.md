@@ -95,15 +95,16 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T225 — LiveSession: CSS file instead of inline <style>
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T220
 - area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T11:44Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T225-wip-1147: start from it (git switch task/T225-wip-1147 && git merge origin/main)
 
 What: `web/src/live/LiveSession.tsx` (line ~140) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215). Waits for T220, which edits the same file.
 Interface: new `web/src/live/liveSession.css` imported by `LiveSession.tsx`; same class names, same rules.
