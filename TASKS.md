@@ -479,15 +479,15 @@ Acceptance:
 - `cd web && npx vitest run src/resident` passes; `scripts/ci.sh` passes.
 
 ### T151 — Shift handoff: "Copy summary" button for the shift report
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
 - source: proposed
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:30Z
 - pr: —
 
 What: Nurses paste handoff notes into their shift report; one tap copies the handoff as plain text. Read only `web/src/handoff/Handoff.tsx`, `types.ts`, `mockHandoff.ts`, its test and `web/src/ui/Button.tsx`.
