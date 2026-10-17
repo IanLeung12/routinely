@@ -558,14 +558,14 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T368 — Test infra: every web test gets a fake WebSocket by default
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - deps: —
 - area: web/vite.config.ts, web/src/testSetup.ts, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:24Z
 - pr: —
 
 What: Local `scripts/ci.sh` keeps failing with an undici `ERR_INVALID_ARG_TYPE` WebSocket error (blocked T351, LESSONS lines 28 and 42) because some web tests render screens that open a real socket to localhost:8000. Stub it once for the whole suite.
