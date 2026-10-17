@@ -79,14 +79,14 @@ Acceptance:
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
 ### T194 — smoke.sh: seeded alert survives /demo/reset
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: T178
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:08Z
 - pr: —
 - note: released: stale claim (max_API_light, 90+ min)
 
