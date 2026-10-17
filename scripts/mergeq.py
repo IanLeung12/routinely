@@ -78,14 +78,26 @@ def main():
                           if any(p["number"] == n and p["mergeStateStatus"] in ("DIRTY", "UNKNOWN") for p in prs)]
 
     # Auto-merge sometimes doesn't fire after a rule change or a re-run; merge clean, green PRs directly.
-    for p in sorted(prs, key=lambda p: p["number"]):
-        if p["mergeStateStatus"] == "CLEAN" and checks_state(p) == "green":
-            rc, out2, _ = gh("pr", "view", str(p["number"]), "--json", "mergeStateStatus", "--jq", ".mergeStateStatus")
-            if out2.strip() != "CLEAN":
+    # Each merge makes GitHub recompute the others (UNKNOWN for a few seconds), so re-poll between merges.
+    import time
+    for _ in range(12):
+        rc, out2, _ = gh("pr", "list", "--state", "open", "-L", "100", "--json",
+                         "number,title,mergeStateStatus,autoMergeRequest,statusCheckRollup,isDraft")
+        cur = [p for p in json.loads(out2 or "[]") if p.get("autoMergeRequest") and not p.get("isDraft")]
+        ready = sorted((p for p in cur if p["mergeStateStatus"] == "CLEAN" and checks_state(p) == "green"),
+                       key=lambda p: p["number"])
+        if not ready:
+            if any(p["mergeStateStatus"] == "UNKNOWN" for p in cur):
+                time.sleep(6)
                 continue
-            print(f"merging #{p['number']} {p['title']} (clean + green, auto-merge stuck)")
-            if not DRY:
-                gh("pr", "merge", str(p["number"]), "--squash", "--delete-branch")
+            break
+        p = ready[0]
+        print(f"merging #{p['number']} {p['title']} (clean + green, auto-merge stuck)")
+        if DRY:
+            break
+        gh("pr", "merge", str(p["number"]), "--squash", "--delete-branch")
+        time.sleep(6)
+    prs = cur if "cur" in dir() else prs
 
     if any(checks_state(p) == "running" for p in prs):
         pass  # something is in flight; let it finish
