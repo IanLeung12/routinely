@@ -689,14 +689,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_live_replay_parity.py
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T19:38Z
 - pr: —
 
 What: The live screen comes from live.py and the alert view from replay.py; nothing checks they agree. For every single-session scenario under tests/scenarios/, compare the errors and change flag in live `session_messages(...)`'s session_end message with `replay.run(load_scenario(...))`.
