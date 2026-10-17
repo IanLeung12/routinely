@@ -89,7 +89,7 @@ Acceptance:
 - `scripts/e2e.sh` passes locally and is called from `scripts/ci.sh`.
 
 ### T006 — Dev stack script
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T001
