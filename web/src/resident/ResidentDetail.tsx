@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
@@ -15,6 +15,8 @@ import HeatCalendar from './HeatCalendar.tsx'
 import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
 import type { Resident } from './types.ts'
+
+const HEADING_ID = 'resident-detail-heading'
 
 /** Tagged with the id (and attempt) it was fetched for, so switching resident shows
  * the new one loading rather than the last one's chart, and "Try again" shows loading
@@ -36,6 +38,25 @@ export function ResidentDetail({
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [monitoring, setMonitoring] = useState(true)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  /** Which resident focus has already landed on, so re-rendering after the monitoring
+   * toggle changes (same resident, new data) doesn't steal focus back from the nurse. */
+  const focusedResidentIdRef = useRef<string | null>(null)
+
+  /** Moves focus to the `h1` as soon as a resident finishes loading, so a screen reader
+   * announces whose page this is right when the screen opens (SPEC section 9). */
+  useEffect(() => {
+    if (
+      loaded !== null &&
+      loaded.residentId === residentId &&
+      loaded.status === 'ok' &&
+      loaded.resident !== null &&
+      focusedResidentIdRef.current !== residentId
+    ) {
+      headingRef.current?.focus()
+      focusedResidentIdRef.current = residentId
+    }
+  }, [residentId, loaded])
 
   useEffect(() => {
     let cancelled = false
@@ -75,7 +96,7 @@ export function ResidentDetail({
     body = (
       <>
         <header className="resident-detail__header">
-          <h2>{resident.name}</h2>
+          <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
           <span className="resident-room">Room {resident.room}</span>
           <MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />
           <StatusChip status={resident.status} />
@@ -83,7 +104,7 @@ export function ResidentDetail({
 
         <div className="resident-panels">
           <section className="panel panel--wide">
-            <h3>Baseline</h3>
+            <h2>Baseline</h2>
             <BaselineChart scores={resident.scores} baseline={resident.baseline} />
           </section>
 
@@ -96,7 +117,7 @@ export function ResidentDetail({
           )}
 
           <section className="panel">
-            <h3>Daily scores</h3>
+            <h2>Daily scores</h2>
             {days.length === 0 ? (
               <EmptyState message="No scored sessions yet." />
             ) : (
@@ -107,7 +128,7 @@ export function ResidentDetail({
           </section>
 
           <section className="panel">
-            <h3>Sessions</h3>
+            <h2>Sessions</h2>
             <SessionList
               sessions={resident.sessions}
               scores={resident.scores}
@@ -116,7 +137,7 @@ export function ResidentDetail({
           </section>
 
           <section className="panel">
-            <h3>Care records</h3>
+            <h2>Care records</h2>
             <ContextTimeline records={resident.care_records} />
           </section>
         </div>
@@ -125,7 +146,10 @@ export function ResidentDetail({
   }
 
   return (
-    <section className="resident-detail">
+    <section
+      className="resident-detail"
+      aria-labelledby={loaded?.status === 'ok' && loaded.resident ? HEADING_ID : undefined}
+    >
       <button type="button" className="back-button" onClick={onBack}>
         ← Unit overview
       </button>
