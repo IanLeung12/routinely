@@ -406,7 +406,7 @@ Acceptance:
 - `cd web && npx vitest run` passes; `scripts/ci.sh` passes.
 
 ### T153 — Docs: demo runbook (docs/DEMO.md)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
