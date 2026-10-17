@@ -67,7 +67,7 @@ What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
 
 ### T409 — Person view: "My routine"
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -76,8 +76,9 @@ Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests
 - area: web/src/people/MyRoutine.tsx, web/src/people/MyRoutine.test.tsx, web/src/person/routine/
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T21:23Z
-- pr: —
+- pr: #407
 - note: T408 already shipped a basic MyRoutine in web/src/people/MyRoutine.tsx; extend it there, put new pieces under web/src/person/routine/ (own CSS file, not people.css). Use PrivacyCard (T429) and personNotes (T423).
+- rating: 4/5 clear on the sections and wording; it pointed at PrivacyCard (T429) and personNotes (T423) as if both had landed, but T429 was still todo, so the privacy card had to be built to its interface inside this area
 
 What: What someone watching themselves sees (SPEC §17). Calm and personal; never alarming or diagnostic. Use the mobbin MCP for 2–3 references of calm personal health/habit dashboards (and follow `docs/DESIGN.md` if it has landed).
 Interface (`web/src/person/MyRoutine.tsx` + pieces):
