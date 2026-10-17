@@ -163,11 +163,13 @@ describe('UnitOverview', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
-    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'All (6)' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
-    expect(screen.getByRole('button', { name: 'Watch' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Watch (3)' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
   })
@@ -183,12 +185,12 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
 
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
-    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed')).toBe(
       'true',
     )
   })
@@ -204,7 +206,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (3)' }).click()
 
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
@@ -222,7 +224,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(noneFlagged.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (0)' }).click()
 
     expect(await screen.findByText('No residents flagged for review.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
@@ -239,7 +241,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(noneWatch.length)
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (0)' }).click()
 
     expect(await screen.findByText('No residents to watch.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
@@ -256,12 +258,12 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
 
-    screen.getByRole('button', { name: 'All' }).click()
+    screen.getByRole('button', { name: 'All (6)' }).click()
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
@@ -332,12 +334,12 @@ describe('UnitOverview', () => {
 
     expect(await screen.findByRole('button', { name: 'Paused (0)' })).toBeTruthy()
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (3)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
     })
@@ -399,7 +401,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    const watchButton = screen.getByRole('button', { name: 'Watch' })
+    const watchButton = screen.getByRole('button', { name: 'Watch (3)' })
 
     for (let i = 0; i < 20 && document.activeElement !== watchButton; i++) {
       await user.tab()
