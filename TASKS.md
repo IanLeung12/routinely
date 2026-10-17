@@ -258,7 +258,7 @@ Acceptance:
 - `shellcheck scripts/smoke.sh` clean if available; `scripts/ci.sh` passes.
 
 ### T099 — Unit overview: one-line status summary at the top
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -266,7 +266,7 @@ Acceptance:
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:25Z
-- pr: —
+- pr: #100
 
 What: For the 10-second read (SPEC §9), the overview should say up front how many residents need attention. Read only the two files in `area`, `web/src/overview/types.ts` and `web/src/ui/SectionHeader.tsx`.
 Interface: above the list render `<p role="status">` with e.g. "2 flagged for review · 1 on watch · 3 normal" (counts from the fetched residents; omit zero parts; "All residents normal" when nothing is flagged or on watch). Nothing while loading. No new fetches.
