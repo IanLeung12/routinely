@@ -7,90 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T212 — Docs: CODEMAP note that alerts read live session errors
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: T179
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: T155 (#192) made `alerts.task_errors` return the real `error_events` of a session recorded live by `session_log.py` (keeping its own `session_id`), and only synthesise placeholder errors for the seeded history. Add 2–3 lines to the alerts/session_log notes in `docs/CODEMAP.md` saying so.
-Interface: read `pipeline/src/routine_watch/alerts.py` (`session_id_for`, `task_errors` docstrings) and `pipeline/src/routine_watch/session_log.py`. Edit notes only, not the generated file list.
-Acceptance:
-- Note present and accurate; `scripts/ci.sh` passes.
-
-### T240 — Pattern library: usable at phone width (375 px)
-- status: todo
-- class: light
-- priority: 3
-- kind: improvement
-- deps: —
-- area: web/src/patterns/PatternLibrary.css
-- owner: —
-- claimed: —
-- pr: —
-
-What: The pattern library page has no responsive rules. Add a `@media (max-width: 480px)` block to `PatternLibrary.css` so each pattern card's signals, rule-outs and sources stack in one column with no horizontal scroll.
-Interface: read only `web/src/patterns/PatternLibrary.tsx` (for class names) and `web/src/patterns/PatternLibrary.css`; for the breakpoint style copy `web/src/live/taskMap.css`'s `@media (max-width: 480px)` block. CSS only, no markup changes.
-Acceptance:
-- No horizontal scroll on the pattern library at 375 px; desktop unchanged.
-- `scripts/ci.sh` passes.
-
-### T305 — Feedback history card: usable at phone width (375 px)
-- status: todo
-- class: light
-- priority: 3
-- kind: improvement
-- deps: —
-- area: web/src/resident/feedbackHistory.css, web/src/resident/FeedbackHistory.mobile.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: Same as T247 but for the new feedback history card on the resident page: no horizontal scroll and readable rows at 375 px.
-Interface: read `web/src/resident/FeedbackHistory.tsx` and `web/src/resident/feedbackHistory.css`. CSS-only change (add a `@media (max-width: 480px)` block); don't edit the component.
-Acceptance:
-- At ≤480 px each answer's verdict, cause and time wrap onto their own lines instead of overflowing; long pattern names wrap (`overflow-wrap: anywhere`).
-- The new test asserts the card renders its rows with the classes the media query targets (jsdom can't measure layout).
-- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
-
-### T317 — Test: each screen sets its page title
-- status: todo
-- class: light
-- priority: 3
-- kind: test
-- deps: —
-- area: web/src/App.title.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: T297 made document.title name the screen and resident. Add one App-level test that navigates to the overview, a resident, and the pattern library and checks document.title each time.
-Interface: new test file only. Read web/src/App.tsx, web/src/ui/useDocumentTitle.ts and web/src/App.test.tsx (copy its fetch mocks and navigation setup).
-Acceptance:
-- Three cases, each asserting the exact title the app sets (read it from the code, e.g. "Mrs. K — Routine Watch").
-- `scripts/ci.sh` passes.
-
-### T348 — Docs: CODEMAP note that unclear sessions are never scored
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: Add a 2–3 line note to the pipeline section of `docs/CODEMAP.md` (notes only; the file list is generated): `quality.session_quality` gates `replay.score_session`; an unclear session (fewer than 3 events or >40% unclear/low-confidence) gets score 0.0 and never flags, like an assisted one. Read `pipeline/src/routine_watch/quality.py` and `score_session` in `pipeline/src/routine_watch/replay.py`.
-Interface: docs only.
-Acceptance:
-- note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
-
 ### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
 - status: claimed
 - class: heavy
@@ -110,23 +26,6 @@ Acceptance:
 - web test: row shows the camera line when > 0 and nothing when 0
 - `scripts/ci.sh` passes
 
-### T363 — Test: task map legend has accessible names for every step state
-- status: todo
-- class: light
-- priority: 3
-- kind: test
-- deps: —
-- area: web/src/live/TaskMapLegend.a11y.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: Each legend entry (done, current, missed, error…) must be readable without colour, by text or accessible name.
-Interface: read `web/src/live/TaskMapLegend.tsx` and `web/src/live/TaskMapLegend.test.tsx`; new test file only. If an entry relies on colour alone, set the task blocked with a note naming the entry (don't change the component).
-Acceptance:
-- One assertion per legend state, by role/name or visible text.
-- `scripts/ci.sh` passes.
-
 ### T367 — Bug: integration check failing on main
 - status: claimed
 - class: standard
@@ -145,21 +44,6 @@ What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard
 Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
-
-### T373 — Docs: CODEMAP note that web tests share one default WebSocket stub
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: T368
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: One-line note in the web section of `docs/CODEMAP.md` (notes only, not the generated list) that `web/src/testSetup.ts` stubs WebSocket for every test and tests needing a socket use `web/src/live/testWebSocket.ts`.
-Acceptance:
-- note added; `scripts/ci.sh` passes
 
 ### T374 — Test infra: load every web stylesheet in Vitest so tasks stop editing vite.config.ts
 - status: done
@@ -275,25 +159,6 @@ Acceptance:
 - Tabbing from "Copy summary" reaches "Print handoff"; Enter and Space each call `window.print` once.
 - `cd web && npx vitest run src/handoff/Handoff.keyboard.test.tsx` passes; `scripts/ci.sh` passes.
 
-### T380 — Dashboard: dark theme for night shift (prefers-color-scheme)
-- status: todo
-- class: standard
-- priority: 3
-- kind: feature
-- source: proposed
-- deps: —
-- area: web/src/index.css, web/src/ui/, web/src/theme.test.ts
-- owner: —
-- claimed: —
-- pr: —
-
-What: Nurses check the dashboard on dim night-shift units; follow the OS dark setting so it isn't a bright glare. Rationale: Usefulness + Execution polish, no behaviour change.
-Interface: a `@media (prefers-color-scheme: dark)` block in web/src/index.css overriding the existing CSS custom properties only (no per-component colours); ui/ components must use those variables (fix any hard-coded colours in web/src/ui/*.css|tsx). Print stays light (print.css untouched).
-Acceptance:
-- New web/src/theme.test.ts: every custom property set in `:root` is also set in the dark block; text/background pairs in the dark block meet contrast ≥ 4.5:1 (compute from the hex values).
-- Look at overview + alert view with dark emulation in a browser; describe what you checked in the PR.
-- `scripts/ci.sh` passes.
-
 ### T381 — scripts/preflight.sh: one command that says "ready to demo"
 - status: done
 - class: standard
@@ -365,23 +230,6 @@ Interface: read only web/src/evidence/GhostReplay.tsx and its test. Build the la
 Acceptance:
 - Test asserts the label changes with the frame and never contains "diagnos".
 - `cd web && npx vitest run src/evidence/GhostReplay` passes; `scripts/ci.sh` passes.
-
-### T385 — Docs: CODEMAP notes for overview filter counts and remembered prefs
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: T347 (filter buttons show counts), T337 (filter/sort remembered for the session) and T318 (sort by most recent change) aren't in CODEMAP's overview notes.
-Interface: read only docs/CODEMAP.md, web/src/overview/UnitOverview.tsx and web/src/overview/overviewPrefs.ts. Edit only the notes, not the generated file list.
-Acceptance:
-- 2–4 lines under the overview section naming `countForFilter`, `overviewPrefs.ts` (sessionStorage) and the sort modes.
-- `scripts/ci.sh` passes.
 
 ### T386 — Test: demo banner reset works keyboard-only
 - status: claimed
@@ -455,40 +303,6 @@ Acceptance:
 - Removing the @media block from `privacyPanel.css` makes the test fail
 - `cd web && npm test` and `scripts/ci.sh` pass
 
-### T390 — Docs: CODEMAP note for scripts/preflight.sh
-- status: todo
-- class: light
-- priority: 2
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: PR #365 added `scripts/preflight.sh` (the one-command "ready to demo" check) but docs/CODEMAP.md notes don't mention it.
-Interface: Read scripts/preflight.sh (header comment) and docs/DEMO.md "Before you start". Add a 1-3 line note in the scripts section of docs/CODEMAP.md notes: what it runs (dev.sh up, smoke.sh, e2e.sh, demo reset check), that it refuses LIVE_API=1, and `--dry-run`. Don't touch the generated file list.
-Acceptance:
-- docs/CODEMAP.md notes mention scripts/preflight.sh and --dry-run.
-- `scripts/ci.sh` passes.
-
-### T391 — Preflight: write step logs to a temp dir, not fixed /tmp paths
-- status: todo
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: scripts/preflight.sh, tests/test_preflight.py
-- owner: —
-- claimed: —
-- pr: —
-
-What: scripts/preflight.sh writes to fixed `/tmp/preflight-dev-up.log` and `/tmp/preflight-reset.log`, which collide when two people (or a worker and the tester) run it on one host.
-Interface: Read only scripts/preflight.sh and tests/test_preflight.py. Use `LOG_DIR=$(mktemp -d)` (respect $TMPDIR) for both logs, print the log path in the ✗ fix hint, keep all ✓/✗ output and exit codes the same.
-Acceptance:
-- `grep -n '/tmp/preflight' scripts/preflight.sh` finds nothing.
-- tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.
-
 ### T392 — Test: scripts/camera.sh argument handling (no camera needed)
 - status: done
 - class: standard
@@ -508,24 +322,6 @@ Acceptance:
 - tests for --help (exit 0, usage text), unknown arg (exit 2), `--camera abc` (exit 2), `--camera` with no value (non-zero)
 - no network, no camera, no stack started
 - `scripts/ci.sh` passes
-
-### T393 — Landing page: usable at phone width (375 px)
-- status: todo
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/landing/landing.css, web/src/landing/Landing.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: Judges may open the public landing page (T378) on a phone. Make the flow strip, pattern cards and CTA stack in one column at ≤ 480 px with no horizontal scroll.
-Interface: read only web/src/landing/Landing.tsx, web/src/landing/landing.css, web/src/index.css (tokens). CSS-only change in landing.css (a `@media (max-width: 480px)` block); don't change copy or Landing.tsx.
-Acceptance:
-- grids in landing.css collapse to one column at ≤ 480 px; no fixed widths wider than 375 px
-- Landing.test.tsx gains a test that the stylesheet contains the phone media query for the flow/pattern grids (Vitest can't lay out; assert on the CSS text like other phone-width tests)
-- `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T394 — Live: tell the nurse when the camera could not be opened (close code 4503)
 - status: in-review
@@ -547,42 +343,6 @@ Acceptance:
 - 4404 and network-error messages unchanged (existing tests pass)
 - `cd web && npm test` and `scripts/ci.sh` pass
 
-### T395 — Docs: CODEMAP note for live camera source and scripts/camera.sh
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: Check docs/CODEMAP.md notes describe T356: `/ws/live?source=camera` (`api_live._session`), `capture.camera_frames`/`frame_stream`/`recorded`, `live_camera.py`, `scripts/camera.sh`, and `CAMERA_RECORD`. Add or fix one short note per item that is missing or wrong.
-Interface: read pipeline/src/routine_watch/api_live.py, capture.py, live_camera.py, scripts/camera.sh headers only. Edit only notes, not the generated file list.
-Acceptance:
-- notes match the code; no file-list edits
-- `scripts/ci.sh` passes
-
-### T396 — Flag outcomes: unit-wide confirmed vs false-alarm counts per pattern
-- status: todo
-- class: heavy
-- priority: 2
-- kind: feature
-- source: proposed
-- deps: —
-- area: pipeline/src/routine_watch/feedback.py, pipeline/src/routine_watch/api_alerts.py, pipeline/src/routine_watch/contracts.py, contracts/, pipeline/tests/test_feedback_summary.py, web/src/contracts.ts, web/src/outcomes/, web/src/App.tsx, docs/CODEMAP.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: Rationale: judges (Execution, Use of AI) and nurses want to see how often flags turned out to be real. Add a small read-only "Flag outcomes" screen listing, per pattern, how many flagged alerts nurses marked confirmed vs false alarm and the most common "what was it?" answer, from the existing FeedbackStore.
-Interface: `FeedbackStore.summary()`; `GET /feedback/summary` returning `{patterns: [{pattern_id, confirmed, false_alarm, unanswered, top_cause}]}`; Pydantic model + JSON Schema in contracts/ + type in web/src/contracts.ts; `web/src/outcomes/OutcomesScreen.tsx` reached from a link in the app header (follow App.tsx's existing screen switch, no router). Wording: "flags reviewed", never diagnosis accuracy.
-Acceptance:
-- Pipeline test covers empty store, mixed answers, and reset via api_state.reset().
-- Web test renders counts and the empty state ("No flags reviewed yet") with shared ui components.
-- `scripts/ci.sh` passes.
-
 ### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
 - status: done
 - class: heavy
@@ -601,24 +361,6 @@ Acceptance:
 - `cd pipeline && pytest tests/test_live_replay_parity.py` passes quickly (fake clock, no real sleeps).
 - `scripts/ci.sh` passes.
 
-### T398 — Test: landing page works keyboard-only
-- status: todo
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: web/src/landing/Landing.keyboard.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: the public landing page (T378) has no keyboard test; judges may tab through it.
-Interface: new file `web/src/landing/Landing.keyboard.test.tsx` only. Read `web/src/landing/Landing.tsx` and copy the style of `web/src/alert/AlertView.keyboard.test.tsx` (uses `@testing-library/user-event` `tab()`).
-Acceptance:
-- Render `<Landing />`; tabbing reaches, in order, the "Open the dashboard" link (href `/`), the "#how-it-works" link, the `/?tour=1` tour link, and the GitHub source link; each is focusable and has an accessible name.
-- Every `h2` section has an `id` so the in-page link target exists (assert `#how-it-works` resolves to an element).
-- `cd web && npx vitest run src/landing` passes; `scripts/ci.sh` passes.
-
 ### T399 — Smoke: check the landing page is served
 - status: claimed
 - class: standard
@@ -635,23 +377,6 @@ Interface: add one check next to the existing `GET $DASHBOARD_URL -> HTML` block
 Acceptance:
 - With `scripts/dev.sh up`, `scripts/smoke.sh` passes and prints the new pass line; with the landing entry removed from the build it fails with a readable message.
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
-
-### T400 — Docs: DEMO.md points judges at the landing page
-- status: todo
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/DEMO.md
-- owner: —
-- claimed: —
-- pr: —
-
-What: DEMO.md never mentions the public landing page at `/landing.html` (T378), which is the judges' first impression and links into the dashboard and guided tour.
-Interface: in `docs/DEMO.md`, add one line to the setup/"before you start" section: open `http://localhost:5173/landing.html` (or the deployed URL) on a second tab to hand to judges; its "Open the dashboard" button goes to `/`, the tour link to `/?tour=1`. Read only `docs/DEMO.md` and `web/src/landing/Landing.tsx`. No other file.
-Acceptance:
-- One short addition, matching the existing bullet style; no change to the run order.
-- `scripts/ci.sh` passes.
 
 ### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
 - status: todo
