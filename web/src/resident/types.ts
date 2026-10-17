@@ -33,7 +33,17 @@ export type CareRecord = {
 }
 
 /** This resident's own normal, and the score a session has to pass to count towards a flag. */
-export type Baseline = { mean: number; std: number; threshold: number }
+export type Baseline = {
+  mean: number
+  std: number
+  threshold: number
+  /** How long one of their sessions usually runs and how many errors it usually has,
+   * averaged by the pipeline over the early window their baseline is anchored to
+   * (`routine_watch.demo`) - not their whole history, which the change being flagged
+   * would drag up along with it. Absent when they have no early sessions of their own. */
+  usual_duration_s?: number
+  usual_errors?: number
+}
 
 export type Resident = ResidentSummary & {
   scores: ScorePoint[]

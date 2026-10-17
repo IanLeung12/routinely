@@ -25,7 +25,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from .change_detection import Baseline
 from .checks import suggest_checks
 from .contracts import (
     Alert,
@@ -36,7 +35,7 @@ from .contracts import (
     SuggestedCheck,
     TaskError,
 )
-from .demo import DEMO_DAYS, DEMO_NOW
+from .demo import DEMO_DAYS, DEMO_NOW, baseline_of
 from .explain import Explainer
 from .explain_claude import get_explainer
 from .feedback import FeedbackStore
@@ -238,7 +237,7 @@ def _patterns(resident: dict, feedback: FeedbackStore | None) -> list[PatternMat
     """
     features = extract_features(
         resident["sessions"],
-        Baseline(**resident["baseline"]),
+        baseline_of(resident),
         resident["care_records"],
         now=DEMO_NOW,
         window_h=FLAG_WINDOW_H,
