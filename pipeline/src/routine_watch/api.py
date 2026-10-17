@@ -13,7 +13,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from . import __version__
 from .alerts import build_alerts
@@ -24,6 +24,7 @@ from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
+from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .replay import ReplayError
 
 app = FastAPI(title="Routine Watch API", version=__version__)
@@ -52,12 +53,35 @@ _feedback_store = FeedbackStore()
 #: The MVP has no nurse logins yet; every one-tap feedback is logged under this name.
 _FEEDBACK_BY = "nurse"
 
+#: A nurse who saw a cause the pattern library has no pattern for answers with this.
+OTHER_CAUSE = "other"
+
+#: Every answer "what was it?" accepts (SPEC section 5, MVP 8): one of the library's
+#: patterns, or "other". Anything else is a typo or a stale client, so it is a 422
+#: rather than a cause nobody can count later.
+KNOWN_CAUSES = frozenset(PATTERNS_BY_ID) | {OTHER_CAUSE}
+
 
 class AlertFeedbackIn(BaseModel):
-    """The one-tap feedback body (SPEC section 5, MVP 7)."""
+    """The one-tap feedback body (SPEC section 5, MVP 7), plus "what was it?" (MVP 8)."""
 
     verdict: FeedbackVerdict
     note: str | None = None
+    cause: str | None = Field(
+        default=None,
+        description='The answer to "what was it?": a pattern_id, "other", or null for '
+        "no answer.",
+    )
+
+    @field_validator("cause")
+    @classmethod
+    def _known_cause(cls, value: str | None) -> str | None:
+        if value is not None and value not in KNOWN_CAUSES:
+            raise ValueError(
+                f"unknown cause {value!r}: expected a pattern_id from the library "
+                f'or "{OTHER_CAUSE}"'
+            )
+        return value
 
 
 def _alerts_by_id() -> dict[str, Alert]:
@@ -130,16 +154,25 @@ def get_alert(alert_id: str) -> dict:
 def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     """One-tap nurse feedback (SPEC section 5, MVP 7): tunes this resident's threshold.
 
-    Re-posting the same alert replaces its verdict rather than double-counting it.
+    An optional `cause` is the answer to "what was it?" (MVP 8): the pattern the change
+    turned out to be, or "other". It is logged against the resident, so a later task can
+    weigh that resident's patterns by what their confirmed alerts actually were.
+
+    Re-posting the same alert replaces its verdict and its cause rather than
+    double-counting them.
     """
     alerts = _alerts_by_id()
     if alert_id not in alerts:
         raise HTTPException(status_code=404, detail="alert not found")
     alert = alerts[alert_id]
     feedback = AlertFeedback(
-        verdict=body.verdict, by=_FEEDBACK_BY, at=datetime.now(UTC), note=body.note
+        verdict=body.verdict,
+        by=_FEEDBACK_BY,
+        at=datetime.now(UTC),
+        note=body.note,
+        cause=body.cause,
     )
-    _feedback_store.record(alert_id, alert.resident_id, feedback)
+    _feedback_store.record(alert_id, alert.resident_id, feedback, cause=feedback.cause)
     return _alert_payload(alert)
 
 

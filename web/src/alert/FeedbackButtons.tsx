@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import type { FeedbackVerdict } from '../contracts.ts'
 
 const OPTIONS: { verdict: FeedbackVerdict; label: string }[] = [
@@ -7,7 +8,13 @@ const OPTIONS: { verdict: FeedbackVerdict; label: string }[] = [
 
 const OTHER_CAUSE = 'other'
 
-/** Lets a nurse record whether a flagged alert was real, so the threshold can learn from it. */
+const CAUSE_LABEL = 'What was it? (optional)'
+
+/** Lets a nurse record whether a flagged alert was real, so the threshold can learn from it.
+ *
+ * Once an alert is confirmed, `causeOptions` (the patterns this change was flagged as being
+ * consistent with) turns into the "what was it?" picker from SPEC section 5, MVP 8: the
+ * nurse's answer is reported through `onCauseChange` and stored with the feedback. */
 export function FeedbackButtons({
   value,
   onChange,
@@ -21,6 +28,7 @@ export function FeedbackButtons({
   cause?: string | null
   onCauseChange?: (id: string) => void
 }) {
+  const causeLabelId = useId()
   return (
     <div className="feedback-buttons">
       <div role="group" aria-label="Nurse feedback">
@@ -40,7 +48,10 @@ export function FeedbackButtons({
         </p>
       </div>
       {value === 'confirmed' && causeOptions && (
-        <div role="group" aria-label="What was it? (optional)" className="feedback-buttons__cause">
+        <div role="group" aria-labelledby={causeLabelId} className="feedback-buttons__cause">
+          <p className="feedback-buttons__cause-label" id={causeLabelId}>
+            {CAUSE_LABEL}
+          </p>
           {[...causeOptions, { id: OTHER_CAUSE, label: 'Other' }].map((option) => (
             <button
               key={option.id}

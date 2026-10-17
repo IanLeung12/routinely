@@ -24,6 +24,15 @@ function formatBaseline(baseline: BaselineComparison): string {
   return `${baseline.observed.toFixed(1)} vs ${baseline.baseline_mean.toFixed(1)} normal over ${baseline.baseline_days} days`
 }
 
+/** What "what was it?" offers a nurse: the patterns this change was flagged as being
+ * consistent with, each under the id the API counts it by. Undefined when the alert has
+ * no patterns, so the picker never asks a question whose only answer is "Other". */
+function causeOptions(alert: Alert): { id: string; label: string }[] | undefined {
+  const patterns = alert.patterns ?? []
+  if (patterns.length === 0) return undefined
+  return patterns.map((pattern) => ({ id: pattern.pattern_id, label: pattern.name }))
+}
+
 /** Screen 4 (SPEC section 9): the evidence behind a flagged alert, readable in 10
  * seconds. Plain-language summary and baseline comparison first, then the error-by-error
  * detail, suggested checks and the confirm/false-alarm feedback that tunes the threshold. */
@@ -87,10 +96,14 @@ export function AlertView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alertId, loaded?.alert?.alert_id])
 
-  async function handleFeedback(verdict: FeedbackVerdict) {
+  /** Posts the verdict and, when the nurse has answered "what was it?", the cause with
+   * it (SPEC section 5, MVP 8). The saved alert comes back from the API, so what the
+   * buttons show is always what was stored. Answering the verdict again clears the
+   * cause: it is a fresh answer, not a correction of the old one. */
+  async function saveFeedback(verdict: FeedbackVerdict, cause: string | null) {
     setFeedbackError(null)
     try {
-      const updated = await postFeedback(alertId, verdict)
+      const updated = await postFeedback(alertId, verdict, undefined, cause)
       setLoaded({ alertId, alert: updated })
     } catch {
       setFeedbackError('Feedback could not be saved. Try again.')
@@ -150,7 +163,13 @@ export function AlertView({
 
         <Card>
           <SectionHeader title="Feedback" />
-          <FeedbackButtons value={alert.feedback?.verdict ?? null} onChange={handleFeedback} />
+          <FeedbackButtons
+            value={alert.feedback?.verdict ?? null}
+            onChange={(verdict) => saveFeedback(verdict, null)}
+            causeOptions={causeOptions(alert)}
+            cause={alert.feedback?.cause ?? null}
+            onCauseChange={(cause) => saveFeedback('confirmed', cause)}
+          />
           {feedbackError && <ErrorState message={feedbackError} />}
         </Card>
       </>

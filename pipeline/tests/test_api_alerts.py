@@ -3,9 +3,10 @@ from fastapi.testclient import TestClient
 
 from routine_watch import api as api_module
 from routine_watch.alerts import build_alerts
-from routine_watch.api import app
+from routine_watch.api import KNOWN_CAUSES, app
 from routine_watch.demo import demo_residents
 from routine_watch.feedback import FeedbackStore
+from routine_watch.patterns_library import LIBRARY
 
 MRS_K = "mrs-k"
 MRS_K_ALERT = f"alert-{MRS_K}"
@@ -95,6 +96,68 @@ def test_reposting_feedback_replaces_the_verdict():
     body = response.json()
     assert body["feedback"]["verdict"] == "confirmed"
     assert body["feedback"]["note"] == "checked, nothing unusual"
+
+
+def test_feedback_records_the_cause_for_the_resident():
+    with TestClient(app) as client:
+        response = client.post(
+            f"/alerts/{MRS_K_ALERT}/feedback",
+            json={"verdict": "confirmed", "cause": "sudden_change"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["feedback"]["cause"] == "sudden_change"
+    assert api_module._feedback_store.cause_of(MRS_K_ALERT) == "sudden_change"
+    assert api_module._feedback_store.cause_counts(MRS_K) == {"sudden_change": 1}
+
+
+def test_other_is_a_valid_cause():
+    with TestClient(app) as client:
+        response = client.post(
+            f"/alerts/{MRS_K_ALERT}/feedback",
+            json={"verdict": "confirmed", "cause": "other"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["feedback"]["cause"] == "other"
+
+
+def test_feedback_without_a_cause_still_works():
+    with TestClient(app) as client:
+        response = client.post(f"/alerts/{MRS_K_ALERT}/feedback", json={"verdict": "confirmed"})
+
+    assert response.status_code == 200
+    assert response.json()["feedback"]["cause"] is None
+    assert api_module._feedback_store.cause_counts(MRS_K) == {}
+
+
+def test_reposting_without_a_cause_clears_it():
+    with TestClient(app) as client:
+        client.post(
+            f"/alerts/{MRS_K_ALERT}/feedback",
+            json={"verdict": "confirmed", "cause": "sudden_change"},
+        )
+        response = client.post(f"/alerts/{MRS_K_ALERT}/feedback", json={"verdict": "confirmed"})
+
+    assert response.json()["feedback"]["cause"] is None
+    assert api_module._feedback_store.cause_counts(MRS_K) == {}
+
+
+@pytest.mark.parametrize("cause", ["not_a_pattern", "", "Sudden change"])
+def test_unknown_cause_is_422(cause):
+    with TestClient(app) as client:
+        response = client.post(
+            f"/alerts/{MRS_K_ALERT}/feedback",
+            json={"verdict": "confirmed", "cause": cause},
+        )
+
+    assert response.status_code == 422
+    assert api_module._feedback_store.get(MRS_K_ALERT) is None
+
+
+def test_every_library_pattern_is_an_accepted_cause():
+    """The picker offers the alert's own patterns, so every id has to be postable."""
+    assert KNOWN_CAUSES == {pattern.pattern_id for pattern in LIBRARY} | {"other"}
 
 
 def test_bad_verdict_is_422():

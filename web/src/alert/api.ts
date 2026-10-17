@@ -19,21 +19,23 @@ export async function fetchAlert(id: string): Promise<Alert | null> {
   return mockAlerts.find(alert => alert.alert_id === id) ?? null
 }
 
+/** `cause` is the nurse's answer to "what was it?" (SPEC section 5, MVP 8): a
+ * pattern_id from the alert's patterns, 'other', or left out when they didn't say. */
 export async function postFeedback(
-  id: string, verdict: FeedbackVerdict, note?: string,
+  id: string, verdict: FeedbackVerdict, note?: string, cause?: string | null,
 ): Promise<Alert> {
   let response: Response
   try {
     response = await fetch(`${apiUrl}/alerts/${encodeURIComponent(id)}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ verdict, note }),
+      body: JSON.stringify({ verdict, note, cause }),
     })
   } catch {
     // Record feedback locally only when the API cannot be reached.
     const alert = mockAlerts.find(alert => alert.alert_id === id)
     if (!alert) throw new Error(`Unknown alert: ${id}`)
-    alert.feedback = { verdict, by: 'nurse', at: new Date().toISOString(), note }
+    alert.feedback = { verdict, by: 'nurse', at: new Date().toISOString(), note, cause }
     return alert
   }
   if (!response.ok) throw new Error(`Feedback not saved (${response.status})`)
