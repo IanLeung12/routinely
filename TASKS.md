@@ -375,17 +375,17 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
-- status: in-review
+- status: todo
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
-- area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/
-- owner: ian-claude-standard
+- area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/, tests/scenarios/README.md
+- owner: —
 - claimed: 2026-10-17T15:56Z
 - pr: #303
 - rating: 5/5 clear task, well-specified acceptance criteria and known README conflict called out in advance
-- note: PR #303 CI fails only on test_scenarios_readme_lists_every_scenario_folder (tea_two_errors_one_session, tea_long_pause_not_error not yet in README.md, which T313 owns per this task's own instructions not to edit it). Scenarios themselves pass scripts/e2e.sh and all other tests pass. Needs a follow-up task to add these two rows to tests/scenarios/README.md once T313 settles.
+- note: fix CI on PR #303: T313 has merged; on branch task/T314-tea-scenarios, git merge origin/main, then add rows for tea_two_errors_one_session and tea_long_pause_not_error to tests/scenarios/README.md (now in area)
 
 What: Add a tea session with two different errors in one session, and a correct session with one unusually long gap between steps that must produce no task error (long gaps are hesitations from `hesitation.py`, not errors) and no flag.
 Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/tea_normal/` and `tests/scenarios/tea_sequence_error/`. Read pipeline/src/routine_watch/hesitation.py. Don't edit tests/scenarios/README.md (T313 owns it); list the two names in the PR body. If the README-lists-every-scenario test then fails, add a deps-free follow-up note in the PR rather than widening scope. No pipeline code changes; bugs found → known-failing + PR note.
