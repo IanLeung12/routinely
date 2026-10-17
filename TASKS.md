@@ -350,7 +350,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_feedback_cause_ids.py` and `scripts/ci.sh` pass.
 
 ### T166 — Review: handoff summary uses old "the task" placeholder errors and a unit-wide baseline
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
