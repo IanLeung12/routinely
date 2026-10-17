@@ -45,7 +45,7 @@ app.add_middleware(
 )
 
 #: What the unit-overview list shows, vs. the fuller resident-detail payload.
-_SUMMARY_FIELDS = ("id", "name", "room", "status", "scores")
+_SUMMARY_FIELDS = ("id", "name", "room", "status", "top_pattern", "scores")
 
 #: In-memory only (SPEC MVP 7): no DB, so feedback resets when the API restarts.
 _feedback_store = FeedbackStore()

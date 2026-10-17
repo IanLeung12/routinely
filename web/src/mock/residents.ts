@@ -9,6 +9,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mrs. K',
     room: '204',
     status: 'flagged',
+    top_pattern: { pattern_id: 'sudden_change', name: 'Sudden change (delirium pattern)', urgency: 'same_shift' },
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.12 },
       { ts: '2025-12-30T09:00:00+00:00', score: 0.15 },
@@ -21,6 +22,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mr. Chen',
     room: '211',
     status: 'watch',
+    top_pattern: { pattern_id: 'slow_drift', name: 'Slow drift (cognitive decline pattern)', urgency: 'routine' },
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.1 },
       { ts: '2025-12-30T09:00:00+00:00', score: 0.18 },
@@ -33,6 +35,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mrs. Ahmed',
     room: '108',
     status: 'normal',
+    top_pattern: null,
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.08 },
       { ts: '2025-12-30T09:00:00+00:00', score: 0.11 },
@@ -45,6 +48,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mr. Silva',
     room: '117',
     status: 'normal',
+    top_pattern: null,
     scores: [
       { ts: '2025-12-29T09:00:00+00:00', score: 0.13 },
       { ts: '2025-12-30T09:00:00+00:00', score: 0.1 },
@@ -57,6 +61,11 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mr. Nguyen',
     room: '126',
     status: 'watch',
+    top_pattern: {
+      pattern_id: 'evening_worsening',
+      name: 'Evening-only worsening (sundowning pattern)',
+      urgency: 'routine',
+    },
     scores: [
       { ts: '2025-12-31T08:00:00+00:00', score: 0 },
       { ts: '2025-12-31T18:00:00+00:00', score: 5 },
@@ -69,6 +78,7 @@ export const mockResidents: ResidentSummary[] = [
     name: 'Mrs. Patel',
     room: '132',
     status: 'watch',
+    top_pattern: { pattern_id: 'motor_slowing', name: 'Motor slowing / medication effect', urgency: 'next_round' },
     scores: [
       { ts: '2025-12-29T08:00:00+00:00', score: 0 },
       { ts: '2025-12-30T08:00:00+00:00', score: 1 },

@@ -67,6 +67,31 @@ describe('UnitOverview', () => {
     expect(status.getAttribute('role')).toBe('status')
   })
 
+  it('shows the top pattern for flagged and watch residents, nothing for normal', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const rows = screen.getAllByRole('listitem')
+    const byName = new Map(rows.map((row) => [row.querySelector('.resident-name')?.textContent, row]))
+
+    expect(byName.get('Mrs. K')?.querySelector('.resident-pattern')?.textContent).toBe(
+      'Sudden change (delirium pattern)',
+    )
+    expect(byName.get('Mr. Chen')?.querySelector('.resident-pattern')?.textContent).toBe(
+      'Slow drift (cognitive decline pattern)',
+    )
+    expect(byName.get('Mrs. Ahmed')?.querySelector('.resident-pattern')).toBeNull()
+    expect(byName.get('Mr. Silva')?.querySelector('.resident-pattern')).toBeNull()
+  })
+
   it('colours the status chip per status', async () => {
     vi.stubGlobal(
       'fetch',

@@ -128,6 +128,7 @@ describe('ResidentDetail', () => {
       name: 'Mr. Okafor',
       room: '301',
       status: 'watch',
+      top_pattern: null,
       scores: [
         { ts: '2026-01-01T08:00:00+00:00', score: 0 },
         { ts: '2026-01-02T08:00:00+00:00', score: 3 },
@@ -196,6 +197,7 @@ describe('ResidentDetail', () => {
       name: 'Mr. New',
       room: '101',
       status: 'normal',
+      top_pattern: null,
       scores: [],
       sessions: [],
       care_records: [],
