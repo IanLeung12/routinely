@@ -251,14 +251,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_checks.py -q` and `scripts/ci.sh` pass.
 
 ### T016 — Alert summary template (offline explainer)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/explain.py, pipeline/tests/test_explain.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T04:00Z
-- pr: —
+- pr: #11
 
 What: The deterministic, offline plain-language alert summary; it is the default fake behind which the Claude explainer will sit later. Uses only the evidence passed in. Read only the files in `area` and `pipeline/pyproject.toml`.
 Interface: `class Explainer(Protocol): def summarise(self, errors: list[dict], baseline: dict, context: list[str]) -> str`; `class TemplateExplainer` implementing it. `errors`: `[{"type", "step_id", "t_start"}]` (seconds); `baseline`: `{"observed", "baseline_mean", "baseline_days"}`; `context`: short strings like "new antibiotic started 2 days ago". Output ≤ 3 sentences, e.g. "Flagged for review: 2 errors this session (skipped teabag in cup at 0:42, repeated pour at 1:15) vs 0.2 normally over 14 days. Context: new antibiotic started 2 days ago." Step ids rendered with underscores replaced by spaces.
