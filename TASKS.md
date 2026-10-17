@@ -301,7 +301,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_top_pattern_for.py -q` and `scripts/ci.sh` pass.
 
 ### T207 — Bug: skeleton view and evidence ghost replay show no skeleton, only object boxes
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -309,7 +309,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/evidence.py, pipeline/tests/
 - owner: ian-claude
 - claimed: 2026-10-17T09:54Z
-- pr: —
+- pr: #205
+- rating: 5/5 clear - repro, expected/actual and the acceptance checks all matched what I found; the only thing not spelled out was that the replay stand-ins are the tests/scenarios frames.jsonl files, which are outside the listed area, so the fix had to go in evidence.py rather than the recordings
 
 What: Tester (main 355d6b1). Every stand-in frame the demo serves is built with `poses=[]` and `hands=[]` (`live._synthetic_frames`, and the recordings behind `/sessions/{id}/replay` and `/residents/{id}/normal_replay`), so the live "Skeleton view" and the alert's "Today / Usual" ghost replay draw only labelled object boxes, never a body skeleton or hands (SPEC §5 ghost replay, §10 step 3 "skeleton view").
 Repro: `OFFLINE_MODE=true scripts/dev.sh up`; open the dashboard, wait for the live session to flag, click "Open alert", press Play under Evidence. `curl "localhost:8000/sessions/mrs-k-22/replay?t_start=40&t_end=60"` → every frame has `"poses": [], "hands": []`.
