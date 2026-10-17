@@ -21,11 +21,11 @@ describe('UnitOverview remembers filter and sort for the session', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
-        'true',
-      )
+      expect(
+        screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed'),
+      ).toBe('true')
     })
 
     screen.getByRole('button', { name: 'Most recent change first' }).click()
@@ -41,13 +41,15 @@ describe('UnitOverview remembers filter and sort for the session', () => {
       expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0)
     })
 
-    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed')).toBe(
       'true',
     )
     expect(
       screen.getByRole('button', { name: 'Most recent change first' }).getAttribute('aria-pressed'),
     ).toBe('true')
-    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('button', { name: 'All (6)' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
     expect(screen.getByRole('button', { name: 'Default order' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
@@ -65,7 +67,9 @@ describe('UnitOverview remembers filter and sort for the session', () => {
       expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0)
     })
 
-    expect(screen.getByRole('button', { name: 'Watch' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Watch (3)' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
     expect(
       screen.getByRole('button', { name: 'Most recent change first' }).getAttribute('aria-pressed'),
     ).toBe('true')
