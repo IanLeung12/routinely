@@ -154,13 +154,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_history.py -q` and `scripts/ci.sh` pass.
 
 ### T010 — Error classifier (graph rules)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - deps: T002, T003
 - area: pipeline/src/routine_watch/errors.py, pipeline/tests/test_errors.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T04:06Z
 - pr: —
 
 What: Turn one session's step events plus the task graph into TaskErrors for the graph-based types in SPEC §7: omission, sequence, perseveration, substitution, abandonment, plus self-corrected slips. Hesitation is T014 (needs a baseline); do not implement it here.
