@@ -385,14 +385,14 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T304 — Test: demo reset clears feedback history
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_feedback_reset.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T15:24Z
 - pr: —
 
 What: `GET /residents/{id}/feedback` (T283) must be empty again after `/demo/reset`, or a second demo run shows the first run's answers.
