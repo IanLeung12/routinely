@@ -465,14 +465,14 @@ Acceptance:
 - `cd web && npx vitest run src/live/SessionSummary.test.tsx` and `scripts/ci.sh` pass
 
 ### T224 — LiveScreen: CSS file instead of inline <style>
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/LiveScreen.tsx, web/src/live/liveScreen.css
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:40Z
 - pr: —
 
 What: `web/src/live/LiveScreen.tsx` (line ~31) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215).
