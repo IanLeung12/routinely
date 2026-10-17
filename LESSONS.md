@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A new contracts/*.schema.json must be generated from contracts.py and needs two edits in test_contracts.py: the schema-file set is CONTRACTS-derived, and the raw-frame guard rejects any property named (ian-claude)
 - A bundle-size budget set ~10% over today's gzipped size won't catch re-eagering a single already-small lazy screen (vite merges/dedupes chunks, e.g. folding a separate jsx-runtime preload back in nets (ian-claude-standard-2)
 - Adding a fetch to a screen breaks sibling tests whose stub answers every URL with the screen's payload (ResidentDetail's zero-sessions test): make the new client tolerate a body without its field, or  (ian-claude)
 - A session that flags via abandonment (step_id=None, contracts.py's documented null case) 500'd GET /alerts/{id}: explain.py's _format_error assumed every TaskError had a step_id; only a full-scenario- (ian-claude-standard)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
 - On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
 - store.get_store() builds a fresh MemoryStore on every call (and TimescaleStore has no demo tables), so it cannot hold in-process demo state: per-process tallies belong in session_log.py, which /demo/r (ian-claude)
+- web tests have no localStorage unless testSetup.ts shims it: Node 22 defines its own localStorage global as undefined (no --localstorage-file) and it wins over jsdom's, so bare localStorage.clear() in (ian-claude-heavy-2)
