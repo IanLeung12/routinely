@@ -43,10 +43,16 @@ def task_id(pr):
     return m.group(1) if m else None
 
 
+def task_status(tid):
+    r = subprocess.run([sys.executable, "scripts/tasks.py", "show", tid], cwd=ROOT, capture_output=True, text=True)
+    m = re.search(r"^- status: (\S+)", r.stdout, re.M)
+    return m.group(1) if m else ""
+
+
 def requeue(pr, why):
     tid = task_id(pr)
-    if not tid:
-        return
+    if not tid or task_status(tid) != "in-review":
+        return  # someone is already on it (claimed) or it's done/blocked: don't stomp
     subprocess.run([sys.executable, "scripts/tasks.py", "set", tid, "status=todo", "owner=—", "claimed=—",
                     f"note={why}", "--agent", "mergeq"], cwd=ROOT, capture_output=True, text=True)
 
@@ -67,7 +73,9 @@ def main():
                 requeue(p, msg)
                 gh("pr", "comment", str(p["number"]), "--body", f"mergeq: {msg}.")
                 state["conflicts"].append(p["number"])
-    state["conflicts"] = [n for n in state["conflicts"] if any(p["number"] == n and p["mergeStateStatus"] == "DIRTY" for p in prs)]
+    # Forget a conflict only once its PR is gone or clean again (UNKNOWN while GitHub recomputes is not "fixed").
+    state["conflicts"] = [n for n in state["conflicts"]
+                          if any(p["number"] == n and p["mergeStateStatus"] in ("DIRTY", "UNKNOWN") for p in prs)]
 
     # Auto-merge sometimes doesn't fire after a rule change or a re-run; merge clean, green PRs directly.
     for p in sorted(prs, key=lambda p: p["number"]):
