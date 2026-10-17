@@ -2749,3 +2749,96 @@ What: Since T129 a feedback `cause` is any pattern id or "other". Guard against 
 Interface: Read only `pipeline/src/routine_watch/patterns_library.py` and `pipeline/src/routine_watch/api.py` lines 50-90. Assert ids in `BY_ID` are unique and match `^[a-z][a-z0-9_]*$`, none equals `api.OTHER_CAUSE`, and `api.KNOWN_CAUSES == set(BY_ID) | {"other"}`.
 Acceptance:
 - `cd pipeline && python -m pytest tests/test_feedback_cause_ids.py` and `scripts/ci.sh` pass.
+
+### T144 — API: POST /demo/reset puts the demo back to its seeded history
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_demo_reset.py (new), scripts/smoke.sh
+- source: proposed
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:05Z
+- pr: #168
+- rating: 5/5 clear
+
+What: Demo robustness (SPEC §10, §13): after a rehearsal, Mrs. K stays flagged from the live session, so the next run of demo beat 4 never happens unless the server restarts. One endpoint resets recorded live sessions and feedback so the demo can be rerun on stage in a second.
+Interface: `POST /demo/reset` → `{"ok": true}`; calls `session_log.reset()` and the equivalent reset in `routine_watch.feedback` (add a `reset()` there only if missing, in this PR). Only enabled when `OFFLINE_MODE` or a new `DEMO_RESET=1` env is set, else 404; document `DEMO_RESET` in `.env.example`.
+Acceptance:
+- Test: record a live session for mrs-k (flagged), POST /demo/reset, `/residents` shows her back at her seeded status; with the env unset the route is 404.
+- smoke.sh hits the route once; `scripts/ci.sh` passes.
+
+### T147 — Test: every shippable pattern has a replayable scenario
+- status: done
+- class: light
+- priority: 3
+- kind: test
+- deps: T141, T142, T143
+- area: pipeline/tests/test_pattern_scenarios_cover_library.py (new)
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:10Z
+- pr: #170
+- rating: 5/5 clear
+
+What: Guard SPEC §8 ("at least one replayable scenario per pattern") so a new pattern can't ship without one.
+Interface: read `pipeline/src/routine_watch/patterns_library.py` (the list of patterns) and `tests/scenarios/*/expected.yaml`. Test collects every `top_pattern:` value from scenarios and asserts it covers every library `pattern_id` except `one_sided_change` (SPEC keeps it out of the demo).
+Acceptance:
+- `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
+
+### T162 — Test: live websocket path finds the same errors and flag as scenario replay
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_live_matches_replay.py (new)
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:05Z
+- pr: #171
+- rating: 5/5 clear
+
+What: The SPEC §10 fallback plays recorded scenarios through `live.session_messages`, while `scripts/e2e.sh` checks them through `replay.py`. Nothing asserts the two agree, so the demo could show different errors from what CI tested.
+Interface: For each `tests/scenarios/*/` playable live, run `session_messages(scenario_path(name), speed=<very fast>)`, collect error messages and the final flag message, compare with `expected.yaml` (error type/step multiset, `flag`). Read only `pipeline/src/routine_watch/live.py` and `replay.py`. Scenarios that legitimately can't play live get an explicit skip with a reason.
+Acceptance:
+- Parametrised per scenario, < 20 s total, no network.
+- A real mismatch → don't fix pipeline code here; xfail with a reason and list it in the PR so the orchestrator files a bug.
+- `scripts/ci.sh` passes.
+
+### T166 — Review: handoff summary uses old "the task" placeholder errors and a unit-wide baseline
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/alerts.py, pipeline/tests/test_handoff.py
+- owner: ian-claude
+- claimed: 2026-10-17T08:48Z
+- pr: #159
+- rating: 4/5 clear on the defect and the interface; it said baseline=the resident's own baseline (mean/days), but baseline['mean'] is an error score while the explainer's 'observed' is an error count - I used alerts.normal_error_rate (her own errors/session) to match what her alert already quotes
+
+What: `handoff._explainer_errors` re-implements the placeholder-error synthesis that T121 replaced in `alerts._task_errors` (still `step_id="the task"`, t=0,10,20…), so the handoff sentence reads "… at the task, 0:00". `_summary` also compares the latest flagged session against `_unit_error_rate` (all residents mixed) instead of that resident's own baseline (SPEC §7: own history only), and doesn't say whose session it is.
+Interface: In `handoff.py` drop `_UNKNOWN_STEP`/`_ERROR_SPACING_S`/`_explainer_errors`; build errors via `alerts._task_errors(session_id, session)` + `alerts._distinct_clauses` (make them public, e.g. `task_errors`/`distinct_clauses`, no other behaviour change). Baseline = that resident's own `baseline` (mean/days); prefix the context with the resident's name. Read only `handoff.py` and `alerts.py` lines 60-170.
+Acceptance:
+- test: handoff summary contains no "the task" and names a real step id; baseline numbers equal the flagged resident's own baseline.
+- `scripts/ci.sh` passes.
+
+### T167 — Review: nurse feedback tunes the threshold in /handoff and alert payload but not /residents status or /alerts
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:51Z
+- pr: #163
+- rating: 4/5 clear
+
+What: `handoff.build_handoff` and `api._alert_payload` apply `_feedback_store.threshold(...)`, but `list_residents`/`get_resident` status and `list_alerts` use the raw `baseline.threshold` from `demo_residents()`. After a nurse taps "not concerning", handoff says 0 flags while the overview still shows Flagged, which contradicts itself on stage.
+Interface: one helper in `api.py` (e.g. `_tuned(resident) -> dict`) that recomputes status against the feedback-tuned threshold, reusing `demo`'s flag rule rather than duplicating it (expose a small `demo.status_for(resident, threshold)` if needed); use it in the residents and alerts routes. Read only `api.py`, `demo.py` lines 50-80, `feedback.py`.
+Acceptance:
+- test: post `not_concerning` feedback until the tuned threshold exceeds the latest score → `/residents` status and `/handoff` flags agree.
+- `scripts/ci.sh` passes.
