@@ -245,7 +245,7 @@ Acceptance:
 - No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
 
 ### T307 — Test: replay player works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -253,7 +253,7 @@ Acceptance:
 - area: web/src/evidence/ReplayPlayer.keyboard.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T15:44Z
-- pr: —
+- pr: #310
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T307-wip-1531: start from it (git switch task/T307-wip-1531 && git merge origin/main)
 
 What: Prove the evidence replay player (play/pause, scrub, ghost toggle) is usable with Tab/Enter/Space/arrow keys only.
