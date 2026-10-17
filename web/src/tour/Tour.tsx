@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { TOUR_STEPS } from './steps.ts'
 
@@ -8,8 +8,6 @@ export function Tour({ onClose }: { onClose?: () => void } = {}) {
   const [index, setIndex] = useState(0)
   const [closed, setClosed] = useState(false)
 
-  if (closed) return null
-
   const step = TOUR_STEPS[index]
   const isFirst = index === 0
   const isLast = index === TOUR_STEPS.length - 1
@@ -18,6 +16,19 @@ export function Tour({ onClose }: { onClose?: () => void } = {}) {
     setClosed(true)
     onClose?.()
   }
+
+  useEffect(() => {
+    if (closed) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') close()
+      else if (e.key === 'ArrowRight') setIndex(i => Math.min(i + 1, TOUR_STEPS.length - 1))
+      else if (e.key === 'ArrowLeft') setIndex(i => Math.max(i - 1, 0))
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [closed])
+
+  if (closed) return null
 
   return (
     <div className="tour" role="dialog" aria-label="Guided demo tour">
