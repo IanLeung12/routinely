@@ -542,7 +542,7 @@ Acceptance:
 - `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
 
 ### T353 — Improvement: one shared print stylesheet for alert view and resident detail
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
