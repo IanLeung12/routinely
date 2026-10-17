@@ -8,6 +8,13 @@ import type {
 } from '../resident/types.ts'
 import { mockResidents } from './residents.ts'
 
+/** The demo's slow-drift resident; other residents have no mock drift assessment. */
+export function mockResidentDrift(residentId: string) {
+  return residentId === 'mr-chen'
+    ? { resident_id: residentId, slope_per_day: 0.7, days: 7, trending: true }
+    : null
+}
+
 /** Shown when the API is unreachable, so the resident detail screen still has
  * something to demo (SPEC section 8: most normal, one spike, one drift). Mirrors the
  * shape of `GET /residents/{id}`: sessions, care records and the resident's baseline.
