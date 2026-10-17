@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CaptureFrame } from '../contracts.ts'
+import evidenceCss from './evidence.css?raw'
 import ReplayPlayer from './ReplayPlayer.tsx'
 
 const frames: CaptureFrame[] = [60, 61, 62].map((t, seq) => ({
@@ -102,5 +103,25 @@ describe('ReplayPlayer', () => {
     act(() => vi.advanceTimersByTime(100))
     expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('1')
     delete (window as { matchMedia?: typeof window.matchMedia }).matchMedia
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (same approach as alert.css's and overview.css's phone tests). */
+describe('evidence.css phone layout', () => {
+  it('scales the skeleton canvas to the container and stacks the controls at 375px', () => {
+    const mobileBlock = evidenceCss.match(/@media \(max-width: 375px\) \{([\s\S]*)\}\s*$/)?.[1]
+    expect(mobileBlock).toBeTruthy()
+
+    expect(mobileBlock).toMatch(/\.replay-player\s*\{[^}]*flex-direction:\s*column/)
+    expect(mobileBlock).toMatch(/\.replay-player \.skeleton-view,\s*\n\s*\.replay-player \.skeleton-view--empty\s*\{[^}]*width:\s*100%/)
+    expect(mobileBlock).toMatch(/\.replay-player__controls\s*\{[^}]*flex-wrap:\s*wrap/)
+  })
+
+  it('keeps the play button and scrub bar at a 44px tap target', () => {
+    const mobileBlock = evidenceCss.match(/@media \(max-width: 375px\) \{([\s\S]*)\}\s*$/)?.[1]
+
+    expect(mobileBlock).toMatch(/\.replay-player__controls \.btn\s*\{[^}]*min-height:\s*2\.75rem/)
+    expect(mobileBlock).toMatch(/\.replay-player__controls input\[type='range'\]\s*\{[^}]*min-height:\s*2\.75rem/)
   })
 })
