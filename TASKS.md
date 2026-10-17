@@ -206,7 +206,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T096 — Scenario: teabag added three times is perseveration, stirring twice is not
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
