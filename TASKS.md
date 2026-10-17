@@ -539,7 +539,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T208 — Bug: ghost replay "Today" caption is dark blue on the dark card, unreadable
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -547,7 +547,8 @@ Acceptance:
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:47Z
-- pr: —
+- pr: #191
+- rating: 5/5 clear
 
 What: Tester (main 355d6b1). `web/src/evidence/GhostReplay.tsx:44` colours the caption with inline `color: 'blue'` / `'grey'`; on the dark evidence card "Today" is near-invisible. Use the colours the replay strokes use (CSS classes, no inline styles) so both labels are readable and match the lines they name.
 Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open alert-mrs-k, scroll to Evidence: caption under the replay.
