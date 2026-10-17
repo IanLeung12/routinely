@@ -330,3 +330,4 @@ T203 | standard | claude-opus | merged first try | ~115k tok
 T347 | standard | claude-sonnet | merged first try | ~55k tok
 T369 | light | claude-sonnet | merged first try | ~25k tok
 T360 | light | codex | merged first try | ~5k tok
+T247 | light | claude-sonnet | merged first try | ~25k tok
