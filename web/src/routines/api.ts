@@ -1,6 +1,11 @@
 import { apiUrl } from '../config.ts'
-import { mockBuiltInRoutines, mockDraftFromText, mockDraftFromVideo } from '../mock/routines.ts'
-import type { RoutineDraftResult, SavedRoutine, TaskGraph } from './types.ts'
+import {
+  mockBuiltInRoutines,
+  mockDraftFromText,
+  mockDraftFromVideo,
+  mockSavedRoutine,
+} from '../mock/routines.ts'
+import type { RoutineDraftResult, RoutineSummary, SavedRoutine, TaskGraph } from './types.ts'
 
 const SAVED_KEY = 'rw.routines.saved'
 
@@ -57,10 +62,10 @@ export async function draftFromVideo(file: File, consent: boolean): Promise<Rout
 
 /** Built-ins (`tea`, `meds`) plus whatever has been saved, newest last. Falls back to
  * the built-ins plus whatever is saved locally when the API isn't reachable. */
-export async function fetchRoutines(): Promise<SavedRoutine[]> {
+export async function fetchRoutines(): Promise<RoutineSummary[]> {
   try {
     const response = await fetch(`${apiUrl}/routines`)
-    if (response.ok) return (await response.json()) as SavedRoutine[]
+    if (response.ok) return (await response.json()) as RoutineSummary[]
   } catch {
     // Offline: fall through to the mock list below.
   }
@@ -81,7 +86,7 @@ export async function saveRoutine(graph: TaskGraph): Promise<SavedRoutine> {
   } catch {
     // Offline: fall through to the local save below.
   }
-  const saved: SavedRoutine = { id: graph.id, title: graph.title, task_graph: graph, built_in: false }
+  const saved = mockSavedRoutine(graph)
   writeSaved([...readSaved(), saved])
   return saved
 }
