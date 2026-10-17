@@ -282,7 +282,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T140 — Test: every scenario directory is listed in the scenario README
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: test
@@ -290,7 +290,8 @@ Acceptance:
 - area: tests/test_scenarios_readme.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:24Z
-- pr: —
+- pr: #137
+- rating: 4/5 clear; one gap: the acceptance criterion 'scripts/ci.sh ... runs the new test' doesn't hold on this repo since root tests/ has no pyproject.toml and ci.sh never executes them (same as pre-existing test_tasks_py.py), so the task instructions anticipated this correctly
 
 What: The scenario README keeps falling behind new scenarios (T065, T139). Add a pytest that fails when a scenario directory has no row in the README, so CI catches it.
 Interface: New file `tests/test_scenarios_readme.py`: list dirs in `tests/scenarios/` that contain `expected.yaml`; assert each name appears in `tests/scenarios/README.md`. Read only `tests/scenarios/README.md` and `tests/test_tasks_py.py` (for how root tests are written and run).
