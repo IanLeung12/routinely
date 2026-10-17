@@ -131,7 +131,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T292 — Review: generate web resident/handoff/monitoring types from contracts.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
