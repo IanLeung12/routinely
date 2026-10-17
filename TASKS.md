@@ -386,7 +386,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
 
 ### T384 — Ghost replay: aria-label says what is being compared
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -394,7 +394,8 @@ Acceptance:
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T19:41Z
-- pr: —
+- pr: #375
+- rating: 5/5 clear
 
 What: The ghost replay SVG's label is the fixed "Today and usual skeleton replay"; a screen-reader user gets no information. Describe the comparison in words.
 Interface: read only web/src/evidence/GhostReplay.tsx and its test. Build the label from the props already passed (e.g. "Today's routine drawn over the usual routine, frame 12 of 40"); if a prop you'd need doesn't exist, keep to what's there. No new props from other files.
