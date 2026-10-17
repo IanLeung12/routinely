@@ -476,15 +476,15 @@ What: Split from T402 so the chart kit is built in parallel. Dependency-free SVG
 Acceptance: accessible name + text alternative (summary line); tests for ticks, end tag = latest value, band drawn only when given, keyboard focus; `cd web && npm test && npm run build`.
 
 ### T418 — Chart kit: BarChart (paired bars + callout)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: ian
 - deps: T401
 - area: web/src/ui/charts/BarChart.tsx, web/src/ui/charts/BarChart.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T20:48Z
 - pr: —
 
 What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` (tokens) and `web/src/ui/` primitives. SVG `BarChart`: slim rounded bars, optional second series muted/outlined beside each bar (e.g. this week vs usual), optional callout pill above one highlighted bar (`callout={{index, label: "2.4× usual"}}`), tiny muted labels, tokens only (no hex). Props: `data: {label: string, value: number, compare?: number}[]`, `ariaLabel`, `highlight?`. Self-contained (own min/max scaling; don't import `scale.ts`).
