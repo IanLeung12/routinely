@@ -297,7 +297,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T036 — Skeleton replay player
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: T025
@@ -361,7 +361,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_capture.py -q` and `scripts/ci.sh` pass.
 
 ### T040 — Privacy guard test
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
@@ -442,7 +442,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_notify.py -q` and `scripts/ci.sh` pass.
 
 ### T045 — Privacy & limits panel
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
