@@ -412,7 +412,7 @@ Acceptance:
 - `cd web && npm test -- ResidentDetail` and `scripts/ci.sh` pass
 
 ### T218 — Test: DemoBanner disables Reset while resetting and clears the error on retry
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
