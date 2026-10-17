@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T155 — Bug: alert opened after the live session shows other errors than the live session made
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: bug
@@ -53,7 +53,8 @@ Acceptance:
 - source: tester
 - owner: ian-claude
 - claimed: 2026-10-17T09:36Z
-- pr: —
+- pr: #192
+- rating: 4/5 clear repro and interface; the step id is teabag_in_cup not add_teabag, and the fix needs evidence.known_session (outside the listed area) or 'Open evidence' 404s on the live session's errors
 
 What: On stage the live session (default demo scenario) flags "skipped Put the teabag in the cup · 1:10" and "repeated Pour the water · 1:30". Clicking "Open alert" then shows `alert-mrs-k` with errors "skipped fill kettle 0:51, repeated boil 1:42, skipped fill kettle 0:33, repeated boil 1:06" (sessions mrs-k-22, mrs-k-23): the recorded live session's score is merged into Mrs. K's history, but its actual errors are not; the alert's errors for that session are synthetic. The summary also says "4 errors this session" for errors spread over two sessions.
 Interface: the session recorded by `routine_watch.live` (via `session_log`) must carry its real `ErrorEvent`s into the resident's newest session, so `build_alerts` lists them (with their real step ids and times) for that session; the summary should count errors per session or say "across 2 sessions".
