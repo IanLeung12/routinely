@@ -95,14 +95,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T343 — Live: session_end says when a session was too unclear to score
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: feature
 - deps: T342
 - area: pipeline/src/routine_watch/contracts.py, contracts/live_message.schema.json, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, web/src/contracts.ts, web/src/live/SessionSummary.tsx, web/src/live/SessionSummary.test.tsx, web/src/live/mockLiveStream.ts, pipeline/tests/test_live_quality.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T19:21Z
 - pr: —
 
 What: SPEC §12 says low-confidence capture (walker, bad lighting) is "unclear", never an error. Today the nurse just sees score 0 with no explanation. Add `quality: "ok" | "unclear"` to `LiveSessionEnd`, send it from both `live.py` and `live_camera.py` (`session_quality(events)`), and have `SessionSummary` show "Capture unclear — this session wasn't scored" with one line on why (lighting, view blocked, walker) instead of the score.
