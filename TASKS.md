@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T062 — Nurse shift handoff summary (separate screen)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 3
 - kind: feature
