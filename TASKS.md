@@ -225,7 +225,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T113 — Pattern scenarios: one replayable scenario per pattern
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: test
@@ -233,7 +233,7 @@ Acceptance:
 - area: tests/scenarios/pattern_*/, tests/scenarios/README.md, pipeline/src/routine_watch/replay.py (expected top-pattern check only), pipeline/tests/test_replay.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T07:39Z
-- pr: —
+- pr: #112
 
 What: SPEC §8: at least one scenario per MVP pattern (sudden change, slow drift) with the expected top pattern in `expected.yaml`, plus "no clear pattern" for a flag that matches none.
 Interface: optional `top_pattern: <pattern id> | none` key in `expected.yaml`; `scripts/e2e.sh` fails when the scorer's top pattern differs. Scenarios without the key are unaffected.
