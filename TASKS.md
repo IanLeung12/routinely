@@ -60,7 +60,7 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T044 — Alert notifier behind an interface (push alert)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -68,7 +68,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/notify.py, pipeline/tests/test_notify.py, .env.example
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:03Z
-- pr: —
+- pr: #69
 
 What: SPEC Nice-to-have 3 (push alert to a phone) and §10 step 4. A `Notifier` interface with a fake used by default and a Supabase implementation used only when `LIVE_API=1` and Supabase env vars are set. No route wiring in this task.
 Interface: `class Notifier(Protocol): def send(self, alert: dict) -> None`; `FakeNotifier` (records sent alerts in `.sent`); `SupabaseNotifier(url, key)` inserting `{alert_id, resident_id, summary, created_at}` into table `alerts_feed` via the REST endpoint with plain HTTP (httpx or urllib, no new SDK); `get_notifier() -> Notifier` returns Supabase only when `LIVE_API=1` and `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are set, else Fake. Network errors are logged and swallowed (never break the pipeline). Payload carries ids and summary text only, no frames. Document the table in the module docstring; any new env var goes in `.env.example`.
