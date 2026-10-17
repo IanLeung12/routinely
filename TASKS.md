@@ -514,14 +514,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T165 — Test: pattern ids are safe feedback causes
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: test
 - deps: —
 - area: pipeline/tests/test_feedback_cause_ids.py (new)
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:45Z
 - pr: —
 
 What: Since T129 a feedback `cause` is any pattern id or "other". Guard against a future pattern colliding with "other" or using an id the web can't round-trip.
