@@ -5489,3 +5489,59 @@ Acceptance:
 - Pipeline: a Handoff dict without `paused` and residents without `monitoring_paused` validates; defaults are `[]` / `False`; round-trips through `model_dump`.
 - Web: Handoff renders a payload missing both fields with no crash, no paused-rooms section, and no "paused" label on any row.
 - `scripts/ci.sh` passes.
+
+### T312 — Test: resident detail feedback history after reset shows the empty state
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/ResidentDetail.reset.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:47Z
+- pr: #301
+- rating: 5/5 clear
+
+What: T304 (#298) proved the API clears feedback on demo reset; add the dashboard side: after a reset the resident detail "What nurses said" card shows "No nurse answers yet" instead of stale answers.
+Interface: new test file only; read web/src/resident/ResidentDetail.tsx and its existing tests for how the feedback API is mocked; pipeline/tests/test_feedback_reset.py for the reset behaviour.
+Acceptance:
+- Mock feedback API returns one answer, then an empty list after a reset; the card updates to the empty-state text on re-fetch/re-mount.
+- No raw video or real API calls; fakes only.
+- `scripts/ci.sh` passes.
+
+### T313 — Scenarios: meds_two_errors_one_session and meds_pill_substitution
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_two_errors_one_session/, tests/scenarios/meds_pill_substitution/, tests/scenarios/README.md
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T15:56Z
+- pr: #305
+- rating: 5/5 clear
+
+What: Meds still lacks two cases tea has. Add a meds session with two different errors in one session (e.g. skipped water plus pill taken twice), and a substitution case mirroring `tea_substitution` if the meds graph (pipeline/src/routine_watch/tasks/meds.yaml) allows one; otherwise pick another error type tea covers and meds doesn't, and say which in the PR.
+Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/meds_pill_twice/` and `tests/scenarios/tea_substitution/`; add both to the README list. No pipeline code changes; if a scenario exposes a pipeline bug, keep the correct expected behaviour, mark it known-failing as tests/scenarios/README.md describes, and say so in the PR.
+Acceptance:
+- Both scenarios run in `scripts/e2e.sh`; the two-error one expects both error types.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/, tests/scenarios/README.md
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T16:19Z
+- pr: #303
+- rating: 5/5 clear task, well-specified acceptance criteria and known README conflict called out in advance
+- note: fix CI on PR #303: T313 has merged; on branch task/T314-tea-scenarios, git merge origin/main, then add rows for tea_two_errors_one_session and tea_long_pause_not_error to tests/scenarios/README.md (now in area)
+
+What: Add a tea session with two different errors in one session, and a correct session with one unusually long gap between steps that must produce no task error (long gaps are hesitations from `hesitation.py`, not errors) and no flag.
+Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/tea_normal/` and `tests/scenarios/tea_sequence_error/`. Read pipeline/src/routine_watch/hesitation.py. Don't edit tests/scenarios/README.md (T313 owns it); list the two names in the PR body. If the README-lists-every-scenario test then fails, add a deps-free follow-up note in the PR rather than widening scope. No pipeline code changes; bugs found → known-failing + PR note.
+Acceptance:
+- Both run in `scripts/e2e.sh`; the long-pause one expects zero errors and no flag.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
