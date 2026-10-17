@@ -535,7 +535,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T169 — Test: scenarios README lists every scenario folder
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
