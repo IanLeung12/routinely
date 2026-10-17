@@ -659,3 +659,25 @@ Interface: move it into the run list between "Why / not just delirium" and "Clos
 Acceptance:
 - `docs/DEMO.md` beat list is one contiguous list ending with "Close"
 - `scripts/ci.sh` passes
+
+### T378 — Landing page (public, judges' first impression)
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/landing.html, web/src/landing/, web/vite.config.ts, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: A one-page public site for the demo URL (and the GoDaddy domain later): what Routine Watch is, why it matters, how it works, and a button into the live dashboard. Separate from the nurse dashboard so it can't break the demo path.
+Interface:
+- Second Vite entry `web/landing.html` + `web/src/landing/` (React, plain CSS using the design tokens from `web/src/index.css` / `web/src/ui/`). Build output `dist/landing.html`; dashboard stays at `/`. Add the entry to `vite.config.ts` `build.rollupOptions.input`.
+- Sections, in order: hero (one-liner from SPEC §1 + "Open the dashboard" button to `/` and "Watch the demo" anchor) → problem (SPEC §2, 3 short points) → how it works (camera → skeleton only → task graph → personal baseline → patterns → nurse, as a simple visual strip; reuse `docs/routine-watch-flow.png` ideas, not the image) → "consistent with, not a diagnosis" pattern examples (sudden change, slow drift, evening worsening) → privacy (no video stored, skeletons only, per-room off switch) → built with (Gemini, Tiger Data, Vultr, Claude, Roboflow; text only, no logos needed) → footer (Hack the Valley 11, GitHub link placeholder).
+- Copy: plain, confident, no hype words, never "diagnose". Under ~350 words total.
+- Responsive (mobile first), accessible (landmarks, headings in order, contrast ≥ 4.5:1, keyboard), loads fast (no new runtime deps, no web fonts beyond what the dashboard uses).
+Acceptance:
+- `cd web && npm run build` produces `dist/landing.html`; Vitest test renders the landing page and checks every section heading and the dashboard link.
+- `wording.test.ts`-style check: no "diagnos" in landing copy.
+- Look at it (dev server `/landing.html`, desktop + 390 px wide); describe what you checked in the PR.
