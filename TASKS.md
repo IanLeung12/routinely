@@ -429,7 +429,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T293 — Test: api_state.reset() clears feedback without replacing the store
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -437,7 +437,8 @@ Acceptance:
 - area: pipeline/tests/test_api_state.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T14:31Z
-- pr: —
+- pr: #282
+- rating: 5/5 clear
 
 What: T284 moved the feedback store to `api_state.py`; routers import `_feedback_store` at load time, so `reset()` must clear it in place. Pin that with a direct unit test.
 Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/test_api_feedback.py` (for how feedback is recorded). New file `pipeline/tests/test_api_state.py`: keep a reference `store = api_state._feedback_store`, record one feedback answer, call `api_state.reset()`, assert `api_state._feedback_store is store` and the answer is gone; also assert `_flagged_residents()` returns only residents whose raw `status` is "flagged". Test-only.
