@@ -18,6 +18,14 @@ describe('HeatCalendar', () => {
     expect(screen.getByLabelText('2026-01-05: score 0')).toBeTruthy()
   })
 
+  it('renders Monday-first weekday headers and the legend', () => {
+    render(<HeatCalendar days={[{ date: '2026-01-03', score: 1 }]} />)
+
+    const headers = screen.getAllByRole('columnheader')
+    expect(headers.map(header => header.textContent)).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+    expect(screen.getByText('Darker = more errors that day. Grey = no session.')).toBeTruthy()
+  })
+
   it('orders dates and positions Monday first across week boundaries', () => {
     render(<HeatCalendar days={[
       { date: '2026-01-05', score: 1 },
@@ -27,9 +35,9 @@ describe('HeatCalendar', () => {
     const cells = screen.getAllByRole('gridcell')
     expect(cells[0].getAttribute('aria-label')).toBe('2026-01-04: score 1')
     expect(cells[0].style.gridColumn).toBe('7')
-    expect(cells[0].style.gridRow).toBe('1')
+    expect(cells[0].style.gridRow).toBe('2')
     expect(cells[1].style.gridColumn).toBe('1')
-    expect(cells[1].style.gridRow).toBe('2')
+    expect(cells[1].style.gridRow).toBe('3')
   })
 
   it('mixes more of the theme red into higher scores', () => {
