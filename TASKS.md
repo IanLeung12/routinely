@@ -511,15 +511,15 @@ Acceptance:
 - `api.py` shrinks by ≥80 lines; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T257 — Contracts: JSON Schemas for /residents and /handoff payloads
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - source: reviewer
 - deps: T250, T251
 - area: contracts/resident.schema.json, contracts/handoff.schema.json, contracts/README.md, pipeline/tests/test_api_payload_contracts.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T12:18Z
 - pr: —
 
 What: REVIEW.md noted the resident and handoff payloads have no `contracts/` schema and web types are hand-mirrored (`web/src/overview/types.ts`, `web/src/handoff/types.ts`), which is how fields drift. Add schemas describing today's shapes (incl. `top_pattern`, `monitoring_paused`/`paused` from T251).
