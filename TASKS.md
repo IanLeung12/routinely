@@ -60,7 +60,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T247 — Shift handoff: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
