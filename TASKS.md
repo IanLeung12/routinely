@@ -265,13 +265,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
 
 ### T033 — Slow-drift trend detector
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/drift.py, pipeline/tests/test_drift.py
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:08Z
 - pr: —
 
 What: SPEC Nice-to-have 6: a sustained upward trend in a resident's daily error score over weeks, reported as a trend for review, separate from the sudden-change flag. Read only the files in `area`, `pipeline/src/routine_watch/change_detection.py` (style; do not edit) and `pipeline/pyproject.toml`. Standard library only.
