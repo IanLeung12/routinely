@@ -517,15 +517,15 @@ Acceptance:
 - `cd web && npx vitest run src/handoff` and `scripts/ci.sh` pass.
 
 ### T429 — Person view: privacy card (pause, what's stored, who sees it)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - source: orch (carved from T409)
 - deps: —
 - area: web/src/person/PrivacyCard.tsx, web/src/person/PrivacyCard.test.tsx, web/src/person/privacyCard.css
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-17T21:28Z
 - pr: —
 
 What: A self-contained card T409 ("My routine") will drop in. Not wired into any screen here.
