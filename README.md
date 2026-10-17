@@ -21,3 +21,4 @@ AGENT=max TOOL=claude CLASS=light scripts/worker.sh  # loop: claim → PR → au
 - `TASKS.md` lives on the `tasks` branch. `scripts/tasks.py` claims tasks atomically (push races lose cleanly).
 - Workers open PRs that auto-merge when CI (`scripts/ci.sh`) passes.
 - An orchestrator on Ian's VPS runs every ~20 min: writes new tasks, reviews merges, frees stuck claims, keeps `main` green.
+- A tester on Ian's VPS runs when `main` changes: CI, scenario replays (`scripts/e2e.sh`), a browser walkthrough of the demo, and files `Bug:` tasks. Report: `TESTREPORT.md` on the `tasks` branch.

@@ -33,5 +33,6 @@ Each run, in order. Be quick; skip steps with nothing to do.
    Acceptance: bullet list incl. the test command.
    ```
    `light` tasks must be fully self-contained: list the exact files to read, so a cheap agent never needs SPEC.md. Avoid two concurrent tasks touching the same files. Small tasks (≤90 min of agent work) beat big ones.
+   Testability: the tester (`prompts/tester.md`) needs `scripts/e2e.sh` + `tests/scenarios/<name>/{frames.jsonl,expected.yaml}` and `scripts/dev.sh up|down` early. Pipeline tasks must add or extend a scenario. `Bug:` tasks filed by the tester outrank feature work of the same priority; read `.tasks/TESTREPORT.md` each run.
 
 6. **Report.** If nothing notable happened, reply exactly `[SILENT]`. Otherwise reply with ≤6 short bullets (no tables): merges, reverts, blocked tasks needing a human, decisions you made. Mention Ian only if a human is actually needed.

@@ -5,6 +5,7 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 
 ## Roles
 - **Orchestrator** (one, runs on Ian's VPS): writes tasks, reviews merged work, releases stuck claims, keeps `main` green. Never writes feature code. Prompt: `prompts/orchestrator.md`.
+- **Tester** (one, runs on Ian's VPS when `main` changes): runs CI, replays recorded scenarios end to end, walks the dashboard in a real browser, files `Bug:` tasks. Never fixes code. Prompt: `prompts/tester.md`.
 - **Workers** (Claude Code / Codex, any teammate): claim one task, ship one PR, repeat. Prompt: `prompts/worker.md`. Run via `scripts/worker.sh`.
 
 ## The board
