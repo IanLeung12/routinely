@@ -59,7 +59,7 @@ describe('LiveSession', () => {
     const legend = screen.getByRole('list', { name: 'Task map legend' })
     expect(map.nextElementSibling).toBe(legend)
     expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      'not yet', 'done', 'missed step', 'repeated step', 'out of order',
+      'not yet', '✓ done', '✕ missed step', '↻ repeated step', '⇄ out of order',
     ])
   })
 
