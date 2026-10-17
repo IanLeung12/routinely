@@ -4741,3 +4741,41 @@ What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard
 Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T271 — Review: handoff summary counts a paused resident as "nothing to review"
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T12:53Z
+- pr: #254
+- rating: 5/5 clear
+
+What: T259 (#243) adds "Room X (name) was paused, so no flags are expected from it" to the handoff context, but `_context` still computes `quiet = len(rows) - len(review)` including paused residents, so a paused, otherwise-quiet room also reads as "N residents with nothing to review" — the exact "all quiet" reading T259 meant to stop.
+Interface: in `handoff._context`, exclude rows with `monitoring_paused` (and not `_needs_review`) from `quiet`; keep the paused line as is.
+Acceptance:
+- test: pause a quiet resident's room; the context has its paused line and the "nothing to review" count drops by one (line omitted when it reaches 0).
+- existing handoff tests pass; `scripts/ci.sh` passes.
+
+### T272 — Review: duplicate scenario-README test in tests/ and pipeline/tests/
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- source: reviewer
+- deps: —
+- area: tests/test_scenarios_readme.py, pipeline/tests/test_scenarios_readme.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:01Z
+- pr: #275
+- rating: 5/5 clear
+
+What: `tests/test_scenarios_readme.py` and `pipeline/tests/test_scenarios_readme.py` both check that every `tests/scenarios/*` folder has a README row, with slightly different rules (expected.yaml dirs vs all dirs). Two copies drift and both run in CI.
+Interface: keep the pipeline/tests one (runs with the other scenario tests), fold in any check only the root one has, delete `tests/test_scenarios_readme.py`.
+Acceptance:
+- one README-coverage test remains; adding a scenario folder without a README row still fails it.
+- `scripts/ci.sh` passes.
