@@ -154,6 +154,11 @@ export function ResidentDetail({
               }}
             />
             <MonitoringHistory changes={monitoringChanges} />
+            {resident.consent && (
+              <p className="resident-detail__consent">
+                Consent: {resident.consent.given_by}, {resident.consent.on}
+              </p>
+            )}
           </div>
           <StatusChip status={resident.status} />
           {monitoringMessage && (

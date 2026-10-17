@@ -237,6 +237,38 @@ describe('ResidentDetail', () => {
     await waitFor(() => expect(switchEl.textContent).toBe('On'))
   })
 
+  it('shows who consented to monitoring', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    await screen.findByText('Room 204')
+
+    expect(screen.getByText('Consent: Substitute decision-maker (daughter), 2026-09-28')).toBeTruthy()
+  })
+
+  it('shows no consent line when the field is absent', async () => {
+    const payload: Resident = {
+      id: 'mr-okafor',
+      name: 'Mr. Okafor',
+      room: '301',
+      status: 'watch',
+      top_pattern: null,
+      scores: [],
+      sessions: [],
+      care_records: [],
+      baseline: { mean: 0, std: 0, threshold: 0 },
+    }
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true, json: async () => url.endsWith('/drift') ? null : payload,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ResidentDetail residentId="mr-okafor" onBack={() => {}} />)
+    await screen.findByRole('heading', { level: 1, name: 'Mr. Okafor' })
+
+    expect(screen.queryByText(/^Consent:/)).toBeNull()
+  })
+
   it('calls onBack when the back button is clicked', async () => {
     offline()
     const onBack = vi.fn()
