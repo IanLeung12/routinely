@@ -4,10 +4,12 @@ The pydantic models in `routine_watch.contracts` are the source. The JSON Schema
 sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so these
 tests check four things: every type round-trips through JSON into its own schema, the
 sample frames validate, nothing on disk has drifted away from the models, and what the
-dashboard writes by hand against a schema - its `Alert` type, the feedback body its
-client posts, the monitoring bodies its client casts, the drift card's type, the
-pattern library's two types and the body both replay clients read - still names the
-same fields.
+dashboard still writes by hand against a schema - its `Alert` type, the feedback body
+its client posts, the monitoring bodies its client casts - names the same fields. The
+payloads it used to copy by hand (the drift card's, a pattern library entry's, both
+replay windows') are generated into `web/src/contracts.ts` instead, so a changed field
+breaks its build; what is left to test here is that they are in the generated file and
+that nothing keeps a second copy of them.
 """
 
 import json
@@ -26,6 +28,7 @@ from routine_watch.contracts import (
     HAND_LANDMARK_COUNT,
     POSE_LANDMARK_COUNT,
     SCHEMAS,
+    WEB_PAYLOADS,
     Alert,
     AlertDetail,
     AlertFeedback,
@@ -42,16 +45,12 @@ from routine_watch.contracts import (
     HandLandmarks,
     Monitoring,
     MonitoringChange,
-    NormalReplay,
     ObjectDetection,
     ObjectLabel,
-    PatternLibraryEntry,
     PatternTimeProfile,
     Pose,
-    ResidentDrift,
     RoomMonitoringHistory,
     Session,
-    SessionReplay,
     StepEvent,
     StepSource,
     SuggestedCheck,
@@ -74,18 +73,13 @@ WEB_ALERT_API = REPO / "web" / "src" / "alert" / "api.ts"
 #: routes by hand (SPEC section 12).
 WEB_MONITORING_API = REPO / "web" / "src" / "about" / "monitoringApi.ts"
 
-#: The resident screen's client, which writes the drift card's payload out by hand.
-WEB_RESIDENT_API = REPO / "web" / "src" / "resident" / "api.ts"
-
-#: The pattern screen's types, its hand-written copy of a library entry (SPEC §7.5).
-WEB_PATTERN_TYPES = REPO / "web" / "src" / "patterns" / "types.ts"
-
-#: The evidence view's client, which reads both replay routes through one cast.
-WEB_EVIDENCE_API = REPO / "web" / "src" / "evidence" / "api.ts"
-
-#: The field each replay payload's reader has no use for: it asked about the session
-#: or the resident, so the answer naming it back tells the player nothing new.
-REPLAY_SUBJECTS = {SessionReplay: "session_id", NormalReplay: "resident_id"}
+#: Every source file the dashboard is written in: where a second copy of a generated
+#: payload would turn up if somebody wrote one.
+WEB_SOURCES = [
+    path
+    for path in sorted((REPO / "web" / "src").rglob("*"))
+    if path.suffix in {".ts", ".tsx"}
+]
 
 #: The one field of the audit trail its client has no use for: it asked about the
 #: room, so the answer naming it again tells the screen nothing new.
@@ -354,10 +348,9 @@ def ts_fields(type_name: str, path: Path = WEB_CONTRACTS) -> set[str]:
 def ts_read_fields(function: str, path: Path = WEB_MONITORING_API) -> set[str]:
     """The fields one client function reads a response body through.
 
-    These clients cast the body inline (`as { paused_rooms: string[] }`) instead of
-    naming a type, which is still a hand-written copy of a payload and still drifts.
-    Exported or not: the evidence view's `replayWindow` is module-private and is as
-    much a copy as the rest.
+    The monitoring client casts the bodies of the pause switch's routes inline
+    (`as { paused_rooms: string[] }`) instead of naming a type, which is still a
+    hand-written copy of a payload and still drifts.
     """
     source = path.read_text(encoding="utf-8")
     body = re.search(rf"^(?:export )?async function {function}\b.*?^\}}$", source, re.S | re.M)
@@ -434,31 +427,25 @@ def test_the_dashboards_monitoring_change_names_every_logged_field() -> None:
     assert ts_fields("MonitoringChange", WEB_MONITORING_API) == set(MonitoringChange.model_fields)
 
 
-def test_the_dashboards_drift_type_names_every_field() -> None:
-    """`fetchDrift` reads `GET /residents/{id}/drift` through a type it writes out
-    itself (`web/src/resident/api.ts`), so a field added to the drift card on either
-    side alone fails here."""
-    assert ts_fields("ResidentDrift", WEB_RESIDENT_API) == set(ResidentDrift.model_fields)
+def test_the_dashboards_payload_types_are_generated_not_copied() -> None:
+    """The drift card's payload, a pattern library entry and both replay windows were
+    written out by hand in three dashboard modules (`web/src/resident/api.ts`,
+    `web/src/patterns/types.ts`, `web/src/evidence/api.ts`) and held to the models by
+    a field-name test over their source. They are in `WEB_PAYLOADS` now, so the
+    dashboard imports them and a changed field fails its build instead. What is left
+    to check here is that the generated file really carries them - a model dropped
+    from `WEB_PAYLOADS` would regenerate clean - and that nobody has started a second
+    copy, time profile included."""
+    for model in WEB_PAYLOADS:
+        assert ts_fields(model.__name__) == set(model.model_fields)
 
-
-def test_the_dashboards_pattern_entry_names_every_library_field() -> None:
-    """The pattern screen's copy of a library entry and its time profile
-    (`web/src/patterns/types.ts`), against what `GET /patterns` really sends."""
-    assert ts_fields("PatternLibraryEntry", WEB_PATTERN_TYPES) == set(
-        PatternLibraryEntry.model_fields
-    )
-    assert ts_fields("TimeProfile", WEB_PATTERN_TYPES) == set(PatternTimeProfile.model_fields)
-
-
-def test_the_dashboard_reads_both_replay_windows_through_one_cast() -> None:
-    """`replayWindow` is the one client behind both replay routes
-    (`web/src/evidence/api.ts`): it casts the body for its frames and leaves only the
-    subject it asked about, so anything either route grows has to reach the player
-    and anything the player reads has to be something a route sends."""
-    read = ts_read_fields("replayWindow", WEB_EVIDENCE_API)
-
-    for model, subject in REPLAY_SUBJECTS.items():
-        assert read | {subject} == set(model.model_fields)
+    copied = {model.__name__ for model in WEB_PAYLOADS} | {PatternTimeProfile.__name__}
+    for path in WEB_SOURCES:
+        if path == WEB_CONTRACTS:
+            continue
+        source = path.read_text(encoding="utf-8")
+        for name in sorted(copied):
+            assert f"type {name} = {{" not in source, f"{path.relative_to(REPO)}: {name}"
 
 
 def test_a_logged_change_is_what_the_monitoring_store_writes() -> None:
