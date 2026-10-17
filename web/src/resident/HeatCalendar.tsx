@@ -17,7 +17,7 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
       {orderedDays.map(({ date, score }) => {
         const weekday = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7
         const label = `${date}: ${score === null ? 'no session' : `score ${score}`}`
-        const lightness = 96 - (Math.max(0, score ?? 0) / maximum) * 56
+        const intensity = Math.round((Math.max(0, score ?? 0) / maximum) * 100)
 
         return (
           <div
@@ -28,7 +28,10 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
             style={{
               gridColumn: weekday + 1,
               gridRow: Math.floor((Date.parse(`${date}T00:00:00Z`) - firstMonday) / 604800000) + 1,
-              backgroundColor: score === null ? '#bdbdbd' : `hsl(0, 80%, ${lightness}%)`,
+              backgroundColor: score === null
+                ? 'var(--error-grey-bg)'
+                : `color-mix(in srgb, var(--error-red-bg) ${intensity}%, var(--panel))`,
+              color: score !== null && score >= 4 ? 'var(--text)' : 'var(--error-grey-text)',
               padding: 8,
             }}
           >
