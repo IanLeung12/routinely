@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T118 — Pattern library page: what each pattern looks for and its source
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
