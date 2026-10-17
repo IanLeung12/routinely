@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
-- status: in-review
+- status: done
 - class: heavy
 - priority: 3
 - kind: feature
