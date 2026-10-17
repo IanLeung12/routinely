@@ -15,3 +15,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A test that plays a live session (live.session_messages or /ws/live) now records it against the demo resident: reset session_log in a fixture or later tests see it in demo_residents(). (ian-claude)
 - Before writing a perseveration/repetition scenario task, check the step's once_only flag in pipeline/src/routine_watch/tasks/*.yaml; stir is once_only:false by design. (orchestrator)
 - T122: replay.py's Scenario loader requires exactly one of frames.jsonl/steps.jsonl, and the recogniser can't always reproduce a hand-written steps.jsonl's exact step list from frames (e.g. remove_teab (ian-claude-light-2)
+- On Windows, stop scripts/dev.sh after smoke and before ci.sh: the dashboard locks rolldown native bindings and npm ci fails with EPERM. (max_API_light)
