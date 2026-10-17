@@ -48,6 +48,10 @@ BAD = "tea_skip_teabag_pour_twice"
 GOOD = "tea_normal"
 FRAMES = "tea_no_kettle"
 
+#: Pouring before the teabag goes in: the session whose error list heals, because the
+#: dependency reported missing mid-session is done later on.
+SEQUENCE = "tea_sequence_error"
+
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
 
@@ -288,6 +292,8 @@ def test_every_message_is_a_contract() -> None:
         StepEvent.model_validate(message["event"])
     for message in of_type(messages, "error"):
         TaskError.model_validate(message["error"])
+    for error in messages[-1]["errors"]:  # `session_end` carries a list of them
+        TaskError.model_validate(error)
     assert {m["type"] for m in messages} <= {
         "session_start", "frame", "step", "step_state", "error", "session_end"
     }
@@ -307,8 +313,11 @@ def test_live_session_says_what_the_replay_says(path: Path) -> None:
     assert [m["event"].step_id for m in of_type(messages, "step")] == list(
         scenario.expected.steps
     )
+    want = Counter((e["type"], e["step"]) for e in result["errors"])
     sent = Counter((m["error"].type, m["error"].step_id) for m in of_type(messages, "error"))
-    assert sent >= Counter((e["type"], e["step"]) for e in result["errors"])
+    ended = Counter((error.type, error.step_id) for error in messages[-1]["errors"])
+    assert sent >= want  # the stream also keeps what healed on the way
+    assert ended == want  # the end is exactly the offline replay's reading
     assert messages[-1]["score"] == result["score"]
     assert messages[-1]["flag"] == result["flag"]
 
@@ -319,6 +328,16 @@ def test_each_error_is_sent_once() -> None:
     ids = [m["error"].error_id for m in of_type(played(scenario_path(BAD)), "error")]
 
     assert len(ids) == len(set(ids))
+
+
+def test_session_end_carries_the_errors_the_session_ended_on() -> None:
+    """A streamed error is provisional; `session_end`'s `errors` is the list to settle
+    on, so the screen ends up showing the errors `expected.yaml` (and so
+    `scripts/e2e.sh`) has for this recording rather than the gap that healed."""
+    messages = live_session(SEQUENCE)
+
+    assert reported(messages) == [("omission", "teabag_in_cup"), ("sequence", "pour")]
+    assert [(e["type"], e["step_id"]) for e in messages[-1]["errors"]] == [("sequence", "pour")]
 
 
 def test_a_step_that_turns_out_not_to_be_missing_goes_back_to_done() -> None:

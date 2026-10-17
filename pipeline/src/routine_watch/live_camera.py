@@ -37,9 +37,10 @@ second reading of a hand on a kettle to keep in step with the rules.
 **What a camera session has not got is history.** A session is only flagged against
 prior sessions of the same resident, and at least three of them (SPEC section 7: a
 single bad session never alerts). A live session is not attached to a resident yet, so
-`session_end` carries the score and `flag: false`; a scenario replay can flag because
-the scenario carries its own history in `expected.yaml`. Attaching the resident, and
-with them their history and their alert, is a follow-up.
+`session_end` carries the finished session's errors and its score with `flag: false`; a
+scenario replay can flag because the scenario carries its own history in
+`expected.yaml`. Attaching the resident, and with them their history and their alert,
+is a follow-up.
 
 Nothing here holds a frame. The records are landmarks, boxes and timestamps (SPEC
 section 8), which is all the recogniser reads, and they are kept for the session because
@@ -149,6 +150,9 @@ async def camera_session_messages(
     score, _, flag = score_session(_as_session(graph, records, events, session_id), final)
     yield {
         "type": "session_end",
+        # The finished session's errors, the same authoritative list `live`'s
+        # `session_end` carries: the streamed ones are every reading on the way.
+        "errors": final,
         "score": score,
         "flag": flag,
         "alert_id": f"alert-{session_id}" if flag else None,
