@@ -40,7 +40,8 @@ while true; do
   fi
   EFFECTIVE_FLAGS=${FLAGS-$(sed -n "s|^- $TOOL/$CLASS: ||p" MODELS.md)}
   if [ "$TOOL" = claude ] && [[ ! "$EFFECTIVE_FLAGS" =~ (^|[[:space:]])--disallowedTools(=|[[:space:]]|$) ]]; then
-    EFFECTIVE_FLAGS="$EFFECTIVE_FLAGS --disallowedTools Monitor ScheduleWakeup"
+    # Prepend: --disallowedTools is variadic, so anything after it (the prompt!) would be eaten as tool names.
+    EFFECTIVE_FLAGS="--disallowedTools Monitor ScheduleWakeup $EFFECTIVE_FLAGS"
   fi
   MODEL="$TOOL $EFFECTIVE_FLAGS"
   ID=$(printf '%s\n' "$TASK" | sed -n '1s/^### \(T[0-9]*\).*/\1/p')
