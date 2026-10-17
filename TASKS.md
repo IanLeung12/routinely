@@ -390,14 +390,14 @@ Acceptance:
 * Existing live tests still pass; `scripts/ci.sh` passes.
 
 ### T220 — Live screen: settle on session_end's final error list
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: T219
 - area: web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/useLiveSession.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:35Z
 - pr: —
 
 What: After T219 the `session_end` WebSocket message carries `errors`, the session's final (healed) error list. The live screen should replace its streamed error list with it, so a step reported missed mid-session but done later no longer shows as missed once the session ends.
