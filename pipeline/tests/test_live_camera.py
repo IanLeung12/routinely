@@ -67,6 +67,13 @@ TEA = load_task("tea")
 #: Fast enough that a recorded session replays inside a test.
 FAST = 1000.0
 
+#: Nobody on the dashboard. A camera session is not attached to a resident ("what a
+#: camera session has not got is history"), and `session_end`'s flag is that resident's
+#: reading (T236), so the replay a camera session is compared against is played for a
+#: resident who has no history to be flagged over either: both ends say nothing flagged,
+#: and what is compared stays the steps, the errors, the map and the score.
+NOBODY = "no-such-resident"
+
 #: Frames at the capture rate for as long as a second person has to stay before the
 #: session counts as assisted (`replay.assisted_of`), and for a moment less than that.
 ASSISTED_FRAMES = int(ASSISTED_MIN_S * DEFAULT_FPS) + 1
@@ -112,7 +119,8 @@ def replayed(scenario_dir: Path) -> list[dict[str, Any]]:
     """Every message of the same recording played back as the pre-recorded fallback."""
 
     async def collect() -> list[dict[str, Any]]:
-        return [message async for message in session_messages(scenario_dir, speed=FAST)]
+        messages = session_messages(scenario_dir, speed=FAST, resident_id=NOBODY)
+        return [message async for message in messages]
 
     return asyncio.run(collect())
 
