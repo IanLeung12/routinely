@@ -137,14 +137,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 3
 - kind: feature
 - deps: T129
 - area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/feedback.py, pipeline/tests/test_pattern_feedback.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T08:32Z
 - pr: —
 
 What: SPEC §5 Nice to have 8. Causes a nurse confirmed for a resident nudge that pattern's weight up for her next alerts (and a false alarm on a top pattern nudges it down), bounded so one answer can't flip the ranking alone.
