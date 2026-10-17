@@ -139,7 +139,7 @@ describe('AlertView', () => {
 
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(screen.getByRole('slider', { name: /replay position/i })).toBeTruthy()
-    expect(screen.getByRole('img', { name: /today and usual skeleton replay/i })).toBeTruthy()
+    expect(screen.getByRole('img', { name: /today's routine drawn over the usual routine/i })).toBeTruthy()
     expect(container.querySelectorAll('video, img')).toHaveLength(0)
   })
 
