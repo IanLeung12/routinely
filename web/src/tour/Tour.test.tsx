@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TOUR_STEPS } from './steps.ts'
@@ -6,6 +7,13 @@ import { Tour } from './Tour.tsx'
 afterEach(cleanup)
 
 describe('Tour', () => {
+  it('limits the phone card width and wraps its navigation buttons', () => {
+    const css = readFileSync('src/tour/tour.css', 'utf8')
+    expect(css).toMatch(/@media\s*\(max-width:\s*480px\)/)
+    expect(css).toMatch(/\.tour\s*\{[^}]*max-width:\s*calc\(100vw - 2rem\)/)
+    expect(css).toMatch(/\.tour__footer,\s*\.tour__nav\s*\{[^}]*flex-wrap:\s*wrap/)
+  })
+
   it('starts on step 1 and never uses diagnostic language', () => {
     render(<Tour />)
     expect(screen.getByText(`1 of ${TOUR_STEPS.length}`)).toBeTruthy()
