@@ -40,4 +40,25 @@ describe('TaskMap', () => {
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
     expect(screen.queryByText('→')).toBeNull()
   })
+
+  it.each([
+    ['pending', 'Wash hands'],
+    ['done', 'Wash hands — done'],
+    ['omission', 'Wash hands — missed'],
+    ['repeat', 'Wash hands — repeated'],
+    ['sequence', 'Wash hands — out of order'],
+  ] as const)('gives the %s state the accessible name "%s"', (state, name) => {
+    render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: state }} />)
+
+    expect(screen.getByRole('listitem', { name })).toBeTruthy()
+  })
+
+  it('shows a visible icon for every non-pending state, and none for pending', () => {
+    render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: 'pending' }} />)
+    expect(screen.getByRole('listitem').querySelector('[aria-hidden="true"]')).toBeNull()
+
+    cleanup()
+    render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: 'omission' }} />)
+    expect(screen.getByRole('listitem').querySelector('[aria-hidden="true"]')?.textContent).toContain('✕')
+  })
 })
