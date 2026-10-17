@@ -36,14 +36,14 @@ What: Fey "stock detail" layout for a resident: header (name, status pill, top p
 Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T406 — Redesign 6/6: live session + handoff
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/live/, web/src/handoff/Handoff.tsx, web/src/handoff/handoff.css, web/src/handoff/Handoff.test.tsx, web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.defaults.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T21:41Z
 - pr: —
 - note: Delta pills split out to T428 (HandoffDelta on Pill); just keep using <HandoffDelta>.
 
