@@ -197,6 +197,9 @@ export function AlertView({
         <Button variant="secondary" onClick={() => { void copySummary(alert) }}>
           Copy summary
         </Button>
+        <Button variant="secondary" className="no-print" onClick={() => window.print()}>
+          Print
+        </Button>
         {copyStatus && <p role="status">{copyStatus}</p>}
 
         {resident !== null && resident.alertId === alertId && resident.records !== null && (
@@ -211,7 +214,7 @@ export function AlertView({
           <ErrorList errors={alert.errors} onOpen={(error) => onOpenEvidence?.(error)} />
         </Card>
 
-        <Card>
+        <Card className="no-print">
           <AlertSectionHeading title="Evidence" />
           {replay === null || replay.alertId !== alertId ? (
             <Loading label="Loading replay…" />
@@ -235,7 +238,7 @@ export function AlertView({
           <SuggestedChecks checks={alert.suggested_checks} />
         </Card>
 
-        <Card>
+        <Card className="no-print">
           <AlertSectionHeading title="Feedback" />
           <FeedbackButtons
             value={alert.feedback?.verdict ?? null}
@@ -252,7 +255,7 @@ export function AlertView({
 
   return (
     <section className="alert-view" aria-labelledby={heading ? HEADING_ID : undefined}>
-      <button type="button" className="back-button" onClick={onBack}>
+      <button type="button" className="back-button no-print" onClick={onBack}>
         ← Back
       </button>
       {heading}

@@ -167,3 +167,33 @@
     min-width: 0;
   }
 }
+
+/* Print (SPEC section 9 follow-up): nurses bring a flagged alert to care
+   conferences on paper, so printing it should show the resident, errors,
+   "consistent with" patterns, rule-outs and suggested checks in black on
+   white - not the dashboard's dark theme, the nav, or anything interactive
+   that has no meaning on paper. `html, body, body *` (not just `.alert-view`)
+   because the dark theme's colours are set on `:root` and inherited by the
+   page canvas in index.css, outside this component. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  body * {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border-color: #000 !important;
+  }
+
+  /* The app shell's title and the demo banner sit outside .alert-view (they're
+     rendered unconditionally in App.tsx), but only need hiding while an alert
+     is actually open for print. */
+  .app:has(.alert-view) > header,
+  .app:has(.alert-view) > .demo-banner {
+    display: none !important;
+  }
+}
