@@ -76,7 +76,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T039 — Capture process: MediaPipe + local detector → JSONL
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -84,7 +84,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/detector.py, pipeline/tests/test_capture.py, pipeline/pyproject.toml (optional extra `capture`), .env.example
 - owner: ian-claude
 - claimed: 2026-10-17T05:21Z
-- pr: —
+- pr: #54
 
 What: SPEC MVP 1–2 and §16: the privacy boundary. Webcam or video file → MediaPipe pose + hands + local object detector → one `CaptureFrame` JSONL record per frame; frames dropped after processing, never written. Roboflow weights run locally (no hosted inference, no training runs); until weights exist, `FakeDetector` returns no boxes.
 Interface: `frame_record(t, pose_landmarks, hand_landmarks, detections, source) -> CaptureFrame` (pure, tested); `class Detector(Protocol): detect(image) -> list[ObjectDetection]`, `FakeDetector`, `LocalDetector(weights_path)` (ONNX/ultralytics, import guarded); `run(source: int | Path, out: Path, fps: int = 15)`; CLI `python -m routine_watch.capture --camera 0 | --video path --out file.jsonl`. Heavy deps (mediapipe, opencv) only in the `capture` extra and imported lazily so CI doesn't need them.
