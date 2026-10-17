@@ -412,7 +412,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T185 — demo.py: one flag rule shared by demo_residents and status_for
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -420,7 +420,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:21Z
-- pr: —
+- pr: #180
+- rating: 5/5 clear
 
 What: `demo_residents()` and `status_for()` each build `timestamped`, call `flag_change` and `_watch`, then `_status` (the second copy calls `_watch(sessions, sessions, ...)` instead of `(history, sessions, ...)`, which only works because live sessions fall after the baseline cutoff). Pull this into one private helper both call, with no behaviour change.
 Interface: one private helper (e.g. `_status_from(history, sessions, scores, baseline: Baseline) -> str`); `status_for` signature unchanged; `api.py` untouched.
