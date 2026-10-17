@@ -335,7 +335,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T281 — Shift handoff: paused rooms say who paused them and since when
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
