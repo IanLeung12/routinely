@@ -625,14 +625,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T381 — scripts/preflight.sh: one command that says "ready to demo"
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: improvement
 - deps: —
 - area: scripts/preflight.sh, docs/DEMO.md, tests/test_preflight.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T19:05Z
 - pr: —
 
 What: Before judging, one command should confirm the demo path works offline (SPEC §10 fallback, §13 risks) instead of someone remembering five scripts.
