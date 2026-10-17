@@ -567,14 +567,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T378 — Landing page (public, judges' first impression)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: feature
 - deps: —
 - area: web/landing.html, web/src/landing/, web/vite.config.ts, docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T19:02Z
 - pr: —
 
 What: A one-page public site for the demo URL (and the GoDaddy domain later): what Routine Watch is, why it matters, how it works, and a button into the live dashboard. Separate from the nurse dashboard so it can't break the demo path.
