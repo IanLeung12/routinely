@@ -2,10 +2,10 @@
 
 Split out of `api.py`: `GET /alerts`, `GET /alerts/{alert_id}` and
 `POST /alerts/{alert_id}/feedback` share these helpers, kept together here.
-The feedback store and the feedback-tuned flagged-residents list stay module
-state on `api.py` (tests reset `api._feedback_store` directly), so every
-lookup here goes back through `. import api` rather than caching either at
-import time, or a test's reset would be invisible to these routes.
+The feedback store and the feedback-tuned flagged-residents list live on
+`api_state.py`, imported here at module load time instead of reached back
+into for on every call, so a reset there (`api_state.reset()`) is visible to
+these routes without either module rebinding the other's state.
 """
 
 from datetime import UTC, datetime
@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException
 from pydantic import field_validator
 
+from . import api_state
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, Feedback
 from .demo import demo_residents
@@ -53,28 +54,25 @@ class AlertFeedbackIn(Feedback):
 def _alerts_by_id() -> dict[str, Alert]:
     """Every raw-flagged resident's alert, keyed by id.
 
-    Looks up by the raw flag rather than `api._flagged_residents()`'s feedback-tuned
-    subset, so an alert a nurse has just tuned away with a "false alarm" (SPEC MVP 7)
-    still resolves here: `GET /alerts/{id}` and a second feedback POST (the "what was
-    it?" cause) must keep working on it even after `/alerts` stops listing it.
+    Looks up by the raw flag rather than `api_state._flagged_residents()`'s
+    feedback-tuned subset, so an alert a nurse has just tuned away with a "false
+    alarm" (SPEC MVP 7) still resolves here: `GET /alerts/{id}` and a second
+    feedback POST (the "what was it?" cause) must keep working on it even after
+    `/alerts` stops listing it.
     """
-    from . import api
-
     residents = [resident for resident in demo_residents() if resident["status"] == "flagged"]
     return {
         alert.alert_id: alert
-        for alert in build_alerts(residents, feedback=api._feedback_store)
+        for alert in build_alerts(residents, feedback=api_state._feedback_store)
     }
 
 
 def _alert_payload(alert: Alert) -> dict:
     """The alert as JSON, with its feedback and feedback-tuned threshold applied."""
-    from . import api
-
     payload = alert.model_dump(mode="json")
-    feedback = api._feedback_store.get(alert.alert_id)
+    feedback = api_state._feedback_store.get(alert.alert_id)
     payload["feedback"] = feedback.model_dump(mode="json") if feedback else None
-    payload["baseline"]["threshold"] = api._feedback_store.threshold(
+    payload["baseline"]["threshold"] = api_state._feedback_store.threshold(
         alert.resident_id, base=alert.baseline.threshold
     )
     return payload
@@ -83,11 +81,11 @@ def _alert_payload(alert: Alert) -> dict:
 @router.get("/alerts")
 def list_alerts() -> list[dict]:
     """Every current alert (SPEC section 5, MVP 5): one per still-flagged resident."""
-    from . import api
-
     return [
         _alert_payload(alert)
-        for alert in build_alerts(api._flagged_residents(), feedback=api._feedback_store)
+        for alert in build_alerts(
+            api_state._flagged_residents(), feedback=api_state._feedback_store
+        )
     ]
 
 
@@ -112,8 +110,6 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     Re-posting the same alert replaces its verdict and its cause rather than
     double-counting them.
     """
-    from . import api
-
     alerts = _alerts_by_id()
     if alert_id not in alerts:
         raise HTTPException(status_code=404, detail="alert not found")
@@ -125,7 +121,7 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
         note=body.note,
         cause=body.cause,
     )
-    api._feedback_store.record(
+    api_state._feedback_store.record(
         alert_id,
         alert.resident_id,
         feedback,

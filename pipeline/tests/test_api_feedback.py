@@ -8,13 +8,12 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch import feedback as feedback_module
 from routine_watch.api import app
 from routine_watch.change_detection import Baseline, flag_change
 from routine_watch.contracts import AlertFeedback, FeedbackVerdict
 from routine_watch.demo import DEMO_NOW, status_for
-from routine_watch.feedback import FeedbackStore
 
 #: The demo resident on a slow drift: her seeded history alone leaves her on watch,
 #: just under the bar, until a nurse's feedback lowers it (T124, `tests/test_handoff.py`).
@@ -29,10 +28,10 @@ MRS_K_ALERT = f"alert-{MRS_K}"
 
 @pytest.fixture(autouse=True)
 def _clean_feedback_store():
-    """Each test gets a clean feedback store: the API module keeps it global."""
-    api_module._feedback_store = FeedbackStore()
+    """Each test gets a clean feedback store: `api_state` keeps it global."""
+    api_state.reset()
     yield
-    api_module._feedback_store = FeedbackStore()
+    api_state.reset()
 
 
 def _confirmed(resident_id: str, n: int) -> None:
@@ -40,7 +39,7 @@ def _confirmed(resident_id: str, n: int) -> None:
     they all count (re-posting one alert id replaces its verdict rather than piling
     up, `routine_watch.feedback`)."""
     for i in range(n):
-        api_module._feedback_store.record(
+        api_state._feedback_store.record(
             f"alert-{resident_id}-{i}",
             resident_id,
             AlertFeedback(verdict=FeedbackVerdict.CONFIRMED, by="nurse", at=DEMO_NOW),
@@ -49,7 +48,7 @@ def _confirmed(resident_id: str, n: int) -> None:
 
 def _false_alarms(resident_id: str, n: int) -> None:
     for i in range(n):
-        api_module._feedback_store.record(
+        api_state._feedback_store.record(
             f"alert-{resident_id}-{i}",
             resident_id,
             AlertFeedback(verdict=FeedbackVerdict.FALSE_ALARM, by="nurse", at=DEMO_NOW),
