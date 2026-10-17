@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T118 — Pattern library page: what each pattern looks for and its source
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: T084
 - area: pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_api_patterns.py (new), web/src/patterns/ (new), web/src/App.tsx (one nav entry)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T10:23Z
 - pr: —
 - source: proposed
 
