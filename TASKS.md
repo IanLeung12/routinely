@@ -389,7 +389,7 @@ Acceptance:
 - `cd web && npx vitest run src/handoff` and `scripts/ci.sh` pass.
 
 ### T429 — Person view: privacy card (pause, what's stored, who sees it)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
