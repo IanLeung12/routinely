@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 082c183
-- next-area: contracts+api
+- last-reviewed: ba73eaa
+- next-area: scripts+ci
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -12,3 +12,5 @@
 - T073 live screen uses MOCK_STEPS; no session_start with task graph
 - T074 assisted = any single 2-pose frame
 - T075 ErrorType label/colour maps x3 in web
+- T105 Claude guard misses spelled-out numbers
+- (noted) cause picker not wired to API/contract yet (T100 is store half); verifier.resolve unused until live capture
