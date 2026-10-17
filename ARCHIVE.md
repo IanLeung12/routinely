@@ -3969,3 +3969,44 @@ Interface: read only the two test files. In both focus tests, replace the bare `
 Acceptance:
 - `cd web && for i in 1 2 3 4 5; do npx vitest run || break; done` passes all 5 full runs
 - `scripts/ci.sh` passes
+
+### T230 — Review: live summary's "usually ~" averages the resident's whole history, drift included
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: T220
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, web/src/live/LiveSession.tsx, web/src/resident/types.ts
+- owner: ian-claude
+- claimed: 2026-10-17T11:02Z
+- pr: #222
+- rating: 5/5 clear - the interface named the exact fields and where to compute them; only thing not mentioned was alerts.py's Baseline(**resident['baseline']) splat, which breaks when the payload grows
+
+What: `useResidentBaseline` in `web/src/live/LiveSession.tsx` averages `duration_s` and error totals over *every* non-assisted session of mrs-k, including the recent bad days that triggered her flag. So the end-of-session "usually ~Xs / ~N errors" is inflated by exactly the change we're flagging, and disagrees with the pipeline's baseline, which is anchored to the earliest `BASELINE_DAYS` (demo.py, SPEC §8 beat 6). It also re-implements baseline logic in the web.
+Interface: in `demo.py`, where the resident baseline is built from the early window, also compute `usual_duration_s` and `usual_errors` (mean over the same early, non-assisted sessions) and serve them inside `baseline` from `GET /residents/{id}`. Add both as optional fields to `Baseline` in `web/src/resident/types.ts`; have `LiveSession.tsx` read them instead of averaging `sessions`, and delete `average`/`sessionErrorTotal`.
+Acceptance:
+- pytest: mrs-k's `baseline.usual_errors` equals the mean over her first `BASELINE_DAYS` own sessions, and is lower than the whole-history mean
+- `LiveSession.test.tsx` shows the "usually" values from the mocked `baseline`, not from `sessions`
+- `scripts/ci.sh` passes
+
+### T232 — Bug: alert feedback buttons (Confirmed / False alarm / cause) render unstyled
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/alert/FeedbackButtons.tsx, web/src/alert/alert.css, web/src/alert/FeedbackButtons.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T11:06Z
+- pr: #218
+- source: tester
+- rating: 5/5 clear
+
+What: On the alert view (main 13032a4), the Feedback section's "Confirmed" / "False alarm" and the "What was it?" cause buttons show as tiny browser-default buttons (white border, small text), unlike every other button on the dashboard. "Confirmed" is the demo's closing click (SPEC §10) and is easy to miss. `.feedback-button` only has an `[aria-pressed='true']` rule in `alert.css`; there is no base style.
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, let the live tea session finish, click "Open alert", scroll to Feedback.
+Expected: buttons use the shared `Button` from `web/src/ui/Button.tsx` (or the `.btn` / `.btn--secondary` classes in `index.css`) at normal size, pressed state still visible. Actual: unstyled default buttons.
+Interface: in `FeedbackButtons.tsx` render the buttons with `ui/Button` (or add `btn btn--secondary` classes); keep `aria-pressed` and the existing pressed-state rule.
+Acceptance:
+- Confirmed / False alarm / cause buttons share the dashboard button look; pressed one stays visibly distinct (not colour alone)
+- existing FeedbackButtons tests pass; `scripts/ci.sh` passes
