@@ -241,7 +241,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T097 — Scenario: two bad sessions 60 h apart do not flag
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -249,7 +249,7 @@ Acceptance:
 - area: tests/scenarios/tea_bad_sessions_far_apart/
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:17Z
-- pr: —
+- pr: #95
 
 What: Guards the 48 h window end to end: today's bad session (teabag skipped) plus one bad session 60 hours ago and quiet older history must **not** flag. Read only `tests/scenarios/README.md` (the `history:` section) and `tests/scenarios/tea_skip_teabag_pour_twice/` (copy its shape; that one flags with a bad session 30 h ago). Do not edit `tests/scenarios/README.md`.
 Interface: `tests/scenarios/tea_bad_sessions_far_apart/{expected.yaml,steps.jsonl}` with a comment saying what it's for; `history:` has at least three quiet sessions plus the 60 h bad one; `flag: false`.
