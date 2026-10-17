@@ -224,7 +224,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T269 — Contracts: JSON Schema for GET/PUT /monitoring payloads
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: improvement
@@ -232,7 +232,8 @@ Acceptance:
 - area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
 - owner: ian-claude
 - claimed: 2026-10-17T13:37Z
-- pr: —
+- pr: #267
+- rating: 4/5 the Interface named one schema file (contracts/monitoring.schema.json) but the three monitoring routes answer three shapes, and the acceptance pointed at web/src/contracts.ts, which is generated and gets no payload types - the hand-mirrored copy is web/src/about/monitoringApi.ts. Area also left out test_api_payload_contracts.py, where every other payload's route test lives.
 
 What: Same pattern as T257/T263: the monitoring state (incl. T262's audit trail) is hand-mirrored in web/src/contracts.ts; generate a schema from pydantic so drift fails CI.
 Interface: `contracts/monitoring.schema.json` generated from contracts.py; a test validates real GET /monitoring and PUT responses (fakes only) against it and checks web/src/contracts.ts field names match.
