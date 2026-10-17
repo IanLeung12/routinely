@@ -44,20 +44,21 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T071 — Tests for useLiveSession and mockLiveStream
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/live/useLiveSession.test.ts, web/src/live/mockLiveStream.test.ts
-- owner: max-codex-light-1
-- claimed: 2026-10-17T06:01Z
+- owner: —
+- claimed: —
 - pr: —
 
 What: The live screen's state hook and mock stream are untested. Read only `web/src/live/useLiveSession.ts`, `web/src/live/mockLiveStream.ts`, `web/src/live/LiveSession.test.tsx` (how it fakes the socket) and `.tasks/LESSONS.md` (pending effects after teardown break CI).
 Interface: new test files only; use `vi.useFakeTimers()` and a fake WebSocket; no real network.
 Acceptance:
 - mockLiveStream: emits messages in order, ends with a session-ended message, and the returned stop function stops further messages.
+- note: released by orchestrator: stale claim (>90 min, no PR)
 - useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
