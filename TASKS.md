@@ -154,14 +154,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_history.py -q` and `scripts/ci.sh` pass.
 
 ### T010 — Error classifier (graph rules)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - deps: T002, T003
 - area: pipeline/src/routine_watch/errors.py, pipeline/tests/test_errors.py
 - owner: ian-claude
 - claimed: 2026-10-17T04:06Z
-- pr: —
+- pr: #13
 
 What: Turn one session's step events plus the task graph into TaskErrors for the graph-based types in SPEC §7: omission, sequence, perseveration, substitution, abandonment, plus self-corrected slips. Hesitation is T014 (needs a baseline); do not implement it here.
 Interface: `classify_errors(events: list[StepEvent], graph: TaskGraph, *, session_id: str, ended: bool = True, abandon_after_s: float = 120.0, self_correct_window_s: float = 15.0) -> list[TaskError]` in `errors.py` (keep `ERROR_TYPES`). Consumes `routine_watch.contracts.StepEvent/TaskError/EvidenceRef` and `routine_watch.tasks.TaskGraph` (`deps`, `allowed_objects`, `is_optional`, `is_once_only`). Events with `unclear=True` are ignored. Each error's `evidence` points at the StepEvent(s) involved. Deterministic `error_id`s.
