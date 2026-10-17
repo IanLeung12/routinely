@@ -21,6 +21,7 @@ import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
 import type { Resident } from './types.ts'
 import './resident.css'
+import './residentPrint.css'
 
 const HEADING_ID = 'resident-detail-heading'
 
@@ -167,36 +168,41 @@ export function ResidentDetail({
             <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
             <span className="resident-room">Room {resident.room}</span>
             <StatusChip status={resident.status} />
+            <Button variant="secondary" className="no-print" onClick={() => window.print()}>
+              Print
+            </Button>
           </div>
           <div className="resident-detail__monitoring">
-            <MonitoringToggle
-              room={resident.room}
-              on={monitoring}
-              onChange={(next) => {
-                setMonitoring(next)
-                setMonitoringMessage(null)
-                setRoomMonitoring(resident.room, next)
-                  .then(() =>
-                    // The change is logged server side, so re-read the trail rather
-                    // than guessing who the API wrote it down as.
-                    fetchMonitoringHistory(resident.room)
-                      .then(setMonitoringChanges)
-                      .catch(() => { /* API unreachable: keep the trail we have. */ }),
-                  )
-                  .catch(() => {
-                    setMonitoring(!next)
-                    setMonitoringMessage("Couldn't change monitoring. Try again.")
-                  })
-              }}
-            />
-            <MonitoringHistory changes={monitoringChanges} />
+            <div className="no-print">
+              <MonitoringToggle
+                room={resident.room}
+                on={monitoring}
+                onChange={(next) => {
+                  setMonitoring(next)
+                  setMonitoringMessage(null)
+                  setRoomMonitoring(resident.room, next)
+                    .then(() =>
+                      // The change is logged server side, so re-read the trail rather
+                      // than guessing who the API wrote it down as.
+                      fetchMonitoringHistory(resident.room)
+                        .then(setMonitoringChanges)
+                        .catch(() => { /* API unreachable: keep the trail we have. */ }),
+                    )
+                    .catch(() => {
+                      setMonitoring(!next)
+                      setMonitoringMessage("Couldn't change monitoring. Try again.")
+                    })
+                }}
+              />
+              <MonitoringHistory changes={monitoringChanges} />
+              {monitoringMessage && (
+                <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
+              )}
+            </div>
             {resident.consent && (
               <p className="resident-detail__consent">
                 Consent: {resident.consent.given_by}, {resident.consent.on}
               </p>
-            )}
-            {monitoringMessage && (
-              <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
             )}
           </div>
         </header>
@@ -257,7 +263,7 @@ export function ResidentDetail({
       className="resident-detail"
       aria-labelledby={loaded?.status === 'ok' && loaded.resident ? HEADING_ID : undefined}
     >
-      <button type="button" className="back-button" onClick={onBack}>
+      <button type="button" className="back-button no-print" onClick={onBack}>
         ← Unit overview
       </button>
       {body}
