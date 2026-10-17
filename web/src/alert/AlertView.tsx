@@ -13,6 +13,7 @@ import { ReplayPlayer } from '../evidence/ReplayPlayer.tsx'
 import { fetchAlert, postFeedback } from './api.ts'
 import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
+import { PatternList } from './PatternList.tsx'
 import { SuggestedChecks } from './SuggestedChecks.tsx'
 import './alert.css'
 
@@ -86,6 +87,11 @@ export function AlertView({
         <p className="alert-view__threshold">
           Current threshold: {alert.baseline.threshold.toFixed(1)}
         </p>
+
+        <Card>
+          <SectionHeader title="Possible patterns" />
+          <PatternList patterns={alert.patterns ?? []} />
+        </Card>
 
         <Card>
           <SectionHeader title="Errors" />
