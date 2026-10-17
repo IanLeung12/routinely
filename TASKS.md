@@ -599,7 +599,7 @@ Acceptance:
 - `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
 
 ### T353 — Improvement: one shared print stylesheet for alert view and resident detail
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -607,7 +607,8 @@ Acceptance:
 - area: web/src/print.css, web/src/main.tsx, web/src/alert/alert.css, web/src/resident/residentPrint.css, web/src/resident/ResidentDetail.tsx, web/src/print.test.ts
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T17:22Z
-- pr: —
+- pr: #338
+- rating: 5/5 clear
 
 What: `web/src/alert/alert.css` (T289) and `web/src/resident/residentPrint.css` (T333) carry the same `@media print` block (`.no-print`, black-on-white `html, body, body *`). Move the shared rules into one `web/src/print.css` imported once from `main.tsx`; keep only screen-specific print rules (e.g. hiding the app header while a resident is open) in each component's CSS, and delete `residentPrint.css` if nothing specific remains.
 Interface: `web/src/print.css` with `.no-print` utility + black-on-white rules; no TSX behaviour change beyond the import.
