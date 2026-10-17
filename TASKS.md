@@ -81,7 +81,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T103 — Room monitoring pause toggle (component only)
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
