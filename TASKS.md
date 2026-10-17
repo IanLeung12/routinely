@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T241 — Test: no user-facing web copy says "diagnose" or "has <condition>"
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
