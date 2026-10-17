@@ -359,15 +359,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T051 — Feedback buttons announce the recorded choice
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
 - source: proposed
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:38Z
 - pr: —
 
 What: Accessibility (Execution/Clarity): after a tap, screen-reader and sighted users get a confirmation that the verdict was saved. Read only the files in `area`.
