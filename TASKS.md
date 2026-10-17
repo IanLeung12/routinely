@@ -147,7 +147,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T248 — Test: live session_end flag matches /residents for every scenario
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -155,7 +155,8 @@ Acceptance:
 - area: pipeline/tests/test_live_flag_consistency.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T13:05Z
-- pr: —
+- pr: #258
+- rating: 4/5 clear, though the 'area' example file in the task wasn't new behavior to add but a new guard test to write across all scenarios (not just the few named ones) - also required a small fix to explain.py for a real bug it surfaced (abandonment errors with step_id=None)
 
 What: Guard T236 across all recordings: after a live replay of each scenario in `tests/scenarios/`, `session_end.flag` must equal that resident's flagged state from `/residents`, and `alert_id` must be `None` or an id that `/alerts/{id}` returns 200 for.
 Interface: read `pipeline/tests/test_live.py` (how it drives `session_messages` / `/ws/live` with the FastAPI `TestClient`) and `pipeline/tests/test_api_demo_reset.py` (calling `/demo/reset` between cases). New file only; parametrize over scenario dirs; reset state between cases.
