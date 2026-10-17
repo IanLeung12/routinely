@@ -342,3 +342,4 @@ T351 | light | claude-sonnet | merged first try | ~?k tok
 T382 | standard | claude-sonnet | merged first try | ~?k tok
 T388 | standard | claude-sonnet | merged first try | ~?k tok
 T377 | light | claude-sonnet | merged first try | ~?k tok
+T374 | light | claude-opus | merged first try | ~?k tok
