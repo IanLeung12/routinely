@@ -132,23 +132,6 @@ Acceptance:
 - BaselineChart: renders without crashing for typical props and for an empty series (no NaN in rendered attributes).
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
-### T080 — Evidence view: skeleton replay and ghost overlay on the alert screen
-- status: done
-- class: standard
-- priority: 1
-- kind: feature
-- deps: T037
-- area: web/src/alert/AlertView.tsx, web/src/alert/alert.css, web/src/alert/AlertView.test.tsx, web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/mock/
-- owner: ian-claude-standard
-- claimed: 2026-10-17T06:41Z
-- pr: #84
-
-What: SPEC §5 MVP 5 and §10 step 5: the alert screen must show the skeleton replay of the flagged moment, with the ghost of the resident's normal routine. `ReplayPlayer` and `GhostReplay` exist in `web/src/evidence/` but no screen uses them. Fetch the replay from the T037 evidence API (offline mock fallback like the other `api.ts` files) and render it in an "Evidence" card on `AlertView`, starting at the first error's `t_start`.
-Interface: `web/src/evidence/api.ts` `fetchReplay(alertId: string): Promise<...>` matching T037's route/response (read `pipeline/src/routine_watch/evidence.py` after T037 merges); mock data in `web/src/mock/`.
-Acceptance:
-- AlertView test: replay card renders with mocked data; loading and error/empty states use `ui/` primitives; no raw video or image elements.
-- `cd web && npm test` and `scripts/ci.sh` pass.
-
 ### T081 — Live session result counts toward the resident's flag (demo step 4)
 - status: claimed
 - class: heavy
