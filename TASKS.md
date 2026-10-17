@@ -444,14 +444,14 @@ Acceptance:
 - Docstrings of `HistorySession`/`Expected` say how to write a duration.
 
 ### T158 — Docs: CODEMAP note for the "what was it?" cause path
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:35Z
 - pr: —
 
 What: T129 (PR #140) carried the optional feedback cause from the alert screen to the API, but CODEMAP has no note on it. Add 2-4 lines to the notes only (the file list is generated).
