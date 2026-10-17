@@ -2,9 +2,9 @@ import { useId, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Row } from '../ui/Row.tsx'
+import '../supporting/supporting.css'
 import { acceptInvite, currentSupervisor, unlink } from './api.ts'
 import type { Person } from './types.ts'
-import './people.css'
 
 /** "People I support" (SPEC section 17): everyone who shared their routine with this
  * supervisor, plus the invite code box that adds another. One person or a whole unit
@@ -51,11 +51,11 @@ export function PeopleISupport({
   }
 
   return (
-    <div className="people">
+    <div className="supporting">
       {people.length === 0 ? (
         <EmptyState message="Nobody has shared their routine with you yet. Ask them for their invite code." />
       ) : (
-        <ul className="people-list">
+        <ul className="supporting-list">
           {people.map((person) => (
             <li key={person.id}>
               <Row
@@ -83,16 +83,16 @@ export function PeopleISupport({
       )}
 
       <form
-        className="people__add"
+        className="supporting__add"
         onSubmit={(event) => {
           event.preventDefault()
           addPerson()
         }}
       >
-        <label className="people__add-label" htmlFor={codeId}>Invite code</label>
+        <label className="supporting__add-label" htmlFor={codeId}>Invite code</label>
         <input
           id={codeId}
-          className="people__add-input"
+          className="supporting__add-input"
           value={code}
           placeholder="ABC123"
           autoComplete="off"
@@ -100,14 +100,14 @@ export function PeopleISupport({
         />
         <Button type="submit" variant="primary" disabled={code.trim() === ''}>Add person</Button>
       </form>
-      <p className="people__hint">
+      <p className="supporting__hint">
         {'Ask the person you support for the code on their "Invite someone" screen.'}
       </p>
       {added !== null && (
-        <p className="people__message" role="status">{`${added} shared their routine with you.`}</p>
+        <p className="supporting__message" role="status">{`${added} shared their routine with you.`}</p>
       )}
       {failed && (
-        <p className="people__message people__message--failed" role="alert">
+        <p className="supporting__message supporting__message--failed" role="alert">
           {"That code doesn't match an invite. Check it and try again."}
         </p>
       )}

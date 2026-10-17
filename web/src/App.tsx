@@ -219,7 +219,11 @@ export default function App() {
         <>
           <section>
             <h2>Unit overview</h2>
-            <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
+            <UnitOverview
+              onSelect={setOpenResident}
+              refreshKey={refreshKey}
+              personIds={supported.map((person) => person.id)}
+            />
           </section>
 
           <section>

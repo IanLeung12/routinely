@@ -1,5 +1,6 @@
 /* Roles and linking (SPEC section 17): the first-open role chooser, the switch in the
-   shell, "people I support" and the person's placeholder home. Mobile first - these
+   shell and the person's own screens. "People I support" (the list and the add-a-person
+   flow) has its own stylesheet at `supporting/supporting.css`. Mobile first - these
    are the screens someone opens on a phone at home, not at a nurses' station. */
 
 .role-chooser {
@@ -79,51 +80,6 @@
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-}
-
-.people-list {
-  margin: var(--space-2) 0;
-  padding: 0;
-  list-style: none;
-}
-
-.people__add {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin: var(--space-4) 0 var(--space-2);
-}
-
-.people__add-label {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.people__add-input {
-  min-height: 2.75rem;
-  flex: 1 1 10rem;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
-  background: var(--surface-raised);
-  color: var(--text);
-  font: inherit;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.people__hint,
-.people__message {
-  margin: 0 0 var(--space-2);
-  color: var(--text-secondary);
-  font-size: var(--text-md);
-}
-
-.people__message--failed {
-  color: var(--status-flagged);
 }
 
 .my-routine {
