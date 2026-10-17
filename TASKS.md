@@ -421,14 +421,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T263 — Contracts: JSON Schema for GET /alerts/{id} and the feedback POST body
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - deps: T257
 - area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T12:59Z
 - pr: —
 
 What: Same pattern as T250/T257: the alert detail response and the feedback request are hand-mirrored in web/src/contracts.ts; generate schemas from pydantic so drift fails CI.
