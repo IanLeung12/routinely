@@ -365,3 +365,4 @@ T408 | heavy | claude-opus | merged first try | ~?k tok
 T412 | heavy | claude-opus | merged first try | ~?k tok
 T423 | light | codex | merged first try | ~5k tok
 T418 | light | codex | merged first try | ~?k tok
+T405 | standard | claude-opus | merged first try | ~240k tok
