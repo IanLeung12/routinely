@@ -86,3 +86,13 @@
   font-size: var(--text-sm);
   font-weight: 600;
 }
+
+/* Phone width (375 px and similar, SPEC section 9): the name and confidence chip
+   stack instead of wrapping tight against each other, so the pattern card reads
+   top to bottom without horizontal scroll. */
+@media (max-width: 480px) {
+  .pattern__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
