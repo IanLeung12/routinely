@@ -334,7 +334,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T412 — Replay store: keep skeleton replays of every session with errors
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
