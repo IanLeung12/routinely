@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 95a0556
+- last-reviewed: 1e51632
 
 ## Tasks
 
@@ -423,4 +423,68 @@ Interface: tokens in `web/src/index.css` (colour incl. status normal/watch/flagg
 Acceptance:
 - Existing screens switched to the tokens/components with no visual regressions beyond consistency; no hard-coded hex in components.
 - Contrast ≥ 4.5:1 for text tokens; Vitest tests for each component.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T043 — Live session screen (WebSocket client + mock stream)
+- status: todo
+- class: standard
+- priority: 1
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx, web/src/App.tsx (add the nav entry only)
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §9 screen 3 and §10 step 3: skeleton view next to the task map; steps turn green, errors flash red (omission) or amber (repeat/sequence). Consumes the T029 WebSocket protocol and falls back to a scripted mock stream, so the screen works before T029 lands and when the API is down.
+Interface: `useLiveSession(scenario: string, speed = 1): {frame, states, errors, ended: {score, flag, alert_id} | null, source: "live" | "mock"}` opening `ws(s)://<apiUrl host>/ws/live?scenario=..&speed=..`; messages exactly as T029 (`frame`, `step`, `step_state`, `error`, `session_end`). On connect error / close before any data → replay `mockLiveStream` (a short tea_skip_teabag_pour_twice-like script: a few frames, step_states incl. teabag_in_cup=omission and pour=repeat, two errors, session_end flag true) on timers. `LiveSession` renders the existing `SkeletonView` + `TaskMap`, an error ticker (type + step + m:ss), a "mock data" badge when source=mock, and on a flagged `session_end` a "Flagged for review" banner (never "diagnose").
+Acceptance:
+- Vitest with a fake WebSocket class: messages update map states and the error list; session_end shows the banner; WS failure falls back to mock with the badge (fake timers).
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T044 — Alert notifier behind an interface (push alert)
+- status: todo
+- class: standard
+- priority: 2
+- deps: —
+- area: pipeline/src/routine_watch/notify.py, pipeline/tests/test_notify.py, .env.example
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC Nice-to-have 3 (push alert to a phone) and §10 step 4. A `Notifier` interface with a fake used by default and a Supabase implementation used only when `LIVE_API=1` and Supabase env vars are set. No route wiring in this task.
+Interface: `class Notifier(Protocol): def send(self, alert: dict) -> None`; `FakeNotifier` (records sent alerts in `.sent`); `SupabaseNotifier(url, key)` inserting `{alert_id, resident_id, summary, created_at}` into table `alerts_feed` via the REST endpoint with plain HTTP (httpx or urllib, no new SDK); `get_notifier() -> Notifier` returns Supabase only when `LIVE_API=1` and `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are set, else Fake. Network errors are logged and swallowed (never break the pipeline). Payload carries ids and summary text only, no frames. Document the table in the module docstring; any new env var goes in `.env.example`.
+Acceptance:
+- Tests: default env → FakeNotifier; LIVE_API=1 without keys → Fake; with keys → Supabase (HTTP mocked; assert URL, headers, body); network failure doesn't raise. No real calls.
+- `cd pipeline && uv run pytest tests/test_notify.py -q` and `scripts/ci.sh` pass.
+
+### T045 — Privacy & limits panel
+- status: todo
+- class: light
+- priority: 2
+- deps: —
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: A small static panel for the demo close (SPEC §10 step 6, §12): what the system stores and doesn't, and its limits. Not wired into App.tsx in this task. Read only the files in `area` and `web/src/live/TaskMap.tsx` (component style).
+Interface: `export function PrivacyPanel()` rendering a `<section aria-labelledby>` with heading "Privacy and limits" and these bullets verbatim: "Only skeleton points and object boxes leave the camera. No video is stored."; "No face recognition. Each camera is linked to a room by configuration."; "It flags a change for a nurse to review. It is not a medical assessment."; "Low-confidence moments are shown as unclear, never counted as errors."; "Pose tracking is less accurate with walkers, wheelchairs and unusual postures."; "Residents or their decision-maker opt in, and monitoring can be turned off per room."
+Acceptance:
+- Vitest: heading and all six bullets render; rendered text never contains "diagnos" (case-insensitive).
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T046 — Confidence / unclear badge component
+- status: todo
+- class: light
+- priority: 2
+- deps: —
+- area: web/src/alert/ConfidenceBadge.tsx, web/src/alert/ConfidenceBadge.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §12 "show uncertainty": a small badge shown next to a step event or alert. Read only the files in `area` and `web/src/alert/SuggestedChecks.tsx` (style).
+Interface: `export function ConfidenceBadge({ confidence, unclear }: { confidence: number; unclear?: boolean })`. `unclear` → text "Unclear" with `title="Low confidence; not counted as an error"`; otherwise confidence ≥ 0.8 → "High confidence", ≥ 0.5 → "Medium confidence", else "Low confidence"; also shows the rounded percentage (e.g. "87%"). Clamp confidence to [0,1]. Set `data-level="high|medium|low|unclear"` for styling; no hard-coded hex (CSS vars only, e.g. `var(--color-unclear)`).
+Acceptance:
+- Vitest: 0.87 → "High confidence" + "87%"; 0.6 → Medium; 0.2 → Low; unclear wins over any confidence; 1.4 clamps to "100%".
 - `cd web && npm run lint && npm test && npm run build` passes.

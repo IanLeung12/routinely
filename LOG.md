@@ -27,3 +27,5 @@ T021 | standard | claude-sonnet | merged first try | ~80k tok
 T023 | light | codex | merged first try | ~4k tok
 T024 | light | codex | merged first try | ~5k tok
 T025 | light | claude-sonnet | merged first try | ~45k tok
+T022 | standard | claude-opus | merged first try | ~150k tok
+T026 | standard | claude-opus | merged first try | ~150k tok
