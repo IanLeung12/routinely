@@ -279,7 +279,7 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T226 — Ghost replay: say the figure is a stand-in for demo recordings
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
@@ -298,7 +298,7 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
 
 ### T227 — Test: stand-in skeleton never changes what the recogniser reads
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
