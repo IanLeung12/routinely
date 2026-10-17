@@ -339,15 +339,15 @@ What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/Mi
 Acceptance: existing Sparkline tests pass (update selectors only); `cd web && npx vitest run src/overview`.
 
 ### T421 — Restyle: BaselineChart + drift card on LineChart
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: improvement
 - source: ian
 - deps: T417
 - area: web/src/resident/BaselineChart.tsx, web/src/resident/BaselineChart.test.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*Drift*.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-4
+- claimed: 2026-10-17T21:37Z
 - pr: —
 
 What: Split from T402. `BaselineChart` → `LineChart` with the personal baseline band, end-of-line tag and `RangeSelector`; the slow-drift card → `LineChart` with a dotted trend series. Same props and data as today.
