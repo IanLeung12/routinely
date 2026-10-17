@@ -20,3 +20,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Vitest stubs CSS imports (even ?raw), so a stylesheet is untestable until vite.config.ts enables test.css for that path; then getComputedStyle works in jsdom. (ian-claude)
 - Adding web mock residents also requires updating UnitOverview.test.tsx fixed names, status counts, and singular Watch queries. (max_API_light)
 - A feature whose numbers come from demo_residents() can go stale mid-task: main's T124 left mrs-k on watch (use the conftest mrs_k_flagged fixture) and moved daily_scores into drift.py - re-derive expe (ian-claude)
+- Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
