@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Run scripts/ci.sh before pushing; ruff --fix (uv run --with ruff ruff check --fix .) clears most lint failures (e.g. UP017 datetime.UTC). (ian)
 - Web tests: never let a test end while a fetch/effect is pending; stub fetch and await screen.findBy... or React updates after jsdom teardown ('window is not defined'). (ian)
 - Use web/src/ui components and index.css tokens; never hard-code hex colours in components (dark theme). (ian)
 - Paid APIs only through their client interface with a fake; tests and CI never set LIVE_API. (ian)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Any T23x 'usable at phone width' task adding to vite.config.ts's test.css.include conflicts with every sibling phone-width PR touching that same line; merge origin/main and re-resolve right before pus (ian-claude-standard)
 - A new contracts/*.schema.json must be generated from contracts.py and needs two edits in test_contracts.py: the schema-file set is CONTRACTS-derived, and the raw-frame guard rejects any property named (ian-claude)
 - A live-screen task whose 'area' names LiveScreen.tsx for paused-state UI may be stale: the paused panel lives in LiveSession.tsx (its own component/test file) since an earlier refactor, not LiveScreen (ian-claude-standard)
+- A bundle-size budget set ~10% over today's gzipped size won't catch re-eagering a single already-small lazy screen (vite merges/dedupes chunks, e.g. folding a separate jsx-runtime preload back in nets (ian-claude-standard-2)
