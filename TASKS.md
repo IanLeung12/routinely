@@ -7,25 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T114 — api.py: one resident lookup helper instead of copy-pasted loops
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:45Z
-- pr: #153
-- rating: 5/5 clear
-
-What: `get_resident`, `resident_drift` and the replay routes each loop over `demo_residents()` and raise the same 404. Extract `_resident_or_404(resident_id) -> dict` and use it everywhere. No behaviour change.
-Interface: private helper in `api.py`; routes and responses unchanged. Read only `api.py` and `pipeline/tests/test_api*.py`.
-Acceptance:
-- No remaining `for resident in demo_residents()` loops in route bodies.
-- New test: every resident-scoped route returns 404 with `{"detail": "resident not found"}` for an unknown id.
-- `scripts/ci.sh` passes.
-
 ### T118 — Pattern library page: what each pattern looks for and its source
 - status: todo
 - class: standard
@@ -42,25 +23,6 @@ What: Rationale: judges (Clarity, responsible design §12) can see every pattern
 Interface: `GET /patterns` → the library as JSON (id, name, signals, time profile, checks, urgency, source); `web/src/patterns/PatternLibrary.tsx` lists them with "consistent with" wording.
 Acceptance:
 - pytest: route returns every library entry with a non-empty source; vitest: renders each pattern, urgent one visually distinct, no "diagnos" text.
-- `scripts/ci.sh` passes.
-
-### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
-- status: done
-- class: heavy
-- priority: 3
-- kind: feature
-- deps: T129
-- area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/feedback.py, pipeline/tests/test_pattern_feedback.py
-- owner: ian-claude
-- claimed: 2026-10-17T08:32Z
-- pr: #151
-- rating: 4/5 clear on the mechanism; the false-alarm half needs the alert's top pattern at record time, which only api.py can pass - the area didn't list it
-
-What: SPEC §5 Nice to have 8. Causes a nurse confirmed for a resident nudge that pattern's weight up for her next alerts (and a false alarm on a top pattern nudges it down), bounded so one answer can't flip the ranking alone.
-Interface: `FeedbackStore.pattern_weights(resident_id) -> dict[str, float]` (default 1.0, clamped e.g. 0.7–1.3); `score_patterns(..., weights=None)` multiplies confidence before the threshold/sort; `build_alerts` passes the resident's weights. Evidence line notes "weighted by N past nurse answers" when weight ≠ 1.
-Acceptance:
-- Tests: no feedback → identical ranking to today; two confirmed `slow_drift` causes raise its confidence for that resident only; weights stay within bounds after many answers.
-- Wording stays "consistent with"; no "diagnose".
 - `scripts/ci.sh` passes.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
@@ -99,41 +61,6 @@ Acceptance:
 - Test: record a live session for mrs-k (flagged), POST /demo/reset, `/residents` shows her back at her seeded status; with the env unset the route is 404.
 - smoke.sh hits the route once; `scripts/ci.sh` passes.
 
-### T145 — Live session "Flagged for review" banner links straight to the alert
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/App.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:17Z
-- pr: #133
-- rating: 5/5 clear
-
-What: Demo beats 4→5 (SPEC §10): when the live session flags, the nurse should get to the evidence in one tap. The banner at `LiveSession.tsx` ~line 105 says "Flagged for review" but has no way to open the alert, even though `ended.alert_id` is there.
-Interface: add optional prop `onOpenAlert?: (alertId: string) => void` to `LiveSessionProps`; when `ended.flag && ended.alert_id && onOpenAlert`, render a `<button>` "Open alert" inside the banner calling it. In `App.tsx` pass `onOpenAlert={setOpenAlert}`. Read only those two files and `useLiveSession.ts` (for the `ended` type).
-Acceptance:
-- LiveSession test: flagged session_end with alert_id shows the button and clicking calls onOpenAlert with the id; clear session shows no button.
-- `cd web && npm test -- --run` passes.
-
-### T146 — Docs: CODEMAP notes for live push alerts and placeholder alert errors
-- status: done
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:26Z
-- pr: #138
-- rating: 5/5 clear
-
-What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes. Also add notes for T062's shift handoff (`handoff.py` `build_handoff`, `GET /handoff`, `web/src/handoff/`) and T103's `web/src/about/MonitoringToggle.tsx` (component only, not wired yet).
-Interface: read `pipeline/src/routine_watch/live.py` (session_messages docstring, `_resident_flagged`), `notify.py` (`get_notifier`), `alerts.py` (`_task_errors`, `_distinct_clauses`) and add 2-4 lines of notes each under the existing pipeline section. Notes only; the file list is generated.
-Acceptance:
-- `python3 scripts/codemap.py --check` (if it exists) and `scripts/ci.sh` pass.
-
 ### T147 — Test: every shippable pattern has a replayable scenario
 - status: todo
 - class: light
@@ -149,25 +76,6 @@ What: Guard SPEC §8 ("at least one replayable scenario per pattern") so a new p
 Interface: read `pipeline/src/routine_watch/patterns_library.py` (the list of patterns) and `tests/scenarios/*/expected.yaml`. Test collects every `top_pattern:` value from scenarios and asserts it covers every library `pattern_id` except `one_sided_change` (SPEC keeps it out of the demo).
 Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
-
-### T148 — monitoring.py: in-memory per-room monitoring on/paused store
-- status: done
-- class: light
-- priority: 3
-- kind: feature
-- deps: —
-- area: pipeline/src/routine_watch/monitoring.py (new), pipeline/tests/test_monitoring.py (new)
-- source: proposed
-- owner: ian-claude-standard
-- claimed: 2026-10-17T08:29Z
-- pr: #143
-- rating: 5/5 clear
-
-What: Backend half of the per-room pause switch (SPEC §12 "monitoring can be turned off per room"; UI component landed in T103). Pure module, no API wiring yet. Read only `pipeline/src/routine_watch/feedback.py` (style of an in-memory store).
-Interface: `class MonitoringStore` with `is_on(room: str) -> bool` (default True for unknown rooms), `set(room: str, on: bool) -> None`, `paused_rooms() -> list[str]` (sorted), `reset() -> None`. Module-level `get_monitoring_store() -> MonitoringStore` returning one shared instance.
-Acceptance:
-- tests cover default-on, pause then resume, sorted `paused_rooms()`, `reset()`.
-- `cd pipeline && python -m pytest tests/test_monitoring.py` passes; `scripts/ci.sh` passes.
 
 ### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
 - status: todo
@@ -186,44 +94,6 @@ Interface: `GET /monitoring` → `{"paused_rooms": [...]}`; `PUT /rooms/{room}/m
 Acceptance:
 - tests: default empty, pause/resume round trip, 404 for unknown room, paused live session gets the `paused` message and no frames (TestClient websocket); store reset between tests.
 - `scripts/ci.sh` passes.
-
-### T150 — Resident detail: show the room monitoring switch
-- status: done
-- class: light
-- priority: 3
-- kind: feature
-- deps: —
-- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
-- source: proposed
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:29Z
-- pr: #142
-- rating: 5/5 clear
-
-What: Put T103's `MonitoringToggle` next to "Room {resident.room}" in the resident detail header so judges see the privacy control in the demo. Local `useState(true)` only for now (API wiring after T149). Read only `web/src/resident/ResidentDetail.tsx`, its test and `web/src/about/MonitoringToggle.tsx`.
-Interface: `<MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />`.
-Acceptance:
-- test: the switch "Monitoring in room <room>" renders On; clicking shows "Paused" and the "No camera data is processed while paused." note.
-- `cd web && npx vitest run src/resident` passes; `scripts/ci.sh` passes.
-
-### T151 — Shift handoff: "Copy summary" button for the shift report
-- status: done
-- class: light
-- priority: 3
-- kind: feature
-- deps: —
-- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- source: proposed
-- owner: max_API_light
-- claimed: 2026-10-17T08:30Z
-- pr: #144
-- rating: 4/5 Room is requested but absent from Handoff data; otherwise clear
-
-What: Nurses paste handoff notes into their shift report; one tap copies the handoff as plain text. Read only `web/src/handoff/Handoff.tsx`, `types.ts`, `mockHandoff.ts`, its test and `web/src/ui/Button.tsx`.
-Interface: `export function handoffText(h: Handoff): string` (summary line, then one line per resident: name, room, flagged sessions, unreviewed alerts, trend) in `Handoff.tsx`; a secondary `Button` "Copy summary" calling `navigator.clipboard.writeText(handoffText(...))`, then showing "Copied" (role=status) for 2 s; if clipboard is unavailable show "Copy not available" instead of throwing.
-Acceptance:
-- tests: `handoffText(mockHandoff)` contains every resident name and the summary and no "diagnos"; clicking calls a mocked `navigator.clipboard.writeText` and shows "Copied"; missing clipboard shows the fallback.
-- `cd web && npx vitest run src/handoff` passes; `scripts/ci.sh` passes.
 
 ### T152 — Shift handoff rows open the resident's alert
 - status: todo
