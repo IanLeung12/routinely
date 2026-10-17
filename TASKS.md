@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 58c824d
+- last-reviewed: 355d6b1
 
 ## Tasks
 
@@ -516,3 +516,40 @@ Acceptance:
 - Alert step copy names "within 48 hours", no "in a row"
 - Tour test asserts the Alert step body contains "48 hours"
 - `cd web && npm test -- Tour` and `scripts/ci.sh` pass
+
+### T205 — Tour: Escape closes it, arrow keys step through
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/tour/Tour.tsx, web/src/tour/Tour.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The presenter drives the `?tour=1` cue card from a keyboard on stage; today only mouse clicks work. Add Escape = Close, ArrowRight = Next, ArrowLeft = Back (respecting first/last bounds).
+Interface: `Tour` in web/src/tour/Tour.tsx adds one `keydown` listener on `window` in a `useEffect` (removed on unmount/close). No other files; do not edit steps.ts (T204 owns it).
+Acceptance:
+- Escape hides the card and calls `onClose`; ArrowRight/ArrowLeft move one step and never go past step 1 or the last step.
+- New tests in Tour.test.tsx using `fireEvent.keyDown(window, { key: ... })`.
+- `cd web && npm test -- --run src/tour` and `scripts/ci.sh` pass.
+
+### T206 — Test: alerts.top_pattern_for edge cases
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_top_pattern_for.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `top_pattern_for` (pipeline/src/routine_watch/alerts.py, added in T183) has only API-level coverage. Add unit tests for it directly.
+Interface: read pipeline/src/routine_watch/alerts.py (`top_pattern_for`, `_patterns`), pipeline/src/routine_watch/demo.py (`demo_residents`), and pipeline/tests/test_api_residents.py for fixture style. New file only.
+Acceptance:
+- With `feedback=None`, for every resident from `demo_residents()` whose `top_pattern` is set, `top_pattern_for(resident)["pattern_id"] == resident["top_pattern"]["pattern_id"]`.
+- Returned dict has exactly the keys `pattern_id`, `name`, `urgency`, and `urgency` is a plain string.
+- A resident whose patterns all fall below threshold (build one by copying a demo resident and clearing its errors/sessions as needed) returns `None`.
+- `cd pipeline && python -m pytest tests/test_top_pattern_for.py -q` and `scripts/ci.sh` pass.
