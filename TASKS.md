@@ -130,14 +130,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T245 — Smoke: check GET /monitoring and a PUT round-trip
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: T192
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:58Z
 - pr: —
 
 What: `scripts/smoke.sh` doesn't exercise the monitoring endpoints added in T149 (#226). Add checks so the tester catches a broken pause switch.
