@@ -356,7 +356,7 @@ Acceptance:
 - Only docs/DEMO.md changes; `scripts/ci.sh` passes.
 
 ### T189 — Demo banner: "Reset demo" button
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -375,7 +375,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
 
 ### T190 — Test: LiveScreen ignores unknown ?task values
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
