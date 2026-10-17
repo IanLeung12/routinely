@@ -5138,3 +5138,54 @@ Acceptance:
 - No hand-written duplicate of these three payload shapes left in web/src; `test_generated_files_are_up_to_date` covers the new TS output.
 - No behaviour change: existing web tests pass with only import changes.
 - `scripts/ci.sh` passes.
+
+### T292 — Review: generate web resident/handoff/monitoring types from contracts.py
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- source: reviewer
+- deps: T291
+- area: pipeline/src/routine_watch/contracts.py, web/src/contracts.ts, web/src/overview/types.ts, web/src/handoff/types.ts, web/src/about/monitoringApi.ts, pipeline/tests/test_contracts.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:14Z
+- pr: #297
+- rating: 5/5 clear, required judgment on Handoff's always-optional fields but task scope was well-defined
+
+What: T269/T280 added JSON Schemas for `ResidentSummary`/`Resident`, `Handoff` and room monitoring, but the web still hand-mirrors them (`web/src/overview/types.ts` ResidentSummary/TopPattern/consent, `web/src/handoff/types.ts` Handoff/HandoffResident/PausedRoom, `web/src/about/monitoringApi.ts` MonitoringChange). T291 only covers drift/patterns/replay. Same fix, after T291 lands: emit these models into the generated `web/src/contracts.ts` and have those files re-export the generated types.
+Acceptance:
+- The listed web files re-export (or are replaced by) generated types; no hand-written copy of these shapes left.
+- `test_generated_files_are_up_to_date` covers them; existing web tests pass with import-only changes.
+- `scripts/ci.sh` passes.
+
+### T293 — Test: api_state.reset() clears feedback without replacing the store
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_state.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:31Z
+- pr: #282
+- rating: 5/5 clear
+
+What: T284 moved the feedback store to `api_state.py`; routers import `_feedback_store` at load time, so `reset()` must clear it in place. Pin that with a direct unit test.
+Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/test_api_feedback.py` (for how feedback is recorded). New file `pipeline/tests/test_api_state.py`: keep a reference `store = api_state._feedback_store`, record one feedback answer, call `api_state.reset()`, assert `api_state._feedback_store is store` and the answer is gone; also assert `_flagged_residents()` returns only residents whose raw `status` is "flagged". Test-only.
+Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
+
+### T294 — Test: shift handoff works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.test.tsx
+- owner: ian-claude
+- claimed: 2026-10-17T15:14Z
+- pr: #285
+- rating: 4/5 clear, but the task didn't say the handoff screen already had a user-event-free copy test to match, and 'fix CI on PR #285' hid that the failure was tsc in npm run build, not vitest
+
+What: Nurses at a shared workstation may use only the keyboard; prove the handoff screen's "Copy summary" and back button need no mouse.
+Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-library/user-event`: Tab to "Copy summary", press Enter, check the status text ("Copied" with a mocked `navigator.clipboard.writeText`); Tab to the back button, press Enter, check `onBack` was called. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
+Acceptance: `cd web && npx vitest run src/handoff/Handoff.test.tsx` passes; `scripts/ci.sh` passes.
