@@ -7,13 +7,22 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
-    // Load the live-session, overview, alert, resident and shared print stylesheets into
-    // jsdom: the task map's wrapping layout is testable with getComputedStyle (T120), and
-    // the overview's, alert's, resident detail's and shared print.css's media queries are
-    // readable via `?raw` (T234, T238, T239, T353 — jsdom doesn't evaluate @media itself,
-    // and Vitest stubs out CSS imports that don't match here even with `?raw`). Other CSS
-    // stays stubbed out, which is both faster and enough: those screens are tested through
-    // the DOM.
-    css: { include: [/src\/live\//, /src\/overview\//, /src\/alert\//, /src\/resident\//, /src\/print\.css/] },
+    // Load the live-session, overview, alert, resident, handoff and shared print
+    // stylesheets into jsdom: the task map's wrapping layout is testable with
+    // getComputedStyle (T120), and the overview's, alert's, resident detail's, shift
+    // handoff's and shared print.css's media queries are readable via `?raw` (T234, T238,
+    // T239, T353, T203 — jsdom doesn't evaluate @media itself, and Vitest stubs out CSS
+    // imports that don't match here even with `?raw`). Other CSS stays stubbed out, which
+    // is both faster and enough: those screens are tested through the DOM.
+    css: {
+      include: [
+        /src\/live\//,
+        /src\/overview\//,
+        /src\/alert\//,
+        /src\/resident\//,
+        /src\/handoff\/handoff\.css/,
+        /src\/print\.css/,
+      ],
+    },
   },
 })

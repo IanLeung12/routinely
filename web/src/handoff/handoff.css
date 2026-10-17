@@ -49,6 +49,15 @@
   font-size: var(--text-sm);
 }
 
+/* Copy and print sit side by side, with the copy's status beside them, and wrap
+   rather than overflow at phone width. */
+.handoff__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .handoff__headline {
   margin: 0;
   font-size: var(--text-lg);
@@ -155,4 +164,44 @@
 .handoff__chip--paused {
   background: var(--error-grey-bg);
   color: var(--error-grey-text);
+}
+
+/* Print (T203, following the alert view's T289 and resident detail's T333): nurses
+   hand off on paper, so a printed handoff is the headline, the summary and the rows -
+   nothing a nurse can only tap. The shared black-on-white rules and `.no-print`
+   itself live in print.css (T353); these are the handoff's own. */
+@media print {
+  /* The app shell's title and the demo banner sit outside .handoff (App.tsx renders
+     them unconditionally), but only need hiding while the handoff is the open
+     screen. */
+  .app:has(.handoff) > header,
+  .app:has(.handoff) > .demo-banner {
+    display: none !important;
+  }
+
+  .handoff {
+    margin: 0;
+  }
+
+  /* One resident, one block: a row broken over a page edge reads as two residents
+     with half a line each, which is exactly the mistake a handoff must not invite. */
+  .handoff__row {
+    break-inside: avoid;
+    page-break-inside: avoid; /* older print engines */
+    border-left-width: 1px;
+  }
+
+  /* print.css flattens every colour, so the accent rail that marks a row worth
+     reviewing would print the same as a quiet row's edge: the rail keeps its weight
+     and the quiet rows take a hairline. The words on the row still say which is
+     which. */
+  .handoff__row--review {
+    border-left-width: var(--space-1);
+  }
+
+  /* Same: the chips lose their tone backgrounds in black on white, so each one keeps
+     an outline rather than running into its neighbour as one long sentence. */
+  .handoff__chip {
+    border: 1px solid;
+  }
 }
