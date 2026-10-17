@@ -262,14 +262,14 @@ Acceptance:
 - `cd web && npx vitest run src/overview` and `scripts/ci.sh` pass.
 
 ### T161 — Live screen: choose the tea or the medication session
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/live/LiveScreen.tsx (new), web/src/live/LiveScreen.test.tsx (new), web/src/App.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T09:00Z
 - pr: —
 
 What: SPEC §5 Nice to have 4 (a second task) exists in the pipeline (`tests/scenarios/meds_*`) but App hard-codes `tea_skip_teabag_pour_twice`, so judges never see it generalise. Add a two-option switch above the live session.
