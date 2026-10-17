@@ -128,24 +128,6 @@ Acceptance:
 - a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
-### T248 — Test: live session_end flag matches /residents for every scenario
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: pipeline/tests/test_live_flag_consistency.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T13:05Z
-- pr: #258
-- rating: 4/5 clear, though the 'area' example file in the task wasn't new behavior to add but a new guard test to write across all scenarios (not just the few named ones) - also required a small fix to explain.py for a real bug it surfaced (abandonment errors with step_id=None)
-
-What: Guard T236 across all recordings: after a live replay of each scenario in `tests/scenarios/`, `session_end.flag` must equal that resident's flagged state from `/residents`, and `alert_id` must be `None` or an id that `/alerts/{id}` returns 200 for.
-Interface: read `pipeline/tests/test_live.py` (how it drives `session_messages` / `/ws/live` with the FastAPI `TestClient`) and `pipeline/tests/test_api_demo_reset.py` (calling `/demo/reset` between cases). New file only; parametrize over scenario dirs; reset state between cases.
-Acceptance:
-- one parametrized test per scenario; fakes only, no real API calls
-- `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
-
 ### T255 — Resident detail: show who consented to monitoring
 - status: claimed
 - class: light
@@ -163,44 +145,6 @@ What: Show T254's consent record under the monitoring switch: "Consent: Substitu
 Interface: Read `web/src/overview/types.ts` (resident type), `web/src/resident/ResidentDetail.tsx` (header with `MonitoringToggle`), and `pipeline/src/routine_watch/demo.py` (T254's `consent: {given_by, on}`). Add optional `consent?: { given_by: string; on: string }` to the resident type; give the three mock residents in `web/src/mock/residents.ts` a consent record.
 Acceptance:
 - Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
-- `scripts/ci.sh` passes.
-
-### T259 — Shift handoff summary sentence mentions paused rooms
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- deps: —
-- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T12:20Z
-- pr: #243
-- rating: 5/5 clear
-
-What: Since #238 the handoff payload lists paused rooms, but the plain-language `summary` still reads "all quiet" for a window where a room wasn't watched. Pass the paused rooms to the explainer as context so the summary says e.g. "Room 204 (Mrs. K) was paused, so no flags are expected from it."
-Interface: `_summary(rows, flagged_sessions, hours)` gains the `paused` list (or derives it from `rows[*].monitoring_paused`) and adds one context line per paused room to the `Explainer.summarise` call; the fake explainer's output must include the paused room. No contract or API change.
-Acceptance:
-- Test: with room 204 paused, `build_handoff(DEMO_NOW)["summary"]` mentions room 204; with nothing paused the summary is unchanged from today (existing tests still pass).
-- Wording follows SPEC §7.5 (no "diagnose"); fakes only, no real API calls.
-- `scripts/ci.sh` passes.
-
-### T260 — Test: first-load JS bundle size budget for the dashboard
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: web/scripts/check-bundle.mjs, web/package.json, web/README.md
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T12:45Z
-- pr: #251
-- note: released by ian-claude-standard: run ended without progress; partial work on branch task/T260-wip-1234: start from it (git switch task/T260-wip-1234 && git merge origin/main)
-- rating: 4/5 clear, but the acceptance check (eager-import Handoff fails the budget) doesn't hold once the existing lazy-split screens are already small relative to a 10% margin on today's size -- documented in the PR
-
-What: #237 lazy-loaded the handoff, pattern library and tour screens to shrink first paint. Lock that in: a small Node script that, after `vite build`, sums the gzipped size of the JS the entry `index.html` loads (not lazy chunks) and fails above a budget set ~10% over today's size.
-Interface: `web/scripts/check-bundle.mjs` (Node built-ins only: `fs`, `zlib`, `path`), `npm run check:bundle` in `web/package.json` that runs it against `web/dist/`. Print the measured size and the budget. Document the budget and how to raise it in `web/README.md`. Don't edit `scripts/ci.sh` (note in the PR if it should be wired in).
-Acceptance:
-- `cd web && npm run build && npm run check:bundle` passes on main and prints sizes; temporarily importing `Handoff` eagerly in `App.tsx` makes it fail (describe this check in the PR, don't commit it).
 - `scripts/ci.sh` passes.
 
 ### T261 — Review: tests can hit paid APIs if LIVE_API=1 is exported in the shell
