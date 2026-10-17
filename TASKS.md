@@ -335,7 +335,7 @@ Acceptance:
 - existing tests pass (update selectors only, keep behaviour); `cd web && npx vitest run src/patterns && npm run lint`.
 
 ### T434 — Redesign follow-up: guided tour card on the Fey system
-- status: blocked
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -345,7 +345,7 @@ Acceptance:
 - claimed: 2026-10-17T22:09Z
 - pr: #413
 - rating: 5/5 clear
-- note: PR #413: tour tests pass; GitHub CI passes Python/web tests, lint/build but first-load JS is 92529 bytes vs 92200 budget (329 over), outside tour area. Local CI also hits documented Windows preview-port failure.
+- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
 
 What: Restyle the guided-tour card: `--surface-raised`, `--hairline-strong`, `--radius-lg`, the one allowed float shadow (DESIGN.md principle 3), `Button` from `web/src/ui/Button.tsx` for next/back/close. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area. Don't touch `steps.ts`.
 Why: the tour is the first thing a judge sees on the dashboard; it should match the redesigned screens under it.
