@@ -375,7 +375,7 @@ Acceptance:
 - PR body notes the viewport widths checked.
 
 ### T236 — Review: live session_end flag/alert_id can disagree with the resident's real status (alert 404)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -384,7 +384,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live.py
 - owner: ian-claude
 - claimed: 2026-10-17T11:24Z
-- pr: —
+- pr: #228
+- rating: 5/5 clear - exact repro, the fix was the interface note verbatim; only unstated bit was that two sibling test files (test_live_matches_replay.py, test_live_camera.py) assert the old per-recording flag and had to be updated too
 
 What: `session_messages` (live.py ~L282-305) sends `flag` from `score_session`, which judges against the *scenario's* `expected.history`, and sets `alert_id = f"alert-{resident_id}"` whenever that flag is true. But `/alerts` only has an alert when the resident (mrs-k) is flagged over her own history (`_resident_flagged`). Reproduced with `session_log.reset()` + one live run for mrs-k: `tea_kettle_twice` → `flag: True, alert_id: alert-mrs-k`, resident status `watch`, `GET /alerts/alert-mrs-k` → 404 ("View alert" dead-ends). `tea_no_kettle` → `flag: False` while she is `flagged` on the dashboard. The two demo picks (tea_skip_teabag_pour_twice, meds_skip_water) happen to agree, so this bites any other scenario or the camera path.
 Interface: after `_record(...)`, compute `resident_name = _resident_flagged(resident_id)` once (reuse it for the push check) and send `flag = resident_name is not None` and `alert_id = f"alert-{resident_id}" if resident_name else None`, so the live screen says what the dashboard says. Keep the per-recording score as-is. Update the module docstring note about `flag` (~L75).
