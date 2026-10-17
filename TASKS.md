@@ -224,14 +224,14 @@ Acceptance:
 - Demo path unchanged by default. `scripts/ci.sh` passes.
 
 ### T162 — Test: live websocket path finds the same errors and flag as scenario replay
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_live_matches_replay.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:05Z
 - pr: —
 
 What: The SPEC §10 fallback plays recorded scenarios through `live.session_messages`, while `scripts/e2e.sh` checks them through `replay.py`. Nothing asserts the two agree, so the demo could show different errors from what CI tested.
