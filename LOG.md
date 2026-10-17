@@ -178,3 +178,8 @@ T199 | standard | claude-sonnet | merged first try | ~65k tok
 T196 | standard | claude-sonnet | merged first try | ~90k tok
 T208 | light | claude-sonnet | merged first try | ? tok
 T155 | heavy | claude-opus | merged first try | ~130k tok
+T190 | light | codex | merged first try | ~3k tok
+T197 | light | claude-sonnet | merged (resumed from WIP) | ~15k tok
+T201 | light | claude-sonnet | merged first try | ~15k tok
+T200 | light | claude-sonnet | merged first try | ~25k tok
+T204 | light | claude-sonnet | merged first try | ~15k tok

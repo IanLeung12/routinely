@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 8c4bcb8
+- last-reviewed: 7f5edef
 
 ## Tasks
 
@@ -515,3 +515,93 @@ Interface: markup-only changes in `AlertView.tsx`; keep existing class names and
 Acceptance:
 - Tests: heading levels via `getAllByRole('heading')`, `h1` has focus after render, existing tests still pass unchanged in meaning.
 - `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T214 — TaskMapLegend: CSS classes instead of inline styles
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/TaskMapLegend.tsx, web/src/live/taskMap.css, web/src/live/TaskMapLegend.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `TaskMapLegend.tsx` has three inline `style={{...}}` objects (list, item, swatch padding). Move them to classes in the existing `web/src/live/taskMap.css`, same pattern as T197/T200 (#193, #195). No visual change.
+Interface: read only the area files plus `web/src/index.css` for the `--space-*` tokens. Class names `task-map-legend`, `task-map-legend__item`, `task-map-legend__swatch`.
+Acceptance:
+- `grep -c "style={{" web/src/live/TaskMapLegend.tsx` is 0
+- existing TaskMapLegend tests still pass unchanged
+- `cd web && npm test -- TaskMapLegend` and `scripts/ci.sh` pass
+
+### T215 — DriftCard: CSS classes instead of inline styles
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/DriftCard.tsx, web/src/resident/driftCard.css, web/src/resident/DriftCard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `DriftCard.tsx` sets text colour inline, including a `state === 'trending'` ternary. Move it to a new `web/src/resident/driftCard.css` keyed off the existing `data-state` attribute (`.drift-card[data-state="trending"] .drift-card__summary { color: var(--error-amber-text) }`). No visual change.
+Interface: read only the area files and `web/src/resident/heatCalendar.css` as the example.
+Acceptance:
+- `grep -c "style={{" web/src/resident/DriftCard.tsx` is 0
+- test asserts the trending summary has the `drift-card__summary` class and the card keeps `data-state="trending"`
+- `cd web && npm test -- DriftCard` and `scripts/ci.sh` pass
+
+### T216 — HeatCalendar grid and cells: CSS classes instead of inline styles
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: after T197 moved the legend to `heatCalendar.css`, the grid (line ~24) and day cells (~30, ~52) still use inline styles. Move static layout to classes (`heat-grid`, `heat-cell`). A per-cell colour that depends on the score may stay inline only as a single CSS custom property (e.g. `style={{ '--heat': ... }}`). No visual change.
+Interface: read only the area files.
+Acceptance:
+- HeatCalendar.tsx has at most one inline style, and it only sets a CSS custom property
+- existing HeatCalendar tests pass; one new test asserts cells have the `heat-cell` class
+- `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass
+
+### T217 — Resident detail: heading order, landmark, focus on open
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: same accessibility pass as T213 does for the alert view, on the resident detail screen: one `h1` (the resident's display name), section headings as `h2` in visual order, the screen wrapped in `<main>` or a labelled region, and focus moved to the `h1` when the screen opens so a screen-reader user hears whose page it is.
+Interface: ResidentDetail only; don't touch child components (BaselineChart, HeatCalendar, DriftCard, SessionList, ContextTimeline) beyond what ResidentDetail renders around them.
+Acceptance:
+- test: exactly one `heading` of level 1 with the resident's name; it has focus after render
+- test: no heading level is skipped (h1 → h2)
+- `cd web && npm test -- ResidentDetail` and `scripts/ci.sh` pass
+
+### T218 — Test: DemoBanner disables Reset while resetting and clears the error on retry
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: the Reset demo button (T189, T200) is the presenter's recovery path, so pin its behaviour: the button is disabled while the reset promise is pending, and a "Couldn't reset the demo" error from a failed attempt disappears after a later successful reset. If the second case fails today, fix it in DemoBanner.tsx.
+Interface: `DemoBanner({ onReset })` with an injected fake `onReset`; read only the area files.
+Acceptance:
+- test: pending reset → button disabled; resolved → enabled
+- test: reject then resolve → `role="alert"` error gone
+- `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass
