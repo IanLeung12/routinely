@@ -296,9 +296,16 @@ def drain(
 
 
 def test_frames_in_thread_hands_over_every_record_in_order() -> None:
+    """Every record of the stream, oldest first, with none lost crossing the thread.
+
+    `max_pending` is raised past the length of the clip so this is about the handover
+    and not about the dropping: on the default the capture thread outruns the event
+    loop on a loaded machine and the newest records are thrown away on purpose, which
+    is `test_frames_in_thread_drops_records_rather_than_queueing_them_up`'s business.
+    """
     camera = FakeCamera()
 
-    assert drain(camera) == camera.frames
+    assert drain(camera, max_pending=len(camera.frames) + 1) == camera.frames
 
 
 def test_frames_in_thread_raises_what_the_capture_process_raised() -> None:

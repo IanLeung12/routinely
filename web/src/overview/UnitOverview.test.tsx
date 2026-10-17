@@ -444,6 +444,35 @@ describe('overview.css phone layout', () => {
   })
 })
 
+describe('UnitOverview with personIds', () => {
+  it('scopes the list to a supervisor\'s own supported people (SPEC section 17)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview personIds={['mrs-k', 'mr-nguyen']} />)
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mrs. K', 'Mr. Nguyen'])
+    })
+    expect(screen.getByRole('button', { name: 'All (2)' })).toBeTruthy()
+  })
+
+  it('shows every fetched resident when personIds is omitted, unchanged for the care-home case', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+  })
+})
+
 describe('resident score pill', () => {
   it('shows the latest score as a tinted pill at the end of each row', async () => {
     vi.stubGlobal(

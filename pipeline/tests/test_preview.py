@@ -16,6 +16,7 @@ import asyncio
 import gc
 import json
 import re
+import socket
 import subprocess
 import sys
 import types
@@ -197,6 +198,27 @@ def test_host_name_drops_the_port_and_keeps_the_address():
     assert host_name("localhost") == "localhost"
 
 
+@pytest.mark.parametrize("path", [STREAM_PATH, HEALTH_PATH])
+@pytest.mark.parametrize("origin", ["https://evil.example", "null", "", "http://[bad"])
+def test_non_loopback_or_invalid_origins_are_refused(path, origin):
+    reply = response_for(path, "127.0.0.1", "127.0.0.1:8765", origin)
+
+    assert reply.status == 403
+    assert not reply.stream
+    assert "Access-Control-Allow-Origin" not in dict(reply.headers)
+
+
+@pytest.mark.parametrize("path", [STREAM_PATH, HEALTH_PATH])
+@pytest.mark.parametrize(
+    "origin", ["http://localhost:5173", "http://127.0.0.1:5173", "http://[::1]:5173"]
+)
+def test_loopback_origins_are_echoed(path, origin):
+    reply = response_for(path, "127.0.0.1", "127.0.0.1:8765", origin)
+
+    assert reply.status == 200
+    assert dict(reply.headers) == {"Access-Control-Allow-Origin": origin, "Vary": "Origin"}
+
+
 # ------------------------------------------------------------- the current frame
 
 
@@ -329,7 +351,7 @@ def test_the_server_is_on_loopback_and_answers_health(server):
 
     with get(f"http://127.0.0.1:{server.port}{HEALTH_PATH}") as answer:
         assert answer.status == 200
-        assert answer.headers["Access-Control-Allow-Origin"] == "*"
+        assert answer.headers["Access-Control-Allow-Origin"] is None
         assert json.loads(answer.read()) == {"ok": True}
 
 
@@ -340,7 +362,7 @@ def test_the_server_streams_the_current_frame_as_multipart_jpeg(server):
     with get(server.url) as answer:
         assert answer.status == 200
         assert answer.headers["Content-Type"] == f"multipart/x-mixed-replace; boundary={BOUNDARY}"
-        assert answer.headers["Access-Control-Allow-Origin"] == "*"
+        assert answer.headers["Access-Control-Allow-Origin"] is None
         assert answer.headers["Cache-Control"] == "no-store"
         assert answer.read(len(expected)) == expected
 
@@ -350,6 +372,30 @@ def test_the_server_404s_anything_that_is_not_the_preview(server):
         get(f"http://127.0.0.1:{server.port}/secrets")
 
     assert refused.value.code == 404
+
+
+@pytest.mark.parametrize("path", [STREAM_PATH, HEALTH_PATH])
+def test_the_server_refuses_a_cross_site_origin(server, path):
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{server.port}{path}", headers={"Origin": "https://evil.example"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as refused:
+        urllib.request.urlopen(request, timeout=5)
+
+    assert refused.value.code == 403
+    assert refused.value.headers["Access-Control-Allow-Origin"] is None
+
+
+@pytest.mark.parametrize("path", [STREAM_PATH, HEALTH_PATH])
+def test_the_server_echoes_the_local_dashboard_origin(server, path):
+    origin = "http://localhost:5173"
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{server.port}{path}", headers={"Origin": origin}
+    )
+    with urllib.request.urlopen(request, timeout=5) as answer:
+        assert answer.status == 200
+        assert answer.headers["Access-Control-Allow-Origin"] == origin
+        assert answer.headers["Vary"] == "Origin"
 
 
 def test_the_stream_ends_when_the_camera_does(server):
@@ -420,10 +466,15 @@ def test_the_port_comes_from_the_environment_or_the_default(monkeypatch):
 
 def test_a_port_already_taken_leaves_the_capture_without_a_preview(monkeypatch):
     """Never a reason for a session not to run: the capture is the product."""
-    taken = PreviewServer(Preview(fake_jpeg, max_fps=0), port=0)
+    taken = socket.socket()
     try:
+        if sys.platform == "win32":
+            # Windows otherwise lets a server using SO_REUSEADDR share this port.
+            taken.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        taken.bind(("127.0.0.1", 0))
+        taken.listen()
         monkeypatch.setenv(PREVIEW_ENV, "1")
-        monkeypatch.setenv(PORT_ENV, str(taken.port))
+        monkeypatch.setenv(PORT_ENV, str(taken.getsockname()[1]))
 
         assert start_preview(encode=fake_jpeg) is None
     finally:
