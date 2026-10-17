@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T403 — Redesign 3/6: unit overview + app shell
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
@@ -124,7 +124,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T427 — Replays data layer: API client + mock fixture for the replays library
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: feature
