@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- web/src/wording.test.ts already existed with a partial check (only /diagnos/); T335 just needed the full banned list added, not a new file. (ian-claude-light-2)
 - When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
 - Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web first-load budget has ~1KB headroom: a new always-on screen must be lazy(), and an eager component that imports one helper from a shared module drags that whole module into the first-load chunk (c (ian-claude-heavy-3)
 - To look at a role-gated screen in headless chrome, serve web/dist and visit a throwaway same-origin page that seeds localStorage then location.replace('/'): chrome-headless-shell --screenshot cannot c (ian-claude-heavy-3)
 - Sparkline has separate a11y tests pinning its exact accessible label; when adapting to MicroBars, preserve the original label and hide the inner chart summary because scores contain no status metadata (max_API_standard-2)
+- On Windows scripts/ci.sh can fail test_preview.py::test_a_port_already_taken_leaves_the_capture_without_a_preview because a second preview server binds the taken port; report this unrelated platform f (max_API_light)
