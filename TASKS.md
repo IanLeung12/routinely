@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: a3d6e9a
+- last-reviewed: 99dcc12
 
 ## Tasks
 
@@ -437,3 +437,73 @@ Acceptance:
 - When the mock session ends with a flag, the link/button to the alert is reachable by Tab and activates with Enter.
 - Every focused control has an accessible name (`getByRole(..., { name })`).
 - No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
+
+### T307 — Test: replay player works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/evidence/ReplayPlayer.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Prove the evidence replay player (play/pause, scrub, ghost toggle) is usable with Tab/Enter/Space/arrow keys only.
+Interface: new test file only; read web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx and web/src/alert/AlertView.keyboard.test.tsx (copy its style).
+Acceptance:
+- Test tabs to each control, operates it by keyboard, asserts the visible state changes; no mouse events used.
+- If a control is unreachable, mark that case `it.todo` and say so in the PR (don't change ReplayPlayer.tsx).
+- `scripts/ci.sh` passes.
+
+### T308 — Test: privacy panel and monitoring toggle work keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/about/PrivacyPanel.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Prove the privacy panel opens/closes and the room monitoring pause/resume toggle works with keyboard only (Tab, Enter/Space, Escape).
+Interface: new test file only; read web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, their .test.tsx files, and web/src/alert/AlertView.keyboard.test.tsx for style. Mock the API as the existing tests do.
+Acceptance:
+- Keyboard-only: open panel, reach the toggle, pause then resume a room, focus is not lost after each action.
+- No production code changes. `scripts/ci.sh` passes.
+
+### T309 — Monitoring history card: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/MonitoringHistory.tsx, web/src/resident/monitoringHistory.css, web/src/resident/MonitoringHistory.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The resident page's monitoring audit trail (who paused/resumed, when) should read cleanly at 375 px, matching how T239 made resident detail work on phones.
+Interface: CSS media query in monitoringHistory.css; markup changes only if needed for wrapping.
+Acceptance:
+- At 375 px: no horizontal scroll, rows wrap to two lines (who/action, then time), text >= 14 px.
+- Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
+
+### T310 — Test: pattern library urgency + level filters combine correctly
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.filters.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T300 added an urgency filter next to the existing level filter; test that both together narrow the list, that clearing one keeps the other, and that "no match" shows the empty state.
+Interface: new test file only; read web/src/patterns/PatternLibrary.tsx and PatternLibrary.test.tsx.
+Acceptance:
+- Covers: urgency only, level only, both, both with zero matches (empty state text), reset.
+- Filters reachable and operable by keyboard in at least one case.
+- `scripts/ci.sh` passes.
