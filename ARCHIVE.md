@@ -6100,3 +6100,40 @@ Interface: `live.py` only; `from .quality import session_quality`. No contract c
 Acceptance:
 - new test: a live session whose events are mostly `unclear` (build in-test, reuse the fake WebSocket helper from `pipeline/tests/` used by `test_api_live_ws.py`) leaves `session_log` for that resident unchanged and the resident's flag state unchanged; a clean session is still recorded
 - `cd pipeline && uv run pytest tests/test_live_unclear.py tests/test_live*.py` and `scripts/ci.sh` pass
+
+### T344 — Scenario: tea_session_unclear_no_flag (whole session too unclear to score)
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_session_unclear_no_flag/
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T17:05Z
+- pr: #330
+- rating: 5/5 clear
+
+What: #322 added an optional `quality:` assertion to `expected.yaml`, but no scenario uses it. Add one where most tea steps come through low-confidence/unclear (bad lighting), with history that would otherwise flag, so replay must report `quality: unclear`, `score: 0.0`, `flag: false`.
+Interface: copy `tests/scenarios/tea_unclear_not_error/` as the template (read its README comment and `tests/scenarios/README.md`); see `Expected` and `score_session` in `pipeline/src/routine_watch/replay.py` and `pipeline/src/routine_watch/quality.py` for the rule (>40% unclear or <3 events).
+Acceptance:
+- `expected.yaml` sets `quality: unclear`, `flag: false`, `score: 0.0`, and a header comment says why
+- `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
+
+### T345 — Resident detail: session list usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/SessionList.tsx, web/src/resident/sessionList.css, web/src/resident/SessionList.mobile.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:36Z
+- pr: #341
+- rating: 5/5 clear
+
+What: Make the resident's session list readable on a phone, the same way the drift card was done. Read `web/src/resident/SessionList.tsx`, `web/src/resident/DriftCard.mobile.test.tsx` (test template) and `web/src/resident/driftCard.css` (the `@media (max-width: 480px)` pattern). Put new styles in a new `sessionList.css` imported by `SessionList.tsx`; don't edit `resident.css`.
+Interface: CSS + class names only; no behaviour change.
+Acceptance:
+- at ≤480 px rows stack (date/time above score/errors), no horizontal scroll, text wraps
+- new `SessionList.mobile.test.tsx` checks the stylesheet has the 480 px media rule and the list still renders every session
+- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
