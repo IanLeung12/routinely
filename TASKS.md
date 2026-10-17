@@ -129,7 +129,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T273 — CI: run the first-load bundle budget check after the web build
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
