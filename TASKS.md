@@ -348,7 +348,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T304 — Test: demo reset clears feedback history
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -356,7 +356,8 @@ Acceptance:
 - area: pipeline/tests/test_feedback_reset.py
 - owner: ian-claude
 - claimed: 2026-10-17T15:24Z
-- pr: —
+- pr: #298
+- rating: 4/5 the acceptance it spells out was already covered by test_feedback_history.py::test_demo_reset_empties_what_nurses_said; the new file's value is the second-demo-run angle (weights/threshold counted from scratch, fresh alert unanswered), which the task only hints at in its 'What'
 
 What: `GET /residents/{id}/feedback` (T283) must be empty again after `/demo/reset`, or a second demo run shows the first run's answers.
 Interface: read `pipeline/src/routine_watch/api_state.py` (`reset`), `pipeline/src/routine_watch/feedback.py` (`history`, `reset`), and `pipeline/tests/test_feedback_history.py` for the client fixture. New file only.
