@@ -398,7 +398,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T415 — Deploy: Docker images + compose for API and dashboard (Vultr-ready)
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
@@ -558,7 +558,7 @@ Acceptance:
 - `cd web && npx vitest run src/person/personNotes.test.ts` and `scripts/ci.sh` pass.
 
 ### T424 — Live screen: local camera preview component (toggle, video under skeleton, badge)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
