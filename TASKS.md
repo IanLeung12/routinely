@@ -480,7 +480,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T184 — Test: status_for with the raw threshold gives each resident's own status
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -488,7 +488,8 @@ Acceptance:
 - area: pipeline/tests/test_status_for.py (new)
 - owner: max_API_light
 - claimed: 2026-10-17T09:13Z
-- pr: —
+- pr: #172
+- rating: 5/5 clear
 
 What: T167 (PR #163) added `demo.status_for(resident, threshold)`, which repeats the flag rule from `demo_residents()`. Pin that the two agree, so `/residents` can't drift from the demo's own status when no feedback has been given.
 Interface: Read only `pipeline/src/routine_watch/demo.py` (`status_for`, `demo_residents`), `pipeline/tests/conftest.py` (autouse `session_log.reset`) and `pipeline/tests/test_live_flag.py` (how a live session is recorded). New file only.
