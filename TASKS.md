@@ -394,7 +394,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T437 — Routine builder backend: draft a routine from words or a setup video (Gemini)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
