@@ -649,15 +649,15 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T336 — Review: unclear sessions are scored and can flag (quality.py never wired)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/tests/test_replay.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:35Z
 - pr: —
 
 What: `quality.session_quality` (SPEC §7/§12: low-confidence sessions are "unclear", never errors) is imported nowhere in `pipeline/src`. `replay.score_session` scores and flags every session regardless, so a session with mostly unclear/low-confidence events (bad lighting, walker) can push a resident to a flag. Fix: in `replay.score_session`, compute `session_quality(events)`; when `"unclear"`, return score 0.0 and flag False (same treatment as assisted). Add `"quality": "ok"|"unclear"` to the dict `replay_scenario` returns. `live.py` (~line 290) and `live_camera.py` (~line 150) call `score_session`, so they inherit the fix; pass events through if the signature changes, nothing else there.
