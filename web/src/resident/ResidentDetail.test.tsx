@@ -8,6 +8,7 @@ import { fetchDrift, fetchResident } from './api.ts'
 import { dailyScores } from './days.ts'
 import { formatDuration, formatErrors } from './format.ts'
 import type { Resident } from './types.ts'
+import residentCss from './resident.css?raw'
 
 vi.mock('./api.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api.ts')>()
@@ -351,5 +352,28 @@ describe('resident helpers', () => {
     expect(formatDuration(60)).toBe('1m 00s')
     expect(formatErrors({ omission: 1, hesitation: 2 })).toBe('skipped step ×1 · long pause ×2')
     expect(formatErrors({})).toBe('')
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (verified against a real headless Chromium at 320/375/480/768px
+ * for T239: a care-record note that previously forced the list to scroll sideways now
+ * wraps onto its own line, panels stack to one column, and the header's room/toggle/status
+ * drop below a long resident name instead of squeezing it, with no page-level horizontal
+ * scroll at any of those widths). */
+describe('resident.css phone layout', () => {
+  it('stacks panels to one column and wraps the header below 480px', () => {
+    const mobileBlock = residentCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+    expect(mobileBlock).toBeTruthy()
+
+    expect(mobileBlock).toMatch(/\.resident-detail \.resident-panels\s*\{[^}]*grid-template-columns:\s*1fr/)
+    expect(mobileBlock).toMatch(/\.resident-detail \.resident-detail__header\s*\{[^}]*flex-wrap:\s*wrap/)
+  })
+
+  it('wraps session rows and care records instead of scrolling them sideways', () => {
+    const mobileBlock = residentCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+
+    expect(mobileBlock).toMatch(/\.resident-detail \.session-row,\s*\n\s*\.resident-detail \.context-record\s*\{[^}]*flex-wrap:\s*wrap/)
+    expect(mobileBlock).toMatch(/\.resident-detail \.session-detail,\s*\n\s*\.resident-detail \.context-note\s*\{[^}]*flex-basis:\s*100%/)
   })
 })

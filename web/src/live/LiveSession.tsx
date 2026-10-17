@@ -114,7 +114,7 @@ export type LiveSessionProps = {
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, stepSpan, ended, source } = useLiveSession(scenario, speed)
+  const { steps, frame, states, errors, stepSpan, ended, paused, source } = useLiveSession(scenario, speed)
   const announcement = useAnnouncement(steps, states, errors, source)
   const baseline = useResidentBaseline(DEMO_RESIDENT_ID)
   const handledEnded = useRef<LiveSessionEnded | null>(null)
@@ -137,54 +137,71 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
         action={source === 'mock' ? <span className="live-session__mock-badge">Mock data</span> : null}
       />
 
-      {ended && (
+      {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
+          `paused` message and closes without playing anything, so say so instead of
+          showing an empty skeleton view and task map. Picking a routine above reopens
+          the socket, which is how the screen recovers once monitoring is back on. */}
+      {paused ? (
+        <Card>
+          <div role="status">
+            <EmptyState message={`Monitoring is paused for room ${paused.room}`} />
+            <p className="live-session__paused-hint">
+              Turn it back on from the resident's page to watch their routines again.
+            </p>
+          </div>
+        </Card>
+      ) : (
         <>
-          <SessionSummary
-            durationS={stepSpan ? stepSpan.end - stepSpan.start : 0}
-            errorCount={errors.length}
-            usualDurationS={baseline?.usual_duration_s}
-            usualErrors={baseline?.usual_errors}
-          />
-          <p
-            role="status"
-            className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
-          >
-            {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
-            {ended.flag && ended.alert_id && onOpenAlert && (
-              <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
-                Open alert
-              </button>
+          {ended && (
+            <>
+              <SessionSummary
+                durationS={stepSpan ? stepSpan.end - stepSpan.start : 0}
+                errorCount={errors.length}
+                usualDurationS={baseline?.usual_duration_s}
+                usualErrors={baseline?.usual_errors}
+              />
+              <p
+                role="status"
+                className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
+              >
+                {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+                {ended.flag && ended.alert_id && onOpenAlert && (
+                  <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
+                    Open alert
+                  </button>
+                )}
+              </p>
+            </>
+          )}
+
+          <div className="live-session__layout">
+            <Card>
+              <SectionHeader title="Skeleton view" />
+              <SkeletonView frame={frame} />
+            </Card>
+            <Card>
+              <SectionHeader title="Task map" />
+              <TaskMap steps={steps} states={states} />
+              <TaskMapLegend />
+            </Card>
+          </div>
+
+          <Card>
+            <SectionHeader title="Errors" />
+            {errors.length === 0 ? (
+              <EmptyState message="No errors yet." />
+            ) : (
+              <ul className="live-session__error-list">
+                {errors.map((error) => (
+                  <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
+                    {errorText(steps, error)}
+                  </li>
+                ))}
+              </ul>
             )}
-          </p>
+          </Card>
         </>
       )}
-
-      <div className="live-session__layout">
-        <Card>
-          <SectionHeader title="Skeleton view" />
-          <SkeletonView frame={frame} />
-        </Card>
-        <Card>
-          <SectionHeader title="Task map" />
-          <TaskMap steps={steps} states={states} />
-          <TaskMapLegend />
-        </Card>
-      </div>
-
-      <Card>
-        <SectionHeader title="Errors" />
-        {errors.length === 0 ? (
-          <EmptyState message="No errors yet." />
-        ) : (
-          <ul className="live-session__error-list">
-            {errors.map((error) => (
-              <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
-                {errorText(steps, error)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </section>
   )
 }
