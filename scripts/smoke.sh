@@ -9,7 +9,9 @@
 # Plays mrs-k's tea_skip_teabag_pour_twice live session first (the same way the
 # demo does) so a fresh stack has a flagged resident, then checks GET /health,
 # GET /residents, GET /residents/mrs-k, GET /alerts, GET /alerts/<first id> and
-# that the dashboard (DASHBOARD_PORT, default 5173) returns HTML. Prints
+# that the dashboard (DASHBOARD_PORT, default 5173) returns HTML. Also validates
+# the residents/resident/handoff/alert-detail bodies against their schemas in
+# `contracts/` (SKIP, not FAIL, if jsonschema isn't importable). Prints
 # PASS/FAIL per check and exits non-zero if any failed.
 # Never sets LIVE_API, never POSTs feedback. POSTs /demo/reset once, last, since
 # that one is meant to mutate state (it only answers when OFFLINE_MODE or
@@ -54,6 +56,37 @@ assert $expr
   fi
 }
 
+# Validates $body against the JSON Schema at $schema_file (one of
+# contracts/*.schema.json) using jsonschema from the pipeline venv. Validates
+# every element if $body is a JSON list (e.g. GET /residents' rows), the whole
+# body otherwise. Prints SKIP instead of FAIL if jsonschema isn't importable,
+# since the running stack catching contract drift is the point, not pinning
+# down which Python has the dev dependency.
+check_schema() {
+  local label="$1" body="$2" schema_file="$3"
+  local out status
+  out=$("$PIPELINE_PYTHON" -c "
+import json, sys
+try:
+    from jsonschema import Draft202012Validator
+except ImportError:
+    sys.exit(2)
+schema = json.load(open(sys.argv[2]))
+data = json.loads(sys.argv[1])
+validator = Draft202012Validator(schema)
+for item in (data if isinstance(data, list) else [data]):
+    validator.validate(item)
+" "$body" "$schema_file" 2>&1)
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    pass "$label"
+  elif [ "$status" -eq 2 ]; then
+    echo "SKIP: $label (jsonschema not importable)"
+  else
+    fail "$label: $out"
+  fi
+}
+
 if body=$(get "$API_URL/health"); then
   pass "GET /health -> $body"
 else
@@ -64,6 +97,7 @@ demo_room=""
 if residents=$(get "$API_URL/residents"); then
   check_json "GET /residents -> non-empty, mrs-k present" "$residents" \
     "isinstance(data, list) and data and any(r.get('id') == 'mrs-k' for r in data)"
+  check_schema "GET /residents rows match schema" "$residents" "contracts/resident_summary.schema.json"
   demo_room=$(python3 -c '
 import json, sys
 data = json.loads(sys.argv[1])
@@ -75,6 +109,7 @@ fi
 
 if body=$(get "$API_URL/residents/mrs-k"); then
   check_json "GET /residents/mrs-k" "$body" "data.get('id') == 'mrs-k'"
+  check_schema "GET /residents/mrs-k matches schema" "$body" "contracts/resident.schema.json"
 else
   fail "GET /residents/mrs-k: no response"
 fi
@@ -82,6 +117,7 @@ fi
 if body=$(get "$API_URL/handoff"); then
   check_json "GET /handoff" "$body" \
     "data.get('window_hours') == 12 and isinstance(data.get('residents'), list) and data['residents'] and isinstance(data.get('summary'), str) and data['summary']"
+  check_schema "GET /handoff matches schema" "$body" "contracts/handoff.schema.json"
 else
   fail "GET /handoff: no response"
 fi
@@ -135,6 +171,7 @@ alert_body=""
 if [ -n "$first_alert_id" ]; then
   if alert_body=$(get "$API_URL/alerts/$first_alert_id"); then
     pass "GET /alerts/$first_alert_id"
+    check_schema "GET /alerts/$first_alert_id matches schema" "$alert_body" "contracts/alert_detail.schema.json"
   else
     fail "GET /alerts/$first_alert_id: no response"
   fi
