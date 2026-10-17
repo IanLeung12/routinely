@@ -326,7 +326,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T446 — Replay player: error markers on the timeline, speed, arrow-key stepping
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: feature
@@ -335,7 +335,8 @@ Acceptance:
 - area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.markers.test.tsx, web/src/evidence/evidence.css
 - owner: ian-claude
 - claimed: 2026-10-17T23:20Z
-- pr: —
+- pr: #425
+- rating: 4/5 clear on the interface; it didn't say the speed group can't use role=group (an existing unqualified getByRole('group') test pins the player) or that the eager first-load budget has ~100 B of headroom, so the feature needs a budget bump outside the area
 
 What: Carved from T413 (Ian's replays library). Extend the existing skeleton `ReplayPlayer` so a supervisor can analyse a replay: error markers on the timeline that jump to the moment, a 0.5×/1×/2× speed control, and frame-by-frame stepping with arrow keys. Read only `web/src/evidence/ReplayPlayer.tsx`, `web/src/evidence/ReplayPlayer.test.tsx` (style reference) and `web/src/ui/Button.tsx`.
 Interface: add optional props, existing callers unchanged: `markers?: { t: number; label: string; kind?: string }[]` (t in seconds, same clock as `frames[i].t`). Render each marker as a `<button>` positioned along the timeline (left = t / last frame t), accessible name `"Jump to <label> at m:ss"`, class `replay-player__marker` (+ `replay-player__marker--<kind>` if given; colours from existing tokens in evidence.css). Click → position = first frame with `t >= marker.t`, playback pauses. Speed: a labelled group of three `Button`s ("0.5×", "1×", "2×", `aria-pressed` on the active one, default 1×) multiplying the frame rate. On the player group: ArrowRight/ArrowLeft step one frame and pause; Space still plays/pauses. Mention arrow keys in the group `aria-label`.
