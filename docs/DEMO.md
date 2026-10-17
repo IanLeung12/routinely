@@ -84,3 +84,20 @@ The scenario replay and `/alerts` endpoint don't need any manual cleanup between
 takes — `scripts/dev.sh down` followed by `scripts/dev.sh up` gives a fresh process
 with no state carried over. If only the dashboard tab is stale, reload it; it refetches
 alerts and residents on mount.
+
+### Between rehearsals
+
+To put the demo back to its seeded history without restarting the stack:
+
+```sh
+curl -X POST http://localhost:8000/demo/reset
+```
+
+Returns `{"ok": true}`. Only works with `OFFLINE_MODE=true` or `DEMO_RESET=1` — it
+refuses to run against a real deployment.
+
+## Medication routine
+
+The live screen defaults to the tea scenario. To open it on the medication routine
+instead, add `?task=meds` to the dashboard URL, e.g.
+`http://localhost:5173/?task=meds`.
