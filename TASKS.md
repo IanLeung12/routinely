@@ -377,14 +377,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_capture.py -q` and `scripts/ci.sh` pass.
 
 ### T040 — Privacy guard test
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/tests/test_privacy.py
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:14Z
-- pr: —
+- pr: #36
 
 What: SPEC §8/§12 as a test: nothing that flows between stages or is stored can carry an image, and nothing says "diagnose". Read only `pipeline/tests/test_contracts.py` (style), `contracts/README.md` and the file list of `contracts/` and `tests/scenarios/`. Do not edit any other file.
 Interface: pytest only. (1) Walk every `contracts/*.schema.json`; fail if any property name matches `image|frame_bytes|jpeg|png|video|pixels|base64` (case-insensitive) or has `contentEncoding`. (2) Every line of every `tests/scenarios/*/*.jsonl` and `contracts/examples/*.jsonl` is < 20 kB and contains no `data:image` / long base64 run (≥ 200 chars of `[A-Za-z0-9+/=]`). (3) No file under `pipeline/src/` or `web/src/` (excluding tests) contains `diagnos` except in a negation like "never diagnos" / "not diagnos" / "It never diagnoses" — list offenders.
