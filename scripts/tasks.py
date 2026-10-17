@@ -101,8 +101,12 @@ def claimable(tasks, cls):
             continue
         if any(d not in archived and tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
             continue
-        prio = int(v.get("priority", "2") or 2)
-        out.append((CLASSES.index(v["class"]) != rank, prio, int(tid[1:]), tid))
+        try:
+            prio = int(v.get("priority", "2") or 2)
+        except ValueError:
+            prio = 2
+        # P0 goes first for any eligible worker; otherwise exact class first, then priority.
+        out.append((prio != 0, CLASSES.index(v["class"]) != rank, prio, int(tid[1:]), tid))
     return [x[-1] for x in sorted(out)]
 
 
@@ -163,7 +167,7 @@ def main():
     s = sub.add_parser("claim"); s.add_argument("id"); s.add_argument("--agent", required=True)
     s = sub.add_parser("set"); s.add_argument("id"); s.add_argument("kv", nargs="+"); s.add_argument("--agent")
     s = sub.add_parser("show"); s.add_argument("id")
-    s = sub.add_parser("list"); s.add_argument("--status")
+    s = sub.add_parser("list"); s.add_argument("--status"); s.add_argument("--long", action="store_true")
     s = sub.add_parser("stale"); s.add_argument("--minutes", type=int, default=90)
     sub.add_parser("sync")
     sub.add_parser("reconcile")
@@ -196,7 +200,11 @@ def main():
             if a.status and v.get("status") != a.status:
                 continue
             title = lines[t["start"]].split(" ", 2)[-1]
-            print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} {title}")
+            if a.long:
+                print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} "
+                      f"P{v.get('priority', '2') or '2'} {v.get('kind', '-') or '-':11} {title}")
+            else:
+                print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} {title}")
         return
     if a.cmd == "stale":
         cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=a.minutes)

@@ -18,6 +18,7 @@ Each run, in order. Be quick; skip steps with nothing to do.
 
 5. **Plan.** The backlog never runs dry; workers run overnight and idle time is waste. Priority order:
    a. bugs, review findings, red CI; b. SPEC §5 MVP; c. SPEC Nice to have, in order; d. demo polish and robustness (§10 fallback, §13 risks);
+   **Not everything is a feature.** Keep roughly a third of the open backlog as `improvement`/`test`/`docs` work: refactors that remove duplication, clearer naming and module boundaries, design and UX polish against the design system (spacing, hierarchy, empty/error states, copy a nurse understands in 10 s), accessibility, performance, better tests and scenarios, keeping `docs/CODEMAP.md` true. Use the reviewer's findings, `scripts/codemap.py` and `TESTREPORT.md` to pick them. Improvements must be concrete (exact files, a measurable result) and never change behaviour without a test.
    e. **new features you propose**, once a–d have no claimable tasks. They must be realistic for a 36 h hackathon team and make the product better against the judging criteria (Usefulness, Clarity, Creativity, Execution, Use of AI) or the sponsor prizes in SPEC §4. Good examples: a second task type, a better evidence view, nurse shift handoff summary, accessibility, an onboarding/demo mode, more test scenarios, performance. Not allowed: anything that diagnoses, stores raw video, breaks the privacy rules, needs real patient data, or needs hardware/accounts we don't have.
    New features must not destabilize the demo path: keep them behind a flag or on a separate screen until the tester has passed them, and never let a half-finished feature block the MVP. Tag them `- source: proposed` and keep a one-line rationale in `What:`. Post a one-line list of newly proposed features in your report so Ian can veto.
    **Backlog size scales with the team.** Count active agents: `git -C .tasks log --since=1.hour --format=%s | grep -o '([^)]*)$' | sort | uniq -c` (ignore orch/tester). Keep at least **3 claimable todo tasks per active agent, minimum 10**, and at least 2 per class that has an active agent (light agents need light tasks). Workers must never find the board empty: if you're below target, planning comes before deep review this run (do a quick review, then plan), and write tasks in big batches. Prefer tasks without unfinished deps so they're claimable now. Generate the next tasks from SPEC §5 MVP order (MVP before Nice to have), respecting what's merged. Every task must have:
@@ -25,7 +26,8 @@ Each run, in order. Be quick; skip steps with nothing to do.
    ### T0NN — Title
    - status: todo
    - class: light|standard|heavy   (rubric in MODELS.md; apply LOG.md lessons)
-   - priority: 0-3                  (0 = urgent)
+   - priority: 0-3                  (0 = urgent/demo-breaking, 1 = MVP or important, 2 = normal, 3 = nice to have). P0 is taken first by any worker.
+   - kind: feature|improvement|bug|test|docs
    - deps: T0xx, T0yy | —
    - area: exact dirs/files it may touch (use real path prefixes like web/, pipeline/, scripts/: worker.sh attaches the matching guide from prompts/areas/)
    - owner: —
