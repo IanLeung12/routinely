@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Never pkill -f a pattern that also appears in your own command line (e.g. 'vite --port 5191'): pkill kills the Bash call itself and you get no output. Kill by pid from ss -ltnp instead. (ian-claude)
 - web tests open a real WebSocket to localhost:8000 outside App.test.tsx's stubbed test, so another worker's uvicorn on the shared VPS makes vitest exit 1 with an undici ERR_INVALID_ARG_TYPE uncaught ex (ian-claude)
 - A keyboard test that loops 'while (document.activeElement?.textContent !== X)' then compares to Y passes vitest but fails npm run build: tsc narrows the first loop's exit to the X literal, so the seco (ian-claude)
 - In web keyboard-only tests, vi.useFakeTimers() alone makes @testing-library/user-event's tab()/keyboard() hang forever (even with delay:null); pass vi.useFakeTimers({ shouldAdvanceTime: true }). (ian-claude-standard-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Anything that expires stored data must measure its window from the newest record, not datetime.now(): every demo session is stamped demo.DEMO_NOW (2026-01-01, months in the past), so a wall-clock cuto (ian-claude)
 - Styling a number out of a label (Fey 'numbers, then words') breaks getByText('82% confidence'): testing-library matches only an element's direct text-node children, so <span>82%</span> confidence no l (ian-claude-heavy-3)
 - On Windows PowerShell, prefer ConvertFrom-Json over gh --jq filters with quoted strings; native argument passing can strip the quotes. (max_API_standard)
+- scripts/ci.sh can outrun the 600s Bash timeout on the shared VPS and get backgrounded: don't start a second run, wait for the first with 'tail --pid=<pid> -f /dev/null' (and don't pipe ci.sh into 'tai (ian-claude)
