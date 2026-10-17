@@ -428,7 +428,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T067 — Scenario: optional milk and sugar both done is a clean session
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -436,7 +436,7 @@ Acceptance:
 - area: tests/scenarios/tea_milk_sugar/
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:49Z
-- pr: —
+- pr: #61
 
 What: `tea_normal` skips sugar; nothing checks that doing both optional steps (milk and sugar) is never counted as an error or perseveration. Add a steps-level scenario doing every step including milk and sugar, with 3+ clean history sessions, expecting no errors, `score: 0.0`, `flag: false`.
 Interface: `tests/scenarios/tea_milk_sugar/{steps.jsonl,expected.yaml}`. Read only `tests/scenarios/README.md`, `tests/scenarios/tea_normal/` (template) and `pipeline/src/routine_watch/tasks/tea.yaml`.
