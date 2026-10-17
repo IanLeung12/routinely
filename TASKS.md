@@ -427,14 +427,14 @@ Acceptance:
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
 ### T193 — Scenario: medication taken twice is a repetition error
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/meds_pill_twice/ (new), tests/scenarios/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:27Z
 - pr: —
 
 What: The medication routine has skip and order scenarios but none for a repeated step, the most safety-relevant meds error. Add one.
