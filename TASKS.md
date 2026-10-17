@@ -257,7 +257,7 @@ What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
 
 ### T408 — Roles: role chooser, role-aware shell, mock people/linking API
-- status: todo
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
