@@ -533,7 +533,7 @@ Acceptance:
 - `scripts/e2e.sh` passes including the new scenario; `scripts/ci.sh` passes.
 
 ### T083 — Docs: CODEMAP notes for the Claude explainer and Gemini verifier
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
