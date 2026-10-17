@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import './liveSession.css'
 import { fetchResident } from '../resident/api.ts'
 import type { Baseline } from '../resident/types.ts'
 import { Card } from '../ui/Card.tsx'
@@ -127,17 +128,6 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
 
   return (
     <section className="live-session">
-      <style>{`
-        .live-session__layout { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-bottom: var(--space-4); }
-        .live-session__mock-badge { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--error-grey-bg); color: var(--error-grey-text); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-        .live-session__banner { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-weight: 600; }
-        .live-session__banner--flagged { background: var(--status-flagged-bg); color: var(--status-flagged-text); }
-        .live-session__banner--clear { background: var(--status-normal-bg); color: var(--status-normal-text); }
-        .live-session__error-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
-        .live-session__announcer { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-        .live-session__paused-hint { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
-      `}</style>
-
       <p className="live-session__announcer" aria-live="polite">
         {announcement}
       </p>
