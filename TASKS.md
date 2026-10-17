@@ -409,15 +409,16 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T334 — Test: pattern checks and summaries never use diagnosis wording
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_wording_guard.py
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T16:58Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T334-wip-1701: start from it (git switch task/T334-wip-1701 && git merge origin/main)
 
 What: Guard SPEC's wording rule in code: every pattern name, description, rule-out check and generated summary says "consistent with"/"check", never "diagnos", "has <condition>", or treatment advice.
 Interface: read `pipeline/src/routine_watch/patterns_library.py`, `pipeline/src/routine_watch/checks.py`, `pipeline/src/routine_watch/explain.py` (offline/fake path). Iterate every pattern and the offline explanation for each scenario alert you can build cheaply (use `demo.py` data).
