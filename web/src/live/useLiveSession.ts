@@ -26,6 +26,12 @@ export type LiveMessage =
 
 export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }
 
+/** `routine_watch.live_camera.CAMERA_UNAVAILABLE`: the close code `/ws/live?source=camera`
+ * sends when no camera on this machine could be read (T356), with no message sent first.
+ * Distinct from a dropped connection: falling back to mock data would look like a camera
+ * is live when there is none, so this gets its own state instead (T394). */
+const CAMERA_UNAVAILABLE_CLOSE_CODE = 4503
+
 /** This machine's camera, as `/ws/live?source=camera` takes it: which device (`index`,
  * 0 being the laptop's own) and which task graph to read it against (`task`, a
  * `pipeline/src/routine_watch/tasks/<task>.yaml`). `scripts/camera.sh` starts the stack
@@ -53,6 +59,10 @@ export type LiveSessionState = {
    * it is waiting for the detector rather than looking stuck (T356). */
   objectsSeen: boolean
   source: 'live' | 'mock'
+  /** Set when the socket closed with `CAMERA_UNAVAILABLE_CLOSE_CODE`: this machine's
+   * camera could not be opened at all. Shown instead of falling back to mock data,
+   * which would misleadingly look like a live session is running (T394). */
+  cameraUnavailable: boolean
 }
 
 function initialState(source: 'live' | 'mock'): LiveSessionState {
@@ -66,6 +76,7 @@ function initialState(source: 'live' | 'mock'): LiveSessionState {
     paused: null,
     objectsSeen: false,
     source,
+    cameraUnavailable: false,
   }
 }
 
@@ -192,10 +203,15 @@ export function useLiveSession(
         fallBackToMock()
       }
     }
-    socket.onclose = () => {
-      if (!receivedData) {
-        fallBackToMock()
+    socket.onclose = (event?: { code?: number }) => {
+      if (receivedData) {
+        return
       }
+      if (event?.code === CAMERA_UNAVAILABLE_CLOSE_CODE) {
+        setState((prev) => ({ ...prev, cameraUnavailable: true }))
+        return
+      }
+      fallBackToMock()
     }
 
     return () => {

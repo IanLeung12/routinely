@@ -10,7 +10,7 @@ class FakeWebSocket {
   closed = false
   onmessage: ((event: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
+  onclose: ((event?: { code?: number }) => void) | null = null
 
   constructor(url = '') {
     this.url = url
@@ -219,6 +219,39 @@ describe('useLiveSession', () => {
     unmount()
 
     expect(socket.closed).toBe(true)
+  })
+
+  // ------------------------------------------------- the camera that won't open (T394)
+
+  it('reports cameraUnavailable, without falling back to mock data, when the socket closes 4503', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal', 1, { index: 0, task: 'tea' }))
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.onclose?.({ code: 4503 })
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(result.current.cameraUnavailable).toBe(true)
+    expect(result.current.source).toBe('live')
+    expect(result.current.steps).toEqual([])
+  })
+
+  it('leaves cameraUnavailable false and falls back to mock data on an unrelated close code', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal'))
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.onclose?.({ code: 4404 })
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(result.current.cameraUnavailable).toBe(false)
+    expect(result.current.source).toBe('mock')
   })
 
   // ------------------------------------------------------- the camera (T356)
