@@ -794,3 +794,17 @@ Acceptance: readable in 10 s (one glance: what changed, how sure, what to check)
 
 What: Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
+
+### T407 — Redesign: landing page onto the Fey-inspired system
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: T401, T402
+- area: web/src/landing/, web/landing.html
+- owner: —
+- claimed: —
+- pr: —
+
+What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN.md`: dark premium hero, one real chart from the chart kit (a resident's score vs personal baseline band, with the end-of-line tag) as the hero visual, sections as hairline cards. Check Fey refs via the mobbin MCP. Copy unchanged unless it breaks the layout.
+Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
