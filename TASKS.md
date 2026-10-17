@@ -89,13 +89,13 @@ Acceptance:
 - `scripts/e2e.sh` passes locally and is called from `scripts/ci.sh`.
 
 ### T006 — Dev stack script
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: T001
 - area: scripts/dev.sh, README.md (Run section)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:20Z
 - pr: —
 
 What: One command to bring the whole local stack up and down, used by humans and the tester.
