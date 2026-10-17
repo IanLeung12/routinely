@@ -242,7 +242,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
 
 ### T346 — Test: alert time-of-day strip has accessible names
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
