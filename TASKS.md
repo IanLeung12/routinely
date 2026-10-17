@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 602d205
+- last-reviewed: c36c7b8
 
 ## Tasks
 
@@ -501,3 +501,54 @@ Acceptance:
 - No `from . import api` left in `pipeline/src/routine_watch/api_*.py` (`grep` it in the PR).
 - `/demo/reset` and existing test resets still clear feedback across all routes (existing pytest passes unchanged).
 - CODEMAP note for `api_state.py`; `scripts/ci.sh` passes.
+
+### T285 — Docs: DEMO.md walks through pausing a room, the consent line and the audit trail
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: DEMO.md never mentions the monitoring switch, so presenters skip the privacy story judges ask about. Add one short demo step after the Mrs. K resident detail.
+Interface: Read `docs/DEMO.md`, `web/src/resident/ResidentDetail.tsx` and `web/src/about/MonitoringToggle.tsx` for the exact on-screen copy. Step: open Mrs. K → point at the "Consent: ..." line → flip the switch to Paused ("No camera data is processed while paused", "Recent changes: Paused by nurse") → show the unit overview "Monitoring paused" chip and the shift handoff naming the paused room → resume (or `/demo/reset`).
+Acceptance:
+  * One new numbered step (≤10 lines) quoting the real UI copy; no "diagnose" wording
+  * `scripts/ci.sh` passes
+
+### T286 — Privacy panel: say pauses are logged and where consent is recorded
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The privacy panel's opt-in bullet predates the consent record (T255) and the audit trail (T262). Make it concrete in nurse-readable words.
+Interface: In `web/src/about/PrivacyPanel.tsx`, replace only the last bullet with two: "Residents or their decision-maker opt in; who consented and when is shown on each resident's page." and "Monitoring can be paused per room; every pause and resume is logged with who and when."
+Acceptance:
+  * `PrivacyPanel.test.tsx` asserts both bullets render
+  * `cd web && npm test -- PrivacyPanel` and `scripts/ci.sh` pass
+
+### T287 — Test: alert feedback works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/FeedbackButtons.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses on a shared workstation may use only the keyboard; prove the feedback flow (verdict, then cause) needs no mouse.
+Interface: Read `web/src/alert/FeedbackButtons.tsx` and its test. With `@testing-library/user-event`: Tab to "Confirmed", press Enter, check `aria-pressed="true"` and the polite status text; Tab into the cause group, press Space on a cause, check its `aria-pressed`. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
+Acceptance:
+  * New test(s) in `FeedbackButtons.test.tsx` using only keyboard events
+  * `cd web && npm test -- FeedbackButtons` and `scripts/ci.sh` pass

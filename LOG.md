@@ -250,3 +250,5 @@ T276 | standard | claude-sonnet | merged first try | ~45k tok
 T277 | heavy | claude-opus | merged first try | ~130k tok
 T275 | standard | claude-sonnet | merged after release (WIP branch resumed) | ~35k tok
 T278 | standard | claude-sonnet | merged first try | ~75k tok
+T255 | light | claude-sonnet | merged first try | ~40k tok
+T269 | heavy | claude-opus | merged first try | ~130k tok
