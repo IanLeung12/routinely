@@ -79,7 +79,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T075 — Review: error-type labels and colours defined three times in the web app
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -88,7 +88,7 @@ Acceptance:
 - source: reviewer
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:59Z
-- pr: —
+- pr: #89
 
 What: `LiveSession.tsx` (`ERROR_LABELS`, `ERROR_COLOR`), `alert/ErrorList.tsx` (phrase + colour maps) and `resident/format.ts` (plain names) each map `ErrorType` separately, so the same error can read or colour differently across screens.
 Interface: `web/src/ui/errorTypes.ts` exports `ERROR_TYPE_LABEL: Record<ErrorType, string>`, `ERROR_TYPE_TONE: Record<ErrorType, 'red' | 'amber' | 'grey'>` (SPEC §9 colours) and `describeError(type, stepLabel): string`. The three files import from it; delete their local maps. Visible text may only change where screens disagreed today; note any such change in the PR.
