@@ -503,7 +503,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
 
 ### T190 — Test: LiveScreen ignores unknown ?task values
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -511,7 +511,8 @@ Acceptance:
 - area: web/src/live/LiveScreen.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T09:23Z
-- pr: —
+- pr: #181
+- rating: 5/5 clear
 
 What: T186 added `?task=meds`; pin that anything else (absent, `?task=tea`, `?task=foo`) still opens the tea routine.
 Interface: read `web/src/live/LiveScreen.tsx` and its existing test; set `window.history.replaceState(null, '', '/?task=foo')` per case and restore afterwards.
