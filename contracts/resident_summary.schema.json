@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "PatternUrgency": {
+      "description": "How soon a pattern wants a human to look (SPEC section 7.5).",
+      "enum": [
+        "routine",
+        "next_round",
+        "same_shift",
+        "urgent"
+      ],
+      "title": "PatternUrgency",
+      "type": "string"
+    },
+    "ResidentStatus": {
+      "description": "The chip on a resident's overview row (SPEC section 9, screen 1): nothing to\nsay, worth a look, or a change flagged for review.",
+      "enum": [
+        "normal",
+        "watch",
+        "flagged"
+      ],
+      "title": "ResidentStatus",
+      "type": "string"
+    },
+    "ScorePoint": {
+      "additionalProperties": false,
+      "description": "One point of a resident's sparkline: a session's score, and when it ran.",
+      "properties": {
+        "ts": {
+          "description": "When the session started (wall clock).",
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "score": {
+          "description": "Weighted sum of that session's errors.",
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ts",
+        "score"
+      ],
+      "title": "ScorePoint",
+      "type": "object"
+    },
+    "TopPattern": {
+      "additionalProperties": false,
+      "description": "The pattern chip on a resident's row (SPEC section 9, screen 1).\n\nThe best-scoring `PatternMatch` for this resident's change, cut down to what a\nrow shows: what it is consistent with and how soon somebody should look.",
+      "properties": {
+        "pattern_id": {
+          "description": "The pattern in the library, e.g. 'sudden_change'.",
+          "minLength": 1,
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "How the pattern is shown to a nurse.",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "urgency": {
+          "$ref": "#/$defs/PatternUrgency"
+        }
+      },
+      "required": [
+        "pattern_id",
+        "name",
+        "urgency"
+      ],
+      "title": "TopPattern",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One row of the unit overview (`GET /residents`, SPEC section 9, screen 1).\n\nSix fields and no history: the resident, their status chip, the pattern their\nchange is consistent with and the sparkline. `routine_watch.api._SUMMARY_FIELDS`\nis this list, because the row is this much of the resident below.",
+  "properties": {
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "room": {
+      "minLength": 1,
+      "title": "Room",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ResidentStatus"
+    },
+    "top_pattern": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TopPattern"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Null for a normal resident, and for a change no pattern fits: an empty answer is a real one (SPEC section 7.5)."
+    },
+    "scores": {
+      "description": "One point per session, oldest first.",
+      "items": {
+        "$ref": "#/$defs/ScorePoint"
+      },
+      "title": "Scores",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "room",
+    "status",
+    "top_pattern",
+    "scores"
+  ],
+  "title": "ResidentSummary",
+  "type": "object"
+}
