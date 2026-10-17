@@ -44,6 +44,7 @@ from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError, repo_root
 from .errors import classify_errors
 from .patterns import extract_features, score_patterns
 from .patterns_library import BY_ID
+from .quality import Quality, session_quality
 from .recogniser import recognise
 from .scoring import session_score
 from .tasks import TaskGraph, TaskGraphError, load_task
@@ -136,6 +137,9 @@ class Expected(_Strict):
     #: Optional extra assertions, checked only when the file sets them.
     score: float | None = None
     assisted: bool | None = None
+    #: Whether the session was clean enough to score, or too thin/low-confidence to
+    #: trust (SPEC §12). Unset scenarios are unaffected.
+    quality: Quality | None = None
     #: Which pattern (SPEC §7.5) the session should score highest, or `"none"` if the
     #: flag is expected to match no pattern. Unset scenarios are unaffected.
     top_pattern: str | None = None
@@ -265,10 +269,19 @@ def assisted_of(frames: Sequence[CaptureFrame], min_seconds: float = ASSISTED_MI
     return False
 
 
-def score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]:
-    """The same finished-session verdict for offline replay and live playback."""
+def score_session(
+    scenario: Scenario, errors: Sequence[TaskError], events: Sequence[StepEvent]
+) -> tuple[float, bool, bool]:
+    """The same finished-session verdict for offline replay and live playback.
+
+    An unclear session (SPEC §12: too thin, or too much of it low-confidence) is never
+    scored or flagged - the same treatment as an assisted one - because the capture
+    itself cannot be trusted, not the resident's performance.
+    """
     # Read every frame, including ones the live stream downsamples away.
     assisted = assisted_of(scenario.frames)
+    if session_quality(events) == "unclear":
+        return 0.0, assisted, False
     counts = Counter(str(error.type) for error in errors if not error.self_corrected)
     self_corrected = sum(1 for error in errors if error.self_corrected)
     score = session_score(counts, self_corrected, assisted)
@@ -322,7 +335,7 @@ def run(scenario: Scenario) -> dict[str, Any]:
     events = scenario.events
     session_id = session_id_of(scenario)
     errors = classify_errors(events, scenario.graph, session_id=session_id, ended=True)
-    score, assisted, flag = score_session(scenario, errors)
+    score, assisted, flag = score_session(scenario, errors, events)
     # Offline output also includes the baseline's display statistics.
     _, baseline = change_flag(score, scenario.expected.history)
     top_pattern = top_pattern_of(
@@ -354,6 +367,7 @@ def run(scenario: Scenario) -> dict[str, Any]:
         ],
         "score": score,
         "flag": flag,
+        "quality": session_quality(events),
         "top_pattern": top_pattern,
         "baseline": None
         if baseline is None
@@ -397,6 +411,8 @@ def compare(expected: Expected, result: Mapping[str, Any]) -> list[str]:
     if expected.assisted is not None and expected.assisted != result["assisted"]:
         helped = _yes(result["assisted"])
         diffs.append(f"assisted: expected {_yes(expected.assisted)}, got {helped}")
+    if expected.quality is not None and expected.quality != result["quality"]:
+        diffs.append(f"quality:  expected {expected.quality}, got {result['quality']}")
     return diffs
 
 
