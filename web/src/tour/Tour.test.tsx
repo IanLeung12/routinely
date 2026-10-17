@@ -49,4 +49,29 @@ describe('Tour', () => {
     expect(onClose).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).toBeNull()
   })
+
+  it('Escape hides the card and calls onClose', () => {
+    const onClose = vi.fn()
+    render(<Tour onClose={onClose} />)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('ArrowRight/ArrowLeft step through and respect bounds', () => {
+    render(<Tour />)
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[0].title })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[1].title })).toBeTruthy()
+
+    for (let i = 0; i < TOUR_STEPS.length; i++) {
+      fireEvent.keyDown(window, { key: 'ArrowRight' })
+    }
+    expect(screen.getByText(`${TOUR_STEPS.length} of ${TOUR_STEPS.length}`)).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[TOUR_STEPS.length - 2].title })).toBeTruthy()
+  })
 })
