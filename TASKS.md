@@ -297,13 +297,13 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T035 — Ghost replay overlay component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:11Z
 - pr: —
 
 What: SPEC Nice-to-have 1: today's skeleton drawn over the resident's normal routine at the same moment. Skeleton only, never video. Read only the files in `area`, `web/src/contracts.ts` (types `CaptureFrame`, `Pose`, `Landmark`; do not edit), `web/src/live/TaskMap.test.tsx` (test style) and `web/package.json`. Self-contained SVG; do not import other components.
