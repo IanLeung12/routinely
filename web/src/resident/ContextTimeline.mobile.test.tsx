@@ -11,7 +11,7 @@ describe('ContextTimeline at phone width', () => {
     const note = 'LongCareRecordLabelWithoutAnySpaces'.repeat(8)
     render(
       <ContextTimeline records={[
-        { ts: '2026-01-01T10:00:00Z', kind: 'temperature', value: 37, note },
+        { resident_id: 'r1', ts: '2026-01-01T10:00:00Z', kind: 'temperature', value: 37, note },
       ]} />,
     )
     expect(screen.getAllByRole('listitem')).toHaveLength(1)
