@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: feature
@@ -17,7 +17,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: pipeline/src/routine_watch/contracts.py, contracts/, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/store.py, pipeline/tests/test_handoff_unclear.py, web/src/contracts.ts, web/src/handoff/HandoffRow.tsx, web/src/handoff/mockHandoff.ts
 - owner: ian-claude
 - claimed: 2026-10-17T19:50Z
-- pr: —
+- pr: #381
+- rating: 4/5 clear on the interface and acceptance; the area named store.py, whose get_store() returns a fresh MemoryStore per call so it cannot hold process state, and web/src/handoff/HandoffRow.tsx, which does not exist
 
 What: Rationale: since T342 unclear sessions are dropped from history, so repeated bad lighting or a blocked camera goes unnoticed; the incoming nurse should see "2 sessions too unclear to score — check the camera view" for that room. Keep a per-room count of unclear sessions (timestamps only, never frames, never in the resident's scored history) and surface it as `HandoffResident.unclear_sessions: int` for the window.
 Interface: `HandoffResident.unclear_sessions: int` (default 0; regenerate schema and web types the repo's way, update every consumer and mock in the same PR); the handoff row shows the line only when > 0. Wording is about the capture, never the resident.
