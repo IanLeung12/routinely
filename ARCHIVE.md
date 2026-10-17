@@ -4589,3 +4589,21 @@ Acceptance:
 - schemas generated, README in contracts/ updated.
 - test fails if a field is added on one side only.
 - `scripts/ci.sh` passes.
+
+### T264 — Test: consent record survives /demo/reset and shows in /handoff residents
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo_consent.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:27Z
+- pr: #245
+- rating: 5/5 clear
+
+What: T254 added per-resident consent; nothing checks it survives `/demo/reset` or that every resident in GET /residents (not just mrs-k) carries it.
+Interface: extend pipeline/tests/test_demo_consent.py using the FastAPI TestClient with fakes.
+Acceptance:
+- every resident from GET /residents has consent.given_by and consent.on, before and after POST /demo/reset.
+- `scripts/ci.sh` passes.
