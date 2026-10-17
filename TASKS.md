@@ -81,7 +81,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T088 — Alert screen shows ranked possible patterns
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: feature
@@ -89,7 +89,7 @@ Acceptance:
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx, web/src/alert/PatternList.tsx, web/src/mock/alerts.ts
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T07:32Z
-- pr: —
+- pr: #103
 
 What: SPEC §9 screen 4 / demo step 5: the alert view shows "Possible patterns" right under the summary, from `Alert.patterns`.
 Interface: switch `PatternList` to the generated `PatternMatch` type from `web/src/contracts.ts` (drop the local `PatternView` or alias it); render it in `AlertView` between summary and error list; give mock Mrs. K alert a `sudden_change` top pattern with evidence and rule-out checks.
