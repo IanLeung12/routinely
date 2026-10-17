@@ -54,10 +54,10 @@ export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewP
               width={boxWidth}
               height={boxHeight}
               fill="none"
-              stroke="#22d3ee"
+              stroke="var(--skeleton-box)"
               strokeWidth={2}
             />
-            <text className="skeleton-view__label" x={x1} y={y1 - 4} fill="#22d3ee" fontSize={12}>
+            <text className="skeleton-view__label" x={x1} y={y1 - 4} fill="var(--skeleton-box)" fontSize={12}>
               {object.label}
             </text>
           </g>
@@ -79,7 +79,7 @@ export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewP
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke="#f8fafc"
+                stroke="var(--skeleton-bone)"
                 strokeWidth={2}
               />
             )
@@ -93,7 +93,7 @@ export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewP
                 cx={x}
                 cy={y}
                 r={3}
-                fill="#f8fafc"
+                fill="var(--skeleton-bone)"
               />
             )
           })}
@@ -111,7 +111,7 @@ export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewP
                 cx={x}
                 cy={y}
                 r={2.5}
-                fill={hand.handedness === 'left' ? '#fbbf24' : '#a78bfa'}
+                fill={hand.handedness === 'left' ? 'var(--hand-left)' : 'var(--hand-right)'}
               />
             )
           })}
