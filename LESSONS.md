@@ -18,3 +18,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - On Windows, stop scripts/dev.sh after smoke and before ci.sh: the dashboard locks rolldown native bindings and npm ci fails with EPERM. (max_API_light)
 - On Windows, if the full Vitest suite times out across unrelated tests under default parallelism, run npm test -- --maxWorkers=2 to reduce contention. (max_API_light)
 - Vitest stubs CSS imports (even ?raw), so a stylesheet is untestable until vite.config.ts enables test.css for that path; then getComputedStyle works in jsdom. (ian-claude)
+- Adding web mock residents also requires updating UnitOverview.test.tsx fixed names, status counts, and singular Watch queries. (max_API_light)
