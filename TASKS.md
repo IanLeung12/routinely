@@ -502,14 +502,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T076 — Tests for ContextTimeline and BaselineChart
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T06:07Z
 - pr: —
 
 What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
