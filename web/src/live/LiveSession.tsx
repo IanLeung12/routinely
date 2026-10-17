@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchResident } from '../resident/api.ts'
-import type { ResidentSession } from '../resident/types.ts'
+import type { Baseline } from '../resident/types.ts'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
@@ -18,30 +18,20 @@ import { useLiveSession } from './useLiveSession.ts'
  * this screen tells it otherwise. */
 const DEMO_RESIDENT_ID = 'mrs-k'
 
-function average(values: number[]): number | undefined {
-  return values.length === 0 ? undefined : values.reduce((total, value) => total + value, 0) / values.length
-}
-
-function sessionErrorTotal(session: ResidentSession): number {
-  return Object.values(session.errors).reduce((total, count) => total + (count ?? 0), 0)
-}
-
-type Baseline = { usualDurationS?: number; usualErrors?: number }
-
-/** This resident's own normal duration and error count, averaged over their own
- * recorded sessions (excluding assisted ones, which aren't theirs alone). */
-function useResidentBaseline(residentId: string): Baseline {
-  const [baseline, setBaseline] = useState<Baseline>({})
+/** This resident's own normal, as the pipeline measures it: `GET /residents/{id}`
+ * serves the duration and error count their sessions usually have, averaged over the
+ * early window their baseline is anchored to (`routine_watch.demo`). Averaging their
+ * recorded sessions here instead would fold in the recent bad days this screen is
+ * flagging and quietly excuse them. Null until it loads, and when nobody - live or
+ * offline - has that resident. */
+function useResidentBaseline(residentId: string): Baseline | null {
+  const [baseline, setBaseline] = useState<Baseline | null>(null)
 
   useEffect(() => {
     let cancelled = false
     fetchResident(residentId).then((resident) => {
-      if (cancelled || !resident || !Array.isArray(resident.sessions)) return
-      const ownSessions = resident.sessions.filter((session) => !session.assisted)
-      setBaseline({
-        usualDurationS: average(ownSessions.map((session) => session.duration_s)),
-        usualErrors: average(ownSessions.map(sessionErrorTotal)),
-      })
+      if (cancelled) return
+      setBaseline(resident?.baseline ?? null)
     })
     return () => {
       cancelled = true
@@ -161,8 +151,8 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
           <SessionSummary
             durationS={stepSpan ? stepSpan.end - stepSpan.start : 0}
             errorCount={errors.length}
-            usualDurationS={baseline.usualDurationS}
-            usualErrors={baseline.usualErrors}
+            usualDurationS={baseline?.usual_duration_s}
+            usualErrors={baseline?.usual_errors}
           />
           <p
             role="status"

@@ -192,6 +192,32 @@ function buildBaseline(scores: number[]): Baseline {
   return { mean, std, threshold: mean + THRESHOLD_K * Math.max(std, MIN_STD) }
 }
 
+/** routine_watch.demo._usual: how long one of this resident's sessions usually runs
+ * and how many errors it usually has, averaged over the earlier half of their recorded
+ * days (BASELINE_DAYS of DEMO_DAYS) rather than their whole history, which the change
+ * being flagged would drag up along with it (SPEC section 8 beat 6). Assisted sessions
+ * are left out, as they are from the baseline. */
+function buildUsual(sessions: ResidentSession[]): Partial<Baseline> {
+  const dayOf = (session: ResidentSession) => session.ts.slice(0, 10)
+  const days = [...new Set(sessions.map(dayOf))].sort()
+  const early = new Set(days.slice(0, Math.floor(days.length / 2)))
+  const own = sessions.filter((session) => early.has(dayOf(session)) && !session.assisted)
+  if (own.length === 0) {
+    return {}
+  }
+  const mean = (values: number[]) =>
+    values.reduce((total, value) => total + value, 0) / values.length
+  return {
+    usual_duration_s: mean(own.map((session) => session.duration_s)),
+    usual_errors: mean(
+      own.map((session) =>
+        Object.values(session.errors).reduce((total, count) => total + (count ?? 0), 0),
+      ),
+    ),
+  }
+}
+
+
 /** The mock resident behind `fetchResident`, or null when no mock resident has that id. */
 export function mockResidentDetail(residentId: string): Resident | null {
   const summary = mockResidents.find((resident) => resident.id === residentId)
@@ -227,6 +253,9 @@ export function mockResidentDetail(residentId: string): Resident | null {
     scores,
     sessions,
     care_records: careRecords,
-    baseline: buildBaseline(scores.map((point) => point.score)),
+    baseline: {
+      ...buildBaseline(scores.map((point) => point.score)),
+      ...buildUsual(sessions),
+    },
   }
 }

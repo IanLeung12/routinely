@@ -9,28 +9,30 @@ vi.mock('../resident/api.ts', () => ({
   fetchResident: vi.fn(),
 }))
 
-/** A resident with one normal session, so the baseline math in tests is exact
- * instead of tracking whatever the mock resident data happens to be today. */
-const MRS_K_WITH_ONE_NORMAL_SESSION: Resident = {
+/** Mrs. K as `GET /residents/{id}` serves her: her baseline carries the usual
+ * duration and error count the pipeline averaged over her early days, and her
+ * recorded sessions are the bad ones that put her on watch. The two disagree on
+ * purpose - the screen must read the baseline, not average the sessions. */
+const MRS_K: Resident = {
   id: 'mrs-k',
   name: 'Mrs. K',
   room: '204',
-  status: 'normal',
+  status: 'watch',
   top_pattern: null,
   scores: [],
   sessions: [
     {
       resident_id: 'mrs-k',
-      ts: '2025-12-25T08:00:00+00:00',
+      ts: '2026-01-01T08:00:00+00:00',
       task: 'tea',
-      errors: { hesitation: 1 },
+      errors: { omission: 2, perseveration: 2 },
       self_corrected: 0,
-      duration_s: 170,
+      duration_s: 600,
       assisted: false,
     },
   ],
   care_records: [],
-  baseline: { mean: 1, std: 0.5, threshold: 2 },
+  baseline: { mean: 1, std: 0.5, threshold: 2, usual_duration_s: 170, usual_errors: 1 },
 }
 
 /** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
@@ -206,8 +208,8 @@ describe('LiveSession', () => {
     expect(summary.nextElementSibling?.getAttribute('role')).toBe('status')
   })
 
-  it("adds the resident's usual duration and error count once the baseline loads", async () => {
-    vi.mocked(fetchResident).mockResolvedValue(MRS_K_WITH_ONE_NORMAL_SESSION)
+  it("shows the resident's usual duration and errors from the baseline, not their recent sessions", async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
     const socket = FakeWebSocket.latest()
 
@@ -215,11 +217,33 @@ describe('LiveSession', () => {
       socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
     })
 
+    // The baseline's 170 s and 1 error, not the 600 s and 4 errors of the bad
+    // session she is being flagged for (T230).
     await waitFor(() => {
       expect(document.querySelector('.session-summary__line')?.textContent).toBe(
         'Finished in 0s (usually ~2m 50s) · 0 errors (usually ~1)',
       )
     })
+  })
+
+  it('leaves the "usually" comparison out when the baseline carries no usual values', async () => {
+    vi.mocked(fetchResident).mockResolvedValue({
+      ...MRS_K,
+      baseline: { mean: 1, std: 0.5, threshold: 2 },
+    })
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    // Flush the resident fetch, so this asserts the loaded baseline rather than
+    // the blank one the screen renders before it arrives.
+    await act(async () => {})
+    expect(document.querySelector('.session-summary__line')?.textContent).toBe(
+      'Finished in 0s · 0 errors',
+    )
   })
 
   it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {

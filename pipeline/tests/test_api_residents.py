@@ -84,7 +84,13 @@ def test_get_resident_returns_detail() -> None:
     assert body["status"] == "watch"
     assert body["sessions"]
     assert body["care_records"]
-    assert set(body["baseline"]) == {"mean", "std", "threshold"}
+    assert set(body["baseline"]) == {
+        "mean",
+        "std",
+        "threshold",
+        "usual_duration_s",
+        "usual_errors",
+    }
 
 
 def test_get_resident_404s_for_unknown_id() -> None:
