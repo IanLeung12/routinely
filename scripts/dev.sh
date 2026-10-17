@@ -12,19 +12,30 @@
 # Set DEV_DIR to use a different pid/log directory, e.g. to run a second,
 # independent stack (on different ports) without it mistaking the default
 # stack's pid files for its own, or stopping them on `down`.
+#
+# DASHBOARD_MODE=dev (default) runs the Vite dev server, which optimises
+# dependencies lazily on first request - fine for humans iterating, but a
+# render check right after `up` can race a cold optimisation pass.
+# DASHBOARD_MODE=preview builds the dashboard once and serves the static
+# `dist/` via `vite preview` instead, so there is nothing left to warm up.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+REPO_ROOT="$(pwd)"
 
 API_PORT=${API_PORT:-8000}
 DASHBOARD_PORT=${DASHBOARD_PORT:-5173}
 API_URL="http://localhost:${API_PORT}"
 DASHBOARD_URL="http://localhost:${DASHBOARD_PORT}"
+DASHBOARD_MODE=${DASHBOARD_MODE:-dev}
 
 DEV_DIR=${DEV_DIR:-.dev}
 API_PID_FILE="$DEV_DIR/api.pid"
 WEB_PID_FILE="$DEV_DIR/web.pid"
 API_LOG="$DEV_DIR/api.log"
 WEB_LOG="$DEV_DIR/web.log"
+# Outside web/ and namespaced by DEV_DIR so two stacks (e.g. a human's dev
+# server and the integration check) never race on the same build output.
+WEB_DIST_DIR="$REPO_ROOT/$DEV_DIR/web-dist"
 
 # No API keys needed: OFFLINE_MODE defaults on so the pipeline uses mock data.
 export OFFLINE_MODE=${OFFLINE_MODE:-true}
@@ -72,11 +83,20 @@ start_web() {
   if [ ! -d web/node_modules ]; then
     (cd web && npm ci --no-audit --no-fund) >>"$WEB_LOG" 2>&1
   fi
-  (
-    cd web
-    # Run vite directly (not via `npm run`) so this PID is the actual port listener.
-    exec node_modules/.bin/vite --port "$DASHBOARD_PORT" --strictPort
-  ) >>"$WEB_LOG" 2>&1 &
+  if [ "$DASHBOARD_MODE" = "preview" ]; then
+    (cd web && node_modules/.bin/tsc -b && node_modules/.bin/vite build --outDir "$WEB_DIST_DIR" --emptyOutDir) >>"$WEB_LOG" 2>&1
+    (
+      cd web
+      # Run vite directly (not via `npm run`) so this PID is the actual port listener.
+      exec node_modules/.bin/vite preview --port "$DASHBOARD_PORT" --strictPort --outDir "$WEB_DIST_DIR"
+    ) >>"$WEB_LOG" 2>&1 &
+  else
+    (
+      cd web
+      # Run vite directly (not via `npm run`) so this PID is the actual port listener.
+      exec node_modules/.bin/vite --port "$DASHBOARD_PORT" --strictPort
+    ) >>"$WEB_LOG" 2>&1 &
+  fi
   echo $! >"$WEB_PID_FILE"
 }
 
