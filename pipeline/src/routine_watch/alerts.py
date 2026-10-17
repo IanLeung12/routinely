@@ -75,13 +75,20 @@ def build_alerts(residents: list[dict], feedback: FeedbackStore | None = None) -
     ]
 
 
-def session_id_for(resident_id: str, index: int) -> str:
+def session_id_for(resident_id: str, index: int, session: dict | None = None) -> str:
     """The id of a resident's `index`-th session in `demo_residents`.
 
-    The demo history has no session ids of its own, so this is the one convention for
-    making them: anything reading the same session (an alert, the handoff) derives the
-    same id and so the same `TaskError.error_id`s.
+    A session that arrived with an id of its own keeps it: a live session recorded by
+    `routine_watch.session_log` is keyed by the id its socket, its step events and its
+    errors all used, and the alert's evidence has to name that session rather than the
+    slot it happens to occupy in this resident's history (T155).
+
+    The synthetic history has no session ids, so for those this is the one convention
+    for making them: anything reading the same session (an alert, the handoff) derives
+    the same id and so the same `TaskError.error_id`s.
     """
+    if session is not None and session.get("session_id"):
+        return str(session["session_id"])
     return f"{resident_id}-{index}"
 
 
@@ -101,7 +108,8 @@ def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
     for index, (session, point) in enumerate(sessions_and_scores):
         ts = datetime.fromisoformat(session["ts"])
         if window_start <= ts <= DEMO_NOW and point["score"] > threshold:
-            qualifying.append((session_id_for(resident["id"], index), session, point["score"]))
+            session_id = session_id_for(resident["id"], index, session)
+            qualifying.append((session_id, session, point["score"]))
     return qualifying
 
 
@@ -136,14 +144,29 @@ def _step_candidates(graph: TaskGraph, error_type: str) -> tuple[str, ...]:
 
 
 def task_errors(session_id: str, session: dict) -> list[TaskError]:
-    """Synthetic per-instance errors from a session's error-type counts.
+    """One session's errors, as the individual error events an alert shows.
 
-    The demo history only tracks how many errors of each type a session had, not the
-    individual step events, so the step and the time here are plausible placeholders
-    rather than anything observed: a real step of this task, spread evenly across the
-    session's own duration so two different sessions don't land on the same instant
-    and read as a repeated error in the summary.
+    A session this process watched live carries the errors the classifier actually
+    found (`demo._live_sessions`), and those are what comes back: the real step ids,
+    the real times, the real `error_id`s, under the session id the live session was
+    recorded with. A nurse who watched the session flag "skipped Put the teabag in the
+    cup" and then opens the alert must read that same error back, not a plausible
+    stand-in for it (T155). Self-corrected slips are left out, so the list is the one
+    the session's score and this resident's normal were built from (SPEC section 7).
+
+    Otherwise - the synthetic demo history - only how many errors of each type a
+    session had is known, not the individual step events, so the step and the time
+    here are plausible placeholders rather than anything observed: a real step of this
+    task, spread evenly across the session's own duration so two different sessions
+    don't land on the same instant and read as a repeated error in the summary.
     """
+    if "error_events" in session:
+        return [
+            TaskError.model_validate(error)
+            for error in session["error_events"]
+            if not error.get("self_corrected")
+        ]
+
     graph = _graph_for(session["task"])
     duration = session.get("duration_s") or _MIN_ERROR_SPAN_S
     counts = sorted(session["errors"].items())
@@ -272,6 +295,11 @@ def _build_alert(resident: dict, feedback: FeedbackStore | None = None) -> Alert
         explainer_errors,
         {
             "observed": len(errors),
+            # How many sessions those errors came from. A change flag rests on two bad
+            # sessions inside 48 h (SPEC section 7), so an alert's errors routinely
+            # span more than one and calling them "this session" is a wrong fact in
+            # the nurse's first sentence (`explain.scope_phrase`, T155).
+            "sessions": len(session_ids),
             "baseline_mean": round(normal_error_rate(resident), 2),
             "baseline_days": DEMO_DAYS,
         },

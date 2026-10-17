@@ -8,9 +8,10 @@ own baseline with the same pure functions the pipeline uses for a live session.
 
 A live session that has been played this run is one of those sessions. Whatever
 `routine_watch.session_log` has recorded for a resident is merged in as their newest
-sessions, so the session a teammate just made tea for spikes their sparkline and, if
-it is the second qualifying one inside the window, flags a change for review on the
-next `/residents` and `/alerts` (SPEC section 10, step 4).
+sessions - its errors included, so the alert a nurse opens afterwards shows the steps
+and times that session really had - so the session a teammate just made tea for spikes
+their sparkline and, if it is the second qualifying one inside the window, flags a
+change for review on the next `/residents` and `/alerts` (SPEC section 10, step 4).
 """
 
 from collections import Counter
@@ -80,7 +81,16 @@ def _score(session: dict) -> float:
 def _live_sessions(resident_id: str) -> list[dict]:
     """This run's recorded live sessions for one resident, written the way the
     synthetic generator writes a session, so everything downstream - scoring, the
-    baseline comparison, the alert's evidence - reads both the same way."""
+    baseline comparison, the alert's evidence - reads both the same way.
+
+    Plus the one thing a generated session cannot have: `error_events`, the errors
+    the classifier actually found in it (`session_log.errors_for`). Synthetic history
+    only knows how many errors of each type a session had, so an alert built from
+    counts alone has to invent a step and a time per error; a session this process
+    watched knows both, and the nurse who just watched it has to read the same ones
+    back (`alerts.task_errors`, T155). JSON data like the rest of the dict, because
+    `/residents/{id}` serves it as it is.
+    """
     sessions = []
     for session in session_log.sessions_for(resident_id):
         errors = session_log.errors_for(session.session_id)
@@ -93,6 +103,7 @@ def _live_sessions(resident_id: str) -> list[dict]:
                 "ts": session.started_at.isoformat(),
                 "task": session.task_id,
                 "errors": dict(counts),
+                "error_events": [error.model_dump(mode="json") for error in errors],
                 "self_corrected": sum(1 for error in errors if error.self_corrected),
                 "duration_s": round((ended_at - session.started_at).total_seconds(), 1),
                 "assisted": session.assisted,
