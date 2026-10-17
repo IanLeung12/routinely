@@ -88,4 +88,25 @@ describe('LiveScreen', () => {
 
     expect(screen.getByRole('group', { name: 'Routine to watch' })).toBeTruthy()
   })
+
+  it('opens on the medication scenario when linked with ?task=meds', () => {
+    window.history.pushState({}, '', '/?task=meds')
+    render(<LiveScreen />)
+
+    expect(scenarioOf()).toBe('meds_skip_water')
+    expect(pressed('Medication with water')).toBe('true')
+    expect(pressed('Making tea')).toBe('false')
+
+    window.history.pushState({}, '', '/')
+  })
+
+  it('falls back to tea for an unrecognised ?task value', () => {
+    window.history.pushState({}, '', '/?task=bogus')
+    render(<LiveScreen />)
+
+    expect(scenarioOf()).toBe('tea_skip_teabag_pour_twice')
+    expect(pressed('Making tea')).toBe('true')
+
+    window.history.pushState({}, '', '/')
+  })
 })
