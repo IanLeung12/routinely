@@ -6062,3 +6062,41 @@ Acceptance:
 - Tabbing reaches the back button and every urgency filter button (role group "Filter by urgency").
 - Pressing Enter or Space on a filter sets its `aria-pressed="true"` and narrows the list; the back button fires `onBack` on Enter.
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
+
+### T187 — Test: App shows the live routine picker with tea selected
+- status: done
+- class: light
+- priority: 3
+- kind: test
+- deps: —
+- area: web/src/App.test.tsx
+- owner: Max_codex_light
+- claimed: 2026-10-17T17:47Z
+- pr: #345
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T187-wip-1503: start from it (git switch task/T187-wip-1503 && git merge origin/main)
+- rating: 5/5 clear
+
+What: T161 swapped `LiveSession` for `LiveScreen` in `App.tsx`; nothing at app level checks the picker is there. Add one test.
+Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/LiveScreen.tsx`. Reuse App.test's existing fetch/websocket mocks.
+Acceptance:
+* Test: the "Routine to watch" group renders with "Making tea" pressed and "Medication with water" not pressed.
+* `scripts/ci.sh` passes.
+
+### T342 — Review: unclear live sessions still go into the resident's history and can flag
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- source: orchestrator (review of #322)
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_unclear.py
+- owner: ian-claude
+- claimed: 2026-10-17T17:02Z
+- pr: #328
+- rating: 4/5 clear diagnosis and fix; the acceptance criterion's 'fake WebSocket helper from pipeline/tests/ used by test_api_live_ws.py' does not exist - that file uses fastapi's TestClient.websocket_connect, and an in-test scenario needs api_live.scenario_path monkeypatched to be reachable by ?scenario= at all
+
+What: PR #322 made `replay.score_session` return score 0.0 / flag False for an unclear session (`quality.session_quality`), but `live.session_messages` (~line 290) still calls `_record(...)` with that session's errors and `assisted=False`. `demo.py` recomputes scores from recorded errors and only skips assisted sessions, so an unclear session's errors still count toward the 24–48 h flag and a 0.0 score enters the baseline. Fix: when `session_quality(events) == "unclear"`, don't record the session into `session_log` at all (nothing to trust), and keep `was_flagged`/alert logic unchanged.
+Interface: `live.py` only; `from .quality import session_quality`. No contract change (T343 adds the `quality` field to `session_end`).
+Acceptance:
+- new test: a live session whose events are mostly `unclear` (build in-test, reuse the fake WebSocket helper from `pipeline/tests/` used by `test_api_live_ws.py`) leaves `session_log` for that resident unchanged and the resident's flag state unchanged; a clean session is still recorded
+- `cd pipeline && uv run pytest tests/test_live_unclear.py tests/test_live*.py` and `scripts/ci.sh` pass
