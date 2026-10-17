@@ -93,8 +93,9 @@ from .contracts import (
     StepEvent,
     TaskError,
 )
-from .demo import DEMO_NOW, DEMO_RESIDENT
+from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents
 from .errors import classify_errors
+from .notify import Notifier, get_notifier
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
 from .tasks import TaskGraph
 
@@ -176,7 +177,10 @@ def as_json(message: dict[str, Any]) -> dict[str, Any]:
 
 
 async def session_messages(
-    scenario_dir: Path | str, speed: float = 1.0, resident_id: str = DEMO_RESIDENT
+    scenario_dir: Path | str,
+    speed: float = 1.0,
+    resident_id: str = DEMO_RESIDENT,
+    notifier: Notifier | None = None,
 ) -> AsyncIterator[dict[str, Any]]:
     """Play one recorded scenario through the pipeline as a live session.
 
@@ -185,6 +189,12 @@ async def session_messages(
     theirs (`routine_watch.session_log`), and the demo resident is who makes tea on
     stage. Raises :class:`routine_watch.replay.ReplayError` on the first step if
     `scenario_dir` is not a scenario, and ``ValueError`` if `speed` is not positive.
+
+    `notifier` is the seam tests use in place of `routine_watch.notify.get_notifier()`'s
+    default: if this session's end flips `resident_id` from not-flagged to flagged
+    (SPEC Nice-to-have 3), one push alert goes out through it, never more than once per
+    session and never for a session that leaves the resident flagged already or still
+    not flagged.
     """
     if speed <= 0:
         raise ValueError(f"speed must be positive, not {speed}")
@@ -245,8 +255,18 @@ async def session_messages(
     for message in reading(final):
         yield message
 
+    was_flagged = _resident_flagged(resident_id)
     score, assisted, flag = score_session(scenario, final)
     _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
+    if not was_flagged and _resident_flagged(resident_id):
+        (notifier or get_notifier()).send(
+            {
+                "alert_id": f"alert-{resident_id}",
+                "resident_id": resident_id,
+                "summary": f"A session just flagged a change for {resident_id} to review.",
+                "created_at": DEMO_NOW,
+            }
+        )
     yield {
         "type": "session_end",
         "score": score,
@@ -256,6 +276,16 @@ async def session_messages(
         # one per session: the nurse is being told about a change in a person.
         "alert_id": f"alert-{resident_id}" if flag else None,
     }
+
+
+def _resident_flagged(resident_id: str) -> bool:
+    """Whether `resident_id` is flagged right now (SPEC section 7: over their own
+    history, the same reading `/residents` and `/alerts` give a nurse), so a push
+    alert goes out exactly when a session's end turns this from `False` to `True`."""
+    return any(
+        resident["id"] == resident_id and resident["status"] == "flagged"
+        for resident in demo_residents()
+    )
 
 
 def _record(
