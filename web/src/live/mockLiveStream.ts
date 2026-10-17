@@ -182,7 +182,35 @@ const SCRIPT: { delayMs: number; message: LiveMessage }[] = [
     },
   },
   { delayMs: 50, message: { type: 'step_state', states: { teabag_in_cup: 'omission' } } },
-  { delayMs: 300, message: { type: 'session_end', score: 6.5, flag: true, alert_id: 'mock-alert-1' } },
+  {
+    delayMs: 300,
+    message: {
+      type: 'session_end',
+      score: 6.5,
+      flag: true,
+      alert_id: 'mock-alert-1',
+      errors: [
+        {
+          error_id: 'mock-error-perseveration',
+          session_id: MOCK_SESSION_ID,
+          type: 'perseveration',
+          step_id: 'pour',
+          t_start: 30,
+          t_end: 30,
+          evidence: [{ kind: 'step_event', t_start: 29, t_end: 30, event_id: 'mock-pour-2' }],
+        },
+        {
+          error_id: 'mock-error-omission',
+          session_id: MOCK_SESSION_ID,
+          type: 'omission',
+          step_id: 'teabag_in_cup',
+          t_start: 40,
+          t_end: 40,
+          evidence: [{ kind: 'skeleton_replay', t_start: 0, t_end: 40 }],
+        },
+      ],
+    },
+  },
 ]
 
 /** Plays `SCRIPT` on timers, scaled by `speed` (the same knob the live WebSocket's
