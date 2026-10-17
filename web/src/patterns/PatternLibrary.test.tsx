@@ -40,7 +40,7 @@ describe('PatternLibrary', () => {
 
     expect(urgentEntry?.className).toContain('pattern-library__entry--urgent')
     expect(routineEntry?.className).not.toContain('pattern-library__entry--urgent')
-    expect(screen.getByText('Urgent')).toBeTruthy()
+    expect(urgentEntry?.textContent).toContain('Urgent')
   })
 
   it('never uses diagnostic wording', async () => {
@@ -97,5 +97,70 @@ describe('PatternLibrary', () => {
     for (const entry of mockPatterns) {
       expect(await screen.findByRole('heading', { name: entry.name, level: 3 })).toBeTruthy()
     }
+  })
+
+  it('defaults to showing every pattern with the All filter pressed', async () => {
+    serve()
+    await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
+    await screen.findByRole('heading', { name: mockPatterns[0].name, level: 3 })
+
+    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('true')
+    for (const entry of mockPatterns) {
+      expect(screen.getByRole('heading', { name: entry.name, level: 3 })).toBeTruthy()
+    }
+  })
+
+  it('filters the list to one urgency level when its button is picked', async () => {
+    serve()
+    const user = userEvent.setup()
+    await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
+    await screen.findByRole('heading', { name: mockPatterns[0].name, level: 3 })
+
+    await user.click(screen.getByRole('button', { name: 'Urgent' }))
+
+    expect(screen.getByRole('button', { name: 'Urgent' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('false')
+
+    const urgentEntries = mockPatterns.filter((p) => p.urgency === 'urgent')
+    const routineEntries = mockPatterns.filter((p) => p.urgency !== 'urgent')
+    for (const entry of urgentEntries) {
+      expect(screen.getByRole('heading', { name: entry.name, level: 3 })).toBeTruthy()
+    }
+    for (const entry of routineEntries) {
+      expect(screen.queryByRole('heading', { name: entry.name, level: 3 })).toBeNull()
+    }
+  })
+
+  it('shows an empty state, not an error, when a level has no patterns', async () => {
+    const noNextRound = mockPatterns.filter((p) => p.urgency !== 'next_round')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => noNextRound }))
+    const user = userEvent.setup()
+    await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
+    await screen.findByRole('heading', { name: noNextRound[0].name, level: 3 })
+
+    await user.click(screen.getByRole('button', { name: 'Check next round' }))
+
+    expect(await screen.findByText('No patterns at this level.')).toBeTruthy()
+    expect(screen.queryByText(/No patterns in the library\./)).toBeNull()
+  })
+
+  it('lets a keyboard-only nurse toggle the urgency filter', async () => {
+    serve()
+    const user = userEvent.setup()
+    await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
+    await screen.findByRole('heading', { name: mockPatterns[0].name, level: 3 })
+
+    const urgentButton = screen.getByRole('button', { name: 'Urgent' })
+    urgentButton.focus()
+    expect(document.activeElement).toBe(urgentButton)
+
+    await user.keyboard('{Enter}')
+    expect(urgentButton.getAttribute('aria-pressed')).toBe('true')
+
+    const allButton = screen.getByRole('button', { name: 'All' })
+    allButton.focus()
+    await user.keyboard('{Enter}')
+    expect(allButton.getAttribute('aria-pressed')).toBe('true')
+    expect(urgentButton.getAttribute('aria-pressed')).toBe('false')
   })
 })

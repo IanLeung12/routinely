@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { PatternUrgency, SuggestedCheck } from '../contracts.ts'
 import { SUGGESTED_CHECK_LABELS } from '../alert/SuggestedChecks.tsx'
+import { Button } from '../ui/Button.tsx'
+import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { fetchPatterns } from './api.ts'
 import type { PatternLibraryEntry } from './types.ts'
 import './PatternLibrary.css'
+import './urgencyFilter.css'
 
 const URGENCY_LABELS: Record<PatternUrgency, string> = {
   routine: 'Routine',
@@ -13,6 +16,16 @@ const URGENCY_LABELS: Record<PatternUrgency, string> = {
   same_shift: 'Check this shift',
   urgent: 'Urgent',
 }
+
+type UrgencyFilter = 'all' | PatternUrgency
+
+const URGENCY_FILTERS: { id: UrgencyFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'urgent', label: URGENCY_LABELS.urgent },
+  { id: 'same_shift', label: URGENCY_LABELS.same_shift },
+  { id: 'next_round', label: URGENCY_LABELS.next_round },
+  { id: 'routine', label: URGENCY_LABELS.routine },
+]
 
 function checkLabel(check: SuggestedCheck | string): string {
   return (SUGGESTED_CHECK_LABELS as Record<string, string>)[check] ?? check
@@ -32,6 +45,7 @@ function timeProfileLabel(entry: PatternLibraryEntry): string {
  * whole cited rules library, not a model guess, without touching live data. */
 export function PatternLibrary({ onBack }: { onBack: () => void }) {
   const [patterns, setPatterns] = useState<PatternLibraryEntry[] | null>(null)
+  const [filter, setFilter] = useState<UrgencyFilter>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -44,14 +58,35 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
   }, [])
 
   let body
+  let filterBar
   if (patterns === null) {
     body = <Loading label="Loading pattern library…" />
   } else if (patterns.length === 0) {
     body = <ErrorState message="No patterns in the library." />
   } else {
-    body = (
+    filterBar = (
+      <div className="urgency-filter" role="group" aria-label="Filter by urgency">
+        {URGENCY_FILTERS.map(({ id, label }) => (
+          <Button
+            key={id}
+            variant="secondary"
+            className="urgency-filter__button"
+            aria-pressed={filter === id}
+            onClick={() => setFilter(id)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+    )
+
+    const filtered = filter === 'all' ? patterns : patterns.filter((entry) => entry.urgency === filter)
+
+    body = filtered.length === 0 ? (
+      <EmptyState message="No patterns at this level." />
+    ) : (
       <ul className="pattern-library__list" aria-label="Pattern library">
-        {patterns.map((entry) => {
+        {filtered.map((entry) => {
           const urgent = entry.urgency === 'urgent'
           return (
             <li
@@ -103,6 +138,7 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
         What each pattern a flagged change can be consistent with looks for, and where it
         comes from. Reference only - never a verdict on a specific resident.
       </p>
+      {filterBar}
       {body}
     </section>
   )
