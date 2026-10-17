@@ -369,14 +369,14 @@ Acceptance:
 - note added; `scripts/ci.sh` passes
 
 ### T374 — Test infra: load every web stylesheet in Vitest so tasks stop editing vite.config.ts
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - deps: T368
 - area: web/vite.config.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T19:22Z
 - pr: —
 
 What: every phone-width / print task appends a folder to `test.css.include` in `web/vite.config.ts`, so sibling PRs conflict on that one line (T203's PR #353 is conflicting now; LESSONS.md line 19). Replace the per-folder list with one pattern that matches all `src/**/*.css`.
