@@ -198,7 +198,7 @@ Acceptance:
 - `cd web && npx vitest run src/evidence/GhostReplay` passes; `scripts/ci.sh` passes.
 
 ### T386 — Test: demo banner reset works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -206,7 +206,7 @@ Acceptance:
 - area: web/src/ui/DemoBanner.keyboard.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T19:56Z
-- pr: —
+- pr: #382
 
 What: The presenter resets the demo from the banner; it must work without a mouse like every other screen's keyboard test.
 Interface: read only web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx (reuse its fetch stub) and web/src/about/PrivacyPanel.keyboard.test.tsx (style). No production code changes.
