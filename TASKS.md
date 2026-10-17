@@ -7,23 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T028 — Alert / evidence view screen
-- status: done
-- class: standard
-- priority: 1
-- kind: feature
-- deps: T027
-- area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx, web/src/alert/ErrorList.tsx, web/src/alert/alert.css
-- owner: ian-claude-standard
-- claimed: 2026-10-17T05:28Z
-- pr: #46
-
-What: SPEC §9 screen 4, readable in 10 seconds: plain-language summary on top, baseline comparison ("5.0 vs 0.2 normal over 14 days"), error list with m:ss timestamps and nurse-readable phrases (same wording as `pipeline/src/routine_watch/explain.py`), `SuggestedChecks`, and `FeedbackButtons` wired to `postFeedback`; after feedback show the updated threshold. Each error row has an `onOpenEvidence(error)` callback (replay view comes later). Don't touch App.tsx (T022 owns it); a later task wires navigation.
-Interface: `AlertView({alertId, onBack, onOpenEvidence?})` loads via `fetchAlert` (mock fallback); `ErrorList({errors, onOpen})`.
-Acceptance:
-- Vitest: renders summary, comparison, both mock errors with "0:42"/"1:15", four checks; clicking "False alarm" calls postFeedback and shows the new threshold; no "diagnos" in rendered text.
-- `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
-
 ### T030 — Gemini step verifier behind an interface
 - status: todo
 - class: standard
@@ -57,70 +40,6 @@ Interface: `ClaudeExplainer(client=None, model=env ANTHROPIC_MODEL or "claude-ha
 Acceptance:
 - Tests with an injected fake client only: good reply used; "diagnosed" reply rejected; invented timestamp rejected; exception → template; `get_explainer()` default is Template.
 - `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
-
-### T033 — Slow-drift trend detector
-- status: done
-- class: light
-- priority: 2
-- deps: —
-- area: pipeline/src/routine_watch/drift.py, pipeline/tests/test_drift.py
-- owner: max-codex-light-1
-- claimed: 2026-10-17T05:08Z
-- pr: #30
-
-What: SPEC Nice-to-have 6: a sustained upward trend in a resident's daily error score over weeks, reported as a trend for review, separate from the sudden-change flag. Read only the files in `area`, `pipeline/src/routine_watch/change_detection.py` (style; do not edit) and `pipeline/pyproject.toml`. Standard library only.
-Interface: `@dataclass(frozen=True) class Drift: slope_per_day: float; days: int; trending: bool`; `drift(daily: Sequence[tuple[date, float]], min_days: int = 7, min_slope: float = 0.1) -> Drift`. Slope = Theil–Sen (median of pairwise slopes, x in days). `trending` = `days >= min_days and slope_per_day >= min_slope`. Fewer than 2 points → slope 0, not trending. Input order doesn't matter.
-Acceptance:
-- Tests: flat series not trending; steady +0.2/day over 14 days trending; one huge spike in an otherwise flat series NOT trending (robustness); 5 days of rising scores not trending (too short); unsorted input same result.
-- `cd pipeline && uv run pytest tests/test_drift.py -q` and `scripts/ci.sh` pass.
-
-### T034 — More step-level scenarios
-- status: done
-- class: light
-- priority: 2
-- deps: —
-- area: tests/scenarios/tea_sequence_error/, tests/scenarios/tea_substitution/, tests/scenarios/tea_unclear_not_error/, tests/scenarios/tea_single_bad_no_flag/
-- owner: max-codex-light-2
-- claimed: 2026-10-17T05:08Z
-- pr: #31
-
-What: Widen e2e coverage of SPEC §7. Read only `tests/scenarios/README.md`, every file in `tests/scenarios/tea_normal/` and `tests/scenarios/tea_skip_teabag_pour_twice/` (copy their style), `pipeline/src/routine_watch/tasks/tea.yaml` and `contracts/step_event.schema.json`. Add four `steps.jsonl` + `expected.yaml` scenarios, each with a header comment saying what it proves. Do not edit any code.
-Interface: `tea_sequence_error`: pour before teabag_in_cup, teabag added after → one `sequence` error. `tea_substitution`: stir done with `milk` instead of `spoon` → one `substitution` error. `tea_unclear_not_error`: normal session where teabag_in_cup has confidence 0.4 and `unclear: true` → no errors. `tea_single_bad_no_flag`: the demo bad session with quiet history and NO other recent bad session → errors as usual, `flag: false` (a single bad session never alerts).
-Acceptance:
-- `scripts/e2e.sh` passes for all scenarios. If the pipeline disagrees with SPEC §7 on one, don't edit code: leave that scenario out and describe the disagreement in the PR body.
-- `scripts/ci.sh` passes.
-
-### T035 — Ghost replay overlay component
-- status: done
-- class: light
-- priority: 2
-- deps: —
-- area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: max-codex-light-1
-- claimed: 2026-10-17T05:11Z
-- pr: #32
-
-What: SPEC Nice-to-have 1: today's skeleton drawn over the resident's normal routine at the same moment. Skeleton only, never video. Read only the files in `area`, `web/src/contracts.ts` (types `CaptureFrame`, `Pose`, `Landmark`; do not edit), `web/src/live/TaskMap.test.tsx` (test style) and `web/package.json`. Self-contained SVG; do not import other components.
-Interface: `GhostReplay({today, normal, t, width = 480, height = 360}: {today: CaptureFrame[]; normal: CaptureFrame[]; t: number; width?: number; height?: number})`. Picks the frame with the closest `t` from each list; draws the normal pose as grey circles+lines at 40% opacity (`data-layer="normal"`) under today's pose in blue (`data-layer="today"`). Landmarks are normalised 0–1. Pose connections: shoulders 11–12, arms 11–13–15 and 12–14–16, torso 11–23, 12–24, 23–24. Empty list → that layer omitted; both empty → text "No skeleton data". A small legend "Today" / "Usual".
-Acceptance:
-- Vitest: both layers render with the right circle counts; nearest-t frame chosen; empty normal → only today layer; both empty → text.
-- `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
-
-### T036 — Skeleton replay player
-- status: done
-- class: light
-- priority: 2
-- deps: T025
-- area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx
-- owner: max-codex-light-2
-- claimed: 2026-10-17T05:11Z
-- pr: #34
-
-What: Plays a span of skeleton frames as the "evidence one tap away" for an error. Read only the files in `area`, `web/src/live/SkeletonView.tsx` (import it; do not edit), `web/src/contracts.ts` (type `CaptureFrame`), `web/src/live/TaskMap.test.tsx` and `web/package.json`.
-Interface: `ReplayPlayer({frames, autoPlay = false, fps = 10}: {frames: CaptureFrame[]; autoPlay?: boolean; fps?: number})`: renders `SkeletonView` for the current frame, a Play/Pause button, an `<input type="range" aria-label="Replay position">` scrubber, and the current time as m:ss. Uses `setInterval` at `fps`; stops at the end. Empty frames → "No replay available".
-Acceptance:
-- Vitest with fake timers: play advances frames; pause stops; scrubber jumps; stops at end; empty list text.
-- `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T037 — Skeleton replay API for evidence
 - status: todo
@@ -172,22 +91,6 @@ Interface: `frame_record(t, pose_landmarks, hand_landmarks, detections, source) 
 Acceptance:
 - Tests (no camera, no mediapipe needed): `frame_record` from fake landmark objects validates against `contracts/capture_frame.schema.json`; output records contain no image/bytes/base64 fields; CLI `--help` works without the extra installed.
 - `cd pipeline && uv run pytest tests/test_capture.py -q` and `scripts/ci.sh` pass.
-
-### T040 — Privacy guard test
-- status: done
-- class: light
-- priority: 2
-- deps: —
-- area: pipeline/tests/test_privacy.py
-- owner: max-codex-light-1
-- claimed: 2026-10-17T05:14Z
-- pr: #36
-
-What: SPEC §8/§12 as a test: nothing that flows between stages or is stored can carry an image, and nothing says "diagnose". Read only `pipeline/tests/test_contracts.py` (style), `contracts/README.md` and the file list of `contracts/` and `tests/scenarios/`. Do not edit any other file.
-Interface: pytest only. (1) Walk every `contracts/*.schema.json`; fail if any property name matches `image|frame_bytes|jpeg|png|video|pixels|base64` (case-insensitive) or has `contentEncoding`. (2) Every line of every `tests/scenarios/*/*.jsonl` and `contracts/examples/*.jsonl` is < 20 kB and contains no `data:image` / long base64 run (≥ 200 chars of `[A-Za-z0-9+/=]`). (3) No file under `pipeline/src/` or `web/src/` (excluding tests) contains `diagnos` except in a negation like "never diagnos" / "not diagnos" / "It never diagnoses" — list offenders.
-Acceptance:
-- Test passes on current main (if it finds a real offender, report it in the PR instead of editing other files, and mark that check `xfail` with the reason).
-- `cd pipeline && uv run pytest tests/test_privacy.py -q` and `scripts/ci.sh` pass.
 
 ### T041 — Second task: taking medication with water
 - status: todo
