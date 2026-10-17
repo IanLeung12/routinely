@@ -351,7 +351,7 @@ Acceptance:
 - `scripts/ci.sh` passes with no change to existing expected outputs.
 
 ### T056 — Scenario: tea abandoned mid-task
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -368,7 +368,7 @@ Acceptance:
 - expected.yaml has a header comment explaining the scenario, like the existing ones.
 
 ### T057 — Task map legend component
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
@@ -385,7 +385,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T058 — Review: merge duplicate pipeline modules found by the code map
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: improvement
@@ -404,7 +404,7 @@ Acceptance:
 - Remove the "Known overlaps" lines you fixed from `docs/CODEMAP.md`.
 
 ### T059 — Show the drift card on the resident detail screen
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
@@ -421,7 +421,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T060 — Tests for resident date/format helpers
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
