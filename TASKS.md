@@ -530,14 +530,14 @@ Acceptance:
 - `cd web && npx vitest run src/live/LiveSession.test.tsx` and `scripts/ci.sh` pass
 
 ### T176 — Docs: scenarios README explains session duration_s
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: tests/scenarios/README.md
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:59Z
 - pr: —
 
 What: T157 (PR #154) let scenarios give history sessions and the expected session a `duration_s`, which is how `motor_slowing` becomes reachable; `tests/scenarios/README.md` doesn't mention it, so scenario authors won't find it.
