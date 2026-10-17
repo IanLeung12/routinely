@@ -25,7 +25,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T413 — Replays library for supervisors and the person
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
@@ -33,8 +33,8 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 - deps: T412, T427, T430, T431
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/mock/replays.ts, web/src/App.tsx
 - note: merge conflict with main on PR #429: check out its branch, merge origin/main, fix, push
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T23:56Z
 - pr: #429
 - rating: 4/5 clear, but the listed area (Replays.tsx/test/css, mock/replays.ts, App.tsx) didn't fit the entry-point work the spec asked for (a person's detail, an alert's error rows, My routine); ResidentDetail/AlertView/MyRoutine stayed untouched and entry points went into App.tsx's shell instead -- worth naming that tradeoff in the task next time
 
