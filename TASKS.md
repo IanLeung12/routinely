@@ -443,14 +443,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T242 — Web: monitoring API client (GET /monitoring, PUT /rooms/{room}/monitoring)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - deps: —
 - area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:39Z
 - pr: —
 
 What: T149 (#226) added the pipeline endpoints behind the room pause switch, but the web has no client for them. Add a small typed client; no UI changes.
