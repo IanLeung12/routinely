@@ -94,44 +94,6 @@ Interface: read `pipeline/src/routine_watch/alerts.py` (`session_id_for`, `task_
 Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
-### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: web/src/alert/PatternList.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:31Z
-- pr: #247
-- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T229-wip-1210: start from it (git switch task/T229-wip-1210 && git merge origin/main)
-- rating: 5/5 clear
-
-What: `PatternList.test.tsx > never uses diagnostic wording` renders two `pattern()` fixtures that both have `pattern_id: 'delirium'`, so React logs "Encountered two children with the same key" in every CI run, hiding real warnings.
-Interface: read `web/src/alert/PatternList.test.tsx` only. Give the second fixture a different `pattern_id` (e.g. `pattern({ pattern_id: 'infection', urgency: 'urgent' })`); fix any other test in the file that renders duplicate ids the same way.
-Acceptance:
-- `cd web && npx vitest run src/alert/PatternList.test.tsx 2>&1 | grep -c "same key"` prints 0; all tests pass
-- `scripts/ci.sh` passes
-
-### T231 — Test: integration.sh dashboard check retries instead of failing on a cold Vite start
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: scripts/integration.sh
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:39Z
-- pr: #249
-- source: integration
-- rating: 5/5 clear
-
-What: The integration run on main @ 60dce5a failed with "dashboard did not render (no 'Routine Watch' in DOM)", but the orchestrator reran `scripts/integration.sh` on the same sha at 10:52 UTC and it passed, so it is a flake (likely the headless-Chrome DOM dump racing Vite's first compile). Make the check robust, not looser.
-Interface: in `scripts/integration.sh`, the "Rendered dashboard" block (around line 45): retry the `--dump-dom` up to 3 times with a 3 s sleep between attempts before calling `fail`; keep both existing grep checks unchanged.
-Acceptance:
-- a slow first render no longer fails the run; a dashboard that never renders still fails with the same message
-- `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
-
 ### T240 — Pattern library: usable at phone width (375 px)
 - status: todo
 - class: light
@@ -233,25 +195,6 @@ Interface: read `pipeline/tests/test_live.py` (how it drives `session_messages` 
 Acceptance:
 - one parametrized test per scenario; fakes only, no real API calls
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
-
-### T250 — Review: /ws/live message protocol has no contract
-- status: done
-- class: heavy
-- priority: 2
-- kind: improvement
-- source: reviewer
-- deps: T244
-- area: contracts/live_message.schema.json, contracts/README.md, pipeline/tests/test_live_contract.py
-- owner: ian-claude
-- claimed: 2026-10-17T11:53Z
-- pr: #240
-- rating: 4/5 the area left out contracts.py (the generated-schema source) and test_contracts.py, whose raw-frame guard rejects an envelope with a 'frame' property and an open step_state map
-
-What: The live socket's messages (`session_start`, `frame`, `step`, `step_state`, `error`, `session_end`, and now `paused`) cross the pipeline/web boundary but are defined only in `live.py`'s docstring and hand-mirrored in `web/src/live/useLiveSession.ts`; `paused` was just added on one side only. Add a JSON Schema (`oneOf` on `type`) to `contracts/`.
-Interface: read `pipeline/src/routine_watch/live.py` (module docstring + `as_json`), `api.py` `live_session`, and `web/src/live/useLiveSession.ts`. Schema only plus a test; don't change message shapes.
-Acceptance:
-- pytest replays one scenario through `/ws/live` (fakes only) and validates every message, plus a `paused` message, against the schema
-- `contracts/README.md` lists it; `scripts/ci.sh` passes
 
 ### T251 — Shift handoff payload lists rooms whose monitoring is paused
 - status: done
