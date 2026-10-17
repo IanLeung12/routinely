@@ -466,7 +466,7 @@ Acceptance:
 - Existing live/notify tests still pass; `scripts/ci.sh` passes.
 
 ### T235 — Live screen and task map: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
