@@ -7038,3 +7038,79 @@ Acceptance:
 - `cd web && npm run build` produces `dist/landing.html`; Vitest test renders the landing page and checks every section heading and the dashboard link.
 - `wording.test.ts`-style check: no "diagnos" in landing copy.
 - Look at it (dev server `/landing.html`, desktop + 390 px wide); describe what you checked in the PR.
+
+### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
+- status: done
+- class: heavy
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T343
+- area: pipeline/src/routine_watch/contracts.py, contracts/, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/store.py, pipeline/tests/test_handoff_unclear.py, web/src/contracts.ts, web/src/handoff/HandoffRow.tsx, web/src/handoff/mockHandoff.ts
+- owner: ian-claude
+- claimed: 2026-10-17T19:50Z
+- pr: #381
+- rating: 4/5 clear on the interface and acceptance; the area named store.py, whose get_store() returns a fresh MemoryStore per call so it cannot hold process state, and web/src/handoff/HandoffRow.tsx, which does not exist
+
+What: Rationale: since T342 unclear sessions are dropped from history, so repeated bad lighting or a blocked camera goes unnoticed; the incoming nurse should see "2 sessions too unclear to score — check the camera view" for that room. Keep a per-room count of unclear sessions (timestamps only, never frames, never in the resident's scored history) and surface it as `HandoffResident.unclear_sessions: int` for the window.
+Interface: `HandoffResident.unclear_sessions: int` (default 0; regenerate schema and web types the repo's way, update every consumer and mock in the same PR); the handoff row shows the line only when > 0. Wording is about the capture, never the resident.
+Acceptance:
+- pytest: two unclear live sessions in the window → `unclear_sessions == 2`, resident's history and flag unchanged; outside the window → 0
+- web test: row shows the camera line when > 0 and nothing when 0
+- `scripts/ci.sh` passes
+
+### T367 — Bug: integration check failing on main
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/integration.sh, scripts/dev.sh
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T19:59Z
+- pr: #384
+- source: integration
+- note: area narrowed (was web/src/, which overlapped claims and kept this P0 from being handed out). T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. If it is Vite cold-start timing, make integration.sh wait for Vite readiness. If the render itself is broken, note the file and set blocked so a web task can be filed.
+- rating: 4/5 the note's two hypotheses (dev-stack sharing, Vite cold start) were both wrong - the cause was the check's own 'echo | grep -q' + pipefail SIGPIPE race, so 'first re-run it twice and mark done if both print OK' would have closed a real, ~50%-flaky bug
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ c332a28:
+  FAIL dashboard did not render (no 'Routine Watch' in DOM)
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T379 — Test: shift handoff Print button works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.keyboard.test.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T19:36Z
+- pr: #377
+
+What: T203 added a "Print handoff" button; the keyboard-only test (T294/T321) predates it. Cover it so a nurse without a mouse can print.
+Interface: read only web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.tsx and the 'Print handoff' test near line 171 of web/src/handoff/Handoff.test.tsx (stub `window.print` the same way). No production code changes.
+Acceptance:
+- Tabbing from "Copy summary" reaches "Print handoff"; Enter and Space each call `window.print` once.
+- `cd web && npx vitest run src/handoff/Handoff.keyboard.test.tsx` passes; `scripts/ci.sh` passes.
+
+### T381 — scripts/preflight.sh: one command that says "ready to demo"
+- status: done
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: —
+- area: scripts/preflight.sh, docs/DEMO.md, tests/test_preflight.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T19:05Z
+- pr: #365
+- rating: 5/5 clear
+
+What: Before judging, one command should confirm the demo path works offline (SPEC §10 fallback, §13 risks) instead of someone remembering five scripts.
+Interface: `scripts/preflight.sh` runs in order and prints a ✓/✗ checklist: LIVE_API unset and OFFLINE_MODE=true; `scripts/dev.sh up` (if not already up); `scripts/smoke.sh`; `scripts/e2e.sh` (scenario count); POST /demo/reset then GET /residents shows the demo resident on watch. Exits non-zero on the first ✗ with the fix hint. Never calls paid APIs.
+Acceptance:
+- tests/test_preflight.py runs `scripts/preflight.sh --dry-run` and checks it lists every step and refuses to run when `LIVE_API=1`.
+- docs/DEMO.md "Before you start" says to run it.
+- Run it for real against `scripts/dev.sh up`, paste the checklist in the PR, then `scripts/dev.sh down`. `scripts/ci.sh` passes.
