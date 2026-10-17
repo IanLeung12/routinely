@@ -27,14 +27,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T203 — Shift handoff: print-friendly layout
-- status: todo
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- owner: —
+- owner: ian-claude
 - claimed: —
 - pr: #353
 - rating: 4/5 acceptance asked for the .no-print rule inside handoff.css, but T353 already moved it to the shared print.css; the area also left out vite.config.ts's test.css.include, which a ?raw CSS assertion needs
