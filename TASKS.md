@@ -282,7 +282,7 @@ Acceptance:
 - `cd web && npm test -- Tour` and `scripts/ci.sh` pass
 
 ### T205 — Tour: Escape closes it, arrow keys step through
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
