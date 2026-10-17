@@ -333,7 +333,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T135 — demo.py: pull the "worth watching" status out of demo_residents()
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
