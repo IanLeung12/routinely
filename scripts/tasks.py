@@ -254,6 +254,7 @@ def main():
     if a.cmd == "auto" and os.path.exists(os.path.join(WT, "FROZEN")):
         return print("NO_TASK")  # demo freeze: no new claims (delete FROZEN on the tasks branch to resume)
     if a.cmd == "auto":
+        err = ""
         for _ in range(5):
             lines, tasks = load()
             c = claimable(tasks, a.cls)
@@ -264,6 +265,10 @@ def main():
             if r.returncode == 0:
                 lines, tasks = load()
                 return print(block(lines, tasks[c[0]]))
+            err = (r.stderr or r.stdout).strip().splitlines()[-1:] or [""]
+            err = err[0]
+        # tasks were claimable but every claim failed: say why (git identity, push auth...)
+        print(f"claim of {c[0]} failed 5 times: {err}", file=sys.stderr)
         return print("NO_TASK")
     if a.cmd == "lesson":
         path = os.path.join(WT, "LESSONS.md")
