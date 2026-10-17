@@ -121,13 +121,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_scoring.py -q` and `scripts/ci.sh` pass.
 
 ### T008 — Per-resident baseline and change flag
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/change_detection.py, pipeline/tests/test_change_detection.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:36Z
 - pr: —
 
 What: Pure functions that build a resident's baseline from past session scores and decide whether recent sessions flag a change for review. Read only the files in `area`, `pipeline/src/routine_watch/baseline.py` (import `FLAG_MIN_SESSIONS`; do not edit it) and `pipeline/pyproject.toml`.
