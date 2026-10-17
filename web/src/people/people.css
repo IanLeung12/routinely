@@ -16,7 +16,7 @@
 .role-chooser__lead {
   margin: 0 auto var(--space-5);
   max-width: 30rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 
@@ -42,9 +42,9 @@
   width: 100%;
   height: 100%;
   padding: var(--space-5) var(--space-4);
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-md);
-  background: var(--panel);
+  background: var(--surface-card);
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -61,7 +61,7 @@
 }
 
 .role-chooser__option-detail {
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 
@@ -75,59 +75,16 @@
 
 .role-switch__label {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .people-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: var(--space-4) 0;
+  margin: var(--space-2) 0;
   padding: 0;
   list-style: none;
-}
-
-.people-list__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-}
-
-.people-list__open {
-  display: flex;
-  flex: 1 1 12rem;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-height: 2.75rem;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-button.people-list__open {
-  cursor: pointer;
-}
-
-.people-list__name {
-  font-size: var(--text-base);
-  font-weight: 600;
-}
-
-.people-list__context {
-  color: var(--muted);
-  font-size: var(--text-md);
 }
 
 .people__add {
@@ -139,7 +96,7 @@ button.people-list__open {
 }
 
 .people__add-label {
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -149,9 +106,9 @@ button.people-list__open {
   min-height: 2.75rem;
   flex: 1 1 10rem;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
-  background: var(--bg);
+  background: var(--surface-raised);
   color: var(--text);
   font: inherit;
   letter-spacing: 0.08em;
@@ -161,12 +118,12 @@ button.people-list__open {
 .people__hint,
 .people__message {
   margin: 0 0 var(--space-2);
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 
 .people__message--failed {
-  color: var(--error-red-text);
+  color: var(--status-flagged);
 }
 
 .my-routine {
@@ -180,7 +137,7 @@ button.people-list__open {
 .my-routine__invite-lead {
   margin: 0;
   max-width: 34rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 
@@ -193,7 +150,7 @@ button.people-list__open {
 
 .my-routine__link {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 

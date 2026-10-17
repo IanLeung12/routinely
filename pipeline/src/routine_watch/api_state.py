@@ -33,12 +33,15 @@ def _tuned(resident: dict) -> dict:
     """`resident`, with its status (and `top_pattern`) recomputed against this
     resident's feedback-tuned threshold (SPEC MVP 7) instead of the raw baseline
     one, so `/residents` and `/alerts` agree with `/handoff` and the alert payload
-    once a nurse's feedback moves the bar a session is judged against.
+    once a nurse's feedback moves the bar a session is judged against. `baseline`
+    carries the same tuned threshold, so a resident's own detail page shows the
+    bar her status was actually judged against instead of the untuned raw one.
     """
     threshold = _feedback_store.threshold(resident["id"], base=resident["baseline"]["threshold"])
     status = status_for(resident, threshold)
     top_pattern = _top_pattern(resident) if status != "normal" else None
-    return {**resident, "status": status, "top_pattern": top_pattern}
+    baseline = {**resident["baseline"], "threshold": threshold}
+    return {**resident, "status": status, "top_pattern": top_pattern, "baseline": baseline}
 
 
 def _top_pattern(resident: dict) -> dict | None:

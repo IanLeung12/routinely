@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { Row } from '../ui/Row.tsx'
 import { acceptInvite, currentSupervisor, unlink } from './api.ts'
 import type { Person } from './types.ts'
 import './people.css'
@@ -56,22 +57,26 @@ export function PeopleISupport({
       ) : (
         <ul className="people-list">
           {people.map((person) => (
-            <li key={person.id} className="people-list__row">
-              <button
-                type="button"
-                className="people-list__open"
-                aria-label={`Open ${person.name}, ${person.context}`}
-                onClick={() => onOpen?.(person.id)}
-              >
-                <span className="people-list__name">{person.name}</span>
-                <span className="people-list__context">{person.context}</span>
-              </button>
-              <Button
-                aria-label={`Stop supporting ${person.name}`}
-                onClick={() => removePerson(person)}
-              >
-                Stop supporting
-              </Button>
+            <li key={person.id}>
+              <Row
+                title={person.name}
+                subtitle={person.context}
+                trailing={
+                  <>
+                    {onOpen && (
+                      <Button aria-label={`Open ${person.name}`} onClick={() => onOpen(person.id)}>
+                        Open
+                      </Button>
+                    )}
+                    <Button
+                      aria-label={`Stop supporting ${person.name}`}
+                      onClick={() => removePerson(person)}
+                    >
+                      Stop supporting
+                    </Button>
+                  </>
+                }
+              />
             </li>
           ))}
         </ul>

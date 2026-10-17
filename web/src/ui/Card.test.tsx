@@ -12,10 +12,16 @@ describe('Card', () => {
     const card = screen.getByText('hello')
     expect(card.className).toContain('card')
     expect(card.className).not.toContain('card--wide')
+    expect(card.className).not.toContain('card--flush')
   })
 
   it('adds the wide modifier when asked', () => {
     render(<Card wide>hello</Card>)
     expect(screen.getByText('hello').className).toContain('card--wide')
+  })
+
+  it('drops its padding when the content draws its own edges', () => {
+    render(<Card flush>hello</Card>)
+    expect(screen.getByText('hello').className).toContain('card--flush')
   })
 })

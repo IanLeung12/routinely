@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { Row } from '../ui/Row.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { createInvite, currentPerson, supervisorsOf, unlink } from './api.ts'
 import type { Invite, Relationship } from './types.ts'
@@ -45,19 +46,19 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
         ) : (
           <ul className="people-list">
             {supervisors.map((supervisor) => (
-              <li key={supervisor.id} className="people-list__row">
-                <span className="people-list__open">
-                  <span className="people-list__name">{supervisor.name}</span>
-                  <span className="people-list__context">
-                    {RELATIONSHIP[supervisor.relationship]} · {supervisor.context}
-                  </span>
-                </span>
-                <Button
-                  aria-label={`Remove ${supervisor.name}`}
-                  onClick={() => removeSupervisor(supervisor.id)}
-                >
-                  Remove
-                </Button>
+              <li key={supervisor.id}>
+                <Row
+                  title={supervisor.name}
+                  subtitle={`${RELATIONSHIP[supervisor.relationship]} · ${supervisor.context}`}
+                  trailing={
+                    <Button
+                      aria-label={`Remove ${supervisor.name}`}
+                      onClick={() => removeSupervisor(supervisor.id)}
+                    >
+                      Remove
+                    </Button>
+                  }
+                />
               </li>
             ))}
           </ul>

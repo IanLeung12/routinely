@@ -29,7 +29,7 @@ describe('PeopleISupport', () => {
     render(<PeopleISupport people={[MRS_K]} onOpen={onOpen} />)
 
     expect(screen.getByText('Room 204, care home')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Open Mrs. K, Room 204, care home' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open Mrs. K' }))
 
     expect(onOpen).toHaveBeenCalledWith('mrs-k')
   })

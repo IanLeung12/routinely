@@ -1,16 +1,14 @@
-import { useId } from 'react'
-import { Button } from '../ui/Button.tsx'
+import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import type { RoleId } from './types.ts'
 import './people.css'
 
-const OPTIONS: { role: RoleId; label: string }[] = [
-  { role: 'person', label: 'Myself' },
-  { role: 'supervisor', label: 'Someone I support' },
+const OPTIONS: { value: RoleId; label: string }[] = [
+  { value: 'person', label: 'Myself' },
+  { value: 'supervisor', label: 'Someone I support' },
 ]
 
 /** The role switch in the shell (SPEC section 17): the demo flips between watching
- * your own routine and supporting someone without clearing anything. Same shape as the
- * live screen's routine picker, so both read as one control. */
+ * your own routine and supporting someone without clearing anything. */
 export function RoleSwitch({
   role,
   onChange,
@@ -18,24 +16,10 @@ export function RoleSwitch({
   role: RoleId
   onChange: (role: RoleId) => void
 }) {
-  const labelId = useId()
-
   return (
-    <div className="role-switch" role="group" aria-labelledby={labelId}>
-      <p className="role-switch__label" id={labelId}>Viewing as</p>
-      {OPTIONS.map((option) => {
-        const active = option.role === role
-        return (
-          <Button
-            key={option.role}
-            variant={active ? 'primary' : 'secondary'}
-            aria-pressed={active}
-            onClick={() => onChange(option.role)}
-          >
-            {option.label}
-          </Button>
-        )
-      })}
+    <div className="role-switch">
+      <p className="role-switch__label" aria-hidden="true">Viewing as</p>
+      <SegmentedControl label="Viewing as" options={OPTIONS} value={role} onChange={onChange} />
     </div>
   )
 }
