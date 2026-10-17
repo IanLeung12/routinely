@@ -74,3 +74,57 @@ def test_get_returns_latest_after_replacement():
     replacement = _feedback(FeedbackVerdict.CONFIRMED)
     store.record("alert-1", "res-1", replacement)
     assert store.get("alert-1") == replacement
+
+
+def test_cause_of_returns_none_when_unrecorded():
+    store = FeedbackStore()
+    assert store.cause_of("alert-1") is None
+
+
+def test_cause_of_returns_stored_cause():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    assert store.cause_of("alert-1") == "forgot-step"
+
+
+def test_cause_is_replaced_on_rerecord():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="other")
+    assert store.cause_of("alert-1") == "other"
+
+
+def test_cause_counts_only_confirmed_alerts():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-2", "res-1", _feedback(FeedbackVerdict.FALSE_ALARM), cause="forgot-step")
+    assert store.cause_counts("res-1") == {"forgot-step": 1}
+
+
+def test_cause_counts_tally_per_cause():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-2", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-3", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="other")
+    assert store.cause_counts("res-1") == {"forgot-step": 2, "other": 1}
+
+
+def test_cause_counts_are_per_resident():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-2", "res-2", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    assert store.cause_counts("res-1") == {"forgot-step": 1}
+    assert store.cause_counts("res-2") == {"forgot-step": 1}
+
+
+def test_cause_counts_empty_when_no_cause_recorded():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED))
+    assert store.cause_counts("res-1") == {}
+
+
+def test_replacing_cause_does_not_double_count():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="other")
+    assert store.cause_counts("res-1") == {"other": 1}
