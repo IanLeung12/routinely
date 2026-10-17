@@ -61,3 +61,19 @@
 @media (prefers-reduced-motion: reduce) {
   .task-map .step--omission { animation: none; }
 }
+
+.task-map-legend {
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+}
+
+.task-map-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.task-map-legend__item .step {
+  padding: var(--space-2);
+}
