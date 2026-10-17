@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: bf77ff1
+- last-reviewed: 41cedef
 
 ## Tasks
 
@@ -172,16 +172,16 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: blocked
+- status: todo
 - class: standard
 - priority: 2
 - kind: test
-- deps: —
+- deps: T157
 - area: tests/scenarios/pattern_motor_slowing/
-- owner: ian-claude-standard
-- claimed: 2026-10-17T08:22Z
+- owner: —
+- claimed: —
 - pr: —
-- note: NOT a human-needed block, a code gap: motor_slowing requires=(durations_up,) but replay.py's top_pattern_of never sets duration_s on history or current-session dicts (HistorySession has no duration field either), so duration_ratio is always None in scenario replay and durations_up never reaches SIGNAL_PRESENT. Only demo.py/synth/history.py populate duration_s. Pattern is unreachable from tests/scenarios/*/steps.jsonl+expected.yaml without a replay.py change (add duration_s to HistorySession + pass session durations through top_pattern_of), which is pipeline code outside this task's area.
+- note: orch: was blocked because replay.py never passes duration_s, so durations_up is unreachable in scenarios. T157 adds scenario durations; after it this is data-only (use the new duration fields).
 
 What: Same as T142 for SPEC §7.5's `motor_slowing` pattern: slower steps and hesitation without new sequence errors.
 Interface: `tests/scenarios/pattern_motor_slowing/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/pattern_slow_drift/`, `top_pattern: motor_slowing`. Read the `motor_slowing` entry in `pipeline/src/routine_watch/patterns_library.py` for its signals. Don't change pipeline code; if unreachable without code changes, set blocked with the reason.
@@ -424,3 +424,158 @@ Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, wait f
 Acceptance:
 - test: a mocked live session ending with a flag triggers a second fetch of residents and alerts and the Flagged chip / alert row render.
 - `cd web && npx vitest run` and `scripts/ci.sh` pass.
+
+### T157 — replay.py: scenarios can give sessions a duration so motor_slowing is reachable
+- status: todo
+- class: standard
+- priority: 1
+- kind: test
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay_durations.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: `motor_slowing` needs `durations_up`, but `HistorySession` has no duration and `top_pattern_of` never sets `duration_s` on the history or current-session dicts, so `duration_ratio` is always None in scenario replay (found by T143). Add an optional duration so a scenario can express "slower than usual".
+Interface: `HistorySession.duration_s: float | None = Field(default=None, gt=0)`; `Expected.duration_s: float | None = None` for the replayed session (or derive it from the last step timestamp in steps.jsonl if simpler; document which). `top_pattern_of` passes `duration_s` into the session dicts `patterns.py` already reads (around patterns.py:695). Unset durations behave exactly as today.
+Acceptance:
+- New test: ~10 history sessions at 300 s plus a current session at 450 s with no new sequence errors → `duration_ratio` ≈ 1.5 and `durations_up` present; same inputs without durations → `duration_ratio is None`.
+- Every existing scenario still passes: `scripts/e2e.sh` and `scripts/ci.sh` green.
+- Docstrings of `HistorySession`/`Expected` say how to write a duration.
+
+### T158 — Docs: CODEMAP note for the "what was it?" cause path
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T129 (PR #140) carried the optional feedback cause from the alert screen to the API, but CODEMAP has no note on it. Add 2-4 lines to the notes only (the file list is generated).
+Interface: Read only `docs/CODEMAP.md`, `web/src/alert/FeedbackButtons.tsx` (top 30 lines) and `pipeline/src/routine_watch/api.py` lines 50-180. Describe: FeedbackButtons offers the alert's patterns + "other" once confirmed → `POST /alerts/{id}/feedback` with `cause` → validated against `KNOWN_CAUSES` (pattern ids + "other", else 422) → `FeedbackStore.record(..., cause=)`.
+Acceptance:
+- Note sits next to the existing alert/feedback notes; no other file changed.
+- `scripts/ci.sh` passes.
+
+### T159 — Resident detail: real empty states for sessions and heat calendar
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/SessionList.tsx, web/src/resident/SessionList.test.tsx, web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `SessionList` renders a bare `<p className="muted">` when empty and `HeatCalendar` returns `null` (the section just vanishes). Use the shared `EmptyState` so a new resident's page explains itself.
+Interface: Read only those four files plus `web/src/ui/EmptyState.tsx` and `web/src/ui/README.md`. SessionList empty → `<EmptyState message="No sessions recorded yet." />`. HeatCalendar empty → `<EmptyState message="No sessions yet, so nothing to show on the calendar." />`.
+Acceptance:
+- One test per component renders it with an empty list and finds the message.
+- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
+
+### T160 — Unit overview: empty state when the unit has no residents
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `UnitOverview` handles loading but renders an empty list when the API returns no residents. Show `EmptyState` with "No residents on this unit yet." (same wording as `web/src/handoff/Handoff.tsx`).
+Interface: Read only the two files above and `web/src/ui/EmptyState.tsx`.
+Acceptance:
+- Test: mocked fetch returns `[]` → message visible, no list rendered.
+- `cd web && npx vitest run src/overview` and `scripts/ci.sh` pass.
+
+### T161 — Live screen: choose the tea or the medication session
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/LiveScreen.tsx (new), web/src/live/LiveScreen.test.tsx (new), web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 Nice to have 4 (a second task) exists in the pipeline (`tests/scenarios/meds_*`) but App hard-codes `tea_skip_teabag_pour_twice`, so judges never see it generalise. Add a two-option switch above the live session.
+Interface: `LiveScreen({ onOpenAlert })` renders a segmented control ("Making tea" → `tea_skip_teabag_pour_twice`, "Medication with water" → `meds_skip_water`, default tea) and `<LiveSession scenario=… key=… />`. App.tsx swaps its `<LiveSession …/>` for `<LiveScreen …/>`, nothing else. Use `web/src/ui/Button.tsx`; `aria-pressed` on the active option.
+Acceptance:
+- Test: default renders the tea scenario; clicking "Medication with water" switches the scenario (mock `LiveSession`).
+- Demo path unchanged by default. `scripts/ci.sh` passes.
+
+### T162 — Test: live websocket path finds the same errors and flag as scenario replay
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_live_matches_replay.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: The SPEC §10 fallback plays recorded scenarios through `live.session_messages`, while `scripts/e2e.sh` checks them through `replay.py`. Nothing asserts the two agree, so the demo could show different errors from what CI tested.
+Interface: For each `tests/scenarios/*/` playable live, run `session_messages(scenario_path(name), speed=<very fast>)`, collect error messages and the final flag message, compare with `expected.yaml` (error type/step multiset, `flag`). Read only `pipeline/src/routine_watch/live.py` and `replay.py`. Scenarios that legitimately can't play live get an explicit skip with a reason.
+Acceptance:
+- Parametrised per scenario, < 20 s total, no network.
+- A real mismatch → don't fix pipeline code here; xfail with a reason and list it in the PR so the orchestrator files a bug.
+- `scripts/ci.sh` passes.
+
+### T163 — Docs: web/src/ui/README.md lists every shared component
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: web/src/ui/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: The UI kit grew (DemoBanner, EmptyState, ErrorState, Loading, SectionHeader, StatusChip, errorTypes) and the README is where workers look before writing a new component. List each with one line on when to use it and its props.
+Interface: Read only `web/src/ui/README.md` and the non-test `web/src/ui/*.tsx`/`*.ts` files.
+Acceptance:
+- Every non-test file in `web/src/ui/` appears in the README; no code changes.
+- `scripts/ci.sh` passes.
+
+### T164 — Guided demo tour behind ?tour=1
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/tour/ (new), web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: judges skim; a 7-step tour following SPEC §10 (baseline → live → alert → why → not just delirium → privacy) makes Clarity obvious and doubles as a presenter cue card. Off unless the URL has `?tour=1`, so it can't touch the demo path.
+Interface: `web/src/tour/Tour.tsx` renders a small fixed card (title, body, Back/Next/Close, "n of 7") from a `web/src/tour/steps.ts` array of `{ title, body }`; plain-language copy using "flags a change for review" / "consistent with", never "diagnose". App.tsx mounts `<Tour />` only when `new URLSearchParams(location.search).has('tour')`. No navigation automation.
+Acceptance:
+- Tests: hidden without the param; with it, Next/Back move through steps and Close hides it; copy contains no "diagnos".
+- `scripts/ci.sh` passes.
+
+### T165 — Test: pattern ids are safe feedback causes
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: —
+- area: pipeline/tests/test_feedback_cause_ids.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T129 a feedback `cause` is any pattern id or "other". Guard against a future pattern colliding with "other" or using an id the web can't round-trip.
+Interface: Read only `pipeline/src/routine_watch/patterns_library.py` and `pipeline/src/routine_watch/api.py` lines 50-90. Assert ids in `BY_ID` are unique and match `^[a-z][a-z0-9_]*$`, none equals `api.OTHER_CAUSE`, and `api.KNOWN_CAUSES == set(BY_ID) | {"other"}`.
+Acceptance:
+- `cd pipeline && python -m pytest tests/test_feedback_cause_ids.py` and `scripts/ci.sh` pass.
