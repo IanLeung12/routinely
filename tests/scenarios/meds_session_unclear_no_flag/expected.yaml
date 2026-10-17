@@ -1,0 +1,39 @@
+# Bad lighting makes most of this session's observations low-confidence: getting the
+# glass, opening the organiser and filling the glass come through unclear, while both
+# times the pill comes out of the organiser, and drinking the water, stay clear - so
+# 3 of 7 events are unclear - over session_quality's 40% threshold. The steps and
+# errors underneath are meds_pill_twice's double-dose session verbatim (the pill comes
+# out of the organiser a second time, with drink_water in between), against the same
+# otherwise-flagging history, so this scenario proves the quality gate - not an empty
+# session or a quiet history - is what keeps it from scoring and flagging: the capture
+# cannot be trusted, so it is never scored at all (SPEC section 12).
+
+task: meds
+
+steps:
+  - get_glass
+  - open_organiser
+  - take_pill
+  - fill_glass
+  - drink_water
+  - take_pill # again, with drink_water in between
+  - close_organiser # optional, taken
+
+errors:
+  - { type: perseveration, step: take_pill }
+
+quality: unclear
+score: 0.0
+flag: false
+
+# A week of quiet mornings, then one other pill-twice session 30 hours ago: the same
+# history that makes meds_pill_twice flag. Proves the quality gate suppresses the flag
+# even when the history alone would have allowed it.
+history:
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, score: 0.0 }
+  - { hours_ago: 30, errors: { perseveration: 1 } }
