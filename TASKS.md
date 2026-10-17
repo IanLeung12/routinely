@@ -459,3 +459,60 @@ Acceptance:
 - Schemas generated, README in contracts/ updated.
 - `test_api_payload_contracts.py` validates each route's real response against its schema, and a test fails if a field is added on one side only.
 - `scripts/ci.sh` passes.
+
+### T281 — Shift handoff: paused rooms say who paused them and since when
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/handoff/handoff.css
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: an incoming nurse reading "Monitoring paused: Mrs. K (room 204)" can't tell if that was a deliberate 5-minute pause or one forgotten since yesterday (SPEC §12). For each paused room on the handoff screen, show the latest pause entry from the audit trail ("paused by nurse at 13:40") on screen and in the copied text.
+Interface: consume `fetchMonitoringHistory(room)` from `web/src/about/monitoringApi.ts` (read only; don't edit it) for each room in `Handoff.paused`; use the newest entry with `on: false`. If the history call fails or is empty, keep today's line unchanged (no error banner).
+Acceptance:
+- Screen and "Copy summary" text read like `Monitoring paused: Mrs. K (room 204), paused by nurse at 13:40`; time formatted as local HH:MM.
+- History fetch failure → same output as today; no paused rooms → no history calls.
+- Tests in Handoff.test.tsx cover: entry shown, fetch failure, no paused rooms; copied text still has no "diagnos".
+- `scripts/ci.sh` passes.
+
+### T282 — Integration: pausing a room makes /ws/live send "paused", resuming lets it run
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/integration.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: The pause flow (T244/T249/T266/T275) is covered by unit tests and an in-process API test, but not against the running stack. Extend scripts/integration.sh's existing websockets block to check it end to end.
+Interface: against the stack integration.sh already starts: `PUT /rooms/204/monitoring` with `{"on": false}` → connect `/ws/live?scenario=tea_skip_teabag_pour_twice&speed=20` → first message has `"type": "paused"`; then `PUT ... {"on": true}` → a fresh connection gets a normal frame/step message. Always resume in a `trap`/finally so the stack is left unpaused; read the demo room from `GET /residents` (as smoke.sh does since T274) rather than hard-coding 204 if practical.
+Acceptance:
+- integration.sh fails with a clear message if the paused message is missing or the resumed session doesn't stream.
+- Room is resumed even when a check fails.
+- `scripts/integration.sh` passes locally on main (paste its last line in the PR); `scripts/ci.sh` passes.
+
+### T283 — Resident detail: "What nurses said" — past feedback answers and the pattern ranking they changed
+- status: todo
+- class: heavy
+- priority: 2
+- kind: feature
+- deps: T278
+- area: pipeline/src/routine_watch/feedback.py, pipeline/src/routine_watch/ (the residents routes module T278 creates; not api.py), pipeline/tests/test_feedback_history.py, web/src/resident/FeedbackHistory.tsx, web/src/resident/FeedbackHistory.test.tsx, web/src/resident/feedbackHistory.css, web/src/resident/ResidentDetail.tsx, web/src/resident/api.ts, web/src/resident/types.ts
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: the feedback loop (T130, Nice-to-have 8) re-weights patterns silently; judges and nurses can't see the AI learning. Expose a resident's recorded answers and current pattern weights and show them as a small card on the resident detail screen.
+Interface: `FeedbackStore.history(resident_id) -> list[{alert_id, verdict, cause, at}]` (newest first) plus existing `pattern_weights()`; route `GET /residents/{id}/feedback` → `{"answers": [...], "pattern_weights": {pattern_id: float}}` (404 for unknown resident) in the residents routes module from T278. Web: `fetchFeedbackHistory(id)` in resident/api.ts, `<FeedbackHistory>` card under the session list: "Confirmed · consistent with <pattern name> · 13:40" rows and "Ranking now favours: <pattern>" when weights exist; empty state "No nurse answers yet". Don't add a contracts/ schema here (contracts/ is busy with T269/T280); note it in the PR for a follow-up.
+Acceptance:
+- pytest: answers recorded via the feedback POST appear newest-first; `/demo/reset` empties them; unknown resident → 404.
+- Vitest: rows, empty state, fetch error state ("Couldn't load feedback"); copy uses "consistent with", never "diagnos".
+- `scripts/ci.sh` passes.
