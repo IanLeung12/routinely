@@ -1,0 +1,6 @@
+# Stirring with milk instead of a spoon is exactly one substitution error.
+task: tea
+steps: [fill_kettle, get_cup, boil, teabag_in_cup, pour, milk, stir, remove_teabag]
+errors:
+  - { type: substitution, step: stir }
+flag: false

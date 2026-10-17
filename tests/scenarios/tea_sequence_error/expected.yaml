@@ -1,0 +1,6 @@
+# Pouring before the teabag goes in, then adding it, is one sequence error.
+task: tea
+steps: [fill_kettle, get_cup, boil, pour, teabag_in_cup, milk, stir, remove_teabag]
+errors:
+  - { type: sequence, step: pour }
+flag: false
