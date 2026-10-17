@@ -182,15 +182,15 @@ What: Split from T402. Read only `docs/DESIGN.md` and `web/src/index.css`. A row
 Acceptance: one tick per day; null days render as hairlines; status colours via tokens; accessible name summarises "14 days, 2 flagged"; `cd web && npx vitest run src/ui/charts/MicroBars.test.tsx`.
 
 ### T420 — Restyle: overview Sparkline → MicroBars
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: improvement
 - source: ian
 - deps: T419
 - area: web/src/overview/Sparkline.tsx, web/src/overview/Sparkline.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_standard-2
+- claimed: 2026-10-17T22:05Z
 - pr: —
 
 What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/MicroBars.tsx) from the same input it takes today; keep its props and export so callers don't change. Read only those files and `web/src/overview/types.ts`.
