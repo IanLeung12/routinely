@@ -623,7 +623,7 @@ Acceptance:
 - `scripts/ci.sh` passes; update `docs/CODEMAP.md` data-flow notes.
 
 ### T085 — PatternList component for ranked "possible patterns" (not wired yet)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: feature
@@ -631,7 +631,7 @@ Acceptance:
 - area: web/src/alert/PatternList.tsx, web/src/alert/PatternList.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T06:15Z
-- pr: —
+- pr: #73
 
 What: SPEC §9 screen 4 now shows "Possible patterns", ranked. Build the presentational component now so T088 only has to wire it once T084 lands the contract.
 Interface: `export interface PatternView { pattern_id: string; name: string; confidence: number /*0-1*/; urgency: 'routine'|'next_round'|'same_shift'|'urgent'; evidence: string[]; checks: string[] }` and `export function PatternList({ patterns }: { patterns: PatternView[] })`. Each item: name, "consistent with" phrasing (e.g. heading "Consistent with: Sudden change (delirium)"), confidence as a percentage, urgency label, evidence bullets, "Consider ruling out:" checks. `urgent` items get a distinct class (`pattern--urgent`) and an "Urgent" label (not colour alone). Empty list renders "Change detected, no clear pattern". Read for style only: `web/src/alert/SuggestedChecks.tsx`, `web/src/ui/Card.tsx`. Do not import from contracts.ts and do not edit any other file.
