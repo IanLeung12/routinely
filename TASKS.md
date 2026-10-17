@@ -265,14 +265,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
 
 ### T033 — Slow-drift trend detector
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/drift.py, pipeline/tests/test_drift.py
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:08Z
-- pr: —
+- pr: #30
 
 What: SPEC Nice-to-have 6: a sustained upward trend in a resident's daily error score over weeks, reported as a trend for review, separate from the sudden-change flag. Read only the files in `area`, `pipeline/src/routine_watch/change_detection.py` (style; do not edit) and `pipeline/pyproject.toml`. Standard library only.
 Interface: `@dataclass(frozen=True) class Drift: slope_per_day: float; days: int; trending: bool`; `drift(daily: Sequence[tuple[date, float]], min_days: int = 7, min_slope: float = 0.1) -> Drift`. Slope = Theil–Sen (median of pairwise slopes, x in days). `trending` = `days >= min_days and slope_per_day >= min_slope`. Fewer than 2 points → slope 0, not trending. Input order doesn't matter.
