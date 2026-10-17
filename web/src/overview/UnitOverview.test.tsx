@@ -103,6 +103,15 @@ describe('UnitOverview', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   })
 
+  it('shows an empty state when there are no residents', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [] }))
+
+    render(<UnitOverview />)
+
+    expect(await screen.findByText('No residents on this unit yet.')).toBeTruthy()
+    expect(screen.queryByRole('list')).toBeNull()
+  })
+
   it('colours the status chip per status', async () => {
     vi.stubGlobal(
       'fetch',

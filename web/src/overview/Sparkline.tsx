@@ -1,3 +1,5 @@
+import { formatScore } from '../resident/format.ts'
+
 const WIDTH = 120
 const HEIGHT = 32
 const PADDING = 2
@@ -29,7 +31,7 @@ export function Sparkline({ scores }: { scores: { ts: string; score: number }[] 
       height={HEIGHT}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       role="img"
-      aria-label={`error score trend, latest ${values[values.length - 1]}`}
+      aria-label={`Error score over the last ${values.length} sessions, latest ${formatScore(values[values.length - 1])}`}
     >
       <polyline points={points.join(' ')} fill="none" stroke="currentColor" strokeWidth={2} />
     </svg>
