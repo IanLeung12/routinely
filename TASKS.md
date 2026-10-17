@@ -382,7 +382,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T250 — Review: /ws/live message protocol has no contract
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: improvement
@@ -391,7 +391,8 @@ Acceptance:
 - area: contracts/live_message.schema.json, contracts/README.md, pipeline/tests/test_live_contract.py
 - owner: ian-claude
 - claimed: 2026-10-17T11:53Z
-- pr: —
+- pr: #240
+- rating: 4/5 the area left out contracts.py (the generated-schema source) and test_contracts.py, whose raw-frame guard rejects an envelope with a 'frame' property and an open step_state map
 
 What: The live socket's messages (`session_start`, `frame`, `step`, `step_state`, `error`, `session_end`, and now `paused`) cross the pipeline/web boundary but are defined only in `live.py`'s docstring and hand-mirrored in `web/src/live/useLiveSession.ts`; `paused` was just added on one side only. Add a JSON Schema (`oneOf` on `type`) to `contracts/`.
 Interface: read `pipeline/src/routine_watch/live.py` (module docstring + `as_json`), `api.py` `live_session`, and `web/src/live/useLiveSession.ts`. Schema only plus a test; don't change message shapes.
