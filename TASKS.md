@@ -185,7 +185,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T102 — Docs: README quickstart for teammates and judges
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -193,7 +193,7 @@ Acceptance:
 - area: README.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:40Z
-- pr: —
+- pr: #106
 
 What: Make the top-level README a 1-minute quickstart. Read only `README.md`, `scripts/dev.sh`, `scripts/e2e.sh`, `scripts/ci.sh` (headers only) and SPEC.md §1 and §12.
 Interface: sections: what it is (2 lines, "flags a change for review"; never any form of "diagnos*"), run it (`scripts/dev.sh up|down`, ports), test it (`scripts/ci.sh`, `scripts/e2e.sh`), offline by default (`OFFLINE_MODE`, `LIVE_API` unset = fakes, no paid calls), privacy (skeletons and boxes only, no video stored), where things are (pointers to `docs/CODEMAP.md`, `tests/scenarios/README.md`). Under ~80 lines.
