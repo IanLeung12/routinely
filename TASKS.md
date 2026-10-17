@@ -41,13 +41,13 @@ Acceptance:
 - A sample `contracts/examples/capture.jsonl` (a few frames) validates against the CaptureFrame schema.
 
 ### T003 — Tea task graph definition
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: T001
 - area: pipeline/src/routine_watch/tasks/, pipeline/tests/test_tea_graph.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T03:36Z
 - pr: —
 
 What: The "make tea" dependency graph from SPEC §7 as data plus a loader. Steps: fill kettle, boil, get cup, teabag in cup, pour water, (optional) milk, (optional) sugar, stir, remove teabag. Dependencies, allowed objects per step (spoon|teaspoon), once-only flags, optional flags.
