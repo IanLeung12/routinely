@@ -31,6 +31,7 @@ from .demo import DEMO_DAYS, DEMO_NOW
 from .explain import Explainer
 from .explain_claude import get_explainer
 from .patterns import extract_features, score_patterns
+from .tasks import TASKS_DIR, TaskGraph, TaskGraphError, load_task
 
 #: How far back a session still counts toward the flag (SPEC section 7).
 FLAG_WINDOW_H = 48.0
@@ -38,9 +39,10 @@ FLAG_WINDOW_H = 48.0
 #: How far back a care-record note is still worth mentioning next to the alert.
 CONTEXT_LOOKBACK_H = 72.0
 
-#: Stand-in for the step an error happened at, when the resident's history only
-#: carries a count of errors per type rather than individual step events.
-_UNKNOWN_STEP = "the task"
+#: The step a placeholder error is spaced before/after, as a fraction of the
+#: session's duration, so two sessions of different lengths don't land on the
+#: same timestamps and read as duplicate errors in the summary.
+_MIN_ERROR_SPAN_S = 5.0
 
 
 def _get_explainer() -> Explainer:
@@ -55,7 +57,14 @@ def build_alerts(residents: list[dict]) -> list[Alert]:
 
 
 def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
-    """The sessions behind the flag: id, session dict and score, oldest first."""
+    """The sessions behind the flag: id, session dict and score, oldest first.
+
+    A live session played twice is one session here too: `session_log.record`
+    replaces a session recorded under the same `session_id` rather than adding a
+    second one (SPEC section 10 step 4), so a dashboard reload that replays the same
+    recording doesn't grow the alert - `resident["sessions"]` already carries only
+    the one.
+    """
     threshold = resident["baseline"]["threshold"]
     window_start = DEMO_NOW - timedelta(hours=FLAG_WINDOW_H)
     qualifying = []
@@ -67,30 +76,89 @@ def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
     return qualifying
 
 
+def _graph_for(task: str) -> TaskGraph:
+    """The task graph behind a session's `task` field.
+
+    Synthetic history names it by the task file (``"tea"``); a session played live
+    names it by the graph's own id (``"make_tea"``, from `live.py`'s `graph.id`).
+    Either way, one of the files in `TASKS_DIR` is it.
+    """
+    try:
+        return load_task(task)
+    except TaskGraphError:
+        for path in TASKS_DIR.glob("*.yaml"):
+            graph = load_task(path.stem)
+            if graph.id == task:
+                return graph
+        raise
+
+
+def _step_candidates(graph: TaskGraph, error_type: str) -> tuple[str, ...]:
+    """The steps a placeholder error of this type could plausibly be about."""
+    if error_type in ("omission", "abandonment"):
+        candidates = graph.required_steps
+    elif error_type == "perseveration":
+        candidates = tuple(step_id for step_id in graph.step_ids if graph.is_once_only(step_id))
+    elif error_type == "sequence":
+        candidates = tuple(step_id for step_id in graph.step_ids if graph.deps(step_id))
+    else:
+        candidates = graph.step_ids
+    return candidates or graph.step_ids
+
+
 def _task_errors(session_id: str, session: dict) -> list[TaskError]:
     """Synthetic per-instance errors from a session's error-type counts.
 
     The demo history only tracks how many errors of each type a session had, not the
-    individual step events, so the times here are spaced placeholders rather than
-    anything observed.
+    individual step events, so the step and the time here are plausible placeholders
+    rather than anything observed: a real step of this task, spread evenly across the
+    session's own duration so two different sessions don't land on the same instant
+    and read as a repeated error in the summary.
     """
+    graph = _graph_for(session["task"])
+    duration = session.get("duration_s") or _MIN_ERROR_SPAN_S
+    counts = sorted(session["errors"].items())
+    total = sum(count for _, count in counts)
+    span = max(duration - _MIN_ERROR_SPAN_S, _MIN_ERROR_SPAN_S)
+
     errors = []
-    t = 0.0
-    for error_type, count in sorted(session["errors"].items()):
+    index = 0
+    for error_type, count in counts:
+        candidates = _step_candidates(graph, error_type)
         for i in range(count):
+            t_start = round(span * (index + 1) / (total + 1), 1)
             errors.append(
                 TaskError(
                     error_id=f"{session_id}:{error_type}:{i}",
                     session_id=session_id,
                     type=error_type,
-                    step_id=None,
-                    t_start=t,
-                    t_end=t + 5.0,
+                    step_id=candidates[index % len(candidates)],
+                    t_start=t_start,
+                    t_end=min(t_start + _MIN_ERROR_SPAN_S, duration),
                     evidence=[],
                 )
             )
-            t += 10.0
+            index += 1
     return errors
+
+
+def _distinct_clauses(errors: list[TaskError]) -> list[dict]:
+    """`errors` as explainer input, minus any whose type, step and displayed
+    timestamp exactly repeat an earlier one (the explainer renders all three, so a
+    repeat there is a repeated clause in the summary, SPEC section 7's "no two bad
+    sessions on their own" notwithstanding)."""
+    seen: set[tuple[str, str | None, str]] = set()
+    distinct = []
+    for error in errors:
+        minutes, seconds = divmod(int(error.t_start), 60)
+        key = (str(error.type), error.step_id, f"{minutes}:{seconds:02d}")
+        if key in seen:
+            continue
+        seen.add(key)
+        distinct.append(
+            {"type": str(error.type), "step_id": error.step_id, "t_start": error.t_start}
+        )
+    return distinct
 
 
 def _context(care_records: list[dict]) -> list[str]:
@@ -145,14 +213,7 @@ def _build_alert(resident: dict) -> Alert:
         threshold=baseline["threshold"],
     )
 
-    explainer_errors = [
-        {
-            "type": str(error.type),
-            "step_id": error.step_id or _UNKNOWN_STEP,
-            "t_start": error.t_start,
-        }
-        for error in errors
-    ]
+    explainer_errors = _distinct_clauses(errors)
     summary = _get_explainer().summarise(
         explainer_errors,
         {
