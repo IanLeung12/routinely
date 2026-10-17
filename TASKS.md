@@ -476,15 +476,15 @@ What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` (tokens) 
 Acceptance: renders N bars; compare series only when present; callout shows its label; has an accessible name and a visually hidden data table; `cd web && npx vitest run src/ui/charts/BarChart.test.tsx`.
 
 ### T419 — Chart kit: MicroBars (14-day tick strip)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
 - area: web/src/ui/charts/MicroBars.tsx, web/src/ui/charts/MicroBars.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T21:04Z
 - pr: —
 
 What: Split from T402. Read only `docs/DESIGN.md` and `web/src/index.css`. A row of thin vertical ticks (like Fey's sector rows), one per day, height = score, colour by status token (normal / watch / flagged; missing day = faint hairline). Props: `days: {date: string, score: number | null, status: 'normal'|'watch'|'flagged'}[]`, `ariaLabel`. Fixed small size (~84×20) for list rows.
