@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T203 — Shift handoff: print-friendly layout
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
