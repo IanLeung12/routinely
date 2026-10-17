@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1898e3b
+- last-reviewed: 8f7b286
 
 ## Tasks
 
@@ -459,3 +459,142 @@ Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/Li
 Acceptance:
 * Test: the "Routine to watch" group renders with "Making tea" pressed and "Medication with water" not pressed.
 * `scripts/ci.sh` passes.
+
+### T188 — Docs: DEMO.md covers /demo/reset and ?task=meds
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: The demo runbook doesn't say how to put the demo back between rehearsals or how to open the medication routine directly. Add both.
+Interface: read `docs/DEMO.md`, `pipeline/src/routine_watch/api.py` (`demo_reset`, `_demo_reset_enabled`), `web/src/live/LiveScreen.tsx` (the `?task=meds` query), `.env.example` (`DEMO_RESET`).
+Acceptance:
+- DEMO.md has a "Between rehearsals" step: `curl -X POST http://localhost:8000/demo/reset`, only works with `OFFLINE_MODE=true` or `DEMO_RESET=1`, returns `{"ok": true}`.
+- DEMO.md mentions opening the live screen with `?task=meds` for the medication routine (tea stays the default).
+- Only docs/DEMO.md changes; `scripts/ci.sh` passes.
+
+### T189 — Demo banner: "Reset demo" button
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Presenters need a one-click way to undo a rehearsal's flag and feedback. Add a "Reset demo" button to the demo banner that POSTs `/demo/reset` and then reloads the page.
+Interface: `DemoBanner({ onDismiss?, onReset? })`; default `onReset` does `fetch(\`${apiBase}/demo/reset\`, {method:'POST'})` using the API base from `web/src/config.ts`, then `window.location.reload()`. On a non-2xx/network error show inline "Couldn't reset the demo" text, no throw.
+Acceptance:
+- Button is a secondary `btn`, labelled "Reset demo"; disabled while the request is in flight.
+- Tests (mock fetch): success calls reload; 404 shows the error text and doesn't reload.
+- `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
+
+### T190 — Test: LiveScreen ignores unknown ?task values
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/LiveScreen.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T186 added `?task=meds`; pin that anything else (absent, `?task=tea`, `?task=foo`) still opens the tea routine.
+Interface: read `web/src/live/LiveScreen.tsx` and its existing test; set `window.history.replaceState(null, '', '/?task=foo')` per case and restore afterwards.
+Acceptance:
+- Three cases (no query, `tea`, `foo`) all show tea selected in the picker.
+- Only the test file changes; `cd web && npm test -- LiveScreen` and `scripts/ci.sh` pass.
+
+### T191 — Test: FeedbackStore.reset() puts threshold and weights back to base
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_feedback.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `FeedbackStore.reset()` (added by T144) has no unit test.
+Interface: read `pipeline/src/routine_watch/feedback.py` and `pipeline/tests/test_feedback.py`.
+Acceptance:
+- Test: log a false alarm and a cause, call `reset()`, assert threshold equals the no-feedback base, the feedback for that alert id is None, and `cause_of` is None.
+- `cd pipeline && pytest tests/test_feedback.py` and `scripts/ci.sh` pass.
+
+### T192 — /demo/reset also resumes paused room monitoring
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T149
+- area: pipeline/src/routine_watch/api.py (demo_reset only), pipeline/tests/test_api_demo_reset.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: After T149 a rehearsal can pause a room, and `/demo/reset` leaves it paused. Make reset also call the monitoring store's `reset()`.
+Interface: read `pipeline/src/routine_watch/api.py` (`demo_reset`), `pipeline/src/routine_watch/monitoring.py` (`get_monitoring_store`, `MonitoringStore.reset`), `pipeline/tests/test_api_demo_reset.py`.
+Acceptance:
+- Test: PUT a room to paused, POST /demo/reset, GET /monitoring shows no paused rooms.
+- `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
+
+### T193 — Scenario: medication taken twice is a repetition error
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_pill_twice/ (new), tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: The medication routine has skip and order scenarios but none for a repeated step, the most safety-relevant meds error. Add one.
+Interface: copy the shape of `tests/scenarios/meds_normal/` and `tests/scenarios/tea_kettle_twice/`; `frames.jsonl` + `expected.yaml` with one repetition error on the take-pill step.
+Acceptance:
+- `scripts/e2e.sh` passes including the new scenario; README lists it (the README coverage test passes).
+- If the meds graph can't express it, stop and set the task blocked with the reason (don't change pipeline code).
+
+### T194 — smoke.sh: seeded alert survives /demo/reset
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: T178
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: Reset must only drop live sessions and feedback, not the seeded demo history. After smoke.sh's POST /demo/reset, check GET /alerts still returns at least one alert.
+Interface: read `scripts/smoke.sh` (the `/demo/reset` block at the end and the existing `/alerts` check).
+Acceptance:
+- New PASS/FAIL line "GET /alerts after reset" right after the reset check.
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass; against `scripts/dev.sh up` all checks pass.
+
+### T195 — Unit overview: All / Flagged / Watch filter
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: on a real unit a nurse wants only the residents needing attention in one tap (Clarity). Add a three-way filter above the resident list; All stays default so the demo path is unchanged.
+Interface: local state in `UnitOverview`; buttons with `aria-pressed`; filters on the existing resident `status`; empty filter result uses `EmptyState` "No residents flagged for review." / "No residents to watch.".
+Acceptance:
+- Tests: each filter shows only matching residents; empty case shows the message; default is All.
+- `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
