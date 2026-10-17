@@ -1,0 +1,16 @@
+@media (max-width: 480px) {
+  .session-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    row-gap: 0.25rem;
+  }
+
+  .session-when,
+  .session-score,
+  .session-detail,
+  .session-duration {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
