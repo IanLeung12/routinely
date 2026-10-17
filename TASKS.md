@@ -211,7 +211,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T116 — Scenario: pill taken before the water is poured is a sequence error
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
