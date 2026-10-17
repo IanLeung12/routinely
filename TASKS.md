@@ -364,7 +364,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T300 — Pattern library: filter by urgency
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -373,7 +373,8 @@ Acceptance:
 - area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/urgencyFilter.css
 - owner: ian-claude-standard
 - claimed: 2026-10-17T15:04Z
-- pr: —
+- pr: #293
+- rating: 5/5 clear
 
 What: Rationale: the library lists every pattern in one long column; a nurse wants to see "what needs checking this shift" first. Add a row of filter buttons (All / Urgent / Check this shift / Check next round / Routine) above the list.
 Interface: `PatternLibrary` keeps fetching the same data; filter state is local (`useState`), buttons use `aria-pressed`, labels come from the existing `URGENCY_LABELS`. Put new styles in the new `urgencyFilter.css` (don't touch `PatternLibrary.css`, T240 owns it). Separate screen, not on the demo path.
