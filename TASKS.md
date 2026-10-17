@@ -441,7 +441,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T378 — Landing page (public, judges' first impression)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
