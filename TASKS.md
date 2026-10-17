@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T071 — Tests for useLiveSession and mockLiveStream
-- status: claimed
+- status: blocked
 - class: light
 - priority: 2
 - kind: test
@@ -58,7 +58,7 @@ What: The live screen's state hook and mock stream are untested. Read only `web/
 Interface: new test files only; use `vi.useFakeTimers()` and a fake WebSocket; no real network.
 Acceptance:
 - mockLiveStream: emits messages in order, ends with a session-ended message, and the returned stop function stops further messages.
-- note: released by orchestrator: stale claim (>90 min, no PR)
+- note: Tests committed locally on task/T071-live-tests. Web lint/test/build passed twice with --maxWorkers=2 (235 tests); scripts/ci.sh Python passed but default-parallel web suite timed out in existing AlertView and PatternList tests. New tests pass. No push: required full CI did not pass.
 - useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
