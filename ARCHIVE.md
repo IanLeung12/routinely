@@ -1397,3 +1397,20 @@ Interface: new optional props `causeOptions?: {id: string; label: string}[]`, `c
 Acceptance:
 - Vitest: picker hidden before confirming and when `causeOptions` is absent; shown after confirmed; clicking an option calls `onCauseChange` with its id; existing tests unchanged and passing.
 - `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T091 — Tests: demo residents land on their intended status
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo.py
+- owner: ian-claude
+- claimed: 2026-10-17T06:22Z
+- pr: #78
+
+What: `pipeline/src/routine_watch/demo.py` pins seeds so each resident gets its intended status, but no test guards it; upcoming pattern work (T084, T089) will change this file.
+Interface: new `pipeline/tests/test_demo.py` only. Read `pipeline/src/routine_watch/demo.py`. Don't edit source.
+Acceptance:
+- pytest: `demo_residents()` is deterministic (two calls equal); `mrs-k` status is `flagged`; `mrs-ahmed` and `mr-silva` are `normal`; `mr-chen` is not `normal`; every resident has 14 days of score points sorted by `ts`; no resident has an empty name or room.
+- `scripts/ci.sh` passes.
