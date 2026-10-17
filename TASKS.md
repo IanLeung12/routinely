@@ -459,7 +459,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T378 — Landing page (public, judges' first impression)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -467,7 +467,8 @@ Acceptance:
 - area: web/landing.html, web/src/landing/, web/vite.config.ts, docs/CODEMAP.md
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T19:02Z
-- pr: —
+- pr: #367
+- rating: 4/5 clear; the one ambiguity was the hero's 'Watch the demo' anchor (no video exists, so it points at the How it works section, which links the guided tour) and the section name 'consistent with, not a diagnosis' colliding with the no-'diagnos' copy rule
 
 What: A one-page public site for the demo URL (and the GoDaddy domain later): what Routine Watch is, why it matters, how it works, and a button into the live dashboard. Separate from the nurse dashboard so it can't break the demo path.
 Interface:
