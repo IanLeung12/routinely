@@ -52,4 +52,28 @@ export const mockResidents: ResidentSummary[] = [
       { ts: '2026-01-01T09:00:00+00:00', score: 0.11 },
     ],
   },
+  {
+    id: 'mr-nguyen',
+    name: 'Mr. Nguyen',
+    room: '126',
+    status: 'watch',
+    scores: [
+      { ts: '2025-12-31T08:00:00+00:00', score: 0 },
+      { ts: '2025-12-31T18:00:00+00:00', score: 5 },
+      { ts: '2026-01-01T08:00:00+00:00', score: 0 },
+      { ts: '2026-01-01T18:00:00+00:00', score: 5 },
+    ],
+  },
+  {
+    id: 'mrs-patel',
+    name: 'Mrs. Patel',
+    room: '132',
+    status: 'watch',
+    scores: [
+      { ts: '2025-12-29T08:00:00+00:00', score: 0 },
+      { ts: '2025-12-30T08:00:00+00:00', score: 1 },
+      { ts: '2025-12-31T08:00:00+00:00', score: 0 },
+      { ts: '2026-01-01T08:00:00+00:00', score: 1 },
+    ],
+  },
 ]

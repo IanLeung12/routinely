@@ -33,11 +33,14 @@ describe('UnitOverview', () => {
 
     const rows = screen.getAllByRole('listitem')
     const names = rows.map((row) => row.querySelector('.resident-name')?.textContent)
-    expect(names).toEqual(['Mrs. K', 'Mr. Chen', 'Mrs. Ahmed', 'Mr. Silva'])
+    expect(names).toEqual(['Mrs. K', 'Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel', 'Mrs. Ahmed', 'Mr. Silva'])
 
     expect(rows[0].querySelector('.status-chip')?.textContent).toBe('Flagged')
     expect(rows[1].querySelector('.status-chip')?.textContent).toBe('Watch')
-    for (const row of rows.slice(2)) {
+    for (const row of rows.slice(1, 4)) {
+      expect(row.querySelector('.status-chip')?.textContent).toBe('Watch')
+    }
+    for (const row of rows.slice(4)) {
       expect(row.querySelector('.status-chip')?.textContent).toBe('Normal')
     }
   })
@@ -50,7 +53,7 @@ describe('UnitOverview', () => {
 
     render(<UnitOverview />)
 
-    const status = await screen.findByText('1 flagged for review · 1 on watch · 2 normal')
+    const status = await screen.findByText('1 flagged for review · 3 on watch · 2 normal')
     expect(status.getAttribute('role')).toBe('status')
   })
 
@@ -74,7 +77,7 @@ describe('UnitOverview', () => {
 
     const flagged = await screen.findByText('Flagged')
     expect(flagged.className).toContain('status-chip--flagged')
-    const watch = await screen.findByText('Watch')
+    const [watch] = await screen.findAllByText('Watch')
     expect(watch.className).toContain('status-chip--watch')
     const [normal] = await screen.findAllByText('Normal')
     expect(normal.className).toContain('status-chip--normal')
