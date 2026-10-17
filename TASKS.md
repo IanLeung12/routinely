@@ -316,7 +316,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T318 — Unit overview: sort residents by most recent change
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -325,7 +325,8 @@ Acceptance:
 - area: web/src/overview/ResidentSort.tsx, web/src/overview/ResidentSort.test.tsx, web/src/overview/UnitOverview.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T16:22Z
-- pr: —
+- pr: #313
+- rating: 5/5 clear
 
 What: Rationale: on a busy unit the nurse wants the newest flags first. Add a small sort control ("Default order" / "Most recent change first") to the unit overview; the default keeps today's order so the demo path is unchanged.
 Interface: `ResidentSort.tsx` exports the control and a pure `sortResidents(residents, mode)`; UnitOverview uses it. Read web/src/overview/UnitOverview.tsx for the resident fields (use the latest flag/alert time it already has; if none exists, sort by status urgency and say so in the PR). No API or contract changes.
