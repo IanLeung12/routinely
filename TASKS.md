@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T050 — Drift endpoint for a resident
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
