@@ -496,14 +496,14 @@ Acceptance:
 - `scripts/ci.sh` passes and its output includes the "First-load JS (gzipped):" and "Budget:" lines from web/scripts/check-bundle.mjs.
 
 ### T274 — Refactor: smoke.sh JSON checks through one helper; demo room read from /residents
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T13:15Z
 - pr: —
 
 What: `scripts/smoke.sh` repeats the same `python3 -c 'import json, sys ... assert ...'` block for every check, and T245 hardcoded `demo_room="204"`. Add one `check_json <label> <body> <python-expr>` helper and use it everywhere; read the demo room from the first resident in `GET /residents` instead of hardcoding it.
