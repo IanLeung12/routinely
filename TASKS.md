@@ -193,7 +193,7 @@ Acceptance:
 - `scripts/integration.sh` alone still prints OK; `scripts/dev.sh down` still stops the default stack; `scripts/ci.sh` passes.
 
 ### T389 — Review: PrivacyPanel phone-width test checks nothing about phone layout
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -202,7 +202,8 @@ Acceptance:
 - area: web/src/about/PrivacyPanel.mobile.test.tsx
 - owner: max_API_standard
 - claimed: 2026-10-17T20:02Z
-- pr: —
+- pr: #385
+- rating: 5/5 clear
 
 What: the T369 test sets `window.innerWidth = 375` and only asserts class names exist; jsdom ignores innerWidth and `privacyPanel.css` is stubbed in Vitest, so deleting the whole `@media (max-width: 480px)` block still passes.
 Interface: read `src/about/privacyPanel.css` with `vi.importActual('node:fs').readFileSync` (same as `web/src/tour/Tour.test.tsx`) and assert the `@media (max-width: 480px)` block contains `.privacy-panel__list` with `word-break: break-word`; drop the innerWidth line (and don't leave it mutated for other tests). Only this test file.
