@@ -388,14 +388,14 @@ Acceptance:
 - `cd web && npm test -- --run` passes.
 
 ### T146 — Docs: CODEMAP notes for live push alerts and placeholder alert errors
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: docs
 - deps: —
 - area: docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:26Z
 - pr: —
 
 What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes.
