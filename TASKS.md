@@ -338,7 +338,7 @@ Acceptance:
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
 ### T310 — Test: pattern library urgency filter (every option, reset, empty state)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -346,8 +346,9 @@ Acceptance:
 - area: web/src/patterns/PatternLibrary.filters.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T15:57Z
-- pr: —
+- pr: #304
 - note: rewritten by orchestrator: the library has one filter (urgency); there is no level filter. Test that one axis only.
+- rating: 5/5 clear
 
 What: The pattern library has a single urgency filter (T300). Test each option narrows the list to matching patterns, "All" restores the full list, and an urgency with no matching patterns shows the empty state.
 Interface: new test file only. Read web/src/patterns/PatternLibrary.tsx and web/src/patterns/PatternLibrary.test.tsx (copy its fetch mock). Do not change PatternLibrary.tsx.
