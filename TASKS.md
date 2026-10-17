@@ -467,14 +467,14 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:56Z
 - pr: —
 
 What: Add a tea session with two different errors in one session, and a correct session with one unusually long gap between steps that must produce no task error (long gaps are hesitations from `hesitation.py`, not errors) and no flag.
