@@ -7,43 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T133 — tasks.py: stop reading fields at the task body
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- deps: —
-- area: scripts/tasks.py, tests/test_tasks_py.py (new or existing)
-- source: retro
-- owner: max_API_light
-- claimed: 2026-10-17T07:55Z
-- pr: #118
-- rating: 5/5 clear
-
-What: `parse()` treats every `- word: value` line in a task as a field, including acceptance bullets. On T071 an acceptance bullet `- mockLiveStream: emits ...` became a field, so `set note=...` inserted the note in the middle of the acceptance list. An acceptance bullet starting `- status:` would hijack the status. Fields are only the bullet block right after the `### T…` heading; stop collecting fields at the first blank line.
-Acceptance:
-- A task whose body has `- foo: bar` / `- status: x` bullets: `show` reports the header status, and `set note=...` inserts the note right after the header field block.
-- Existing board parses identically for header fields (run `python3 scripts/tasks.py list` before/after).
-- `scripts/ci.sh` passes.
-
-### T068 — Show the demo-data banner in the app
-- status: done
-- class: light
-- priority: 3
-- kind: feature
-- deps: T052, T063
-- area: web/src/App.tsx, web/src/App.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:22Z
-- pr: #135
-- rating: 5/5 clear
-
-What: Render the `DemoBanner` component from T052 (`web/src/ui/DemoBanner.tsx`) once, at the top of `App.tsx` above the header, on every screen.
-Interface: read only `App.tsx`, `App.test.tsx`, `ui/DemoBanner.tsx`.
-Acceptance:
-- App test: banner visible on overview and after opening a resident.
-- `scripts/ci.sh` passes.
-
 ### T089 — Unit overview shows the top pattern for flagged/watch residents
 - status: todo
 - class: standard
@@ -61,25 +24,6 @@ Acceptance:
 - pytest: Mrs. K's `top_pattern.pattern_id == "sudden_change"`, drift resident's is `slow_drift`, normal residents `null`.
 - Vitest: row shows pattern text for flagged resident, none for normal.
 - `scripts/ci.sh` passes.
-
-### T106 — Evidence replay: stop fetching the alert twice
-- status: done
-- class: light
-- priority: 3
-- kind: improvement
-- deps: —
-- area: web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/alert/AlertView.tsx
-- owner: max_API_light
-- claimed: 2026-10-17T08:23Z
-- pr: #139
-- rating: 5/5 clear
-
-What: Since T080 (#84), `AlertView` loads the alert with `fetchAlert`, then `fetchReplay(alertId)` calls `fetchAlert` again for the same alert. Change `fetchReplay` to take the already-loaded `Alert` so the screen makes one alert request.
-Interface: `fetchReplay(alert: Alert): Promise<EvidenceReplay | null>` in `web/src/evidence/api.ts`; in `AlertView.tsx`, run the replay effect once the alert has loaded (keyed on alert id). Read only these three files plus `web/src/alert/AlertView.test.tsx`.
-Acceptance:
-- `api.test.ts` updated to pass an `Alert`; no `fetchAlert` call inside `evidence/api.ts`.
-- AlertView still shows Loading / Empty / replay states as before (existing tests pass unchanged in behaviour).
-- `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T114 — api.py: one resident lookup helper instead of copy-pasted loops
 - status: todo
@@ -117,25 +61,6 @@ Acceptance:
 - pytest: route returns every library entry with a non-empty source; vitest: renders each pattern, urgent one visually distinct, no "diagnos" text.
 - `scripts/ci.sh` passes.
 
-### T129 — Feedback "what was it?" cause reaches the API (contract + API + web)
-- status: done
-- class: heavy
-- priority: 2
-- kind: feature
-- deps: —
-- area: contracts/alert.schema.json, contracts/examples/, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py, web/src/contracts.ts, web/src/alert/api.ts, web/src/alert/api.test.ts, web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
-- owner: ian-claude
-- claimed: 2026-10-17T08:17Z
-- pr: #140
-- rating: 4/5 area list left out AlertView.tsx/AlertView.test.tsx/alert.css (the picker's only consumer, so the cause can't reach the API without them), and 'the example alert' doesn't exist: contracts/examples/ has only capture.jsonl
-
-What: SPEC §5 MVP 8. The "what was it?" picker (T090) and the per-resident cause store (T100) exist, but the contract and `POST /alerts/{id}/feedback` have no `cause`, so the nurse's answer is dropped. Wire it end to end.
-Interface: optional `cause` (a pattern_id from `patterns_library`, or `"other"`, or null) on `AlertFeedback` in `contracts/alert.schema.json` + `contracts.py` + `web/src/contracts.ts`; `AlertFeedbackIn.cause` validated against known pattern ids (422 otherwise); API calls the FeedbackStore cause-recording method from T100; web `postFeedback` sends the picked cause. Update every consumer and the example alert.
-Acceptance:
-- API test: posting `{verdict: "confirmed", cause: "sudden_change"}` returns the alert with `feedback.cause == "sudden_change"` and the store has it for mrs-k; unknown cause → 422; omitting cause still works.
-- Web test: picking a cause then confirming sends it in the request body.
-- `scripts/ci.sh` passes.
-
 ### T130 — Pattern feedback loop: nurse causes re-weight that resident's pattern ranking
 - status: claimed
 - class: heavy
@@ -152,42 +77,6 @@ Interface: `FeedbackStore.pattern_weights(resident_id) -> dict[str, float]` (def
 Acceptance:
 - Tests: no feedback → identical ranking to today; two confirmed `slow_drift` causes raise its confidence for that resident only; weights stay within bounds after many answers.
 - Wording stays "consistent with"; no "diagnose".
-- `scripts/ci.sh` passes.
-
-### T132 — Web tests: AlertView and PatternList time out under default parallelism
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/alert/AlertView.test.tsx, web/src/alert/PatternList.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:05Z
-- pr: —
-- note: orch: closed as not reproducible (246/246 pass at default parallelism); E1 lets workers push past unrelated local test timeouts
-
-What: On a slower machine `npm test` (default workers) timed out in these two files while `--maxWorkers=2` passed (seen on T071). Make them fast and deterministic without changing what they assert. Read only those two test files, their components, and `.tasks/LESSONS.md`.
-Interface: test files only. Typical fixes: resolve mocked fetches immediately, prefer one `findBy*` then sync `getBy*` instead of many `waitFor`s, use fake timers where the component waits.
-Acceptance:
-- `cd web && npx vitest run src/alert --reporter=verbose` shows no single test over 1 s; `npm run lint && npm test && npm run build` passes twice with no flakes.
-- Same test count and assertions as before (state the before/after durations in the PR).
-
-### T134 — Unit tests for drift.daily_scores
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: pipeline/tests/test_drift.py
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T08:07Z
-- pr: #126
-- rating: 5/5 clear
-
-What: PR #117 (T125) moved `daily_scores` from `api.py` into `pipeline/src/routine_watch/drift.py`; it now feeds both the drift card and the demo "watch" status but has no direct tests. Read only `pipeline/src/routine_watch/drift.py` and `pipeline/tests/test_drift.py`.
-Interface: new tests in `pipeline/tests/test_drift.py` only; no source changes.
-Acceptance:
-- Tests cover: several sessions on one day are averaged into one point; output is sorted by date even when input is not; empty input gives `[]`; timestamps with a `+00:00` offset parse.
 - `scripts/ci.sh` passes.
 
 ### T135 — demo.py: pull the "worth watching" status out of demo_residents()
