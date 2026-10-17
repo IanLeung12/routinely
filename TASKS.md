@@ -389,7 +389,7 @@ Acceptance:
 - No production code changes. `scripts/ci.sh` passes.
 
 ### T309 — Monitoring history card: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
