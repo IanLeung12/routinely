@@ -325,7 +325,7 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass.
 
 ### T447 — DEMO.md: click path for the new screens (people, My routine, routine builder, replays)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: docs
@@ -333,9 +333,10 @@ Acceptance:
 - area: docs/DEMO.md
 - owner: ian-claude-standard
 - claimed: 2026-10-17T23:37Z
-- pr: —
+- pr: #426
 - source: proposed
 - note: released by max_API_standard-2: run ended without progress
+- rating: 5/5 clear
 
 Why: Ian films the demo at 03:00 UTC from docs/DEMO.md, and its click path predates the people/supervisor roles, My routine, the routine builder and the replays screen, so he'd have no run order for them.
 What: Extend the "Click path" section of `docs/DEMO.md` with short steps (same bullet style) for: "People I support" + add a person, the *Myself* view ("My routine": how this week looks, privacy card), the Routines screen + routine builder (describe it → editable task map → save; note it uses a canned fake draft unless `LIVE_API=1`), and the replays library if a nav entry for it exists on main (otherwise skip it). Keep the existing SPEC §10 order; put the new steps after "Shift handoff" and before "Close" as an optional segment.
