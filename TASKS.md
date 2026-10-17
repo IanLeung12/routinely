@@ -114,7 +114,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T231 — Test: integration.sh dashboard check retries instead of failing on a cold Vite start
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
