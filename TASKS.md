@@ -709,14 +709,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T090 — "What was it?" picker in the feedback buttons (UI only)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:19Z
 - pr: —
 
 What: SPEC §5 MVP 8: after "Confirmed", the nurse can optionally say what it turned out to be. Add the picker to the component only; posting it is a later task.
