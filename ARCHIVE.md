@@ -6025,3 +6025,40 @@ Acceptance:
 - after demo reset, every resident in `GET /residents` has `scores` sorted ascending by `ts`, every `ts` parses as ISO 8601
 - after a live session completes (use the existing fake/replay path, no real APIs), that resident's newest score is last
 - `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
+
+### T340 — Resident detail: give monitoring controls their own row under the name
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/resident.css, web/src/resident/ResidentDetail.layout.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:56Z
+- pr: #326
+- rating: 5/5 clear
+
+What: Tester (TESTREPORT, main dc9a6ef) noted Mrs. K's header packs the monitoring switch, monitoring history and consent between the name and the status chip, so it reads cramped. Keep name, room and status chip on the first row; move the monitoring block (toggle, history, consent, error message) to a separate row below.
+Interface: wrap name/room/StatusChip in `.resident-detail__title-row`; `.resident-detail__monitoring` becomes a full-width row after it. No behaviour change.
+Acceptance:
+- New test `ResidentDetail.layout.test.tsx`: in the header, the status chip appears in DOM order before the monitoring toggle, and both still render; existing ResidentDetail and keyboard tests pass unchanged.
+- At 375 px nothing overflows horizontally (CSS uses wrap, no fixed widths).
+- `scripts/ci.sh` passes.
+
+### T341 — Test: pattern library urgency filter works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.keyboard.test.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T17:31Z
+- pr: #342
+
+What: Add a keyboard-only test for the pattern library, like `web/src/overview/UnitOverview.keyboard.test.tsx` (read it first as the template). Read `web/src/patterns/PatternLibrary.tsx` and `web/src/patterns/PatternLibrary.filters.test.tsx` for how it is rendered with mock data.
+Interface: new file only; uses @testing-library/user-event `tab()` and `keyboard('{Enter}')` / `keyboard(' ')`.
+Acceptance:
+- Tabbing reaches the back button and every urgency filter button (role group "Filter by urgency").
+- Pressing Enter or Space on a filter sets its `aria-pressed="true"` and narrows the list; the back button fires `onBack` on Enter.
+- `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
