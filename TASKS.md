@@ -407,7 +407,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T278 — Refactor: move resident, drift, replay and pattern routes out of api.py
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -415,7 +415,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_residents.py, docs/CODEMAP.md
 - owner: ian-claude-standard
 - claimed: 2026-10-17T13:38Z
-- pr: —
+- pr: #265
+- rating: 5/5 clear
 
 What: Same pattern as T265 (api_alerts.py) and T256 (api_live.py): api.py still holds GET /residents, /residents/{id}, /residents/{id}/drift, /patterns, /sessions/{id}/replay and /residents/{id}/normal_replay. Move them into an `APIRouter` in a new `api_residents.py`, leaving api.py with app setup, /health, /demo/reset, /handoff and shared state.
 Interface: `api_residents.router` included by `api.app`; route paths, response bodies and status codes unchanged. Follow how `api_alerts.py` reaches shared state (`from . import api` inside handlers) so /demo/reset stays visible.
