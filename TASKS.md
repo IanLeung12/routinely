@@ -314,7 +314,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
 
 ### T148 — monitoring.py: in-memory per-room monitoring on/paused store
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
