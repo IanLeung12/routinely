@@ -2306,3 +2306,59 @@ Interface: `StatusChip` props unchanged.
 Acceptance:
 - Test asserts each status renders its label text and accessible name; no wording says "diagnos".
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T138 — Review: AlertContext is never rendered, unstyled, and copies ContextTimeline
+- status: done
+- class: standard
+- priority: 1
+- kind: improvement
+- source: reviewer
+- deps: —
+- area: web/src/alert/AlertContext.tsx, web/src/alert/AlertView.tsx, web/src/alert/alert.css, web/src/resident/ContextTimeline.tsx, web/src/resident/format.ts, web/src/alert/AlertView.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:10Z
+- pr: #130
+- rating: 5/5 clear
+
+What: T112 added `AlertContext` but nothing imports it, so the alert screen still shows no care-record context (SPEC §5 bonus 5), and its `alert-context*` classes have no CSS. Its `describe()`/`time()` are verbatim copies of `ContextTimeline.tsx`. Fix: move `describe` and `time` into `web/src/resident/format.ts` (e.g. `describeCareRecord`, `recordTime`) and use them in both components; in `AlertView` render a `<Card><SectionHeader title="Recent care records" /><AlertContext records=… alertTs={alert.ts} /></Card>` fed from the resident detail's `care_records` (existing `web/src/resident/api.ts` fetch, mock fallback), hidden while loading; add `.alert-context*` styles in `alert.css` using `web/src/ui/` tokens only (no hard-coded colours).
+Interface: `AlertContext` props unchanged.
+Acceptance:
+- AlertView test asserts a care record from the mock resident appears on the alert screen.
+- No duplicated `describe` between the two components.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T139 — Docs: scenario README lists only 13 of 20 scenarios
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: tests/scenarios/README.md
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:14Z
+- pr: #131
+- rating: 5/5 clear
+
+What: `tests/scenarios/README.md` has no row for meds_pill_before_water, tea_bad_sessions_far_apart, tea_kettle_twice, tea_milk_sugar, tea_self_corrected, tea_teabag_three_times (check for others); add one row each in the existing table format.
+Interface: Read only `tests/scenarios/README.md` and each missing scenario's `expected.yaml` (its header comment says what it shows).
+Acceptance:
+- Every directory under `tests/scenarios/` has exactly one row; descriptions are one line, plain words, and say whether it flags.
+- `scripts/ci.sh` passes.
+
+### T140 — Test: every scenario directory is listed in the scenario README
+- status: done
+- class: light
+- priority: 3
+- kind: test
+- deps: T139
+- area: tests/test_scenarios_readme.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:24Z
+- pr: #137
+- rating: 4/5 clear; one gap: the acceptance criterion 'scripts/ci.sh ... runs the new test' doesn't hold on this repo since root tests/ has no pyproject.toml and ci.sh never executes them (same as pre-existing test_tasks_py.py), so the task instructions anticipated this correctly
+
+What: The scenario README keeps falling behind new scenarios (T065, T139). Add a pytest that fails when a scenario directory has no row in the README, so CI catches it.
+Interface: New file `tests/test_scenarios_readme.py`: list dirs in `tests/scenarios/` that contain `expected.yaml`; assert each name appears in `tests/scenarios/README.md`. Read only `tests/scenarios/README.md` and `tests/test_tasks_py.py` (for how root tests are written and run).
+Acceptance:
+- Passes on main after T139; deleting a row makes it fail with the missing scenario's name in the message.
+- `scripts/ci.sh` passes and runs the new test (if it doesn't, say so in the PR; don't edit ci.sh).
