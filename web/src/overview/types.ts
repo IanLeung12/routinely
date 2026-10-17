@@ -16,4 +16,6 @@ export type ResidentSummary = {
   status: ResidentStatus
   top_pattern: TopPattern | null
   scores: { ts: string; score: number }[]
+  /** Who consented to monitoring and when (SPEC §12). Absent on an older API or mock. */
+  consent?: { given_by: string; on: string }
 }
