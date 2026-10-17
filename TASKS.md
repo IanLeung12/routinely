@@ -555,14 +555,14 @@ Acceptance:
 - `scripts/e2e.sh` passes with the new scenario included; `scripts/ci.sh` passes.
 
 ### T079 — Alerts use get_explainer() instead of a hard-wired template
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts_explainer.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:07Z
 - pr: —
 
 What: `alerts.py` line ~40 builds `_explainer = TemplateExplainer()`, so the merged Claude summariser (T032, `explain_claude.py`) is never used. Switch to `get_explainer()` so `LIVE_API=1` + `ANTHROPIC_API_KEY` turns on Claude summaries; default stays the template. Read only `alerts.py`, `explain.py`, `explain_claude.py`.
