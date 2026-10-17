@@ -393,14 +393,14 @@ Acceptance:
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
 ### T310 — Test: pattern library urgency filter (every option, reset, empty state)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/patterns/PatternLibrary.filters.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:57Z
 - pr: —
 - note: rewritten by orchestrator: the library has one filter (urgency); there is no level filter. Test that one axis only.
 
