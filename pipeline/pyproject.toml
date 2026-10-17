@@ -12,6 +12,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# The capture process only: MediaPipe pose/hands, OpenCV frame grabbing and the local
+# detector runtime. Big, platform-specific and needed only when a camera or a video
+# file is involved, so they are imported lazily and left out of CI
+# (`scripts/ci.sh` syncs every extra but this one).
+capture = [
+    "mediapipe>=0.10.18",
+    "onnxruntime>=1.19",
+    "opencv-python>=4.10",
+]
 # Installed by scripts/ci.sh via `uv sync --all-extras`.
 dev = [
     "httpx2>=2.13",  # fastapi.testclient needs an http client
