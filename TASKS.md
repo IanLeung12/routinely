@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 4008ae3
+- last-reviewed: 0896fe5
 
 ## Tasks
 
@@ -596,3 +596,56 @@ Acceptance:
 - pytest: two unclear live sessions in the window → `unclear_sessions == 2`, resident's history and flag unchanged; outside the window → 0
 - web test: row shows the camera line when > 0 and nothing when 0
 - `scripts/ci.sh` passes
+
+### T357 — Scenario: meds_long_pause_not_error (long pause under the abandonment cut-off)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_long_pause_not_error/
+- owner: —
+- claimed: —
+- pr: —
+
+What: The medication task's version of `tests/scenarios/tea_long_pause_not_error`: an otherwise-correct meds session with one ~100 s gap between two steps (under `routine_watch.errors.ABANDON_AFTER_S`), which must not surface as an error or flag.
+Interface: `tests/scenarios/meds_long_pause_not_error/{steps.jsonl,expected.yaml}`, step-level like `meds_normal`; copy the comment style of `tea_long_pause_not_error/expected.yaml`. No pipeline code changes.
+Acceptance:
+- `expected.yaml`: `task: meds`, full correct step list, `errors: []`, `score: 0.0`, `flag: false`
+- `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
+
+### T358 — Evidence replay player: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/
+- owner: —
+- claimed: —
+- pr: —
+
+What: A nurse opening an alert on a phone should be able to watch the skeleton replay and use its controls without horizontal scrolling. Follow the 375 px pattern other screens already use (see `web/src/alert/alert.css`, `web/src/live/liveScreen.css`).
+Interface: `ReplayPlayer.tsx` / `GhostReplay.tsx` keep their props; styles go in the existing stylesheet for `.replay-player` (or a new `web/src/evidence/evidence.css` imported by `ReplayPlayer.tsx`). No behaviour change.
+Acceptance:
+- at 375 px the replay canvas scales to the container width and the play/scrub controls wrap onto their own row, touch targets ≥ 44 px
+- a vitest checks the stylesheet has a `max-width: 375px`-or-narrower media rule for `.replay-player` (same approach as existing phone-width tests)
+- `scripts/ci.sh` passes
+
+### T359 — Test: guided tour copy uses flag-for-review wording
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/tour/steps.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard the demo tour text against diagnosis wording, since judges read it first.
+Interface: read only `web/src/tour/steps.ts` (exports `TOUR_STEPS: {title, body}[]`) and `web/src/wording.test.ts` (existing wording-guard style to copy). Create `web/src/tour/steps.test.ts`.
+Acceptance:
+- for every step, `title` and `body` do not match `/diagnos|\bhas (delirium|dementia|a stroke)\b|treatment/i`
+- at least one step body contains "flags a change for review"; every step has a non-empty title and body
+- `cd web && npx vitest run src/tour/steps.test.ts` passes; `scripts/ci.sh` passes
