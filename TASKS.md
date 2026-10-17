@@ -386,7 +386,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T267 — Web: visible keyboard focus and a skip-to-content link
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
