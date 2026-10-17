@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T245 — Smoke: check GET /monitoring and a PUT round-trip
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
