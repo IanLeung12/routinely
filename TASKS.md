@@ -530,7 +530,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T376 — Review: live "Open alert" CTA uses ui/Button and sits outside the status live region
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
