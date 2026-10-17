@@ -375,7 +375,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T284 — Review: move shared API state out of api.py to end the `from . import api` cycle
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -384,7 +384,8 @@ Acceptance:
 - source: reviewer
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T14:08Z
-- pr: —
+- pr: #277
+- rating: 5/5 clear
 
 What: After T278, `api_residents.py`, `api_alerts.py` (and `api_live.py`) reach back into `api.py` with function-level `from . import api` to get `_tuned`, `_SUMMARY_FIELDS`, `_feedback_store`, `_flagged_residents`. That's a circular import hidden inside every handler; each new router copies the pattern. Move that shared state/helpers into a new `api_state.py` (no FastAPI app import), have `api.py` and all routers import from it at module top, and keep test resets working by mutating the store in place (e.g. `api_state.reset()`), not rebinding a module global.
 Acceptance:
