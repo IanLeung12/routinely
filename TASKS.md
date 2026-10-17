@@ -654,7 +654,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: test
@@ -662,7 +662,8 @@ Acceptance:
 - area: pipeline/tests/test_live_replay_parity.py
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T19:38Z
-- pr: —
+- pr: #374
+- rating: 4/5 the flag half of the ask compares two different questions (session_end's flag is the resident's over their own history; replay.run's is the recording's over expected.yaml's, and 17 of 38 scenarios differ by design, T236), so it is restated as the recording's flag on both sides rather than xfailed; also test_live.py::test_live_session_says_what_the_replay_says already compared the errors coarsely
 
 What: The live screen comes from live.py and the alert view from replay.py; nothing checks they agree. For every single-session scenario under tests/scenarios/, compare the errors and change flag in live `session_messages(...)`'s session_end message with `replay.run(load_scenario(...))`.
 Interface: read pipeline/src/routine_watch/live.py (session_messages, as_json), replay.py (run), scenario.py (load_scenario). Test only: if a scenario disagrees, mark it `xfail(strict=True)` with the reason and list it in the PR body; don't change pipeline code.
