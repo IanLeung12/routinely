@@ -3,19 +3,53 @@
 Takes events, sessions and downsampled skeletons from the pipeline, serves the nurse
 dashboard, and carries the live view and alerts over one WebSocket.
 
-/health and the demo /residents routes exist so far; later tasks add the event,
-session and alert routes backed by a real database.
+/health, the demo /residents routes and the /alerts routes exist so far; later tasks
+add the event and session routes backed by a real database.
 """
 
+from datetime import UTC, datetime
+
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from . import __version__
+from .alerts import build_alerts
+from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import demo_residents
+from .feedback import FeedbackStore
 
 app = FastAPI(title="Routine Watch API", version=__version__)
 
 #: What the unit-overview list shows, vs. the fuller resident-detail payload.
 _SUMMARY_FIELDS = ("id", "name", "room", "status", "scores")
+
+#: In-memory only (SPEC MVP 7): no DB, so feedback resets when the API restarts.
+_feedback_store = FeedbackStore()
+
+#: The MVP has no nurse logins yet; every one-tap feedback is logged under this name.
+_FEEDBACK_BY = "nurse"
+
+
+class AlertFeedbackIn(BaseModel):
+    """The one-tap feedback body (SPEC section 5, MVP 7)."""
+
+    verdict: FeedbackVerdict
+    note: str | None = None
+
+
+def _alerts_by_id() -> dict[str, Alert]:
+    return {alert.alert_id: alert for alert in build_alerts(demo_residents())}
+
+
+def _alert_payload(alert: Alert) -> dict:
+    """The alert as JSON, with its feedback and feedback-tuned threshold applied."""
+    payload = alert.model_dump(mode="json")
+    feedback = _feedback_store.get(alert.alert_id)
+    payload["feedback"] = feedback.model_dump(mode="json") if feedback else None
+    payload["baseline"]["threshold"] = _feedback_store.threshold(
+        alert.resident_id, base=alert.baseline.threshold
+    )
+    return payload
 
 
 @app.get("/health")
@@ -37,3 +71,35 @@ def get_resident(resident_id: str) -> dict:
         if resident["id"] == resident_id:
             return resident
     raise HTTPException(status_code=404, detail="resident not found")
+
+
+@app.get("/alerts")
+def list_alerts() -> list[dict]:
+    """Every current alert (SPEC section 5, MVP 5): one per flagged resident."""
+    return [_alert_payload(alert) for alert in build_alerts(demo_residents())]
+
+
+@app.get("/alerts/{alert_id}")
+def get_alert(alert_id: str) -> dict:
+    """One alert's full evidence: errors, baseline comparison and suggested checks."""
+    alerts = _alerts_by_id()
+    if alert_id not in alerts:
+        raise HTTPException(status_code=404, detail="alert not found")
+    return _alert_payload(alerts[alert_id])
+
+
+@app.post("/alerts/{alert_id}/feedback")
+def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
+    """One-tap nurse feedback (SPEC section 5, MVP 7): tunes this resident's threshold.
+
+    Re-posting the same alert replaces its verdict rather than double-counting it.
+    """
+    alerts = _alerts_by_id()
+    if alert_id not in alerts:
+        raise HTTPException(status_code=404, detail="alert not found")
+    alert = alerts[alert_id]
+    feedback = AlertFeedback(
+        verdict=body.verdict, by=_FEEDBACK_BY, at=datetime.now(UTC), note=body.note
+    )
+    _feedback_store.record(alert_id, alert.resident_id, feedback)
+    return _alert_payload(alert)
