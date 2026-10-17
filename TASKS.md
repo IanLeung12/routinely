@@ -373,15 +373,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T318 — Unit overview: sort residents by most recent change
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/overview/ResidentSort.tsx, web/src/overview/ResidentSort.test.tsx, web/src/overview/UnitOverview.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:22Z
 - pr: —
 
 What: Rationale: on a busy unit the nurse wants the newest flags first. Add a small sort control ("Default order" / "Most recent change first") to the unit overview; the default keeps today's order so the demo path is unchanged.
