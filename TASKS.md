@@ -25,14 +25,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T061 — Live session screen accessibility pass
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/live/SkeletonView.tsx, web/src/live/SkeletonView.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:52Z
 - pr: —
 
 What: The live screen updates continuously but a screen-reader user hears nothing. Announce step completions and raised flags through a polite `aria-live` region (one short sentence per event, e.g. "Step done: fill the kettle"), give the skeleton view a text alternative, and announce connection status changes. Do not touch `TaskMap.tsx` (T057 owns the legend next to it).
