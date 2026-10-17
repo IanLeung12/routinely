@@ -10,6 +10,7 @@ its own to be flaky about.
 import asyncio
 import re
 from collections import Counter
+from dataclasses import replace
 from itertools import pairwise
 from pathlib import Path
 from typing import Any, get_args
@@ -47,6 +48,18 @@ FRAMES = "tea_no_kettle"
 
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
+
+
+def test_session_messages_rejects_an_empty_scenario(monkeypatch: pytest.MonkeyPatch) -> None:
+    path = scenario_path(GOOD)
+    scenario = replace(load_scenario(path), frames=(), events=())
+    monkeypatch.setattr(live, "load_scenario", lambda _: scenario)
+
+    async def first() -> dict[str, Any]:
+        return await anext(session_messages(path, speed=FAST))
+
+    with pytest.raises(ReplayError, match="no frames or events"):
+        asyncio.run(first())
 
 #: The dashboard's task map, whose states `live.StepState` has to match.
 TASK_MAP = repo_root() / "web" / "src" / "live" / "TaskMap.tsx"

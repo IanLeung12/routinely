@@ -59,7 +59,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections import Counter
 from collections.abc import AsyncIterator, Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,8 +68,7 @@ from pydantic import BaseModel
 
 from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError
 from .errors import classify_errors
-from .replay import SCENARIOS_DIR, ReplayError, change_flag, load_scenario
-from .scoring import session_score
+from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
 from .tasks import TaskGraph
 
 STAGE = "live"
@@ -164,12 +162,7 @@ async def session_messages(
     scenario = load_scenario(scenario_dir)
     graph = scenario.graph
     frames, recorded = scenario.frames, scenario.events
-    session_id = frames[0].session_id if frames else recorded[0].session_id
-
-    # Two people in frame means somebody is helping, which scores the session zero and
-    # keeps it out of the baseline (SPEC section 7). Read from every frame, not just
-    # the ones sent: a helper does not stop helping between two sent frames.
-    assisted = any(len(frame.poses) >= 2 for frame in frames)
+    session_id = session_id_of(scenario)
 
     seen: set[str] = set()  # error ids already sent, so each error is sent once
     states: dict[str, StepState] = {}  # the task map as the client last saw it
@@ -212,9 +205,7 @@ async def session_messages(
     for message in reading(final):
         yield message
 
-    counts = Counter(str(error.type) for error in final if not error.self_corrected)
-    score = session_score(counts, sum(1 for error in final if error.self_corrected), assisted)
-    flag, _ = change_flag(score, scenario.expected.history)
+    score, _, flag = score_session(scenario, final)
     yield {
         "type": "session_end",
         "score": score,

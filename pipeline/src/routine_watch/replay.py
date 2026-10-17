@@ -40,7 +40,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from .change_detection import Baseline, build_baseline, flag_change
-from .contracts import CaptureFrame, ErrorType, StepEvent, repo_root
+from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError, repo_root
 from .errors import classify_errors
 from .recogniser import recognise
 from .scoring import session_score
@@ -214,20 +214,34 @@ def change_flag(
     return flag_change(sessions, baseline, now), baseline
 
 
-def run(scenario: Scenario) -> dict[str, Any]:
-    """Run one loaded scenario through the pipeline and return the result as JSON data."""
-    events = scenario.events
-    session_id = scenario.frames[0].session_id if scenario.frames else events[0].session_id
+def session_id_of(scenario: Scenario) -> str:
+    """Read a session id from either input level, rejecting an empty scenario."""
+    if scenario.frames:
+        return scenario.frames[0].session_id
+    if scenario.events:
+        return scenario.events[0].session_id
+    raise ReplayError(f"{scenario.path}: no frames or events")
 
-    # Two people in frame means somebody is helping: the session is excluded from the
-    # baseline and scores zero (SPEC section 7).
+
+def score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]:
+    """The same finished-session verdict for offline replay and live playback."""
+    # Read every frame, including ones the live stream downsamples away.
     assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)
-
-    errors = classify_errors(events, scenario.graph, session_id=session_id, ended=True)
     counts = Counter(str(error.type) for error in errors if not error.self_corrected)
     self_corrected = sum(1 for error in errors if error.self_corrected)
     score = session_score(counts, self_corrected, assisted)
-    flag, baseline = change_flag(score, scenario.expected.history)
+    flag, _ = change_flag(score, scenario.expected.history)
+    return score, assisted, flag
+
+
+def run(scenario: Scenario) -> dict[str, Any]:
+    """Run one loaded scenario through the pipeline and return the result as JSON data."""
+    events = scenario.events
+    session_id = session_id_of(scenario)
+    errors = classify_errors(events, scenario.graph, session_id=session_id, ended=True)
+    score, assisted, flag = score_session(scenario, errors)
+    # Offline output also includes the baseline's display statistics.
+    _, baseline = change_flag(score, scenario.expected.history)
 
     return {
         "scenario": scenario.name,
