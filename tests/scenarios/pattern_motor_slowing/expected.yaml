@@ -1,0 +1,43 @@
+# T143: SPEC §7.5's motor_slowing pattern. The replayed session is a clean, complete
+# tea routine - no new sequence errors - but it and two sessions from the last two
+# days run 450s against this resident's usual 300s (duration_ratio ~1.5), with a
+# touch of hesitation on those same two recent sessions. `durations_up` (added by
+# T157's scenario durations) is what clears `motor_slowing`'s coverage floor; the
+# order staying intact and the modest hesitation are what point at slowing rather
+# than disorder.
+
+task: tea
+
+steps:
+  - fill_kettle
+  - get_cup
+  - boil
+  - teabag_in_cup
+  - pour
+  - stir
+  - remove_teabag
+
+errors: []
+score: 0.0
+duration_s: 450
+
+# Ten quiet sessions at this resident's usual 300s, then two slower, slightly
+# hesitant sessions inside the last two days (450s, hesitation: 3 each) - that is
+# the duration_ratio and hesitation_up `motor_slowing` is scored on, with the order
+# still right throughout.
+history:
+  - { hours_ago: 480, errors: {}, duration_s: 300 }
+  - { hours_ago: 456, errors: {}, duration_s: 300 }
+  - { hours_ago: 432, errors: {}, duration_s: 300 }
+  - { hours_ago: 408, errors: {}, duration_s: 300 }
+  - { hours_ago: 384, errors: {}, duration_s: 300 }
+  - { hours_ago: 360, errors: {}, duration_s: 300 }
+  - { hours_ago: 336, errors: {}, duration_s: 300 }
+  - { hours_ago: 312, errors: {}, duration_s: 300 }
+  - { hours_ago: 288, errors: {}, duration_s: 300 }
+  - { hours_ago: 264, errors: {}, duration_s: 300 }
+  - { hours_ago: 47, errors: { hesitation: 3 }, duration_s: 450 }
+  - { hours_ago: 23, errors: { hesitation: 3 }, duration_s: 450 }
+
+flag: true
+top_pattern: motor_slowing
