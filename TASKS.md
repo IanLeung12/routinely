@@ -625,15 +625,15 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T376 — Review: live "Open alert" CTA uses ui/Button and sits outside the status live region
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: reviewer
 - deps: —
 - area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css, web/src/live/LiveSession.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T18:43Z
 - pr: —
 
 What: the demo's key click (SPEC §10, DEMO.md "Alert" beat) is a raw unstyled `<button>` nested inside `<p role="status">` in `LiveSession.tsx` (~line 216). It ignores `web/src/ui/Button.tsx` and, inside a live region, screen readers re-announce the button text with the banner.
