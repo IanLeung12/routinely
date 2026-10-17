@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 9d5456c
+- last-reviewed: 21fbbee
 
 ## Tasks
 
@@ -499,3 +499,74 @@ Acceptance:
 - `scripts/ci.sh` passes (incl. `scripts/e2e.sh`).
 - `python3 scripts/codemap.py pipeline` shows a single baseline/change module and a single task-graph module.
 - Remove the "Known overlaps" lines you fixed from `docs/CODEMAP.md`.
+
+### T059 — Show the drift card on the resident detail screen
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx, web/src/resident/api.ts, web/src/mock/residentDetail.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `DriftCard` (T049) is built but rendered nowhere. Show it on the resident detail screen, fed by a new `fetchDrift(residentId)` that calls `GET /residents/{id}/drift` and falls back to mock data like `fetchResident` does (the endpoint lands in T050).
+Interface: read `web/src/resident/DriftCard.tsx`, `web/src/resident/api.ts`, `web/src/resident/ResidentDetail.tsx`, `web/src/mock/residentDetail.ts`. Add `fetchDrift(residentId): Promise<{resident_id: string; slope_per_day: number; days: number; trending: boolean} | null>` in `api.ts`; render `<DriftCard slopePerDay days trending />` under the baseline chart; render nothing if `null`.
+Acceptance:
+- Test: the mock slow-drift resident shows the trending card; a resident with no drift data shows no card.
+- `scripts/ci.sh` passes.
+
+### T060 — Tests for resident date/format helpers
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/format.test.ts, web/src/resident/days.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/resident/format.ts` and `days.ts` drive every date and score on the resident screen but have no direct tests. Add them; no source changes (if you find a bug, add a skipped test with a comment and note it in the PR).
+Interface: read only `web/src/resident/format.ts`, `web/src/resident/days.ts`, `web/src/resident/types.ts`. Cover `utcDate`, `formatDay`, `formatDayTime`, `formatDuration`, `formatScore`, `formatErrors`, `dailyScores` (incl. empty input, missing days → `null`, UTC day boundaries, invalid timestamps).
+Acceptance:
+- ≥1 test per exported function, edge cases above covered.
+- `scripts/ci.sh` passes.
+
+### T061 — Live session screen accessibility pass
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/live/SkeletonView.tsx, web/src/live/SkeletonView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The live screen updates continuously but a screen-reader user hears nothing. Announce step completions and raised flags through a polite `aria-live` region (one short sentence per event, e.g. "Step done: fill the kettle"), give the skeleton view a text alternative, and announce connection status changes. Do not touch `TaskMap.tsx` (T057 owns the legend next to it).
+Interface: no contract changes; use the existing `useLiveSession` messages.
+Acceptance:
+- Tests (Testing Library) assert the live region text after a mock step event and after a flag; the skeleton has an accessible name.
+- No change to the visual layout.
+- `scripts/ci.sh` passes.
+
+### T062 — Nurse shift handoff summary (separate screen)
+- status: todo
+- class: heavy
+- priority: 3
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_handoff.py, web/src/handoff/, web/src/App.tsx (one nav entry)
+- owner: —
+- claimed: —
+- pr: —
+- source: proposed
+
+What: Rationale: a nurse starting a shift wants one view of "who changed in the last 12 h" (Usefulness/Clarity, Use-of-AI hook). `GET /handoff?hours=12` lists residents with flags, pending-review alerts and drift trends in that window, plus a short plain-language summary from the existing `Explainer` interface (fake by default, no real call without `LIVE_API=1`). Wording: "flagged for review", never "diagnosed".
+Interface: `handoff.build_handoff(now, hours) -> {"window_hours": int, "residents": [{"resident_id", "name", "flags": int, "pending_review": int, "trending": bool}], "summary": str}`; web screen `web/src/handoff/Handoff.tsx` reachable from one button in `App.tsx`, off the main demo path.
+Acceptance:
+- pytest: Mrs. K appears with her flag in the demo window; stable resident has 0 flags; summary comes from the fake explainer and contains no "diagnos".
+- Web test renders the list and summary from mock data.
+- `scripts/ci.sh` passes.

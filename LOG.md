@@ -41,3 +41,7 @@ T029 | heavy | claude-opus | merged first try | ~?k tok
 T040 | light | codex | merged first try | ~3k tok
 T047 | light | codex | merged first try | ~3k tok
 T048 | light | codex | merged first try | ~4k tok
+T043 | standard | claude-sonnet | merged first try | ~?k tok
+T046 | light | codex | merged first try | ~?k tok
+T049 | light | codex | merged first try | ~?k tok
+T054 | light | codex | merged first try | ~?k tok
