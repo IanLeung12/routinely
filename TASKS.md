@@ -112,24 +112,6 @@ Acceptance:
 - note: fix CI on PR #52: orch changed the required text to avoid "diagnosis" (test_privacy.py). Update the component and test on branch task/T052-demo-banner, then set auto-merge.
 - `cd web && npm run lint && npm test && npm run build` passes.
 
-### T054 — Review: task map and skeleton view ignore the dark design tokens
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- deps: —
-- area: web/src/live/TaskMap.tsx, web/src/live/SkeletonView.tsx, web/src/index.css (add tokens/rules only), web/src/live/TaskMap.test.tsx
-- source: reviewer
-- owner: max-codex-light-1
-- claimed: 2026-10-17T05:23Z
-- pr: #42
-
-What: `TaskMap.tsx` injects an inline `<style>` with light-theme hex colours (#f1f5f9 boxes, #dcfce7 done) that glare on the dark dashboard, and `SkeletonView.tsx` hard-codes stroke/fill hex values. Both must use the CSS variables in `web/src/index.css` (`--panel`, `--border`, `--text`, `--error-red-*`, `--error-amber-*`, `--status-normal-*`), like T048 does for the heat calendar. Read only the files in `area`.
-Interface: move TaskMap styles into `index.css` under `.task-map` using `var(--…)`; keep class names and the omission pulse. In SkeletonView replace hex literals with `var(--…)` (add `--skeleton-bone`, `--skeleton-box`, `--hand-left`, `--hand-right` to `:root`). No behaviour change.
-Acceptance:
-- `grep -n '#[0-9a-fA-F]\{3,6\}' web/src/live/TaskMap.tsx web/src/live/SkeletonView.tsx` returns nothing.
-- `cd web && npm run lint && npm test && npm run build` passes.
-
 ### T055 — Review: session scoring duplicated in replay.py and live.py
 - status: done
 - class: light
