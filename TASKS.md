@@ -171,24 +171,6 @@ Acceptance:
 - web test: row shows the camera line when > 0 and nothing when 0
 - `scripts/ci.sh` passes
 
-### T362 — Scenario: tea_late_start_normal (long idle before the first step is not an error)
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: tests/scenarios/tea_late_start_normal/
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T17:59Z
-- pr: #348
-- rating: 5/5 clear
-
-What: A resident who sits for a long time before touching the kettle and then makes tea correctly must not get an error or a flag. Guards against the abandonment timer starting before the first step.
-Interface: copy the layout of `tests/scenarios/tea_long_pause_not_error/` (`steps.jsonl`, `expected.yaml`); generate frames with the same generator/script that scenario's README or `tests/scenarios/README.md` names. Pipeline code is out of scope: if the scenario fails, file it in the PR and set the task blocked with the failing output.
-Acceptance:
-- `scripts/e2e.sh` runs the new scenario and it passes: zero errors, no flag.
-- `scripts/ci.sh` passes.
-
 ### T363 — Test: task map legend has accessible names for every step state
 - status: todo
 - class: light
