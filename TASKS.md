@@ -274,7 +274,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T095 — Tests: hesitation edge cases
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -282,7 +282,7 @@ Acceptance:
 - area: pipeline/tests/test_hesitation_edges.py (new)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:12Z
-- pr: —
+- pr: #94
 
 What: Hesitation (a step or gap much longer than this resident's own average) has five tests; boundaries are untested. Read only `pipeline/src/routine_watch/hesitation.py` and `pipeline/tests/test_hesitation.py`. Don't edit source; if a case reveals a bug, mark it `xfail(strict=True, reason=...)` and say so in the PR.
 Interface: new test file only.
