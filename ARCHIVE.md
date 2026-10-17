@@ -5375,3 +5375,60 @@ Interface: read `pipeline/src/routine_watch/api_state.py` (`reset`), `pipeline/s
 Acceptance:
 - Test posts a feedback answer for an alert, sees it in `/residents/{id}/feedback`, calls `/demo/reset`, then sees `answers == []` and `pattern_weights == {}`.
 - `cd pipeline && python -m pytest tests/test_feedback_reset.py` and `scripts/ci.sh` pass.
+
+### T306 — Test: live screen works keyboard-only
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/LiveScreen.keyboard.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T15:16Z
+- pr: #296
+- rating: 5/5 clear
+
+What: The demo path runs through the live screen, but only the other screens have keyboard-only tests (T287, T295, T298). Prove a nurse can pick a routine, start the session and open its alert using only Tab/Enter/Space, with the mock live stream.
+Interface: new `web/src/live/LiveScreen.keyboard.test.tsx` only; render `LiveScreen` with the existing mock stream (`mockLiveStream.ts`, fake timers) as `LiveScreen.test.tsx` does; drive with `@testing-library/user-event` keyboard/tab only (no `click`).
+Acceptance:
+- Tab reaches the routine picker, arrow/Enter selects a routine, Tab+Enter starts the session; the task map and session summary render.
+- When the mock session ends with a flag, the link/button to the alert is reachable by Tab and activates with Enter.
+- Every focused control has an accessible name (`getByRole(..., { name })`).
+- No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
+
+### T307 — Test: replay player works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/evidence/ReplayPlayer.keyboard.test.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T15:44Z
+- pr: #310
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T307-wip-1531: start from it (git switch task/T307-wip-1531 && git merge origin/main)
+
+What: Prove the evidence replay player (play/pause, scrub, ghost toggle) is usable with Tab/Enter/Space/arrow keys only.
+Interface: new test file only; read web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx and web/src/alert/AlertView.keyboard.test.tsx (copy its style).
+Acceptance:
+- Test tabs to each control, operates it by keyboard, asserts the visible state changes; no mouse events used.
+- If a control is unreachable, mark that case `it.todo` and say so in the PR (don't change ReplayPlayer.tsx).
+- `scripts/ci.sh` passes.
+
+### T308 — Test: privacy panel and monitoring toggle work keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/about/PrivacyPanel.keyboard.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:46Z
+- pr: #302
+- rating: 5/5 clear
+
+What: Prove the privacy panel opens/closes and the room monitoring pause/resume toggle works with keyboard only (Tab, Enter/Space, Escape).
+Interface: new test file only; read web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, their .test.tsx files, and web/src/alert/AlertView.keyboard.test.tsx for style. Mock the API as the existing tests do.
+Acceptance:
+- Keyboard-only: open panel, reach the toggle, pause then resume a room, focus is not lost after each action.
+- No production code changes. `scripts/ci.sh` passes.
