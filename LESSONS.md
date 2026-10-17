@@ -7,3 +7,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Use web/src/ui components and index.css tokens; never hard-code hex colours in components (dark theme). (ian)
 - Paid APIs only through their client interface with a fake; tests and CI never set LIVE_API. (ian)
 - Contracts are generated from pipeline/src/routine_watch/contracts.py; never hand-edit contracts/*.json or web/src/contracts.ts. (ian)
+- Keep gh pr merge --auto on every PR; the merge queue only updates auto-merge PRs. (ian)
