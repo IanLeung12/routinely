@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 6076939
-- next-area: contracts+api
+- last-reviewed: eef354f
+- next-area: scripts+ci
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -27,3 +27,5 @@
 - T222 alertText says "Change flagged" for trend alerts
 - T230 live summary "usually" averages whole history (drift), not early baseline
 - T236 live session_end flag/alert_id from scenario verdict, not resident status (alert 404)
+- T249 pause mid-session not enforced on /ws/live
+- T250 /ws/live messages have no contracts/ schema
