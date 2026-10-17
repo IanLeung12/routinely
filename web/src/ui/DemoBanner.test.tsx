@@ -53,6 +53,29 @@ describe('DemoBanner', () => {
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain("Couldn't reset the demo")
   })
+
+  it('disables the button while resetting and re-enables once resolved', async () => {
+    let resolveReset: () => void = () => {}
+    const onReset = vi.fn(() => new Promise<void>((resolve) => { resolveReset = resolve }))
+    render(<DemoBanner onReset={onReset} />)
+    const button = screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement
+    fireEvent.click(button)
+    expect(button.disabled).toBe(true)
+    resolveReset()
+    await vi.waitFor(() => expect(button.disabled).toBe(false))
+  })
+
+  it('clears a previous reset error once a later reset succeeds', async () => {
+    const onReset = vi.fn()
+      .mockRejectedValueOnce(new Error('demo reset failed: 404'))
+      .mockResolvedValueOnce(undefined)
+    render(<DemoBanner onReset={onReset} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
+    await screen.findByRole('alert')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
+    await vi.waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
+  })
 })
 
 describe('default onReset', () => {
