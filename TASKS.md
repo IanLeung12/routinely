@@ -80,44 +80,6 @@ Acceptance:
 * Also one line that handoff rows open the resident's alert by looking up the id in `GET /alerts` (T152, `web/src/handoff/Handoff.tsx` `alertByResident`).
 * No other file changed.
 
-### T180 — Handoff: each row says what's normal for that resident
-- status: done
-- class: standard
-- priority: 3
-- kind: feature
-- deps: —
-- area: web/src/handoff/
-- owner: ian-claude-standard
-- claimed: 2026-10-17T09:35Z
-- source: proposed
-- pr: #188
-- rating: 5/5 clear
-
-What: Rationale: a night nurse reading the handoff can't tell whether "2 flags" is unusual for that resident. Each row gets a short muted line like "Usually 0.4 errors a session" so the change reads against her own normal (SPEC §7, Clarity).
-Interface: Read `web/src/handoff/Handoff.tsx`, `types.ts`, `api.ts`, `mockHandoff.ts` and the row fields in `pipeline/src/routine_watch/handoff.py`. If rows don't carry a baseline, take it from the resident detail fetch in `web/src/resident/api.ts` (one fetch per row is fine for the demo) and say so in the PR; don't change the API or `contracts/`.
-Acceptance:
-* Rows with history show the baseline line; residents with no history show nothing (no "NaN", no "0").
-* Wording never says "diagnos"/"has <condition>"; plain numbers a nurse reads in 10 s.
-* New/updated test in `web/src/handoff/Handoff.test.tsx`; `scripts/ci.sh` passes.
-
-### T182 — Review: false alarm makes the alert 404, so the cause answer can't be saved
-- status: done
-- class: standard
-- priority: 0
-- kind: bug
-- source: reviewer
-- deps: —
-- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T09:15Z
-- pr: #178
-- rating: 5/5 clear
-
-What: Since T167, `_alerts_by_id()` builds alerts only from `_flagged_residents()` (feedback-tuned). A "false alarm" raises the resident's threshold 10%; if that un-flags her, the alert disappears, so `GET /alerts/{id}` and the next `POST /alerts/{id}/feedback` return 404. AlertView posts the verdict, then posts again with the "what was it?" cause, so the nurse sees "Feedback could not be saved" and can never correct a mistaken tap. Fix: look alerts up by id from every raw-flagged resident (`build_alerts([r for r in demo_residents() if r["status"] == "flagged"], feedback=_feedback_store)`); keep the tuned filter only for the `/alerts` list.
-Acceptance:
-* Test: flagged resident, POST false_alarm with a threshold step big enough to un-flag; `/alerts` no longer lists it, but `GET /alerts/{id}` is 200 and a second POST with `cause` is 200 and stores the cause.
-* `scripts/ci.sh` passes.
-
 ### T183 — Review: overview/handoff top pattern ignores nurse-feedback weights
 - status: done
 - class: light
