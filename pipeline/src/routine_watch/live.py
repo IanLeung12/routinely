@@ -1,0 +1,281 @@
+"""The live session, as one WebSocket (SPEC section 16 decision B, section 10).
+
+One socket carries the whole live view: the skeleton frames, each step as it is
+recognised, the task map, the errors as they are classified and, at the end, the
+session's score and whether it flags a change for a nurse to review::
+
+    async for message in session_messages(scenario_path("tea_normal"), speed=4.0):
+        ...
+
+What it plays is a **recorded scenario**, run through the pipeline in real time rather
+than as fast as the file can be read. That is the demo's fallback for a camera or a
+Wi-Fi that fails (SPEC section 10), and it is why this module exists before the camera
+does: live capture is the same per-frame record from a different source (SPEC section
+16, "single capture stream"), so when it lands it plugs into this generator and
+nothing downstream of it changes.
+
+The messages, in the order a session produces them:
+
+===============  ===========================================================
+``step_state``   ``{step_id: "pending"|"done"|"omission"|"repeat"|"sequence"}``
+                 for every step of the task, in the task map's reading order.
+                 Sent first, all pending, and again whenever it changes: that
+                 is the map going red and amber mid-session (SPEC section 10).
+``frame``        One `CaptureFrame`: skeletons, hand landmarks and object
+                 boxes, never an image (SPEC section 8). Capped at
+                 `MAX_FRAME_FPS`, and absent altogether for a scenario
+                 written at step level, which has no frames to send.
+``step``         One `StepEvent`, sent when the step is over.
+``error``        One `TaskError`. Errors are classified again after every step
+                 (`classify_errors(..., ended=False)`), so a session flashes
+                 red while it is still running; each error is sent once,
+                 keyed by its `error_id`.
+``session_end``  The session's `score`, whether it raised a `flag`, and the
+                 `alert_id` that flag belongs to.
+===============  ===========================================================
+
+Two things follow from classifying an unfinished session, and both are deliberate:
+
+* **Errors accumulate; the task map heals.** The spec's omission rule is "a required
+  step has not happened and something that depends on it is being done", so a step
+  done out of order reports the dependency missing at the time, and reports the step
+  itself as a sequence error once the dependency is done later. The `error` messages
+  keep both, because an error already shown to a nurse is not unsaid; `step_state` is
+  always the current reading, so the step that turned out not to be missing goes back
+  to `done`.
+* **The score is the finished session's.** `session_end` re-classifies with
+  `ended=True` and scores that, which is the number the resident's baseline is fed
+  (`routine_watch.scoring`), not a tally of everything that flickered on the way.
+
+**What is still the scenario's and not the camera's.** A session only flags against
+prior sessions of the same resident (SPEC section 7: a single bad session never
+alerts), and a scenario carries its own history in `expected.yaml`, so that is what
+the flag here is judged against. The frames to steps stage is whichever one
+`routine_watch.replay` uses, the stub included, so a live replay and `scripts/e2e.sh`
+always agree about what a recording means.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from collections import Counter
+from collections.abc import AsyncIterator, Iterable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import BaseModel
+
+from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError
+from .errors import classify_errors
+from .replay import SCENARIOS_DIR, ReplayError, change_flag, load_scenario
+from .scoring import session_score
+from .tasks import TaskGraph
+
+STAGE = "live"
+
+#: Frames are sent no faster than this, in frames per second of session time: enough
+#: for a smooth skeleton, little enough to stay ahead of a laptop's Wi-Fi.
+MAX_FRAME_FPS = 10.0
+
+#: Close code for `?scenario=` naming a scenario that is not there. 4000-4999 is the
+#: application's own range, and 4404 reads the way it looks.
+SCENARIO_NOT_FOUND = 4404
+
+#: A scenario is a directory name under `tests/scenarios`, and only that: anything
+#: else is "no such scenario" rather than a path to go looking down.
+_SCENARIO_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*")
+
+#: The states the dashboard's task map draws (`web/src/live/TaskMap.tsx`).
+StepState = Literal["pending", "done", "omission", "repeat", "sequence"]
+
+#: Which error turns a step red or amber. Substitution, hesitation and abandonment
+#: have no square of their own in the task map - the first is about the object a step
+#: was done with, the other two are about time - so they arrive as `error` messages
+#: and leave the map alone.
+_ERROR_STATES: dict[ErrorType, StepState] = {
+    ErrorType.OMISSION: "omission",
+    ErrorType.PERSEVERATION: "repeat",
+    ErrorType.SEQUENCE: "sequence",
+}
+
+#: Worst last: the state a step keeps when it has more than one error against it.
+_SEVERITY: tuple[StepState, ...] = ("pending", "done", "sequence", "repeat", "omission")
+
+
+def scenario_path(name: str, root: Path = SCENARIOS_DIR) -> Path:
+    """The directory of the scenario called `name`.
+
+    Raises :class:`routine_watch.replay.ReplayError` if there is no such scenario,
+    which is also what a name that is not a bare directory name gets: `?scenario=` is
+    a client's string, so it never becomes a path outside `root`.
+    """
+    if not _SCENARIO_NAME.fullmatch(name):
+        raise ReplayError(f"{name!r} is not a scenario name")
+    path = root / name
+    if not path.is_dir():
+        raise ReplayError(f"no scenario {name!r} in {root}")
+    return path
+
+
+def step_states(
+    graph: TaskGraph, events: Iterable[StepEvent], errors: Iterable[TaskError]
+) -> dict[str, StepState]:
+    """The task map as it stands: one state per step, in the graph's reading order.
+
+    A step with an event is `done`, and an error against it paints it red or amber
+    instead. Two readings of the spec are folded in here (section 7): an `unclear`
+    event is a step that may well have happened, so it shows as done rather than as a
+    gap, and a slip the resident put right is not what the map is for, so a
+    self-corrected error leaves the step done.
+    """
+    states: dict[str, StepState] = {step_id: "pending" for step_id in graph.step_ids}
+    for event in events:
+        states[event.step_id] = "done"
+    for error in errors:
+        state = _ERROR_STATES.get(error.type)
+        if error.step_id is None or error.self_corrected or state is None:
+            continue
+        if _SEVERITY.index(state) > _SEVERITY.index(states[error.step_id]):
+            states[error.step_id] = state
+    return states
+
+
+def as_json(message: dict[str, Any]) -> dict[str, Any]:
+    """One message as JSON data, ready for `WebSocket.send_json`."""
+    return {
+        key: value.model_dump(mode="json") if isinstance(value, BaseModel) else value
+        for key, value in message.items()
+    }
+
+
+async def session_messages(
+    scenario_dir: Path | str, speed: float = 1.0
+) -> AsyncIterator[dict[str, Any]]:
+    """Play one recorded scenario through the pipeline as a live session.
+
+    `speed` is how much faster than recorded: `1.0` is the demo's pace, `1000` makes a
+    test instant. Raises :class:`routine_watch.replay.ReplayError` on the first step if
+    `scenario_dir` is not a scenario, and ``ValueError`` if `speed` is not positive.
+    """
+    if speed <= 0:
+        raise ValueError(f"speed must be positive, not {speed}")
+    scenario = load_scenario(scenario_dir)
+    graph = scenario.graph
+    frames, recorded = scenario.frames, scenario.events
+    session_id = frames[0].session_id if frames else recorded[0].session_id
+
+    # Two people in frame means somebody is helping, which scores the session zero and
+    # keeps it out of the baseline (SPEC section 7). Read from every frame, not just
+    # the ones sent: a helper does not stop helping between two sent frames.
+    assisted = any(len(frame.poses) >= 2 for frame in frames)
+
+    seen: set[str] = set()  # error ids already sent, so each error is sent once
+    states: dict[str, StepState] = {}  # the task map as the client last saw it
+    events: list[StepEvent] = []  # the steps so far, which is all a live session knows
+
+    def reading(errors: Sequence[TaskError]) -> list[dict[str, Any]]:
+        """The messages one classification produces: the errors that are new, then the
+        task map if this reading of it differs from the client's."""
+        nonlocal states
+        messages: list[dict[str, Any]] = []
+        for error in errors:
+            if error.error_id not in seen:
+                seen.add(error.error_id)
+                messages.append({"type": "error", "error": error})
+        now = step_states(graph, events, errors)
+        if now != states:
+            states = now
+            messages.append({"type": "step_state", "states": dict(now)})
+        return messages
+
+    for message in reading(()):  # the map before anything has happened: all pending
+        yield message
+
+    clock = _Clock(speed)
+    for t, _, item in _beats(_downsampled(frames), recorded):
+        await clock.wait_until(t)
+        if isinstance(item, CaptureFrame):
+            yield {"type": "frame", "frame": item}
+            continue
+        events.append(item)
+        yield {"type": "step", "event": item}
+        for message in reading(
+            classify_errors(events, graph, session_id=session_id, ended=False)
+        ):
+            yield message
+
+    # The task is over, which is the other half of the omission rule: a required step
+    # that never happened is an error now, with nothing left that could still do it.
+    final = classify_errors(events, graph, session_id=session_id, ended=True)
+    for message in reading(final):
+        yield message
+
+    counts = Counter(str(error.type) for error in final if not error.self_corrected)
+    score = session_score(counts, sum(1 for error in final if error.self_corrected), assisted)
+    flag, _ = change_flag(score, scenario.expected.history)
+    yield {
+        "type": "session_end",
+        "score": score,
+        "flag": flag,
+        # The id the alert this session raised will carry. Building that alert needs
+        # the session attached to a resident and their care records, which is
+        # `routine_watch.alerts` and a task that has not landed: until it does, a
+        # dashboard has an id to show and an alert to go and fetch later.
+        "alert_id": f"alert-{session_id}" if flag else None,
+    }
+
+
+@dataclass
+class _Clock:
+    """Session time played out in wall-clock time, `speed` times as fast.
+
+    Each wait is measured from the message before it rather than from the start of the
+    session, so the work between two messages is not subtracted from the next wait: a
+    session plays a touch slower than it was recorded instead of catching up in a
+    rush, which is what a demo wants to look at.
+    """
+
+    speed: float
+    t: float = 0.0
+
+    async def wait_until(self, t: float) -> None:
+        """Wait until the session has reached `t` seconds. Yields to the event loop
+        even when there is nothing to wait for, so a fast replay still sends."""
+        delay = max(t - self.t, 0.0) / self.speed
+        self.t = max(self.t, t)
+        await asyncio.sleep(delay)
+
+
+def _beats(
+    frames: Sequence[CaptureFrame], events: Sequence[StepEvent]
+) -> list[tuple[float, int, CaptureFrame | StepEvent]]:
+    """Every moment the session has something to send, in the order it reaches them.
+
+    A frame is sent at its own `t`; a step event once the step is over, at its `t_end`,
+    because that is when a recogniser reading frames could know about it. The frame
+    comes first where the two land on the same instant - the step is read off frames
+    including that one.
+    """
+    beats: list[tuple[float, int, CaptureFrame | StepEvent]] = [
+        (frame.t, 0, frame) for frame in frames
+    ]
+    beats += [(event.t_end, 1, event) for event in events]
+    beats.sort(key=lambda beat: beat[:2])  # stable: never compares two records
+    return beats
+
+
+def _downsampled(
+    frames: Sequence[CaptureFrame], max_fps: float = MAX_FRAME_FPS
+) -> list[CaptureFrame]:
+    """The frames worth sending: the first, then one every `1 / max_fps` seconds of
+    session time. A recording slower than that is sent whole."""
+    gap = 1.0 / max_fps
+    kept: list[CaptureFrame] = []
+    last: float | None = None
+    for frame in sorted(frames, key=lambda frame: (frame.seq, frame.t)):
+        if last is None or frame.t - last >= gap - 1e-9:
+            kept.append(frame)
+            last = frame.t
+    return kept

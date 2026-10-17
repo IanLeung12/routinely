@@ -3,13 +3,14 @@
 Takes events, sessions and downsampled skeletons from the pipeline, serves the nurse
 dashboard, and carries the live view and alerts over one WebSocket.
 
-/health, the demo /residents routes and the /alerts routes exist so far; later tasks
-add the event and session routes backed by a real database.
+/health, the demo /residents routes, the /alerts routes and the live WebSocket exist
+so far; later tasks add the event and session routes backed by a real database.
 """
 
 from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from . import __version__
@@ -17,6 +18,8 @@ from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import demo_residents
 from .feedback import FeedbackStore
+from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
+from .replay import ReplayError
 
 app = FastAPI(title="Routine Watch API", version=__version__)
 
@@ -103,3 +106,32 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     )
     _feedback_store.record(alert_id, alert.resident_id, feedback)
     return _alert_payload(alert)
+
+
+@app.websocket("/ws/live")
+async def live_session(
+    websocket: WebSocket,
+    scenario: str = "",
+    speed: Annotated[float, Query(gt=0)] = 1.0,
+) -> None:
+    """The live view and its alerts, on one socket (SPEC section 16, decision B).
+
+    Plays the recorded scenario named by `?scenario=` through the pipeline in real
+    time, `?speed=` times as fast: frames, steps, the task map, errors as they are
+    classified, then the session's score and flag (`routine_watch.live`). That is also
+    the demo's fallback for a camera that fails (SPEC section 10), and the camera
+    plugs into the same generator later.
+
+    An unknown scenario closes with 4404, and the socket closes normally when the
+    session ends.
+    """
+    await websocket.accept()
+    try:
+        async for message in session_messages(scenario_path(scenario), speed=speed):
+            await websocket.send_json(as_json(message))
+    except ReplayError:
+        await websocket.close(code=SCENARIO_NOT_FOUND)
+        return
+    except WebSocketDisconnect:  # the dashboard closed the tab mid-session
+        return
+    await websocket.close()

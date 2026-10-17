@@ -8,6 +8,7 @@ dependencies = [
     "pydantic>=2.9",
     "pyyaml>=6.0",  # the task graphs in src/routine_watch/tasks/*.yaml
     "uvicorn>=0.32",
+    "websockets>=13",  # uvicorn serves /ws/live only if a websocket library is there
 ]
 
 [project.optional-dependencies]
