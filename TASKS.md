@@ -219,14 +219,14 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T014 — Hesitation detector
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/hesitation.py, pipeline/tests/test_hesitation.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:57Z
-- pr: —
+- pr: #9
 
 What: Flag steps or gaps that took much longer than this resident's own average. Read only the files in `area`, `pipeline/src/routine_watch/baseline.py` (import `HESITATION_SIGMA`; do not edit it) and `pipeline/pyproject.toml`.
 Interface: `hesitations(durations: Mapping[str, float], history: Mapping[str, Sequence[float]], sigma: float = HESITATION_SIGMA, min_history: int = 3, min_std: float = 1.0) -> list[str]`. `durations` maps a step or gap name to seconds this session; `history` maps the same names to past durations. Returns names (sorted) where `duration > mean + sigma * max(std, min_std)`. Names with fewer than `min_history` past values are never flagged. Population std.
