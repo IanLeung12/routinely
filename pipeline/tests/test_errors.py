@@ -29,7 +29,7 @@ from routine_watch.contracts import (
     TaskError,
 )
 from routine_watch.errors import ERROR_TYPES, classify_errors
-from routine_watch.replay import ABANDON_GAP_S, load_scenario, scenario_dirs
+from routine_watch.replay import load_scenario, scenario_dirs
 from routine_watch.tasks import load_task
 
 SESSION = "tea-test-1"
@@ -458,11 +458,7 @@ def test_the_error_types_are_the_spec_s_six_and_hesitation_is_not_ours() -> None
 @pytest.mark.parametrize("path", scenario_dirs(), ids=lambda path: path.name)
 def test_the_recorded_scenarios_expect_what_this_classifier_finds(path: Path) -> None:
     """Every scenario in `tests/scenarios/` gets the errors it expects out of this
-    classifier, not just out of the stand-in in `routine_watch.replay`.
-
-    T005 shipped the replay harness with a stub classifier, to be replaced by this
-    module in a follow-up. This is what makes that swap a small change: if it ever
-    fails, the two disagree, and the scenario, the stub or this module has to give.
+    classifier, called the same way `routine_watch.replay` calls it.
     """
     scenario = load_scenario(path)
     expected = Counter(
@@ -474,6 +470,5 @@ def test_the_recorded_scenarios_expect_what_this_classifier_finds(path: Path) ->
         scenario.events,
         scenario.graph,
         session_id=scenario.events[0].session_id,
-        abandon_after_s=ABANDON_GAP_S,
     )
     assert Counter((str(error.type), error.step_id) for error in errors) == expected
