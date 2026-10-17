@@ -56,7 +56,7 @@ Acceptance:
 - Tests: "fill kettle" and "get cup" in either order are both valid; "pour" requires "teabag in cup"; optional steps can be skipped.
 
 ### T004 — Synthetic care-record generator
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: T001
