@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react'
 import type { CaptureFrame } from '../contracts.ts'
 import SkeletonView from '../live/SkeletonView.tsx'
 import Button from '../ui/Button.tsx'
+import { prefersReducedMotion } from './reducedMotion.ts'
 
 type ReplayPlayerProps = {
   frames: CaptureFrame[]
   autoPlay?: boolean
   fps?: number
-}
-
-function prefersReducedMotion() {
-  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 export function ReplayPlayer({ frames, autoPlay = false, fps = 10 }: ReplayPlayerProps) {
