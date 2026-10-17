@@ -535,14 +535,14 @@ Acceptance:
 - Tests for all three states in ResidentDetail.test.tsx; `scripts/ci.sh` passes.
 
 ### T110 — Live task map: step state not conveyed by colour alone
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx, web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:14Z
 - pr: —
 
 What: The red/amber flashes in the live task map (demo beat 3) are colour-only. Add a text/icon cue and an accessible name per step so the state reads for colour-blind judges and screen readers.
