@@ -1,11 +1,18 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { personNote, personStatus } from '../person/personNotes.ts'
 import { setPersonRoutineApi } from '../person/routine/api.ts'
 import { mockPersonRoutine, mockSteadyRoutine } from '../person/routine/mockRoutine.ts'
 import { acceptInvite, createInvite, currentPerson, setPeopleApi, supervisorsOf } from './api.ts'
 import { MyRoutine } from './MyRoutine.tsx'
+
+// MyRoutine.tsx loads this behind React.lazy so a supervisor's first paint never
+// carries it. Paying that dynamic-import cost here, once, keeps the first test's
+// findByRole (default 1000ms) from racing the transform on a loaded box.
+beforeAll(async () => {
+  await import('../person/routine/RoutineSections.tsx')
+})
 
 beforeEach(() => {
   localStorage.clear()
@@ -25,10 +32,12 @@ function linkASupervisor() {
 }
 
 /** Renders the screen and waits for the week behind it, which loads on demand so a
- * supervisor's first paint never carries it (`MyRoutine.tsx`). */
+ * supervisor's first paint never carries it (`MyRoutine.tsx`). The longer timeout
+ * covers a full `ci.sh` run, where many test files competing for CPU can push the
+ * dynamic import past the default 1000ms even with the `beforeAll` preload above. */
 async function renderRoutine(props: { onChange?: () => void } = {}) {
   render(<MyRoutine {...props} />)
-  await screen.findByRole('heading', { name: 'How this week looks' })
+  await screen.findByRole('heading', { name: 'How this week looks' }, { timeout: 5000 })
 }
 
 /** Nothing on the person's own screen may name a condition or raise an alarm
