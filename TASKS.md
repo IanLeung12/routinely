@@ -162,7 +162,7 @@ Acceptance:
 - replay.py under ~330 lines; CODEMAP note for scenario.py. `scripts/ci.sh` passes.
 
 ### T383 — Care-record context timeline: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
