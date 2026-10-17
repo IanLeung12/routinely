@@ -296,7 +296,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T263 — Contracts: JSON Schema for GET /alerts/{id} and the feedback POST body
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: improvement
@@ -304,7 +304,8 @@ Acceptance:
 - area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
 - owner: ian-claude
 - claimed: 2026-10-17T12:59Z
-- pr: —
+- pr: #260
+- rating: 4/5 the area left out pipeline/src/routine_watch/api_alerts.py (where the feedback POST body is actually defined) and pipeline/tests/test_api_payload_contracts.py (where T257 put the 'real route vs schema' tests), and named web/src/contracts.ts, which is generated and ended up unchanged - the real hand-mirror is web/src/alert/api.ts
 
 What: Same pattern as T250/T257: the alert detail response and the feedback request are hand-mirrored in web/src/contracts.ts; generate schemas from pydantic so drift fails CI.
 Interface: `contracts/alert_detail.schema.json`, `contracts/feedback.schema.json` generated from contracts.py; a test validates real API responses (fakes only) against them and checks web/src/contracts.ts field names match.
