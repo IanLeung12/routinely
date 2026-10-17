@@ -4,10 +4,12 @@
 #
 #   scripts/integration.sh        exit 0 = healthy; prints one line per failed check
 #
-# Uses its own ports (API 8100, dashboard 5273) so it can run next to a dev stack.
+# Uses its own ports (API 8100, dashboard 5273) and its own DEV_DIR so it can
+# run next to a dev stack without mistaking it for already up, or stopping it.
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 export API_PORT=${API_PORT:-8100} DASHBOARD_PORT=${DASHBOARD_PORT:-5273} OFFLINE_MODE=true LIVE_API=0
+export DEV_DIR=${DEV_DIR:-.dev-integration}
 API="http://localhost:$API_PORT"; WEB="http://localhost:$DASHBOARD_PORT"
 fails=()
 fail() { fails+=("$1"); }
@@ -19,7 +21,7 @@ demo_room=""
 trap 'curl -fsS --max-time 5 -X PUT -H "Content-Type: application/json" -d "{\"on\": true}" "$API/rooms/$demo_room/monitoring" >/dev/null 2>&1 || true; scripts/dev.sh down >/dev/null 2>&1' EXIT
 if ! scripts/dev.sh up >/tmp/integration-up.log 2>&1; then
   echo "FAIL dev.sh up: $(tail -3 /tmp/integration-up.log | tr '\n' ' ')"
-  echo "  api log: $(tail -5 .dev/api.log 2>/dev/null | tr '\n' ' ')"
+  echo "  api log: $(tail -5 "$DEV_DIR/api.log" 2>/dev/null | tr '\n' ' ')"
   exit 1
 fi
 
