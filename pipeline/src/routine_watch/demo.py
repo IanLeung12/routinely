@@ -140,6 +140,20 @@ def _top_pattern(sessions: list[dict], baseline, care_records: list[dict]) -> di
     return {"pattern_id": top.pattern_id, "name": top.name, "urgency": top.urgency.value}
 
 
+def _status_from(
+    history: list[dict], sessions: list[dict], scores: list[float], baseline: Baseline
+) -> str:
+    """The one flag rule `demo_residents` and `status_for` both apply: flag against
+    `baseline`, watch against `history`'s early days (SPEC §8 beat 6, MVP 7)."""
+    timestamped = [
+        (datetime.fromisoformat(session["ts"]), score)
+        for session, score in zip(sessions, scores, strict=True)
+    ]
+    flagged = flag_change(timestamped, baseline, DEMO_NOW)
+    watch = _watch(history, sessions, scores)
+    return _status(flagged, watch)
+
+
 def status_for(resident: dict, threshold: float) -> str:
     """`resident`'s status if its flag threshold were `threshold` instead of its own
     baseline's (SPEC MVP 7): the same flag rule `demo_residents` uses, so a
@@ -152,16 +166,10 @@ def status_for(resident: dict, threshold: float) -> str:
     """
     sessions = resident["sessions"]
     scores = [point["score"] for point in resident["scores"]]
-    timestamped = [
-        (datetime.fromisoformat(session["ts"]), score)
-        for session, score in zip(sessions, scores, strict=True)
-    ]
     tuned_baseline = Baseline(
         mean=resident["baseline"]["mean"], std=resident["baseline"]["std"], threshold=threshold
     )
-    flagged = flag_change(timestamped, tuned_baseline, DEMO_NOW)
-    watch = _watch(sessions, sessions, scores)
-    return _status(flagged, watch)
+    return _status_from(sessions, sessions, scores, tuned_baseline)
 
 
 def demo_residents() -> list[dict]:
@@ -184,17 +192,11 @@ def demo_residents() -> list[dict]:
         baseline = build_baseline([_score(session) for session in history])
         sessions = sorted(history + _live_sessions(config["id"]), key=lambda s: s["ts"])
         scores = [_score(session) for session in sessions]
-        timestamped = [
-            (datetime.fromisoformat(session["ts"]), score)
-            for session, score in zip(sessions, scores, strict=True)
-        ]
-        flagged = flag_change(timestamped, baseline, DEMO_NOW)
         score_points = [
             {"ts": session["ts"], "score": score}
             for session, score in zip(sessions, scores, strict=True)
         ]
-        watch = _watch(history, sessions, scores)
-        status = _status(flagged, watch)
+        status = _status_from(history, sessions, scores, baseline)
         top_pattern = (
             _top_pattern(sessions, baseline, care_records) if status != "normal" else None
         )
