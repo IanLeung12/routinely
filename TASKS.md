@@ -373,7 +373,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
 
 ### T328 — Test: /ws/live WebSocket routes in api_live.py
-- status: claimed
+- status: blocked
 - class: light
 - priority: 2
 - kind: test
@@ -381,7 +381,8 @@ Acceptance:
 - area: pipeline/tests/test_api_live_ws.py
 - owner: Max_codex_light
 - claimed: 2026-10-17T16:41Z
-- pr: —
+- pr: #321
+- note: Tests shipped; local ci.sh failed on known unrelated App.test.tsx undici WebSocket ERR_INVALID_ARG_TYPE (all 1121 Python and 497 web tests passed).
 
 What: `api_live.py` has no direct test file. Add WebSocket tests with FastAPI `TestClient` for the live route.
 Interface: read `pipeline/src/routine_watch/api_live.py`, `pipeline/src/routine_watch/api_state.py`, `pipeline/src/routine_watch/monitoring.py` and one existing API test in `pipeline/tests/` for the client fixture. Call `api_state.reset()` before each test.
