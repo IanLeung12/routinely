@@ -380,7 +380,7 @@ Acceptance:
 - No "diagnos"/"patient" in copy. `cd web && npx vitest run src/replays/ReplayList` and `scripts/ci.sh` pass.
 
 ### T431 — Replays: supervisor notes on a replay (component, local only)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
