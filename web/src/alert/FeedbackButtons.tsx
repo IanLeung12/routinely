@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import type { FeedbackVerdict } from '../contracts.ts'
+import { Button } from '../ui/Button.tsx'
 
 const OPTIONS: { verdict: FeedbackVerdict; label: string }[] = [
   { verdict: 'confirmed', label: 'Confirmed' },
@@ -33,15 +34,14 @@ export function FeedbackButtons({
     <div className="feedback-buttons">
       <div role="group" aria-label="Nurse feedback">
         {OPTIONS.map((option) => (
-          <button
+          <Button
             key={option.verdict}
-            type="button"
             className="feedback-button"
             aria-pressed={value === option.verdict}
             onClick={() => onChange(option.verdict)}
           >
             {option.label}
-          </button>
+          </Button>
         ))}
         <p role="status" aria-live="polite">
           {value === 'confirmed' ? 'Marked as confirmed' : value === 'false_alarm' ? 'Marked as false alarm' : ''}
@@ -53,15 +53,14 @@ export function FeedbackButtons({
             {CAUSE_LABEL}
           </p>
           {[...causeOptions, { id: OTHER_CAUSE, label: 'Other' }].map((option) => (
-            <button
+            <Button
               key={option.id}
-              type="button"
               className="feedback-button"
               aria-pressed={cause === option.id}
               onClick={() => onCauseChange?.(option.id)}
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
