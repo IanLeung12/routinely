@@ -135,7 +135,7 @@ Acceptance: existing Sparkline tests pass (update selectors only); `cd web && np
 - claimed: 2026-10-17T21:37Z
 - pr: #409
 - rating: 4/5 mostly clear: DriftCard has no series data in its props (only slopePerDay/days/trending/minDays), so the acceptance's 'dotted trend series' and 'same props and data as today' had to be reconciled by synthesizing a 2-point fitted line from the slope rather than plotting real daily readings - worth saying explicitly next time if that's the intent
-- note: CI fails only on check:bundle (over budget); rebase on main once T441 merges.
+- note: CI fails only on check:bundle (over budget); rebase on main once T442 (bundle budget) merges.
 
 What: Split from T402. `BaselineChart` → `LineChart` with the personal baseline band, end-of-line tag and `RangeSelector`; the slow-drift card → `LineChart` with a dotted trend series. Same props and data as today.
 Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
@@ -516,3 +516,21 @@ Interface: keep the signatures. Fall back to the offline library only inside `ca
 Acceptance:
 - tests in `web/src/replays/api.test.ts`: DELETE returning 500 rejects and a following `fetchPersonReplays` (fetch throwing) still lists the replay; fetch throwing still deletes offline.
 - `cd web && npm test -- replays` and `scripts/ci.sh` pass.
+
+### T442 — Bug: main CI red — first-load JS 336 bytes over bundle budget
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- source: orchestrator
+- deps: —
+- area: web/scripts/check-bundle.mjs, web/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: `main` CI fails at `npm run check:bundle`: first-load JS is 92536 bytes gzipped vs `BUDGET_BYTES = 92_200` (runs 39073873088, 39074550159). No single merge caused it; the redesign (T403/T407), person view (T409) and replays (T430/T431) each added always-on code. Open PRs (#409, #410) fail on this too.
+Interface: in `web/scripts/check-bundle.mjs` raise `BUDGET_BYTES` to `96_000` and update the comment above it to say why (redesign shell + person view + replays are always-on screens added 2026-10-17; measured 92536 bytes). Add one line to the budget section of `web/README.md` with the new number and reason. Touch no other file.
+Acceptance:
+- `cd web && npm run build && npm run check:bundle` passes.
+- `scripts/ci.sh` passes.
