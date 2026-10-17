@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "FeedbackVerdict": {
+      "description": "The nurse's answer to an alert, which tunes this resident's threshold.",
+      "enum": [
+        "confirmed",
+        "false_alarm"
+      ],
+      "title": "FeedbackVerdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The body of `POST /alerts/{id}/feedback` (SPEC section 5, MVP 7 and 8).\n\nOne tap on the alert screen: the verdict, and optionally what the nurse thinks\nthe change turned out to be. Not `AlertFeedback`: that is the record the alert\ncomes back carrying, which also says who answered and when - the server stamps\nthose, a client never sends them.\n\n`routine_watch.api_alerts.AlertFeedbackIn` is this body as FastAPI validates it\nand holds `cause` to the pattern library on top, which a schema cannot: the\nlibrary is data that moves, this is the shape that does not.",
+  "properties": {
+    "verdict": {
+      "$ref": "#/$defs/FeedbackVerdict"
+    },
+    "note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Free text. Usually nobody types any.",
+      "title": "Note"
+    },
+    "cause": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The answer to \"what was it?\" (SPEC section 5, MVP 8): a pattern_id from the pattern library, 'other' for a cause the library has no pattern for, or null when nobody said.",
+      "title": "Cause"
+    }
+  },
+  "required": [
+    "verdict"
+  ],
+  "title": "Feedback",
+  "type": "object"
+}

@@ -17,6 +17,8 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `resident_summary.schema.json` | one row of the unit overview (`GET /residents`): status chip, the pattern the change is consistent with, sparkline (SPEC section 9, screen 1) |
 | `resident.schema.json` | one resident in full (`GET /residents/{id}`): that row plus consent, sessions, care records and baseline (SPEC section 9, screen 2) |
 | `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
+| `alert_detail.schema.json` | an alert as a route answers it (`GET /alerts/{id}`, and each row of `GET /alerts`): the `alert` record with `patterns` and `feedback` always sent and the resident's feedback-tuned threshold applied |
+| `feedback.schema.json` | the body of `POST /alerts/{id}/feedback`: the nurse's verdict, an optional note, and the optional answer to "what was it?" (SPEC section 5, MVP 7 and 8) |
 | `examples/capture.jsonl` | four sample frames in the capture format; made-up landmark numbers, real shape |
 
 Each schema is standalone (nested types are repeated in its `$defs`), so a validator
@@ -43,9 +45,9 @@ and validates what comes back.
 ## Changing them
 
 `pipeline/src/routine_watch/contracts.py` is the source of truth: `CONTRACTS` for the
-records, `PROTOCOLS` for the live socket, `PAYLOADS` for the HTTP routes. The
-schemas, the sample JSONL and `web/src/contracts.ts` are generated from the pydantic
-models there:
+records, `PROTOCOLS` for the live socket, `PAYLOADS` for what the HTTP routes answer
+with, `REQUESTS` for what the dashboard posts back. The schemas, the sample JSONL and
+`web/src/contracts.ts` are generated from the pydantic models there:
 
 ```sh
 cd pipeline

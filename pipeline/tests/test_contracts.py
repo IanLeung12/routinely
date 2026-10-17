@@ -2,11 +2,14 @@
 
 The pydantic models in `routine_watch.contracts` are the source. The JSON Schemas, the
 sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so these
-tests check three things: every type round-trips through JSON into its own schema, the
-sample frames validate, and nothing on disk has drifted away from the models.
+tests check four things: every type round-trips through JSON into its own schema, the
+sample frames validate, nothing on disk has drifted away from the models, and what the
+dashboard writes by hand against a schema - its `Alert` type, the feedback body its
+client posts - still names the same fields.
 """
 
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,6 +25,8 @@ from routine_watch.contracts import (
     POSE_LANDMARK_COUNT,
     SCHEMAS,
     Alert,
+    AlertDetail,
+    AlertFeedback,
     AlertKind,
     BaselineComparison,
     BaselineMetric,
@@ -30,6 +35,7 @@ from routine_watch.contracts import (
     ErrorType,
     EvidenceKind,
     EvidenceRef,
+    Feedback,
     Handedness,
     HandLandmarks,
     ObjectDetection,
@@ -47,6 +53,15 @@ from routine_watch.contracts import (
 
 REPO = Path(__file__).resolve().parents[2]
 CONTRACTS_DIR = REPO / "contracts"
+
+#: The dashboard's copy of the shapes, generated from the same models.
+WEB_CONTRACTS = REPO / "web" / "src" / "contracts.ts"
+
+#: The dashboard's feedback client, which writes the POST body out by hand.
+WEB_ALERT_API = REPO / "web" / "src" / "alert" / "api.ts"
+
+#: What the server stamps on a stored verdict, so a nurse's POST never sends it.
+SERVER_STAMPED = {"by", "at"}
 
 #: Nothing in a contract may name an image, a frame or a clip (SPEC section 8).
 BANNED_FIELD_WORDS = (
@@ -272,3 +287,58 @@ def test_times_and_boxes_must_make_sense() -> None:
 def test_an_alert_needs_at_least_one_session() -> None:
     with pytest.raises(ValidationError):
         Alert.model_validate(_alert().model_dump() | {"session_ids": []})
+
+
+def ts_fields(type_name: str) -> set[str]:
+    """The field names of one generated type in `web/src/contracts.ts`."""
+    source = WEB_CONTRACTS.read_text(encoding="utf-8")
+    block = re.search(rf"^export type {type_name} = \{{$(.*?)^\}}$", source, re.S | re.M)
+    assert block, f"web/src/contracts.ts has no type {type_name}"
+    return set(re.findall(r"^  (\w+)\??:", block.group(1), re.M))
+
+
+def test_the_alert_detail_is_the_record_with_nothing_left_out() -> None:
+    """`GET /alerts/{id}` and every row of `GET /alerts` dump the whole alert
+    (`api_alerts._alert_payload`), so the detail is the stored record's fields with
+    the two it lets default always sent: an empty list and a null, never a gap."""
+    assert set(AlertDetail.model_fields) == set(Alert.model_fields)
+    assert all(field.is_required() for field in AlertDetail.model_fields.values())
+    optional = {name for name, f in Alert.model_fields.items() if not f.is_required()}
+    assert optional == {"patterns", "feedback"}
+
+
+def test_the_detail_schema_fails_an_alert_that_left_its_feedback_out() -> None:
+    """The record's schema takes it; the route's does not. That difference is the
+    whole reason `alert_detail.schema.json` exists beside `alert.schema.json`."""
+    payload = _alert().model_dump(mode="json")
+    del payload["feedback"]
+
+    validator(Alert).validate(payload)
+    with pytest.raises(SchemaValidationError):
+        validator(AlertDetail).validate(payload)
+
+
+def test_the_feedback_body_is_the_stored_verdict_minus_who_and_when() -> None:
+    """A nurse posts `Feedback`; the alert comes back carrying `AlertFeedback`, which
+    is the same answer plus the two fields the server stamps on it."""
+    assert set(AlertFeedback.model_fields) == set(Feedback.model_fields) | SERVER_STAMPED
+
+
+def test_the_dashboards_alert_type_names_every_detail_field() -> None:
+    assert ts_fields("Alert") == set(AlertDetail.model_fields)
+
+
+def test_the_dashboards_feedback_type_names_every_posted_field() -> None:
+    assert ts_fields("AlertFeedback") == set(Feedback.model_fields) | SERVER_STAMPED
+
+
+def test_the_dashboard_posts_exactly_the_feedback_body() -> None:
+    """`postFeedback` writes the POST body out by hand (`web/src/alert/api.ts`), the
+    one copy of a contract that is not generated, so a field added on either side
+    alone fails here."""
+    source = WEB_ALERT_API.read_text(encoding="utf-8")
+    body = re.search(r"body: JSON\.stringify\(\{(.*?)\}\)", source, re.S)
+    assert body, "web/src/alert/api.ts no longer posts a JSON.stringify body"
+
+    posted = set(re.findall(r"(?:^|,)\s*(\w+)", body.group(1)))
+    assert posted == set(Feedback.model_fields)
