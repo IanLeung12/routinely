@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T403 — Redesign 3/6: unit overview + app shell
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: improvement
@@ -16,7 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
 - owner: ian-claude-standard-3
 - claimed: 2026-10-17T21:01Z
-- pr: —
+- pr: #404
+- rating: 4/5 clear task, but it landed just as T408 (role chooser / role-aware shell) merged into main and also rewrote App.tsx's header, which the task description didn't anticipate; had to merge origin/main mid-task and hand-reconcile the two shells
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
 Acceptance: keyboard nav and existing behaviour unchanged (tests updated for structure only); flagged resident still understood in 10 s; before/after screenshot in PR; `scripts/ci.sh` passes.
