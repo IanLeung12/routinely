@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 325c252
+- last-reviewed: 271f2b0
 
 ## Tasks
 
@@ -27,17 +27,17 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
-- status: blocked
+- status: todo
 - class: light
 - priority: 2
 - kind: bug
 - source: reviewer
-- deps: —
+- deps: T368
 - area: pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py
 - rating: —
-- owner: Max_codex_light
-- claimed: 2026-10-17T17:45Z
-- note: Fix committed as c881255 on task/T351-evening-cutoff in Max_codex_light_T351 worktree. Targeted tests: 21 passed; full Python CI: 1193 passed, 1 skipped. Two scripts/ci.sh attempts fail in unrelated web App.test.tsx with undici WebSocket ERR_INVALID_ARG_TYPE (Event instance mismatch), despite 540 web tests passing. No listener on local port 8000 when checked. Not pushed because local CI must pass. Follow-up: TimeOfDay contracts docstring still says until 17:00; heavy-only.
+- owner: —
+- claimed: —
+- note: orch: local ci.sh failed only on the known undici WebSocket flake (fixed by T368, now a dep). A fix exists unpushed as c881255 on task/T351-evening-cutoff in Max's worktree; reuse it if available, else redo (tiny). Leave the contracts TimeOfDay docstring alone.
 
 What: `pattern_features.EVENING_HOUR = 16` decides the evening-only pattern, but `api_alerts.EVENING_START_HOUR = 17` buckets the strip shown as its evidence. A session at 16:xx counts as "evening" for the pattern and "afternoon" on the strip, so an alert "consistent with evening worsening" can show its errors under afternoon. The code comment admits it only holds because no demo session starts 16:00–17:00.
 Interface: in `api_alerts.py`, set `EVENING_START_HOUR = pattern_features.EVENING_HOUR` (import it, drop the hard-coded 17) and update the comment. The `TimeOfDay` docstring in `contracts.py`/schemas says "until 17:00": contracts are heavy-only, so don't touch them; note the stale docstring in the PR for a follow-up.
@@ -554,3 +554,103 @@ What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard
 Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T368 — Test infra: every web test gets a fake WebSocket by default
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- deps: —
+- area: web/vite.config.ts, web/src/testSetup.ts, web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Local `scripts/ci.sh` keeps failing with an undici `ERR_INVALID_ARG_TYPE` WebSocket error (blocked T351, LESSONS lines 28 and 42) because some web tests render screens that open a real socket to localhost:8000. Stub it once for the whole suite.
+Interface: new `web/src/testSetup.ts` that, in a global `beforeEach`, does `vi.stubGlobal('WebSocket', FakeWebSocket)` using the existing helper in `web/src/live/testWebSocket.ts` (read it first), and registers it as `test.setupFiles: ['src/testSetup.ts']` in `web/vite.config.ts`. Tests that already stub WebSocket keep working (their own stub wins). Drop the now-redundant stub in `App.test.tsx` only if it stays green.
+Acceptance:
+- with a local `uvicorn` listening on :8000 (or not), `cd web && npx vitest run` exits 0 with no uncaught exception
+- `scripts/ci.sh` passes
+
+### T369 — Privacy panel: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Make the privacy panel readable at 375 px (no horizontal scroll, controls stack, text wraps), like the other phone-width tasks.
+Interface: read `web/src/about/PrivacyPanel.tsx` and the pattern in `web/src/resident/DriftCard.mobile.test.tsx` + `web/src/resident/driftCard.css`. Add a `@media (max-width: 480px)` block in a new `privacyPanel.css` imported by the panel; keep existing class names.
+Acceptance:
+- new `PrivacyPanel.mobile.test.tsx` renders at 375 px and checks the stacked class names exist
+- `scripts/ci.sh` passes
+
+### T370 — Alert time-of-day strip: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/TimeOfDayStrip.css, web/src/alert/TimeOfDayStrip.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The morning/afternoon/evening strip on the alert view must fit 375 px: the three buckets stay readable (stack or shrink), labels never truncate.
+Interface: read `web/src/alert/TimeOfDayStrip.tsx` and `TimeOfDayStrip.css`; follow `web/src/resident/DriftCard.mobile.test.tsx`. CSS-only change plus the test; don't change the component's props.
+Acceptance:
+- new `TimeOfDayStrip.mobile.test.tsx` renders at 375 px and finds all three bucket labels
+- `scripts/ci.sh` passes
+
+### T371 — Test: error list and suggested checks have accessible names
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/ErrorList.a11y.test.tsx, web/src/alert/SuggestedChecks.a11y.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Screen-reader check for the two alert evidence lists: each is a labelled list/region and every item's name includes its time and step (errors) or check text (suggested checks).
+Interface: read `web/src/alert/ErrorList.tsx`, `SuggestedChecks.tsx` and the style of `web/src/alert/TimeOfDayStrip.a11y.test.tsx`. Tests only; if a name is missing, note it in the PR instead of changing the component.
+Acceptance:
+- two new test files using `getByRole(..., { name })` queries
+- `scripts/ci.sh` passes
+
+### T372 — Test: every error type and pattern is covered by a recorded scenario
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_scenario_coverage.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard against scenario rot: a pipeline test that loads every `tests/scenarios/*/expected.yaml` and asserts each `ErrorType` (contracts.py) appears in at least one scenario's `errors`, each task (tea, meds) has a `*_normal` and an `*_abandoned` scenario, and each pattern in the pattern library has a `pattern_*` scenario (or is listed in an explicit, commented allow-list).
+Interface: read-only use of `routine_watch.contracts.ErrorType`, the pattern library module, and the scenario folder; no new scenarios.
+Acceptance:
+- `pytest pipeline/tests/test_scenario_coverage.py` passes; removing a scenario's error makes it fail with a message naming the missing type
+- `scripts/ci.sh` passes
+
+### T373 — Docs: CODEMAP note that web tests share one default WebSocket stub
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: T368
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: One-line note in the web section of `docs/CODEMAP.md` (notes only, not the generated list) that `web/src/testSetup.ts` stubs WebSocket for every test and tests needing a socket use `web/src/live/testWebSocket.ts`.
+Acceptance:
+- note added; `scripts/ci.sh` passes
