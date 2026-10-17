@@ -66,7 +66,17 @@ describe('saveRoutine', () => {
     const graph: TaskGraph = { id: 'wash_hands', title: 'Wash hands', steps: [] }
 
     const saved = await saveRoutine(graph)
-    expect(saved).toEqual({ id: 'wash_hands', title: 'Wash hands', task_graph: graph, built_in: false })
+    // `Routine.detail()`'s shape, so the list's step count works offline too (T443).
+    expect(saved).toEqual({
+      id: 'wash_hands',
+      title: 'Wash hands',
+      task_id: 'wash_hands',
+      built_in: false,
+      source: 'text',
+      step_count: 0,
+      needs_training: [],
+      task_graph: graph,
+    })
 
     const routines = await fetchRoutines()
     expect(routines).toContainEqual(saved)

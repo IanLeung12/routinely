@@ -1,4 +1,4 @@
-import type { RoutineDraftResult, SavedRoutine, TaskGraph } from '../routines/types.ts'
+import type { RoutineDraftResult, RoutineSummary, SavedRoutine, TaskGraph } from '../routines/types.ts'
 
 /** Detector classes the pipeline already knows (`tasks/tea.yaml`, `tasks/meds.yaml`),
  * so the offline drafts below can show a believable "needs training" note for the
@@ -87,10 +87,38 @@ const MAKE_TOAST_GRAPH: TaskGraph = {
   ],
 }
 
-export const mockBuiltInRoutines: SavedRoutine[] = [
-  { id: TEA_GRAPH.id, title: TEA_GRAPH.title, task_graph: clone(TEA_GRAPH), built_in: true },
-  { id: MEDS_GRAPH.id, title: MEDS_GRAPH.title, task_graph: clone(MEDS_GRAPH), built_in: true },
+/** One `GET /routines` row for a graph, in `Routine.summary()`'s shape. `routineId` is
+ * what the API addresses the routine by, which for a built-in is its file name (`tea`)
+ * rather than the graph's id (`make_tea`). */
+function summaryRow(
+  routineId: string,
+  graph: TaskGraph,
+  source: RoutineSummary['source'],
+): RoutineSummary {
+  return {
+    id: routineId,
+    title: graph.title,
+    task_id: graph.id,
+    built_in: source === 'built_in',
+    source,
+    step_count: graph.steps.length,
+    needs_training: [],
+  }
+}
+
+/** The built-ins as `GET /routines` lists them, by title: summary rows with no task
+ * graph, so the offline list is shaped like the live one (T443). */
+export const mockBuiltInRoutines: RoutineSummary[] = [
+  summaryRow('tea', TEA_GRAPH, 'built_in'),
+  summaryRow('meds', MEDS_GRAPH, 'built_in'),
 ]
+
+/** What `POST /routines` would have answered for a graph saved while the API was
+ * unreachable (`Routine.detail()`): a summary row plus the graph. `needs_training` is
+ * empty because the builder doesn't send one, same as the route. */
+export function mockSavedRoutine(graph: TaskGraph): SavedRoutine {
+  return { ...summaryRow(graph.id, graph, 'text'), task_graph: clone(graph) }
+}
 
 /** Picks a canned draft by keyword, same rule as `pipeline/tests/fixtures/routine_builder/`,
  * so the demo works on the offline try-out link with no Gemini key. "Brush teeth" is the
