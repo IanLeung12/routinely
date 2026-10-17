@@ -5,6 +5,7 @@ import type { ErrorType, TaskError } from '../contracts.ts'
 import { MOCK_STEPS } from './mockLiveStream.ts'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
+import { TaskMapLegend } from './TaskMapLegend.tsx'
 import { useLiveSession } from './useLiveSession.ts'
 
 /** Plain-language names for the error types in SPEC section 7. */
@@ -88,6 +89,7 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
         <Card>
           <SectionHeader title="Task map" />
           <TaskMap steps={MOCK_STEPS} states={states} />
+          <TaskMapLegend />
         </Card>
       </div>
 
