@@ -559,14 +559,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T362 — Scenario: tea_late_start_normal (long idle before the first step is not an error)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_late_start_normal/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T17:59Z
 - pr: —
 
 What: A resident who sits for a long time before touching the kettle and then makes tea correctly must not get an error or a flag. Guards against the abandonment timer starting before the first step.
