@@ -560,7 +560,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T123 — Bug: smoke.sh always fails the evidence replay check (alert body is overwritten)
-- status: blocked
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -570,7 +570,7 @@ Acceptance:
 - claimed: 2026-10-17T07:35Z
 - pr: #104
 - source: tester
-- note: Smoke passes. Local CI attempts: Windows dashboard file lock, then two unrelated web test 5s timeouts (AlertView and LiveSession); Python 548 passed. Stopping per two-attempt limit.
+- note: Smoke passes against dev stack; GitHub CI passed. Local CI had Windows file lock then unrelated web timeouts; auto-merge enabled.
 
 What: `scripts/smoke.sh` stores the alert JSON in `body` (~line 83), then the dashboard check (~line 92) reuses `body` for the HTML, so the replay block parses HTML and reports "no alert error to derive session/resident/time window from". The routes themselves work (`/sessions/mrs-k-20/replay?t_start=0&t_end=5` and `/residents/mrs-k/normal_replay` return frames).
 Repro: `scripts/dev.sh up && scripts/smoke.sh` → `FAIL: GET /sessions/<id>/replay ...`, exit 1.
