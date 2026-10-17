@@ -415,6 +415,107 @@ describe('LiveSession', () => {
     await act(async () => {})
   })
 
+  it('shows the paused message right away when a monitoring-changed event pauses its own room', async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+
+    // Let the resident fetch resolve so the panel knows its own room is 204 (T275): the
+    // toggle on the resident's page fires this without the socket ever saying so.
+    await act(async () => {})
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '204', paused: true } }))
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+  })
+
+  it('reconnects when a monitoring-changed event resumes its own room, same path as "Check again"', async () => {
+    vi.useFakeTimers()
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const firstSocket = FakeWebSocket.latest()
+
+    act(() => {
+      firstSocket.emit({ type: 'paused', room: '204' })
+      firstSocket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '204', paused: false } }))
+    })
+
+    const secondSocket = FakeWebSocket.latest()
+    expect(secondSocket).not.toBe(firstSocket)
+    expect(firstSocket.closed).toBe(true)
+
+    act(() => {
+      secondSocket.emit({
+        type: 'session_start',
+        session_id: 'live-session-2',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+
+    expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
+    expect(screen.getByText('Fill the kettle')).toBeTruthy()
+
+    await act(async () => {})
+  })
+
+  it('ignores a monitoring-changed event for another room', async () => {
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
+      })
+    })
+    await act(async () => {})
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room: '101', paused: true } }))
+    })
+
+    expect(screen.queryByText(/Monitoring is paused/)).toBeNull()
+    expect(screen.getByText('Fill the kettle')).toBeTruthy()
+  })
+
+  it('removes the monitoring-changed listener on unmount', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener')
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const { unmount } = render(<LiveSession scenario="tea_normal" />)
+
+    expect(addSpy).toHaveBeenCalledWith('monitoring-changed', expect.any(Function))
+
+    unmount()
+
+    expect(removeSpy).toHaveBeenCalledWith('monitoring-changed', expect.any(Function))
+    addSpy.mockRestore()
+    removeSpy.mockRestore()
+  })
+
   it('announces step completions and raised flags through a polite live region', () => {
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
     const socket = FakeWebSocket.latest()
