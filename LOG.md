@@ -326,3 +326,4 @@ T358 | standard | claude-sonnet | merged first try | ~65k tok
 T364 | standard | claude-sonnet | merged first try | ~45k tok
 T198 | light | codex | merged after release | ~5k tok
 T365 | light | codex | merged first try | ~5k tok
+T203 | standard | claude-opus | merged first try | ~115k tok

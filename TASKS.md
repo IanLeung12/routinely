@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: e3868d9
+- last-reviewed: 393b66c
 
 ## Tasks
 
@@ -641,3 +641,20 @@ Acceptance:
 - `cd web && npm run build` produces `dist/landing.html`; Vitest test renders the landing page and checks every section heading and the dashboard link.
 - `wording.test.ts`-style check: no "diagnos" in landing copy.
 - Look at it (dev server `/landing.html`, desktop + 390 px wide); describe what you checked in the PR.
+
+### T379 — Test: shift handoff Print button works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T203 added a "Print handoff" button; the keyboard-only test (T294/T321) predates it. Cover it so a nurse without a mouse can print.
+Interface: read only web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.tsx and the 'Print handoff' test near line 171 of web/src/handoff/Handoff.test.tsx (stub `window.print` the same way). No production code changes.
+Acceptance:
+- Tabbing from "Copy summary" reaches "Print handoff"; Enter and Space each call `window.print` once.
+- `cd web && npx vitest run src/handoff/Handoff.keyboard.test.tsx` passes; `scripts/ci.sh` passes.
