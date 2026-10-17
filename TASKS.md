@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T062 — Nurse shift handoff summary (separate screen)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 3
 - kind: feature
@@ -35,7 +35,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_handoff.py, web/src/handoff/, web/src/App.tsx (one nav entry)
 - owner: ian-claude
 - claimed: 2026-10-17T07:47Z
-- pr: —
+- pr: #129
 - source: proposed
 
 What: Rationale: a nurse starting a shift wants one view of "who changed in the last 12 h" (Usefulness/Clarity, Use-of-AI hook). `GET /handoff?hours=12` lists residents with flags, pending-review alerts and drift trends in that window, plus a short plain-language summary from the existing `Explainer` interface (fake by default, no real call without `LIVE_API=1`). Wording: "flagged for review", never "diagnosed".
