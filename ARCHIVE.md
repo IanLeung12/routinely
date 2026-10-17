@@ -7343,3 +7343,47 @@ Interface: add one check next to the existing `GET $DASHBOARD_URL -> HTML` block
 Acceptance:
 - With `scripts/dev.sh up`, `scripts/smoke.sh` passes and prints the new pass line; with the landing entry removed from the build it fails with a readable message.
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
+
+### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
+- status: done
+- class: heavy
+- priority: 0
+- kind: improvement
+- deps: —
+- area: docs/DESIGN.md, web/src/index.css, web/src/ui/
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T20:21Z
+- pr: #387
+- rating: 4/5 clear brief and good starting observations; the only gap was where before/after screenshots should live on a private repo (raw links don't render), so I committed them under docs/design/ which is just outside the stated area
+
+What: Ian wants the dashboard to look like Fey (finance app): quiet, premium, dark, data-first. This task sets the visual language every other redesign task builds on. Use the mobbin MCP (`search_screens` "Fey dashboard", "Fey stock chart", "Fey earnings", "Fey portfolio") to study the references; borrow structure, density and chart style, never Fey's branding or logo. Don't commit Mobbin images; link them.
+References: https://mobbin.com/screens/8487cb92-3969-4f21-a847-26177466cf9a (home), https://mobbin.com/screens/7599e963-22f6-428c-b03e-f0438e2c3291 (watchlist vs markets), https://mobbin.com/screens/d70bd977-1898-4979-a799-bd2dcb94ab25 (financials charts), https://mobbin.com/screens/f7d60fde-c660-4041-8c28-e381512275dd (bar charts), https://mobbin.com/screens/729ec564-7ed7-453d-a3f2-86f51b34c96a (comparison).
+What we observed (starting point, verify against the refs):
+- Near-black page (~#0b0b0d) with a faint warm radial vignette on detail pages; cards one step lighter (~#141416) with 1px hairline borders (white ~6–8% alpha), radius ~12px, generous padding, few shadows.
+- Type: neutral sans, small sizes (12–14px body, 15–16px card titles, semibold), muted grey secondary text, tabular numerals, numbers right-aligned.
+- Colour is rare and meaningful: positive green and negative red shown as small tinted pills (text colour on ~15% alpha background); a secondary series in soft purple; dotted lines for "expected/forecast" series.
+- Lists: dense rows with hairline separators, value pill on the right.
+- Controls: segmented time-range pills (1M 3M YTD 1Y) with the active one on a grey chip; floating rounded "dock" navigation.
+Interface:
+- `docs/DESIGN.md`: the brief: principles, tokens table, chart rules (see T402), status mapping, do/don't, reference links. Short (≤150 lines).
+- Tokens in `web/src/index.css`: surfaces (page, card, raised, hairline), text (primary, secondary, muted), accent + status (normal = neutral/green, watch = amber, flagged = red/pink) each with a tinted-background variant, chart palette (primary line, comparison purple, baseline band, forecast dotted), radii, spacing scale, type scale, `font-variant-numeric: tabular-nums` utility.
+- `web/src/ui/`: update Card, StatusChip (tinted pill), Button, SectionHeader; add `Pill` (value/delta pill), `SegmentedControl` (time range), `Row` (dense list row with hairline). Keep existing exports working so screens don't break before their own redesign task.
+Acceptance:
+- Text contrast ≥ 4.5:1 on its surface for every text token (nurses, not traders: Fey's faintest greys are too light; keep the look but meet contrast). Never colour alone for status.
+- Vitest tests for new primitives; `cd web && npm run lint && npm test && npm run build`; `scripts/ci.sh` passes.
+- Before/after screenshots of the overview in the PR (dev server), labelled.
+
+### T405 — Redesign 5/6: alert / evidence view
+- status: done
+- class: standard
+- priority: 0
+- kind: improvement
+- deps: T401
+- area: web/src/alert/, web/src/evidence/, web/src/patterns/
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T20:48Z
+- pr: #395
+- rating: 4/5 clear on what to build; the chart-kit caveat didn't say whether the time-of-day strip counts as a chart (kept it, restyled its container), and 'tests updated for structure only' left the h2 reading order and the baseline/threshold wording open — both had to change to follow SPEC section 9's order
+
+What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
+Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
