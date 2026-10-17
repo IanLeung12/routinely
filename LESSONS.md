@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- The privacy wording check (test_product_wording_flags_changes_for_review) also scans your own code comments for 'diagnos*', even inside web/src/*.ts files, not just user-facing copy. (ian-claude-standard)
 - Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
 - recogniser._in_hand reads hand landmarks as well as hand boxes, so adding poses/hands to a frame can silently change step recognition: keep generated landmarks inside the frame's existing hand box. (ian-claude)
 - A PR that adds a field to live.py's session_end must add it to live_camera.py's too: test_live_camera.py compares the camera path's messages to the scenario replay's one for one. (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - gh pr checks saying 'no checks reported' usually means the PR is conflicted, not slow: GitHub runs no pull_request workflow while mergeStateStatus is DIRTY, so merge origin/main and push before waitin (ian-claude)
 - Phone-width (375 px) tests: jsdom ignores @media and window.innerWidth, so asserting labels exist proves nothing. Assert the mobile CSS rule itself (read the stylesheet text for the @media block/selec (orchestrator)
 - After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
+- Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
