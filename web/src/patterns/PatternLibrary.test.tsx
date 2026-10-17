@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PatternLibrary } from './PatternLibrary.tsx'
 import { mockPatterns } from './mockPatterns.ts'
@@ -72,5 +73,29 @@ describe('PatternLibrary', () => {
     await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
 
     expect(await screen.findByRole('heading', { name: mockPatterns[0].name, level: 3 })).toBeTruthy()
+  })
+
+  it('lets a keyboard-only nurse go back', async () => {
+    serve()
+    const user = userEvent.setup()
+    const onBack = vi.fn()
+    await act(async () => { render(<PatternLibrary onBack={onBack} />) })
+    await screen.findByRole('heading', { name: mockPatterns[0].name, level: 3 })
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /back/i }))
+
+    await user.keyboard('{Enter}')
+    expect(onBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps every pattern name as an h3 under the page heading', async () => {
+    serve()
+    await act(async () => { render(<PatternLibrary onBack={() => {}} />) })
+
+    expect(screen.getByRole('heading', { name: 'Pattern library', level: 2 })).toBeTruthy()
+    for (const entry of mockPatterns) {
+      expect(await screen.findByRole('heading', { name: entry.name, level: 3 })).toBeTruthy()
+    }
   })
 })
