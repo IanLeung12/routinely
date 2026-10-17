@@ -234,7 +234,7 @@ Acceptance:
 - existing live tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T324 — Shift handoff: "compared with the previous shift" per resident
-- status: in-review
+- status: done
 - class: heavy
 - priority: 3
 - kind: feature
