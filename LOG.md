@@ -53,3 +53,5 @@ T060 | light | codex | merged first try | ~4k tok
 T058 | standard | claude-sonnet | merged first try | ~55k tok
 T039 | heavy | claude-opus | merged first try | ~?k tok
 T063 | light | codex | merged first try | ~4k tok
+T030 | standard | claude-sonnet | merged first try | ~55k tok
+T065 | light | codex | merged first try | ~?k tok
