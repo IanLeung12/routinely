@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "MonitoringChange": {
+      "additionalProperties": false,
+      "description": "One logged change to a room's switch (SPEC section 12).\n\nA pause or a resume, with who made it and when: `routine_watch.monitoring`\nappends one of these every time the switch really moves, so a camera going quiet\nis accountable rather than silent. A tap that leaves the room as it was is not a\nchange and is not logged.",
+      "properties": {
+        "on": {
+          "description": "False is a pause, true a resume.",
+          "title": "On",
+          "type": "boolean"
+        },
+        "by": {
+          "description": "Who made the change. The MVP has no nurse logins, so every change is one anonymous nurse's.",
+          "minLength": 1,
+          "title": "By",
+          "type": "string"
+        },
+        "at": {
+          "description": "When the change was made (wall clock).",
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "on",
+        "by",
+        "at"
+      ],
+      "title": "MonitoringChange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One room's audit trail (`GET /rooms/{room}/monitoring/history`, SPEC section 12).\n\nWhat the resident screen shows under the room's switch. Empty until somebody\nmoves it, and `/demo/reset` empties it again.",
+  "properties": {
+    "room": {
+      "minLength": 1,
+      "title": "Room",
+      "type": "string"
+    },
+    "history": {
+      "description": "The room's changes, newest first, at most `routine_watch.monitoring.MAX_HISTORY` of them.",
+      "items": {
+        "$ref": "#/$defs/MonitoringChange"
+      },
+      "title": "History",
+      "type": "array"
+    }
+  },
+  "required": [
+    "room",
+    "history"
+  ],
+  "title": "RoomMonitoringHistory",
+  "type": "object"
+}

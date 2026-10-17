@@ -13,10 +13,10 @@ the copies other languages read cannot drift:
 Four kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
 `oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
-with: a resident, the overview's row for one, a shift handoff, an alert in full.
-`REQUESTS` are what the dashboard sends back: a nurse's feedback on an alert. The
-last three get a schema but no TypeScript, because the dashboard reads the socket
-and those routes through its own types.
+with: a resident, the overview's row for one, a shift handoff, an alert in full, the
+rooms whose monitoring is paused. `REQUESTS` are what the dashboard sends back: a
+nurse's feedback on an alert. The last three get a schema but no TypeScript, because
+the dashboard reads the socket and those routes through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
@@ -807,6 +807,66 @@ class AlertDetail(Alert):
     )
 
 
+class Monitoring(_Contract):
+    """Which rooms a nurse has paused right now (`GET /monitoring`, SPEC section 12).
+
+    The state behind every pause switch in the dashboard, in one call: room names
+    only, because that is all a switch needs to know whether it is on. The handoff's
+    `paused` says the same thing about a window and names the resident too
+    (`PausedRoom`), so a nurse coming on shift can see whose room was quiet.
+    """
+
+    paused_rooms: list[Annotated[str, Field(min_length=1)]] = Field(
+        description="Every room whose monitoring is paused, sorted. Empty means the whole "
+        "unit is being watched."
+    )
+
+
+class RoomMonitoring(_Contract):
+    """One room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`).
+
+    The state the room is in now, echoed back so the dashboard draws what the server
+    believes rather than what it just sent.
+    """
+
+    room: str = Field(min_length=1)
+    on: bool = Field(
+        description="True when the room is being monitored, false when a nurse has paused it."
+    )
+
+
+class MonitoringChange(_Contract):
+    """One logged change to a room's switch (SPEC section 12).
+
+    A pause or a resume, with who made it and when: `routine_watch.monitoring`
+    appends one of these every time the switch really moves, so a camera going quiet
+    is accountable rather than silent. A tap that leaves the room as it was is not a
+    change and is not logged.
+    """
+
+    on: bool = Field(description="False is a pause, true a resume.")
+    by: str = Field(
+        min_length=1,
+        description="Who made the change. The MVP has no nurse logins, so every change is "
+        "one anonymous nurse's.",
+    )
+    at: datetime = Field(description="When the change was made (wall clock).")
+
+
+class RoomMonitoringHistory(_Contract):
+    """One room's audit trail (`GET /rooms/{room}/monitoring/history`, SPEC section 12).
+
+    What the resident screen shows under the room's switch. Empty until somebody
+    moves it, and `/demo/reset` empties it again.
+    """
+
+    room: str = Field(min_length=1)
+    history: list[MonitoringChange] = Field(
+        description="The room's changes, newest first, at most "
+        "`routine_watch.monitoring.MAX_HISTORY` of them."
+    )
+
+
 # --------------------------------------------------------- what the dashboard posts
 
 
@@ -852,11 +912,20 @@ PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
 #: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
 #: for the same reason as the protocols above - the dashboard mirrors these by hand
-#: in `web/src/overview/types.ts` and `web/src/handoff/types.ts`, or reads them
-#: through a record's own type (`AlertDetail` through `Alert`), so the schema is
-#: what the two sides are held to. `pipeline/tests/test_api_payload_contracts.py`
-#: validates the real routes against them.
-PAYLOADS: tuple[type[BaseModel], ...] = (ResidentSummary, Resident, Handoff, AlertDetail)
+#: in `web/src/overview/types.ts`, `web/src/handoff/types.ts` and
+#: `web/src/about/monitoringApi.ts`, or reads them through a record's own type
+#: (`AlertDetail` through `Alert`), so the schema is what the two sides are held to.
+#: `pipeline/tests/test_api_payload_contracts.py` validates the real routes against
+#: them.
+PAYLOADS: tuple[type[BaseModel], ...] = (
+    ResidentSummary,
+    Resident,
+    Handoff,
+    AlertDetail,
+    Monitoring,
+    RoomMonitoring,
+    RoomMonitoringHistory,
+)
 
 #: What the dashboard sends the other way: a schema file each, no TypeScript. A
 #: request body is hand-written in the client (`web/src/alert/api.ts`) and validated

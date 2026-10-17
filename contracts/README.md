@@ -19,6 +19,9 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
 | `alert_detail.schema.json` | an alert as a route answers it (`GET /alerts/{id}`, and each row of `GET /alerts`): the `alert` record with `patterns` and `feedback` always sent and the resident's feedback-tuned threshold applied |
 | `feedback.schema.json` | the body of `POST /alerts/{id}/feedback`: the nurse's verdict, an optional note, and the optional answer to "what was it?" (SPEC section 5, MVP 7 and 8) |
+| `monitoring.schema.json` | every room whose monitoring a nurse has paused (`GET /monitoring`): the state behind the dashboard's pause switches (SPEC section 12) |
+| `room_monitoring.schema.json` | one room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`): the room and whether it is on now |
+| `room_monitoring_history.schema.json` | one room's audit trail (`GET /rooms/{room}/monitoring/history`): who paused or resumed it and when, newest first (SPEC section 12) |
 | `examples/capture.jsonl` | four sample frames in the capture format; made-up landmark numbers, real shape |
 
 Each schema is standalone (nested types are repeated in its `$defs`), so a validator
@@ -33,13 +36,17 @@ an envelope around the contracts above. The pipeline sends a session's messages
 every message it sends against the schema, and fails if either side knows a message
 the other does not.
 
-The last three are HTTP payloads rather than records: what a route answers with,
-built by `pipeline/src/routine_watch/demo.py` and `handoff.py` and served by
-`api.py`. The dashboard mirrors them by hand too (`web/src/overview/types.ts`,
-`web/src/handoff/types.ts`), so again nothing is generated for the web side and the
-schema is what both sides are held to:
-`pipeline/tests/test_api_payload_contracts.py` calls all three routes - every demo
-resident, one with a live session in their history, a handoff with a room paused -
+Everything from `resident_summary.schema.json` down is an HTTP payload rather than
+a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
+`handoff.py` and `monitoring.py` and served by `api.py`, plus the one body that
+travels the other way. The dashboard mirrors them by hand too
+(`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+`web/src/about/monitoringApi.ts`, `web/src/alert/api.ts`) or reads them through a
+record's own generated type (`alert_detail` through `Alert`), so again nothing is
+generated for the web side and the schema is what both sides are held to:
+`pipeline/tests/test_api_payload_contracts.py` calls every one of those routes -
+every demo resident, one with a live session in their history, a handoff with a room
+paused, an alert before and after a nurse answers it, a room paused and resumed -
 and validates what comes back.
 
 ## Changing them
