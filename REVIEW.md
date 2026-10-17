@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: d48c93a
-- next-area: tests/scenarios
+- last-reviewed: 39eccf1
+- next-area: web
 
 ## Known issues filed
 - T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
