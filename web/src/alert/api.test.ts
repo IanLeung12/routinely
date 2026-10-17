@@ -50,12 +50,19 @@ describe('alerts API', () => {
     })
   })
 
-  it.each(['rejection', 'non-ok'])('records feedback locally on POST %s', async failure => {
+  it.each([404, 422, 500])('rejects HTTP %s without mutating local alerts', async status => {
+    const before = structuredClone(mockAlerts)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status }))
+
+    await expect(postFeedback(mockAlerts[0].alert_id, 'confirmed'))
+      .rejects.toThrow(`Feedback not saved (${status})`)
+    expect(mockAlerts).toEqual(before)
+  })
+
+  it('records feedback locally on a network error', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
-    vi.stubGlobal('fetch', failure === 'rejection'
-      ? vi.fn().mockRejectedValue(new Error('offline'))
-      : vi.fn().mockResolvedValue({ ok: false, status: 500 }))
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
 
     const alert = await postFeedback(mockAlerts[0].alert_id, 'false_alarm', 'Assisted')
     expect(alert.feedback).toEqual({

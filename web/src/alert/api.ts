@@ -22,17 +22,20 @@ export async function fetchAlert(id: string): Promise<Alert | null> {
 export async function postFeedback(
   id: string, verdict: FeedbackVerdict, note?: string,
 ): Promise<Alert> {
+  let response: Response
   try {
-    const response = await fetch(`${apiUrl}/alerts/${encodeURIComponent(id)}/feedback`, {
+    response = await fetch(`${apiUrl}/alerts/${encodeURIComponent(id)}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ verdict, note }),
     })
-    if (response.ok) return await response.json() as Alert
-  } catch { /* Record feedback locally when the API is unavailable. */ }
-
-  const alert = mockAlerts.find(alert => alert.alert_id === id)
-  if (!alert) throw new Error(`Unknown alert: ${id}`)
-  alert.feedback = { verdict, by: 'nurse', at: new Date().toISOString(), note }
-  return alert
+  } catch {
+    // Record feedback locally only when the API cannot be reached.
+    const alert = mockAlerts.find(alert => alert.alert_id === id)
+    if (!alert) throw new Error(`Unknown alert: ${id}`)
+    alert.feedback = { verdict, by: 'nurse', at: new Date().toISOString(), note }
+    return alert
+  }
+  if (!response.ok) throw new Error(`Feedback not saved (${response.status})`)
+  return await response.json() as Alert
 }
