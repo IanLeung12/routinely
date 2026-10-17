@@ -11,6 +11,14 @@
   font-size: var(--text-sm);
 }
 
+/* The room's monitoring switch with the trail of who last changed it underneath
+   (SPEC §12), as one item in the header's flex row. */
+.resident-detail__monitoring {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
 @media (max-width: 480px) {
   /* .resident-panels normally keeps a 19rem minimum column so panels don't get too
      cramped, but that minimum is wider than the viewport below ~352px and pushes the

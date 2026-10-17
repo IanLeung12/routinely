@@ -6,6 +6,7 @@ import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { ResidentDetail } from './ResidentDetail.tsx'
 import { fetchDrift, fetchResident } from './api.ts'
 import { dailyScores } from './days.ts'
+import type { MonitoringChange } from '../about/monitoringApi.ts'
 import { formatDuration, formatErrors } from './format.ts'
 import type { Resident } from './types.ts'
 import residentCss from './resident.css?raw'
@@ -285,12 +286,21 @@ describe('ResidentDetail monitoring switch (T243)', () => {
     pausedRooms = [] as string[],
     pausedRoomsOk = true,
     putOk = true,
+    history = [] as MonitoringChange[],
+    historyAfterPut = null as MonitoringChange[] | null,
   } = {}) {
+    let served = history
     const fetchMock = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
       if (init?.method === 'PUT') {
+        if (putOk && historyAfterPut !== null) {
+          served = historyAfterPut
+        }
         return putOk
           ? { ok: true, json: async () => ({}) }
           : { ok: false, status: 500, json: async () => ({}) }
+      }
+      if (url.endsWith('/monitoring/history')) {
+        return { ok: true, json: async () => ({ room: '204', history: served }) }
       }
       if (url.endsWith('/monitoring')) {
         return pausedRoomsOk
@@ -357,6 +367,57 @@ describe('ResidentDetail monitoring switch (T243)', () => {
     const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
     await waitFor(() => expect(switchEl.textContent).toBe('On'))
     expect(screen.queryByText(/Couldn't change monitoring/)).toBeNull()
+  })
+
+  it('lists who paused and resumed the room under the switch (T262)', async () => {
+    stubMonitoringFetch({
+      pausedRooms: [],
+      history: [
+        { on: true, by: 'nurse-bo', at: '2026-10-17T09:25:00+00:00' },
+        { on: false, by: 'nurse-amy', at: '2026-10-17T09:10:00+00:00' },
+      ],
+    })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const trail = await screen.findByRole('group', { name: 'Recent changes' })
+    await waitFor(() => expect(trail.querySelectorAll('li')).toHaveLength(2))
+    expect(trail.textContent).toContain('Resumed by nurse-bo · 17 Oct, 09:25')
+    expect(trail.textContent).toContain('Paused by nurse-amy · 17 Oct, 09:10')
+  })
+
+  it('shows the empty trail when nobody has touched the switch (T262)', async () => {
+    stubMonitoringFetch({ pausedRooms: [], history: [] })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    expect(await screen.findByText('No changes this shift')).toBeTruthy()
+  })
+
+  it('re-reads the trail after the nurse pauses the room (T262)', async () => {
+    stubMonitoringFetch({
+      pausedRooms: [],
+      history: [],
+      historyAfterPut: [{ on: false, by: 'nurse', at: '2026-10-17T09:10:00+00:00' }],
+    })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    await screen.findByText('No changes this shift')
+
+    fireEvent.click(switchEl)
+
+    const trail = await screen.findByRole('group', { name: 'Recent changes' })
+    await waitFor(() => expect(trail.textContent).toContain('Paused by nurse · 17 Oct, 09:10'))
+    expect(screen.queryByText('No changes this shift')).toBeNull()
+  })
+
+  it('keeps the trail empty offline rather than failing the screen (T262)', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    expect(await screen.findByText('No changes this shift')).toBeTruthy()
   })
 })
 

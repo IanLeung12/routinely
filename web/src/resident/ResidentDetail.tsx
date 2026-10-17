@@ -6,13 +6,15 @@ import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { MonitoringToggle } from '../about/MonitoringToggle.tsx'
-import { fetchPausedRooms, setRoomMonitoring } from '../about/monitoringApi.ts'
+import { fetchMonitoringHistory, fetchPausedRooms, setRoomMonitoring } from '../about/monitoringApi.ts'
+import type { MonitoringChange } from '../about/monitoringApi.ts'
 import { fetchDrift, fetchResident } from './api.ts'
 import type { ResidentDrift } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
 import { ContextTimeline } from './ContextTimeline.tsx'
 import { DriftCard } from './DriftCard.tsx'
 import HeatCalendar from './HeatCalendar.tsx'
+import { MonitoringHistory } from './MonitoringHistory.tsx'
 import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
 import type { Resident } from './types.ts'
@@ -41,6 +43,7 @@ export function ResidentDetail({
   const [attempt, setAttempt] = useState(0)
   const [monitoring, setMonitoring] = useState(true)
   const [monitoringMessage, setMonitoringMessage] = useState<string | null>(null)
+  const [monitoringChanges, setMonitoringChanges] = useState<MonitoringChange[]>([])
   const headingRef = useRef<HTMLHeadingElement>(null)
   /** Which resident focus has already landed on, so re-rendering after the monitoring
    * toggle changes (same resident, new data) doesn't steal focus back from the nurse. */
@@ -79,8 +82,9 @@ export function ResidentDetail({
     }
   }, [residentId, attempt])
 
-  /** Loads this room's real pause state once the resident (and so its room) is known.
-   * Keeps today's local-only "on" default if the API can't be reached (mock mode). */
+  /** Loads this room's real pause state and who changed it (SPEC §12) once the
+   * resident (and so its room) is known. Keeps today's local-only "on" default and an
+   * empty trail if the API can't be reached (mock mode). */
   useEffect(() => {
     if (loaded === null || loaded.residentId !== residentId || loaded.status !== 'ok' || loaded.resident === null) {
       return
@@ -94,6 +98,13 @@ export function ResidentDetail({
         }
       })
       .catch(() => { /* API unreachable: keep the local-only "on" default. */ })
+    fetchMonitoringHistory(room)
+      .then((changes) => {
+        if (!cancelled) {
+          setMonitoringChanges(changes)
+        }
+      })
+      .catch(() => { /* API unreachable: no trail to show. */ })
     return () => {
       cancelled = true
     }
@@ -121,18 +132,29 @@ export function ResidentDetail({
         <header className="resident-detail__header">
           <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
           <span className="resident-room">Room {resident.room}</span>
-          <MonitoringToggle
-            room={resident.room}
-            on={monitoring}
-            onChange={(next) => {
-              setMonitoring(next)
-              setMonitoringMessage(null)
-              setRoomMonitoring(resident.room, next).catch(() => {
-                setMonitoring(!next)
-                setMonitoringMessage("Couldn't change monitoring. Try again.")
-              })
-            }}
-          />
+          <div className="resident-detail__monitoring">
+            <MonitoringToggle
+              room={resident.room}
+              on={monitoring}
+              onChange={(next) => {
+                setMonitoring(next)
+                setMonitoringMessage(null)
+                setRoomMonitoring(resident.room, next)
+                  .then(() =>
+                    // The change is logged server side, so re-read the trail rather
+                    // than guessing who the API wrote it down as.
+                    fetchMonitoringHistory(resident.room)
+                      .then(setMonitoringChanges)
+                      .catch(() => { /* API unreachable: keep the trail we have. */ }),
+                  )
+                  .catch(() => {
+                    setMonitoring(!next)
+                    setMonitoringMessage("Couldn't change monitoring. Try again.")
+                  })
+              }}
+            />
+            <MonitoringHistory changes={monitoringChanges} />
+          </div>
           <StatusChip status={resident.status} />
           {monitoringMessage && (
             <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
