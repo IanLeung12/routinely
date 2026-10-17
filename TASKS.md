@@ -314,14 +314,14 @@ Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layou
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
 
 ### T433 — Redesign follow-up: pattern library onto the Fey system
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - deps: T442
 - area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.css, web/src/patterns/urgencyFilter.css, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/PatternLibrary.filters.test.tsx, web/src/patterns/PatternLibrary.keyboard.test.tsx
-- owner: —
-- claimed: 2026-10-17T21:58Z
+- owner: ian-claude-standard
+- claimed: 2026-10-17T22:41Z
 - pr: #410
 - rating: 5/5 clear
 - note: fix CI on PR #410: after T442 (bundle budget) merges, merge origin/main into the PR branch and push; code is done
