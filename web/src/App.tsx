@@ -5,6 +5,7 @@ import { Handoff } from './handoff/Handoff.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidents } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
+import { PatternLibrary } from './patterns/PatternLibrary.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
 import { Tour } from './tour/Tour.tsx'
 import { Button } from './ui/Button.tsx'
@@ -24,6 +25,8 @@ export default function App() {
   const [alertOrigin, setAlertOrigin] = useState<AlertOrigin>('overview')
   /** The shift handoff sits off the main demo path, behind one button. */
   const [openHandoff, setOpenHandoff] = useState(false)
+  /** The pattern library is a read-only reference screen, off the main demo path. */
+  const [openPatternLibrary, setOpenPatternLibrary] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
   const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidents>>>([])
   /** Bumped when a live session ends, so the overview and alerts list refetch
@@ -72,8 +75,13 @@ export default function App() {
           Watches a resident make a cup of tea and flags a change in their routine for a
           nurse to review.
         </p>
-        {!openHandoff && (
-          <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
+        {!openHandoff && !openPatternLibrary && (
+          <>
+            <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
+            <Button variant="secondary" onClick={() => setOpenPatternLibrary(true)}>
+              Pattern library
+            </Button>
+          </>
         )}
       </header>
 
@@ -84,6 +92,8 @@ export default function App() {
           onBack={() => setOpenHandoff(false)}
           onOpenAlert={id => openAlertFrom('handoff', id)}
         />
+      ) : openPatternLibrary ? (
+        <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
       ) : openResident === null ? (
         <>
           <section>

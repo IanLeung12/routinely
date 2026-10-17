@@ -1,12 +1,14 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiUrl } from '../config.ts'
 import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
+import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { alertText } from './alertText.ts'
 import { AlertView } from './AlertView.tsx'
 
 const MRS_K = mockAlerts[0]
+const MRS_K_DETAIL = mockResidentDetail('mrs-k')
 
 function offline() {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
@@ -45,17 +47,57 @@ describe('AlertView', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText } })
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
     await screen.findByText(MRS_K.summary)
+    await screen.findByRole('heading', { level: 1, name: /mrs\. k/i })
     vi.useFakeTimers()
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
     })
 
-    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K))
+    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K, 'Mrs. K'))
     expect(screen.getByText('Copied').getAttribute('role')).toBe('status')
     act(() => { vi.advanceTimersByTime(2000) })
     expect(screen.queryByText('Copied')).toBeNull()
     vi.useRealTimers()
+  })
+
+  it('names the resident by the name the API has, not one guessed from the id', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes(`/alerts/${MRS_K.alert_id}`)) {
+        return Promise.resolve({ ok: true, json: async () => MRS_K })
+      }
+      if (url.includes('/residents/mrs-k')) {
+        return Promise.resolve({ ok: true, json: async () => ({ ...MRS_K_DETAIL, name: 'Mrs. Kowalski' }) })
+      }
+      return Promise.reject(new Error('offline'))
+    }))
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mrs. Kowalski flagged for review' })).toBeTruthy()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
+    })
+
+    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K, 'Mrs. Kowalski'))
+    expect(writeText.mock.calls[0][0]).toContain('Resident: Mrs. Kowalski')
+  })
+
+  it('falls back to the resident id when the API has no name for them', async () => {
+    const alert: Alert = { ...MRS_K, alert_id: 'nobody-alert', resident_id: 'resident-7' }
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('/alerts/nobody-alert')) {
+        return Promise.resolve({ ok: true, json: async () => alert })
+      }
+      return Promise.reject(new Error('offline'))
+    }))
+
+    render(<AlertView alertId="nobody-alert" onBack={() => {}} />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'resident-7 flagged for review' })).toBeTruthy()
   })
 
   it('shows a recent care record from the resident near the alert', async () => {
@@ -114,7 +156,9 @@ describe('AlertView', () => {
 
     expect(await screen.findByText('Loading replay…')).toBeTruthy()
 
-    releases.forEach((release) => release())
+    await act(async () => {
+      releases.forEach((release) => release())
+    })
     expect(await screen.findByText('No replay available')).toBeTruthy()
   })
 
@@ -218,11 +262,11 @@ describe('AlertView', () => {
 
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
     await screen.findByText(MRS_K.summary)
+    await screen.findByRole('heading', { level: 1, name: /mrs\. k.*flagged for review/i })
 
     const headings = screen.getAllByRole('heading')
     const h1s = headings.filter((h) => h.tagName === 'H1')
     expect(h1s).toHaveLength(1)
-    expect(h1s[0].textContent).toMatch(/mrs\. k.*flagged for review/i)
 
     const h2Titles = headings.filter((h) => h.tagName === 'H2').map((h) => h.textContent)
     expect(h2Titles).toEqual([
@@ -241,7 +285,7 @@ describe('AlertView', () => {
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
 
     const heading = await screen.findByRole('heading', { level: 1 })
-    expect(document.activeElement).toBe(heading)
+    await waitFor(() => expect(document.activeElement).toBe(heading))
   })
 
   it('wraps the view in a landmark labelled by the h1', async () => {
