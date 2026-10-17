@@ -709,7 +709,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T090 — "What was it?" picker in the feedback buttons (UI only)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
