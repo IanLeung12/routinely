@@ -27,6 +27,7 @@ function ok(feedback: Partial<ResidentFeedback> = {}): FeedbackState {
   return {
     status: 'ok',
     feedback: {
+      resident_id: 'mrs-k',
       answers: [],
       pattern_weights: {},
       pattern_names: NAMES,
@@ -158,6 +159,7 @@ describe('FeedbackHistory', () => {
         state={{
           status: 'ok',
           feedback: {
+            resident_id: 'mrs-k',
             answers: [answer({ cause: 'retired_pattern' })],
             pattern_weights: { retired_pattern: 1.1 },
             pattern_names: {},
@@ -224,6 +226,7 @@ describe('FeedbackHistory', () => {
 describe('fetchFeedbackHistory', () => {
   it('asks the API for this resident, with the id encoded', async () => {
     const payload: ResidentFeedback = {
+      resident_id: 'resident/1',
       answers: [answer()],
       pattern_weights: { sudden_change: 1.1 },
       pattern_names: NAMES,
@@ -242,6 +245,7 @@ describe('fetchFeedbackHistory', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }))
 
     expect(await fetchFeedbackHistory('mrs-k')).toEqual({
+      resident_id: 'mrs-k',
       answers: [],
       pattern_weights: {},
       pattern_names: {},
@@ -287,6 +291,7 @@ describe('FeedbackHistory on the resident detail', () => {
 
   it('shows the answers and the ranking they changed under the session list', async () => {
     stubFetch({
+      resident_id: 'mrs-k',
       answers: [answer({ cause: 'evening_worsening' })],
       pattern_weights: { evening_worsening: 1.1 },
       pattern_names: NAMES,

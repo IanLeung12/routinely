@@ -19,12 +19,18 @@ const ANSWER: FeedbackAnswer = {
 }
 
 const ANSWERED: ResidentFeedback = {
+  resident_id: 'mrs-k',
   answers: [ANSWER],
   pattern_weights: { sudden_change: 1.1 },
   pattern_names: { sudden_change: 'Sudden change (delirium pattern)' },
 }
 
-const RESET: ResidentFeedback = { answers: [], pattern_weights: {}, pattern_names: {} }
+const RESET: ResidentFeedback = {
+  resident_id: 'mrs-k',
+  answers: [],
+  pattern_weights: {},
+  pattern_names: {},
+}
 
 function stubFetch(feedback: ResidentFeedback) {
   vi.stubGlobal(

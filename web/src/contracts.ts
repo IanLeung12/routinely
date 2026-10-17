@@ -134,6 +134,28 @@ export type EvidenceRef = {
   event_id?: string | null
 }
 
+/**
+ * One answer a nurse gave on one of this resident's alerts (SPEC MVP 8).
+ * `routine_watch.feedback.FeedbackStore.history`'s row: one per alert, because answering an
+ * alert again replaces its answer rather than piling a second one on top. Not `AlertFeedback`,
+ * which is the verdict as the alert itself carries it: this is the same answer read from the
+ * resident's side, with the alert it was about named and the `by` nobody logs in to set left
+ * off.
+ */
+export type FeedbackAnswer = {
+  /** The alert this answer was given on. */
+  alert_id: string
+  verdict: FeedbackVerdict
+  /**
+   * The answer to "what was it?" (SPEC section 5, MVP 8): a pattern_id from the pattern
+   * library, 'other' for a cause the library has no pattern for, or null when nobody said.
+   * Always sent, often null.
+   */
+  cause: string | null
+  /** When the nurse answered (wall clock). */
+  at: string
+}
+
 /** The nurse's answer to an alert, which tunes this resident's threshold. */
 export const FEEDBACK_VERDICT_VALUES = ['confirmed', 'false_alarm'] as const
 export type FeedbackVerdict = (typeof FEEDBACK_VERDICT_VALUES)[number]
@@ -399,6 +421,31 @@ export type ResidentDrift = {
    * minimum. False is a real answer, not 'unknown'.
    */
   trending: boolean
+}
+
+/**
+ * What this resident's nurses have said (`GET /residents/{id}/feedback`). The record behind the
+ * feedback loop (SPEC Nice to have 8), which until this route only showed up in how her next
+ * alert was ranked: every answer on her alerts newest first, the pattern weights those answers
+ * add up to, and the name the library shows each pattern id named here under, so the card
+ * reading this never keeps its own copy of the library. All three are always sent and all three
+ * can be empty - nobody having answered yet is a real answer, not a gap.
+ */
+export type ResidentFeedback = {
+  resident_id: string
+  /** One row per answered alert, newest first. Empty until a nurse answers. */
+  answers: FeedbackAnswer[]
+  /**
+   * Pattern id -> confidence multiplier, one entry per pattern her nurses have answered about
+   * (`routine_watch.feedback.FeedbackStore.pattern_weights`). A pattern missing here is
+   * unweighted, which is read as 1.0.
+   */
+  pattern_weights: Record<string, number>
+  /**
+   * Pattern id -> how the pattern library shows it, for every id named above that the library
+   * knows. 'other' is a real answer with no pattern to name, so it has no entry here.
+   */
+  pattern_names: Record<string, string>
 }
 
 /**

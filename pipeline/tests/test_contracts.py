@@ -6,9 +6,10 @@ tests check four things: every type round-trips through JSON into its own schema
 sample frames validate, nothing on disk has drifted away from the models, and what the
 dashboard still writes by hand against a schema - its `Alert` type, the feedback body
 its client posts, the two bodies its monitoring client casts inline - names the same
-fields. The payloads it used to copy by hand (the drift card's, a pattern library
-entry's, both replay windows', the overview row, the shift handoff and the monitoring
-audit trail's logged change) are generated into `web/src/contracts.ts` instead, so a
+fields. The payloads it used to copy by hand (the drift card's, what her nurses said,
+a pattern library entry's, both replay windows', the overview row, the shift handoff
+and the monitoring audit trail's logged change) are generated into
+`web/src/contracts.ts` instead, so a
 changed field breaks its build; what is left to test here is that they are in the
 generated file and that nothing keeps a second copy of them.
 """
@@ -42,6 +43,7 @@ from routine_watch.contracts import (
     EvidenceKind,
     EvidenceRef,
     Feedback,
+    FeedbackAnswer,
     Handedness,
     HandLandmarks,
     Monitoring,
@@ -91,9 +93,15 @@ SERVER_STAMPED = {"by", "at"}
 
 #: What a map's values may be where a schema cannot list its fields: a closed enum
 #: (the live protocol's `step_state`, keyed by step id) or a number (a pattern
-#: entry's signal weights). Neither leaves anywhere for an image to go; a string
-#: would.
+#: entry's signal weights). Neither leaves anywhere for an image to go.
 MAP_VALUE_TYPES = {"number", "integer", "boolean"}
+
+#: A string may be a map's values too, but only a short one the schema caps the length
+#: of: a pattern's display name (`ResidentFeedback.pattern_names`) is a few words, and
+#: this many characters is far too few for even a thumbnail. An uncapped string in a
+#: map is the one place an image could still be smuggled through a contract, so it
+#: stays banned.
+MAX_MAP_STRING = 200
 
 #: Nothing in a contract may name an image, a frame or a clip (SPEC section 8).
 BANNED_FIELD_WORDS = (
@@ -218,12 +226,17 @@ def closed_to_images(extra: object) -> bool:
     """Whether one object's `additionalProperties` leaves nowhere for an image.
 
     Every contract forbids unknown fields outright. A map is the exception - its
-    fields cannot be listed - and then its values have to be a closed enum or a
-    number, which still leaves nowhere for an image to go.
+    fields cannot be listed - and then its values have to be a closed enum, a number,
+    or a string the schema caps at `MAX_MAP_STRING`, any of which still leaves nowhere
+    for an image to go.
     """
     if extra is False:
         return True
-    return isinstance(extra, dict) and ("enum" in extra or extra.get("type") in MAP_VALUE_TYPES)
+    if not isinstance(extra, dict):
+        return False
+    if "enum" in extra or extra.get("type") in MAP_VALUE_TYPES:
+        return True
+    return extra.get("type") == "string" and 0 < extra.get("maxLength", 0) <= MAX_MAP_STRING
 
 
 def carries_a_contract(node: dict) -> bool:
@@ -282,6 +295,30 @@ def test_no_schema_can_carry_a_raw_frame() -> None:
                     continue
                 banned = [word for word in BANNED_FIELD_WORDS if word in field]
                 assert not banned, f"{path.name}: {field} looks like raw video"
+
+
+@pytest.mark.parametrize(
+    ("extra", "closed"),
+    [
+        pytest.param(False, True, id="no-unknown-fields-at-all"),
+        pytest.param({"type": "number"}, True, id="a-map-of-numbers"),
+        pytest.param({"enum": ["pending", "done"]}, True, id="a-map-of-one-closed-enum"),
+        pytest.param({"type": "string", "maxLength": 80}, True, id="a-map-of-short-strings"),
+        pytest.param({"type": "string"}, False, id="a-map-of-strings-of-any-length"),
+        pytest.param(
+            {"type": "string", "maxLength": 100_000},
+            False,
+            id="a-map-of-strings-big-enough-for-an-image",
+        ),
+        pytest.param(True, False, id="a-map-of-anything-at-all"),
+    ],
+)
+def test_what_counts_as_closed_to_images(extra: object, closed: bool) -> None:
+    """The rule the sweep above holds every map in a contract to (SPEC section 8): a
+    map's values may be a number, a closed enum or a string the schema caps short, and
+    nothing else. A longer-form string is where an image could still be smuggled
+    through a contract, so it is not a shape a map may have."""
+    assert closed_to_images(extra) is closed
 
 
 def test_example_capture_jsonl_validates() -> None:
@@ -424,20 +461,24 @@ def test_the_dashboard_reads_the_whole_audit_trail() -> None:
 
 
 def test_the_dashboards_payload_types_are_generated_not_copied() -> None:
-    """The drift card's payload, a pattern library entry, both replay windows, the
-    overview row, the shift handoff and the monitoring audit trail's logged change
-    were written out by hand in dashboard modules (`web/src/resident/api.ts`,
+    """The drift card's payload, what her nurses said, a pattern library entry, both
+    replay windows, the overview row, the shift handoff and the monitoring audit
+    trail's logged change were written out by hand in dashboard modules
+    (`web/src/resident/api.ts`, `web/src/resident/types.ts`,
     `web/src/patterns/types.ts`, `web/src/evidence/api.ts`, `web/src/overview/types.ts`,
     `web/src/handoff/types.ts`, `web/src/about/monitoringApi.ts`) and held to the
     models by a field-name test over their source. They are in `WEB_PAYLOADS` now, so
     the dashboard imports them and a changed field fails its build instead. What is
     left to check here is that the generated file really carries them - a model
     dropped from `WEB_PAYLOADS` would regenerate clean - and that nobody has started
-    a second copy, time profile included."""
+    a second copy, time profile and feedback answer included."""
     for model in WEB_PAYLOADS:
         assert ts_fields(model.__name__) == set(model.model_fields)
 
-    copied = {model.__name__ for model in WEB_PAYLOADS} | {PatternTimeProfile.__name__}
+    copied = {model.__name__ for model in WEB_PAYLOADS} | {
+        PatternTimeProfile.__name__,
+        FeedbackAnswer.__name__,
+    }
     for path in WEB_SOURCES:
         if path == WEB_CONTRACTS:
             continue

@@ -2,8 +2,8 @@ import { act, cleanup, render, screen, waitFor, within } from '@testing-library/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchResident } from '../resident/api.ts'
 import type { Resident } from '../resident/types.ts'
-import type { LiveMessage } from './useLiveSession.ts'
 import { LiveSession } from './LiveSession.tsx'
+import { errorMessage, FakeWebSocket, installFakeWebSocket, sessionStart, stepMessage } from './testWebSocket.ts'
 
 vi.mock('../resident/api.ts', () => ({
   fetchResident: vi.fn(),
@@ -35,46 +35,8 @@ const MRS_K: Resident = {
   baseline: { mean: 1, std: 0.5, threshold: 2, usual_duration_s: 170, usual_errors: 1 },
 }
 
-/** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
- * `emit`/`fail` on the latest instance instead of opening a real socket. */
-class FakeWebSocket {
-  static instances: FakeWebSocket[] = []
-  url: string
-  closed = false
-  onmessage: ((event: { data: string }) => void) | null = null
-  onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
-
-  constructor(url: string) {
-    this.url = url
-    FakeWebSocket.instances.push(this)
-  }
-
-  close() {
-    this.closed = true
-  }
-
-  emit(message: LiveMessage) {
-    this.onmessage?.({ data: JSON.stringify(message) })
-  }
-
-  fail() {
-    this.onerror?.()
-    this.onclose?.()
-  }
-
-  static latest(): FakeWebSocket {
-    const instance = FakeWebSocket.instances[FakeWebSocket.instances.length - 1]
-    if (!instance) {
-      throw new Error('no FakeWebSocket instance was created')
-    }
-    return instance
-  }
-}
-
 beforeEach(() => {
-  FakeWebSocket.instances = []
-  vi.stubGlobal('WebSocket', FakeWebSocket)
+  installFakeWebSocket()
   vi.mocked(fetchResident).mockResolvedValue(null)
 })
 
@@ -101,15 +63,15 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'medication',
-        steps: [
-          { id: 'open_box', label: 'Open the pill box', optional: false },
-          { id: 'take_pill', label: 'Take the pill', optional: false },
-        ],
-      })
+      socket.emit(
+        sessionStart(
+          [
+            { id: 'open_box', label: 'Open the pill box', optional: false },
+            { id: 'take_pill', label: 'Take the pill', optional: false },
+          ],
+          { task_id: 'medication' },
+        ),
+      )
     })
 
     const map = screen.getByRole('list', { name: 'Task steps' })
@@ -131,15 +93,12 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [
+      socket.emit(
+        sessionStart([
           { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
           { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
-        ],
-      })
+        ]),
+      )
       socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
     expect(screen.getByText('Fill the kettle').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(
@@ -148,18 +107,7 @@ describe('LiveSession', () => {
     expect(screen.queryByText('Mock data')).toBeNull()
 
     act(() => {
-      socket.emit({
-        type: 'error',
-        error: {
-          error_id: 'live-error-1',
-          session_id: 'live-session',
-          type: 'omission',
-          step_id: 'teabag_in_cup',
-          t_start: 72,
-          t_end: 72,
-          evidence: [],
-        },
-      })
+      socket.emit(errorMessage({ step_id: 'teabag_in_cup', t_start: 72, t_end: 72 }))
     })
     expect(screen.getByText('skipped Put the teabag in the cup · 1:12')).toBeTruthy()
 
@@ -174,32 +122,8 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'step',
-        event: {
-          event_id: 'e1',
-          session_id: 'live-session',
-          step_id: 'fill_kettle',
-          objects: [],
-          t_start: 0,
-          t_end: 1,
-          confidence: 0.9,
-          source: 'rule',
-        },
-      })
-      socket.emit({
-        type: 'step',
-        event: {
-          event_id: 'e2',
-          session_id: 'live-session',
-          step_id: 'pour',
-          objects: [],
-          t_start: 219,
-          t_end: 220,
-          confidence: 0.9,
-          source: 'rule',
-        },
-      })
+      socket.emit(stepMessage({ step_id: 'fill_kettle', t_start: 0, t_end: 1 }))
+      socket.emit(stepMessage({ event_id: 'e2', step_id: 'pour', t_start: 219, t_end: 220 }))
       socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
     })
 
@@ -365,12 +289,11 @@ describe('LiveSession', () => {
     expect(secondSocket).not.toBe(firstSocket)
 
     act(() => {
-      secondSocket.emit({
-        type: 'session_start',
-        session_id: 'live-session-2',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      secondSocket.emit(
+        sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }], {
+          session_id: 'live-session-2',
+        }),
+      )
       secondSocket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
 
@@ -421,12 +344,7 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      socket.emit(sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }]))
     })
 
     // Let the resident fetch resolve so the panel knows its own room is 204 (T275): the
@@ -465,12 +383,11 @@ describe('LiveSession', () => {
     expect(firstSocket.closed).toBe(true)
 
     act(() => {
-      secondSocket.emit({
-        type: 'session_start',
-        session_id: 'live-session-2',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      secondSocket.emit(
+        sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }], {
+          session_id: 'live-session-2',
+        }),
+      )
     })
 
     expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
@@ -485,12 +402,7 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      socket.emit(sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }]))
     })
     await act(async () => {})
 
@@ -523,32 +435,18 @@ describe('LiveSession', () => {
     expect(announcer.getAttribute('aria-live')).toBe('polite')
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [
+      socket.emit(
+        sessionStart([
           { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
           { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
-        ],
-      })
+        ]),
+      )
       socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
     expect(announcer.textContent).toBe('Step done: Fill the kettle')
 
     act(() => {
-      socket.emit({
-        type: 'error',
-        error: {
-          error_id: 'live-error-1',
-          session_id: 'live-session',
-          type: 'omission',
-          step_id: 'teabag_in_cup',
-          t_start: 72,
-          t_end: 72,
-          evidence: [],
-        },
-      })
+      socket.emit(errorMessage({ step_id: 'teabag_in_cup', t_start: 72, t_end: 72 }))
     })
     expect(announcer.textContent).toBe('Flag raised: skipped Put the teabag in the cup · 1:12')
   })
