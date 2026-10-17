@@ -505,7 +505,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T359 — Test: guided tour copy uses flag-for-review wording
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
