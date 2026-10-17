@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T411 — Wording pass: people, not just residents and nurses
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
