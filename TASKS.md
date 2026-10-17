@@ -422,3 +422,60 @@ What: A one-page runbook for whoever drives the 3-minute demo: setup, the click 
 Interface: sections "Before you start" (exact commands, env such as OFFLINE_MODE), "Click path" (one bullet per SPEC §10 beat: which screen, which button, what the audience should see), "If something fails" (offline replay of `tea_skip_teabag_pour_twice`, no Wi-Fi, how to restart), "Reset between runs". Describe only what exists on main; say "flags a change for review", never "diagnoses".
 Acceptance:
 - every command in the file exists in `scripts/` or `web/package.json`; `scripts/ci.sh` passes.
+
+### T154 — Bug: evidence replay is empty for the demo alert (no skeleton, no ghost)
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/evidence.py, pipeline/tests/test_evidence.py
+- source: tester
+- owner: —
+- claimed: —
+- pr: —
+
+What: The alert's evidence view shows "No replay available / No skeleton data" for every error. `GET /sessions/mrs-k-22/replay?t_start=51.1&t_end=56.1` and `GET /residents/mrs-k/normal_replay?...` both return `"frames": []`. Cause: `evidence.py` windows the stand-in scenarios `tea_no_kettle` (frames t=0–12 s) and `tea_normal` (t=0–28 s), but since T121 the alert's error windows sit at 33–107 s, so the clip is empty. `scripts/smoke.sh` fails the same 2 checks.
+Interface: `replay_frames` / `normal_replay_frames` keep their signatures; they must return frames for any window inside a known session (e.g. map the requested window onto the stand-in recording, such as modulo its length or centred on it, and keep the returned `t` values in the requested window).
+Repro: `OFFLINE_MODE=true scripts/dev.sh up && scripts/smoke.sh` → `FAIL: GET /sessions/mrs-k-22/replay: no frames in response` and the same for `normal_replay`; in the dashboard, play the live session → Open alert → click any error → Evidence is empty.
+Acceptance:
+- tests: windows past the stand-in length (e.g. t_start=102.1, t_end=107.1) return non-empty frames for both endpoints.
+- `scripts/smoke.sh` against `scripts/dev.sh up` passes all checks; `scripts/ci.sh` passes.
+
+### T155 — Bug: alert opened after the live session shows other errors than the live session made
+- status: todo
+- class: heavy
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/session_log.py, pipeline/tests/
+- source: tester
+- owner: —
+- claimed: —
+- pr: —
+
+What: On stage the live session (default demo scenario) flags "skipped Put the teabag in the cup · 1:10" and "repeated Pour the water · 1:30". Clicking "Open alert" then shows `alert-mrs-k` with errors "skipped fill kettle 0:51, repeated boil 1:42, skipped fill kettle 0:33, repeated boil 1:06" (sessions mrs-k-22, mrs-k-23): the recorded live session's score is merged into Mrs. K's history, but its actual errors are not; the alert's errors for that session are synthetic. The summary also says "4 errors this session" for errors spread over two sessions.
+Interface: the session recorded by `routine_watch.live` (via `session_log`) must carry its real `ErrorEvent`s into the resident's newest session, so `build_alerts` lists them (with their real step ids and times) for that session; the summary should count errors per session or say "across 2 sessions".
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, wait ~90 s for the live session to finish, click "Open alert"; compare the alert's Errors list with the live session's Errors list. Or `curl localhost:8000/alerts/alert-mrs-k` after the live session.
+Acceptance:
+- test: after playing the demo live scenario through the pipeline, `/alerts/alert-mrs-k` contains its omission of `add_teabag` and perseveration of `pour` with the live session's session_id.
+- summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T156 — Bug: overview and Alerts list don't update when the live session flags Mrs. K
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/App.tsx, web/src/App.test.tsx, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- source: tester
+- owner: —
+- claimed: —
+- pr: —
+
+What: After the live session ends with a flag (the "Open alert" button appears and `/alerts` now returns `alert-mrs-k`), the unit overview still shows Mrs. K as "Watch", the status line still says "4 on watch · 2 normal", and the Alerts list stays empty until a page reload. The demo beat "alert appears after the second bad session" only shows via the banner button.
+Interface: when the live stream reports `session_end` (or a flag), App refetches `fetchAlerts()` and the overview refetches `fetchResidents()` (e.g. a `refreshKey` prop bumped by App).
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, wait for the live session to finish with a flag; Mrs. K chip and Alerts list don't change.
+Acceptance:
+- test: a mocked live session ending with a flag triggers a second fetch of residents and alerts and the Flagged chip / alert row render.
+- `cd web && npx vitest run` and `scripts/ci.sh` pass.

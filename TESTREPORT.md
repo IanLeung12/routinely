@@ -1,24 +1,23 @@
 # Test report
-- main: 5c8db0c (T095: Add hesitation edge case tests)
-- run: 2026-10-17 07:25 UTC (OFFLINE_MODE=true, LIVE_API unset)
+- main: a4a94a1 (T068: show demo banner in App); also checked cdc1798
+- run: 2026-10-17 08:45 UTC (OFFLINE_MODE=true, LIVE_API unset)
 
 ## Levels
 - 1 Unit (scripts/ci.sh): PASS
-- 2 Simulation (scripts/e2e.sh): PASS, 13/13 scenarios (meds_normal, meds_skip_water, tea_abandoned, tea_kettle_twice, tea_milk_sugar, tea_no_kettle, tea_normal, tea_self_corrected, tea_sequence_error, tea_single_bad_no_flag, tea_skip_teabag_pour_twice, tea_substitution, tea_unclear_not_error)
-- Smoke (scripts/smoke.sh): FAIL, 1 check (script bug; the routes work) → T123
-- 3 UI walkthrough: FAIL
-  - API sends no CORS headers: every dashboard fetch fails and silently falls back to web mocks (overview, Mrs. K, alert, feedback all mock) → T119 (P0)
-  - unit overview: renders (mock data)
-  - Mrs. K detail (baseline chart, heat calendar with weekday headers, sessions, care records): renders (mock data); T048 fixed
-  - live session over /ws/live: works (real data); task map overflows and hides the error steps → T120 (P0); skeleton panel never gets frames → T122
-  - alert/evidence view: summary, timestamped errors, skeleton replay + ghost overlay, suggested checks render (mock alert)
-  - "Confirmed": shows "Marked as confirmed" but threshold stays 1.2 (mock path; the API itself lowers 4.09 → 3.88) → T119
-  - API alert content (visible once T119 lands): placeholder errors, repeated summary clauses, grows per page load → T121
+- 2 Simulation (scripts/e2e.sh): PASS, 21/21 scenarios (adds meds_pill_before_water, pattern_* x5, tea_bad_sessions_far_apart, tea_teabag_three_times)
+- Smoke (scripts/smoke.sh): FAIL, 2 checks: session replay and normal_replay return no frames → T154
+- 3 UI walkthrough: FAIL (now on real API data; T119–T123 fixed)
+  - unit overview: renders real residents with status chips + demo banner
+  - Mrs. K detail: baseline chart, slow drift, heat calendar, sessions, care records render
+  - live session: task map steps go green, missed/repeated steps marked, errors listed, "Open alert" appears; skeleton view shows objects
+  - after the live flag, overview chip/status line and Alerts list don't refresh until reload → T156 (P1)
+  - alert view opened from the live session shows synthetic errors (fill kettle/boil), not the live session's (teabag/pour); summary says "4 errors this session" across 2 sessions → T155 (P0)
+  - evidence: "No replay available / No skeleton data" for every error → T154 (P0)
+  - patterns ("Consistent with ..." + rule-outs), suggested checks, care-record context render
+  - "Confirmed": "Marked as confirmed", threshold visibly 2.4 → 2.3 (real API)
 - 4 Robustness: not run (level 3 not passing)
 
 ## Open bug tasks
-- T119 (P0): API missing CORS → dashboard on mock data
-- T120 (P0): live task map overflow hides error steps
-- T121 (P1): demo alert placeholder errors / garbled summary / grows per load
-- T122 (P1): live skeleton view empty for the demo scenario
-- T123 (P1): smoke.sh replay check always fails
+- T154 (P0): evidence replay empty (stand-in recordings shorter than error windows)
+- T155 (P0): live-session alert lists synthetic errors, not the live ones
+- T156 (P1): overview/Alerts list don't refresh after live flag
