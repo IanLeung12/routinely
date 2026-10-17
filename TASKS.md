@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 04a3709
+- last-reviewed: 8ee2cef
 
 ## Tasks
 
@@ -502,3 +502,56 @@ Acceptance:
 - schema + example validate; smoke/contract tests pass
 - `HandoffDelta.test.tsx` covers more/fewer/same/zero
 - `scripts/ci.sh` passes
+
+### T325 — Test: monitoring toggle works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/about/MonitoringToggle.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The privacy monitoring switch is a key trust control; prove a nurse can pause and resume it with the keyboard alone.
+Interface: read `web/src/about/MonitoringToggle.tsx`, `web/src/about/MonitoringToggle.test.tsx` and `web/src/about/PrivacyPanel.keyboard.test.tsx` (copy its user-event keyboard style). New test file only; no component changes (if a bug is found, mark the case `it.fails` and note it in the PR).
+Acceptance:
+- Tab reaches the switch; Space and Enter each call `onChange` with the flipped value; `aria-checked` matches `on`
+- when paused, the "No camera data is processed while paused." text is shown
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T326 — Test: unit tests for session_log
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_session_log.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `pipeline/src/routine_watch/session_log.py` (the in-process log that makes a live session count for the demo) has no direct unit test.
+Interface: read `pipeline/src/routine_watch/session_log.py`, `pipeline/tests/conftest.py`, and how `pipeline/tests/test_api_demo_reset.py` builds a Session/TaskError. New test file only; use a fixture that calls `session_log.reset()` before and after each test.
+Acceptance:
+- covers: record then sessions_for (oldest first), errors_for by session id, unknown resident/session gives an empty list, two residents stay separate, reset() clears everything
+- `cd pipeline && python -m pytest tests/test_session_log.py` and `scripts/ci.sh` pass
+
+### T327 — Test: unit tests for pattern_features.extract_features
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_pattern_features.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `pipeline/src/routine_watch/pattern_features.py` (378 lines; turns sessions + care records into the features the pattern library ranks on) is only tested indirectly through alerts; direct tests make a regression point at the right file.
+Interface: read `pattern_features.py`, `patterns_library.py`, and the `pattern_*` scenarios under `tests/scenarios/` for realistic inputs. New test file only; no source changes (bugs found: `pytest.mark.xfail(strict=True)` + PR note).
+Acceptance:
+- covers at least: flat history (no drift); slow downward trend; sudden change; evening-only worsening; a sedating care record inside its window appears in the context and an old one doesn't; empty sessions don't crash
+- deterministic (fixed `now`, no wall clock)
+- `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
