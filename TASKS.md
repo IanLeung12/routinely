@@ -456,7 +456,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T254 — Demo residents carry a consent record (who opted in, when)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
