@@ -78,24 +78,6 @@ Acceptance:
 - useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
-### T075 — Review: error-type labels and colours defined three times in the web app
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: T064
-- area: web/src/ui/errorTypes.ts (new), web/src/ui/errorTypes.test.ts (new), web/src/live/LiveSession.tsx, web/src/alert/ErrorList.tsx, web/src/resident/format.ts
-- source: reviewer
-- owner: ian-claude-standard
-- claimed: 2026-10-17T06:59Z
-- pr: #89
-
-What: `LiveSession.tsx` (`ERROR_LABELS`, `ERROR_COLOR`), `alert/ErrorList.tsx` (phrase + colour maps) and `resident/format.ts` (plain names) each map `ErrorType` separately, so the same error can read or colour differently across screens.
-Interface: `web/src/ui/errorTypes.ts` exports `ERROR_TYPE_LABEL: Record<ErrorType, string>`, `ERROR_TYPE_TONE: Record<ErrorType, 'red' | 'amber' | 'grey'>` (SPEC §9 colours) and `describeError(type, stepLabel): string`. The three files import from it; delete their local maps. Visible text may only change where screens disagreed today; note any such change in the PR.
-Acceptance:
-- Unit test covers every `ErrorType` in all three exports.
-- `scripts/ci.sh` passes.
-
 ### T076 — Tests for ContextTimeline and BaselineChart
 - status: claimed
 - class: light
@@ -113,38 +95,6 @@ Acceptance:
 - ContextTimeline: empty list shows "No care records for this resident."; records render newest first; temperature/fluid_intake/med_change get their readable labels ("Temperature 37.9 °C", "Fluid intake 800 ml", "Medication change: ...").
 - BaselineChart: renders without crashing for typical props and for an empty series (no NaN in rendered attributes).
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
-
-### T081 — Live session result counts toward the resident's flag (demo step 4)
-- status: done
-- class: heavy
-- priority: 1
-- kind: feature
-- deps: —
-- area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_live_flag.py, docs/CODEMAP.md (notes only)
-- owner: ian-claude
-- claimed: 2026-10-17T06:46Z
-- pr: #87
-
-What: SPEC §10 step 4: when a live (or fallback pre-recorded) session for Mrs. K finishes with qualifying errors, it must become one of her sessions, so her sparkline spikes and, being the second qualifying session in the window, the "possible delirium" flag and alert appear on the next `/residents` and `/alerts` fetch. Today `live.py` scores the session but nothing records it.
-Interface: new `session_log.py` (in-memory, process-local) `record(resident_id, session: Session) -> None`, `sessions_for(resident_id) -> list[Session]`, `reset()`; `live.py` records the finished session; `demo.py` merges logged sessions into the resident's history before scoring/flagging. Keep it swappable for T038's store later (same shape, no DB here).
-Acceptance:
-- pytest: playing `tea_skip_teabag_pour_twice` for Mrs. K via `session_messages` then calling `/residents` and `/alerts` (TestClient) shows her flagged with the new session listed; playing `tea_normal` does not flag; `reset()` restores the seeded demo.
-- `scripts/e2e.sh` and `scripts/ci.sh` pass.
-
-### T083 — Docs: CODEMAP notes for the Claude explainer and Gemini verifier
-- status: done
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/CODEMAP.md (notes only)
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T06:23Z
-- pr: #77
-
-What: `docs/CODEMAP.md` notes don't mention `explain_claude.py` (T032) or how `get_explainer()` / `get_verifier()` choose the fake vs the real client. Add 2–4 lines: both default to offline fakes, real calls only with `LIVE_API=1` + key, through `api_cache.py`, models from `ANTHROPIC_MODEL` / `GEMINI_MODEL`. Read only `docs/CODEMAP.md`, the top docstrings of `explain_claude.py`, `verifier.py`, `api_cache.py`.
-Acceptance:
-- Notes only (generated file list untouched); `scripts/ci.sh` passes.
 
 ### T084 — Pattern library + scorer + Alert.patterns contract (SPEC §7.5)
 - status: claimed
@@ -167,23 +117,6 @@ Acceptance:
 - Unit tests: a sudden-spike history ranks `sudden_change` first; a gradual rise ranks `slow_drift` first; flat noise → no pattern; a new sedating med raises the medication pattern.
 - Wording in evidence/checks uses "consistent with" / "rule out", never "diagnosis".
 - `scripts/ci.sh` passes; update `docs/CODEMAP.md` data-flow notes.
-
-### T085 — PatternList component for ranked "possible patterns" (not wired yet)
-- status: done
-- class: light
-- priority: 1
-- kind: feature
-- deps: —
-- area: web/src/alert/PatternList.tsx, web/src/alert/PatternList.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T06:15Z
-- pr: #73
-
-What: SPEC §9 screen 4 now shows "Possible patterns", ranked. Build the presentational component now so T088 only has to wire it once T084 lands the contract.
-Interface: `export interface PatternView { pattern_id: string; name: string; confidence: number /*0-1*/; urgency: 'routine'|'next_round'|'same_shift'|'urgent'; evidence: string[]; checks: string[] }` and `export function PatternList({ patterns }: { patterns: PatternView[] })`. Each item: name, "consistent with" phrasing (e.g. heading "Consistent with: Sudden change (delirium)"), confidence as a percentage, urgency label, evidence bullets, "Consider ruling out:" checks. `urgent` items get a distinct class (`pattern--urgent`) and an "Urgent" label (not colour alone). Empty list renders "Change detected, no clear pattern". Read for style only: `web/src/alert/SuggestedChecks.tsx`, `web/src/ui/Card.tsx`. Do not import from contracts.ts and do not edit any other file.
-Acceptance:
-- Vitest: renders items in the given order with name, % confidence, evidence and checks; urgent item has the urgent class and visible "Urgent" text; empty list shows "no clear pattern"; no text contains "diagnos".
-- `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T086 — Synthetic history: evening-only worsening resident scenario
 - status: in-review
