@@ -335,7 +335,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` passes; `scripts/ci.sh` passes
 
 ### T201 — Scenario: medication routine abandoned halfway
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -343,7 +343,8 @@ Acceptance:
 - area: tests/scenarios/meds_abandoned/
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:53Z
-- pr: —
+- pr: #194
+- rating: 5/5 clear
 
 What: add a meds scenario where the resident stops after the first steps, mirroring tea_abandoned, so the second task's abandonment path is covered end to end.
 Interface: read tests/scenarios/README.md, tests/scenarios/tea_abandoned/, tests/scenarios/meds_normal/ and tasks/meds.yaml (or the meds task graph named in meds_normal/expected.yaml). Write steps.jsonl + expected.yaml only.
