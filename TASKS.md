@@ -479,7 +479,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T426 — Bug: integration check still flaky ("dashboard did not render" on a cold start)
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
