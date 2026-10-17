@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1c9f3cb
+- last-reviewed: 88693bd
 
 ## Tasks
 
@@ -510,3 +510,21 @@ What: T260 (#251) added `npm run check:bundle` in web/ but nothing runs it, so t
 Interface: in `scripts/ci.sh`, the node loop line `(cd "$d" && npm ci ... && npm run build --if-present)`: append `&& npm run check:bundle --if-present` so it only runs for packages that define it. Read only `scripts/ci.sh` and `web/package.json`. Touch nothing else.
 Acceptance:
 - `scripts/ci.sh` passes and its output includes the "First-load JS (gzipped):" and "Budget:" lines from web/scripts/check-bundle.mjs.
+
+### T274 — Refactor: smoke.sh JSON checks through one helper; demo room read from /residents
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: `scripts/smoke.sh` repeats the same `python3 -c 'import json, sys ... assert ...'` block for every check, and T245 hardcoded `demo_room="204"`. Add one `check_json <label> <body> <python-expr>` helper and use it everywhere; read the demo room from the first resident in `GET /residents` instead of hardcoding it.
+Interface: `scripts/smoke.sh` only; same PASS/FAIL output lines and exit code.
+Acceptance:
+- Every existing check still runs and passes with `scripts/dev.sh up && scripts/smoke.sh; scripts/dev.sh down`.
+- No `"204"` literal left in smoke.sh; script is shorter than before.
+- `scripts/ci.sh` passes.
