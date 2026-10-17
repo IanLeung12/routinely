@@ -408,7 +408,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T139 — Docs: scenario README lists only 13 of 20 scenarios
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -416,7 +416,8 @@ Acceptance:
 - area: tests/scenarios/README.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:14Z
-- pr: —
+- pr: #131
+- rating: 5/5 clear
 
 What: `tests/scenarios/README.md` has no row for meds_pill_before_water, tea_bad_sessions_far_apart, tea_kettle_twice, tea_milk_sugar, tea_self_corrected, tea_teabag_three_times (check for others); add one row each in the existing table format.
 Interface: Read only `tests/scenarios/README.md` and each missing scenario's `expected.yaml` (its header comment says what it shows).
