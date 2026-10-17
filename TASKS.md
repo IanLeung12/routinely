@@ -185,14 +185,14 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T026 — Replay harness uses the real recogniser
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - deps: T011, T020
 - area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py, tests/scenarios/README.md, tests/scenarios/tea_no_kettle/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:55Z
-- pr: —
+- pr: #27
 
 What: Review finding on PR #20/#21: `replay.steps_from_frames` is still the STUB recogniser, so `frames.jsonl` scenarios never exercise `recogniser.recognise` (T011). Replace the stub with the real recogniser and delete the "Stubs" section of the scenarios README.
 Interface: `replay.run` calls `recognise(frames, graph, session_id=...)` for `frames.jsonl` scenarios; `steps.jsonl` scenarios unchanged. Remove `STUB_CONFIDENCE`, `touched_objects`, `steps_from_frames` and the stub helpers. Public CLI/output format unchanged.
