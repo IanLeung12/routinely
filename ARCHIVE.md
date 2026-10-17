@@ -1785,3 +1785,97 @@ Interface: `AlertContext({ records: CareRecord[], alertTs: string, windowHours?:
 Acceptance:
 - vitest: filters to the window, orders newest first, med_change rows are labelled as medication, empty state shown when nothing is in the window.
 - `scripts/ci.sh` passes.
+
+### T071 — Tests for useLiveSession and mockLiveStream
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/useLiveSession.test.ts, web/src/live/mockLiveStream.test.ts
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:55Z
+- pr: #116
+
+What: The live screen's state hook and mock stream are untested. Read only `web/src/live/useLiveSession.ts`, `web/src/live/mockLiveStream.ts`, `web/src/live/LiveSession.test.tsx` (how it fakes the socket) and `.tasks/LESSONS.md` (pending effects after teardown break CI).
+Interface: new test files only; use `vi.useFakeTimers()` and a fake WebSocket; no real network.
+Acceptance:
+- mockLiveStream: emits messages in order, ends with a session-ended message, and the returned stop function stops further messages.
+- note: Earlier attempt left tests on an unpushed local branch; full web suite timed out locally in AlertView/PatternList (T132 tracks that). Write the tests, push and let GitHub CI decide.
+- rating: 5/5 clear
+- useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
+- `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
+
+### T109 — Resident detail: not-found, API-down and no-sessions states
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:59Z
+- pr: #120
+- note: WIP from a session that ended early is on branch task/T109-wip (ResidentDetail.tsx + test): start from it: git switch task/T109-wip && git merge origin/main
+- rating: 5/5 clear
+
+What: The resident screen must stay legible when things go wrong: an unknown resident id, the API being unreachable, or a resident with no sessions yet. A nurse should understand each state in 10 s.
+Interface: `ResidentDetail` only; reuse the existing `web/src/resident/api.ts` fetch (do not change it) and existing CSS classes/design tokens.
+Acceptance:
+- 404 → "Resident not found" with a link back to the unit overview.
+- network/5xx error → short plain message + a "Try again" button that refetches.
+- zero sessions → empty-state copy instead of blank charts (no crash in BaselineChart/HeatCalendar).
+- Tests for all three states in ResidentDetail.test.tsx; `scripts/ci.sh` passes.
+
+### T113 — Pattern scenarios: one replayable scenario per pattern
+- status: done
+- class: standard
+- priority: 1
+- kind: test
+- deps: T084
+- area: tests/scenarios/pattern_*/, tests/scenarios/README.md, pipeline/src/routine_watch/replay.py (expected top-pattern check only), pipeline/tests/test_replay.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:39Z
+- pr: #112
+
+What: SPEC §8: at least one scenario per MVP pattern (sudden change, slow drift) with the expected top pattern in `expected.yaml`, plus "no clear pattern" for a flag that matches none.
+Interface: optional `top_pattern: <pattern id> | none` key in `expected.yaml`; `scripts/e2e.sh` fails when the scorer's top pattern differs. Scenarios without the key are unaffected.
+Acceptance:
+- ≥3 new scenarios (`pattern_sudden_change`, `pattern_slow_drift`, `pattern_none`), each with history context in the same format existing flagging scenarios use.
+- pytest covers the new key (match, mismatch, absent); `scripts/e2e.sh` passes; README table updated.
+
+### T115 — Docs: CODEMAP notes for drift endpoint, evidence sources, smoke.sh, feedback causes
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:58Z
+- pr: #119
+- rating: 5/5 clear
+
+What: Recent merges (T050 drift endpoint, T107 evidence replays `tea_no_kettle` with a `tea_normal` ghost, T098/T108 `scripts/smoke.sh`, T100 feedback causes) aren't in the CODEMAP notes. Add 1–3 lines each.
+Interface: notes only; read the module docstrings of `pipeline/src/routine_watch/{api,evidence,feedback,drift}.py` and the header of `scripts/smoke.sh`. Run `python3 scripts/codemap.py` to regenerate the file list.
+Acceptance:
+- Each of the four is described where a newcomer would look; no stale claims (e.g. "evidence replays one scenario").
+- `scripts/ci.sh` passes.
+
+### T116 — Scenario: pill taken before the water is poured is a sequence error
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_pill_before_water/
+- owner: max_API_light
+- claimed: 2026-10-17T08:00Z
+- pr: #121
+- rating: 5/5 clear
+
+What: The second task has only a normal and an omission scenario. Add a step-level scenario where the pill is taken before the glass is filled, producing exactly one sequence error.
+Interface: `steps.jsonl` + `expected.yaml` in the same format as `tests/scenarios/meds_skip_water/`. Read only `pipeline/src/routine_watch/tasks/meds.yaml`, `tests/scenarios/meds_skip_water/*` and `tests/scenarios/tea_sequence_error/*`.
+Acceptance:
+- `scripts/e2e.sh` passes with the new scenario listed; the error list is exactly one sequence error on the correct step.
+- Note in the PR that `tests/scenarios/README.md` needs a row (outside area; the orchestrator will batch README rows).
