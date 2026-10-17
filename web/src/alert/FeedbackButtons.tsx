@@ -14,7 +14,7 @@ export function FeedbackButtons({
   onChange: (v: FeedbackVerdict) => void
 }) {
   return (
-    <div className="feedback-buttons">
+    <div className="feedback-buttons" role="group" aria-label="Nurse feedback">
       {OPTIONS.map((option) => (
         <button
           key={option.verdict}
@@ -26,6 +26,9 @@ export function FeedbackButtons({
           {option.label}
         </button>
       ))}
+      <p role="status" aria-live="polite">
+        {value === 'confirmed' ? 'Marked as confirmed' : value === 'false_alarm' ? 'Marked as false alarm' : ''}
+      </p>
     </div>
   )
 }

@@ -33,7 +33,10 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .capture import FRAME_SCHEMA_VERSION
+#: Bump whenever the per-frame JSONL record changes shape. It lives here, with the
+#: record it describes; `routine_watch.capture` re-exports it, because the capture
+#: process is what stamps it on every frame.
+FRAME_SCHEMA_VERSION = 1
 
 #: MediaPipe pose gives exactly this many body landmarks per person.
 POSE_LANDMARK_COUNT = 33
