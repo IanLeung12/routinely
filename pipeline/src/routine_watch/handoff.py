@@ -47,10 +47,11 @@ from .feedback import FeedbackStore
 DEFAULT_WINDOW_H = 12
 
 #: Stand-in for the step an error happened at. The demo history carries a count of
-#: errors per type per session rather than the individual step events, so the summary
-#: gets the same placeholder step and spaced times `alerts.py` hands the explainer.
+#: errors per type per session, not the step events, and a handoff line is the wrong
+#: place to guess: the alert screen is where a nurse reads step-by-step evidence.
 _UNKNOWN_STEP = "the task"
 
+#: Only so two errors in one session read as two clauses rather than one repeated.
 _ERROR_SPACING_S = 10.0
 
 
