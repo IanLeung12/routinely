@@ -7,6 +7,7 @@ import { UnitOverview } from './UnitOverview.tsx'
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  sessionStorage.clear()
 })
 
 describe('UnitOverview keyboard access', () => {

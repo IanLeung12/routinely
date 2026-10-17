@@ -29,6 +29,7 @@ function rowNames() {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  sessionStorage.clear()
 })
 
 describe('UnitOverview', () => {
