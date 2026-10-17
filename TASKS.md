@@ -405,14 +405,14 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
 
 ### T227 — Test: stand-in skeleton never changes what the recogniser reads
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_stick_figure.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:50Z
 - pr: —
 
 What: `evidence._with_skeleton` adds poses/hands to box-only frames and promises "a frame read by the recogniser still says exactly what it did before". Pin that promise for every frame-level scenario.
