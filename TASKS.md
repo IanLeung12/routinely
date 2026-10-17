@@ -512,7 +512,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T128 — Bug: smoke.sh finds no alert since mrs-k is only flagged after her live session
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -520,7 +520,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:52Z
-- pr: —
+- pr: #115
+- rating: 5/5 clear
 
 What: Since T124 (#108) a fresh stack has no flagged resident until mrs-k's live session plays, so `GET /alerts` is empty and smoke.sh fails the alert and replay checks. Make smoke.sh play that session first, the same way the demo does. Read only `scripts/smoke.sh` and the `/ws/live` handler at the bottom of `pipeline/src/routine_watch/api.py`.
 Interface: before the `/alerts` checks, open `ws://<api>/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000` with a short inline `python3 -c` using the `websockets` package (already a pipeline dependency; run it with the pipeline venv python if present, else `python3`) and read until the socket closes; report it as `PASS: live session played` / `FAIL: ...`. Keep "never POSTs feedback". Update the header comment.
