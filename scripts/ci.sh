@@ -10,6 +10,7 @@ python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py scri
 bash -n scripts/integration.sh
 python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh
+bash -n scripts/camera.sh
 bash -n scripts/e2e.sh
 bash -n scripts/smoke.sh
 

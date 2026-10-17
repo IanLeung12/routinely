@@ -3,7 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchResident } from '../resident/api.ts'
 import type { Resident } from '../resident/types.ts'
 import { LiveSession } from './LiveSession.tsx'
-import { errorMessage, FakeWebSocket, installFakeWebSocket, sessionStart, stepMessage } from './testWebSocket.ts'
+import {
+  detection,
+  errorMessage,
+  FakeWebSocket,
+  frameMessage,
+  installFakeWebSocket,
+  sessionStart,
+  stepMessage,
+} from './testWebSocket.ts'
 
 vi.mock('../resident/api.ts', () => ({
   fetchResident: vi.fn(),
@@ -519,5 +527,58 @@ describe('LiveSession', () => {
     })
 
     expect(screen.queryByText('Mock data')).toBeNull()
+  })
+
+  // ------------------------------------------------------- the camera (T356)
+
+  const CAMERA = { index: 0, task: 'tea' }
+
+  it('watches the camera the screen was pointed at, not a recording', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+
+    expect(FakeWebSocket.latest().url).toContain('source=camera&camera=0&task=tea')
+    expect(screen.getByText('Live camera')).toBeTruthy()
+  })
+
+  it('says it is waiting for the object detector while a camera sends frames with no objects', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage())
+    })
+
+    // Without the local detector's weights there are no object boxes, so a step - a hand
+    // on an object - can never be recognised: say so rather than show a stuck task map.
+    expect(screen.getByText(/Waiting for object detector/)).toBeTruthy()
+  })
+
+  it('stops saying it once the detector reports something in view', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage())
+    })
+    act(() => {
+      socket.emit(frameMessage({ seq: 1, t: 0.1, objects: [detection({ label: 'kettle' })] }))
+    })
+
+    expect(screen.queryByText(/Waiting for object detector/)).toBeNull()
+  })
+
+  it('says nothing about the detector on a recorded session', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage({ source: 'synthetic' }))
+    })
+
+    expect(screen.queryByText(/Waiting for object detector/)).toBeNull()
+    expect(screen.queryByText('Live camera')).toBeNull()
   })
 })

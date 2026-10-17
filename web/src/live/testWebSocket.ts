@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { StepEvent, TaskError } from '../contracts.ts'
+import type { CaptureFrame, ObjectDetection, StepEvent, TaskError } from '../contracts.ts'
 import type { LiveMessage, LiveStep } from './useLiveSession.ts'
 
 /** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
@@ -90,4 +90,28 @@ export function stepMessage(overrides: Partial<StepEvent> = {}): LiveMessage {
       ...overrides,
     },
   }
+}
+
+/** A `frame` message wrapping a capture record: nobody and nothing in it by default, the
+ * way a camera looks before anyone walks in (landmarks, boxes and a timestamp - never an
+ * image, SPEC section 8), so a call only spells out what it is about. */
+export function frameMessage(overrides: Partial<CaptureFrame> = {}): LiveMessage {
+  return {
+    type: 'frame',
+    frame: {
+      session_id: 'live-session',
+      seq: 0,
+      t: 0,
+      source: 'camera',
+      poses: [],
+      hands: [],
+      objects: [],
+      ...overrides,
+    },
+  }
+}
+
+/** One object the detector found, for a frame that has something in view. */
+export function detection(overrides: Partial<ObjectDetection> = {}): ObjectDetection {
+  return { label: 'cup', confidence: 0.9, box: { x1: 0.4, y1: 0.4, x2: 0.5, y2: 0.5 }, ...overrides }
 }

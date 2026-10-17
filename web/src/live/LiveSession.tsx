@@ -12,7 +12,7 @@ import { SessionSummary } from './SessionSummary.tsx'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
-import type { LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
+import type { LiveCamera, LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 /** `routine_watch.demo.DEMO_RESIDENT`: whoever is on camera, the live WS always
@@ -104,6 +104,11 @@ function useAnnouncement(
 export type LiveSessionProps = {
   scenario: string
   speed?: number
+  /** Watch this machine's camera instead of the recorded `scenario` (T356): set by
+   * `?source=camera` on the dashboard URL, which `scripts/camera.sh` prints. The API
+   * sends the same messages from either, so only the socket and the two lines below -
+   * the badge and the object-detector note - know the difference. */
+  camera?: LiveCamera | null
   onOpenAlert?: (alertId: string) => void
   /** Called once per `session_end`, so the overview and alerts list can refetch
    * without a page reload (the dashboard has no other source of truth for them). */
@@ -114,11 +119,25 @@ export type LiveSessionProps = {
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
-export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, stepSpan, ended, paused: wsPaused, source, retry } = useLiveSession(
-    scenario,
-    speed,
-  )
+export function LiveSession({
+  scenario,
+  speed = 1,
+  camera = null,
+  onOpenAlert,
+  onSessionEnd,
+}: LiveSessionProps) {
+  const {
+    steps,
+    frame,
+    states,
+    errors,
+    stepSpan,
+    ended,
+    paused: wsPaused,
+    objectsSeen,
+    source,
+    retry,
+  } = useLiveSession(scenario, speed, camera)
   const announcement = useAnnouncement(steps, states, errors, source)
   const resident = useResident(DEMO_RESIDENT_ID)
   const baseline = resident?.baseline ?? null
@@ -179,7 +198,13 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
 
       <SectionHeader
         title="Live session"
-        action={source === 'mock' ? <span className="live-session__mock-badge">Mock data</span> : null}
+        action={
+          source === 'mock' ? (
+            <span className="live-session__mock-badge">Mock data</span>
+          ) : camera ? (
+            <span className="live-session__camera-badge">Live camera</span>
+          ) : null
+        }
       />
 
       {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
@@ -230,6 +255,18 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
               <SectionHeader title="Task map" />
               <TaskMap steps={steps} states={states} />
               <TaskMapLegend />
+              {/* A camera whose frames carry no object boxes: the local detector has no
+                  weights to run (`DETECTOR_WEIGHTS`, SPEC section 6.1), and a step is a
+                  hand on an object, so none will ever be recognised. The skeleton view
+                  next to this is still live, so say which half is missing instead of
+                  leaving a task map that looks stuck (T356). */}
+              {camera && frame && !objectsSeen && (
+                <p className="live-session__detector-note" role="status">
+                  Waiting for object detector. The skeleton and hands are live; steps stay
+                  pending until the detector reports the objects in view (set
+                  DETECTOR_WEIGHTS to run it).
+                </p>
+              )}
             </Card>
           </div>
 

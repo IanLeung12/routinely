@@ -6,6 +6,8 @@
 .live-session__error-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .live-session__announcer { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .live-session__paused-hint { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
+.live-session__camera-badge { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--status-normal-bg); color: var(--status-normal-text); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.live-session__detector-note { margin: var(--space-3) 0 0; color: var(--muted); font-size: var(--text-sm); }
 
 @media (max-width: 480px) {
   .live-session,
@@ -26,6 +28,7 @@
 
   .live-session__banner,
   .live-session__paused-hint,
+  .live-session__detector-note,
   .live-session__error-list {
     overflow-wrap: anywhere;
   }
