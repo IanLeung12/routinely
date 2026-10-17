@@ -140,6 +140,7 @@ carry the per-step history needed to exercise it.
 | `tea_long_pause_not_error` | steps | An otherwise-correct session with a 100s gap between `teabag_in_cup` and `pour`, under the 120s abandonment threshold: a long pause alone must never surface as a task error or flag a change. |
 | `tea_late_start_normal` | steps | A resident who sits for 200s before touching the kettle at all, then makes tea correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
 | `meds_long_pause_not_error` | steps | The meds counterpart of `tea_long_pause_not_error`: a 100s gap between `take_pill` and `fill_glass`, under the 120s abandonment threshold, must never surface as a task error or flag a change. |
+| `meds_late_start_normal` | steps | The meds counterpart of `tea_late_start_normal`: a resident who sits for 200s before touching the pill organiser or glass at all, then takes the medication correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
 
 ## Adding one
 

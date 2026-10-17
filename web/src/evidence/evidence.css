@@ -1,0 +1,57 @@
+.replay-player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.replay-player__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Phone width (375 px and similar, SPEC section 9): a nurse opens this from a push
+   alert, so the skeleton canvas (fixed at 480x360 via its width/height attributes,
+   see SkeletonView.tsx and GhostReplay.tsx) shrinks to the card's width instead of
+   forcing horizontal scroll, and the play/scrub controls drop onto their own
+   full-width row with 44px touch targets. */
+@media (max-width: 375px) {
+  .replay-player {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .replay-player .skeleton-view,
+  .replay-player .skeleton-view--empty {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .ghost-replay svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .replay-player__controls {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .replay-player__controls .btn {
+    min-height: 2.75rem;
+  }
+
+  .replay-player__controls input[type='range'] {
+    flex: 1 1 100%;
+    min-height: 2.75rem;
+  }
+
+  .replay-player__controls output {
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+}

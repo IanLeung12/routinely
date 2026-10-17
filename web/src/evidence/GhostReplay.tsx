@@ -17,7 +17,7 @@ export default function GhostReplay({ today, normal, t, width = 480, height = 36
   if (today.length === 0 && normal.length === 0) return <p>No skeleton data</p>
 
   return (
-    <figure>
+    <figure className="ghost-replay">
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Today and usual skeleton replay">
         {(['normal', 'today'] as const).map(layer => {
           const frame = nearest(layer === 'normal' ? normal : today, t)
