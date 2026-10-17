@@ -366,14 +366,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T448 — Smoke: check the routines and replays endpoints
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: test
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T23:43Z
 - pr: —
 - source: proposed
 - note: released by max_API_standard: run ended without progress
