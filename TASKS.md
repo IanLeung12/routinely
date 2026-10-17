@@ -137,14 +137,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_change_detection.py -q` and `scripts/ci.sh` pass.
 
 ### T009 — Synthetic session history generator
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: T004
 - area: pipeline/src/routine_watch/synth/history.py, pipeline/tests/test_history.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:49Z
-- pr: —
+- pr: #8
 
 What: Fake ~14 days of tea-making sessions per demo resident, used to build baselines (SPEC §8: most residents normal, one sudden spike, one slow drift). Read only the files in `area`, `pipeline/src/routine_watch/synth/__init__.py`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`.
 Interface: `generate_history(resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal") -> list[dict]`, one or two sessions per day, sorted by time. Each dict: `{"resident_id", "ts" (ISO 8601 UTC), "task": "tea", "errors": {error_type: count}, "self_corrected": int, "duration_s": float, "assisted": bool}`. `"normal"`: mostly zero errors, at most one hesitation or self-corrected slip on ~20% of sessions. `"spike"`: normal until the last 36 h, then every session has an omission plus a perseveration. `"drift"`: total errors per session trend upward across the whole window, with at most one error per session in the first 3 days.
