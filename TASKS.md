@@ -128,25 +128,6 @@ Acceptance:
 - a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
-### T269 — Contracts: JSON Schema for GET/PUT /monitoring payloads
-- status: done
-- class: heavy
-- priority: 2
-- kind: improvement
-- deps: T263, T262
-- area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
-- owner: ian-claude
-- claimed: 2026-10-17T13:37Z
-- pr: #267
-- rating: 4/5 the Interface named one schema file (contracts/monitoring.schema.json) but the three monitoring routes answer three shapes, and the acceptance pointed at web/src/contracts.ts, which is generated and gets no payload types - the hand-mirrored copy is web/src/about/monitoringApi.ts. Area also left out test_api_payload_contracts.py, where every other payload's route test lives.
-
-What: Same pattern as T257/T263: the monitoring state (incl. T262's audit trail) is hand-mirrored in web/src/contracts.ts; generate a schema from pydantic so drift fails CI.
-Interface: `contracts/monitoring.schema.json` generated from contracts.py; a test validates real GET /monitoring and PUT responses (fakes only) against it and checks web/src/contracts.ts field names match.
-Acceptance:
-- schema generated, contracts/README.md updated.
-- test fails if a field is added on one side only.
-- `scripts/ci.sh` passes.
-
 ### T270 — Bug: integration check failing on main
 - status: done
 - class: standard
