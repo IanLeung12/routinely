@@ -397,15 +397,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/routines/types.ts, web/src/routines/RoutinesScreen.tsx, web/src/routines/RoutinesScreen.test.tsx, web/src/mock/routines.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T22:58Z
 - pr: —
 - note: released by ian-laptop-standard: run ended without progress
 
