@@ -16,7 +16,8 @@ Each run, in order. Be quick; skip steps with nothing to do.
 
 4. **Review.** For PRs merged since the `last-reviewed` sha in the `TASKS.md` header: `git log --oneline <sha>..origin/main`, read diffs. Check: matches the task's acceptance criteria and SPEC, stays in scope, has tests, no secrets, no raw video stored, no "diagnose" wording, contracts consistent. Problems → new fix task (cite the PR). Then update `last-reviewed`.
 
-5. **Plan.** Keep 4–8 claimable `todo` tasks, with at least 2 `light` ones when possible. Generate the next tasks from SPEC §5 MVP order (MVP before Nice to have), respecting what's merged. Every task must have:
+5. **Plan.** Only create tasks that trace to SPEC (MVP §5, then Nice to have in order, then demo polish/robustness for §10 and §13) or to bugs/review findings. Never invent features beyond the spec. When that scope is used up, stop adding tasks and report `BLOCKER: backlog empty — spec scope done, need direction`.
+   Keep 4–8 claimable `todo` tasks, with at least 2 `light` ones when possible. Generate the next tasks from SPEC §5 MVP order (MVP before Nice to have), respecting what's merged. Every task must have:
    ```
    ### T0NN — Title
    - status: todo
