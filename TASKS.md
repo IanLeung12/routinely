@@ -463,7 +463,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T125 — Review: drift/evening/motor demo residents never leave "normal" (no "watch" for demo beat 6)
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
