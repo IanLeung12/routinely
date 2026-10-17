@@ -528,14 +528,14 @@ Acceptance:
 - `contracts/README.md` lists both; `scripts/ci.sh` passes.
 
 ### T258 — Test: pause flow end to end in the API (pause → handoff → live → reset)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: T251
 - area: pipeline/tests/test_pause_flow.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:16Z
 - pr: —
 
 What: Pausing a room now touches four places (monitoring store, `/handoff`, `/ws/live`, `/demo/reset`) built in separate PRs. One test walks the whole flow so a regression in any shows up.
