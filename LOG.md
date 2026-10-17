@@ -349,3 +349,5 @@ T392 | standard | codex | merged after release (wip branch) | ~9k tok
 T384 | light | claude-opus | merged first try | ~90k tok
 T379 | light | codex | merged first try | ~3k tok
 T394 | standard | claude-sonnet | merged after release (wip branch) | ~35k tok
+T383 | light | codex | merged first try | ~?k tok
+T387 | heavy | claude-opus | merged first try | ~50k tok
