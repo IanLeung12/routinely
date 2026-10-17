@@ -468,7 +468,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T357 — Scenario: meds_long_pause_not_error (long pause under the abandonment cut-off)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
