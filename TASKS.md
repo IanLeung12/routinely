@@ -24,15 +24,15 @@ What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T411 — Wording pass: people, not just residents and nurses
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: ian
 - deps: T408, T409, T410
 - area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
-- owner: —
-- claimed: —
+- owner: max_API_standard-2
+- claimed: 2026-10-17T23:21Z
 - pr: —
 
 What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (or the person's name), "nurse" only where it's specifically the care-home supervisor, never "patient". Landing page: say it's for anyone, alone or with family, a carer or a care home.
