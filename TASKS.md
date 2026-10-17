@@ -170,7 +170,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T105 — Review: Claude summary guard lets spelled-out numbers through
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: bug
