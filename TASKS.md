@@ -335,7 +335,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T319 — Bug: integration check failing on main
-- status: todo
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
@@ -345,6 +345,7 @@ Acceptance:
 - claimed: —
 - pr: —
 - source: integration
+- note: orch: scripts/integration.sh passes on main dc9a6ef (OK integration); transient at 08ab990
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 08ab990:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
