@@ -14,7 +14,7 @@ Each run, in order. Be quick; skip steps with nothing to do.
    - `blocked` tasks: read the note; rewrite the task, split it, or raise its class.
    - Append one line per finished task to `.tasks/LOG.md` (format in `MODELS.md`), using the PR's `model:` line.
 
-4. **Review.** For PRs merged since the `last-reviewed` sha in the `TASKS.md` header: `git log --oneline <sha>..origin/main`, read diffs. Check: matches the task's acceptance criteria and SPEC, stays in scope, has tests, no secrets, no raw video stored, no "diagnose" wording, contracts consistent. Problems → new fix task (cite the PR). Then update `last-reviewed`.
+4. **Review (quick).** Deep code review is the reviewer agent's job (`prompts/reviewer.md`); you only check that merged work meets its task's acceptance criteria and scope. For PRs merged since the `last-reviewed` sha in the `TASKS.md` header: `git log --oneline <sha>..origin/main`, read diffs. Check: matches the task's acceptance criteria and SPEC, stays in scope, has tests, no secrets, no raw video stored, no "diagnose" wording, contracts consistent. Problems → new fix task (cite the PR). Then update `last-reviewed`.
 
 5. **Plan.** The backlog never runs dry; workers run overnight and idle time is waste. Priority order:
    a. bugs, review findings, red CI; b. SPEC §5 MVP; c. SPEC Nice to have, in order; d. demo polish and robustness (§10 fallback, §13 risks);
