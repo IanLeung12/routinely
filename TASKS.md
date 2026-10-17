@@ -103,7 +103,7 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T187 — Test: App shows the live routine picker with tea selected
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: test
@@ -111,8 +111,9 @@ Acceptance:
 - area: web/src/App.test.tsx
 - owner: Max_codex_light
 - claimed: 2026-10-17T17:47Z
-- pr: —
+- pr: #345
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T187-wip-1503: start from it (git switch task/T187-wip-1503 && git merge origin/main)
+- rating: 5/5 clear
 
 What: T161 swapped `LiveSession` for `LiveScreen` in `App.tsx`; nothing at app level checks the picker is there. Add one test.
 Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/LiveScreen.tsx`. Reuse App.test's existing fetch/websocket mocks.
