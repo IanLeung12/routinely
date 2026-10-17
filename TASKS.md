@@ -393,7 +393,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T065 — Docs: scenario README table lists only 4 of 8 scenarios
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -401,7 +401,7 @@ Acceptance:
 - area: tests/scenarios/README.md
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:45Z
-- pr: —
+- pr: #58
 
 What: The "The scenarios here" table in `tests/scenarios/README.md` misses `tea_sequence_error`, `tea_single_bad_no_flag`, `tea_substitution`, `tea_unclear_not_error`. Add one row each (level steps/frames + one sentence on what it guards), taken from the comment at the top of each `tests/scenarios/<name>/expected.yaml`. Also drop the stale sentence saying hesitation is missing if `pipeline/src/routine_watch/hesitation.py` now produces hesitation errors (check its docstring; if unsure, leave it).
 Interface: docs only. Read only the README and the four `expected.yaml` files (plus `hesitation.py` docstring).
