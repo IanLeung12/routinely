@@ -7,44 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T394 — Live: tell the nurse when the camera could not be opened (close code 4503)
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T19:50Z
-- pr: #378
-- note: partial work pushed on branch task/T394-camera-unavailable (worker retired mid-task): start from it: git switch task/T394-camera-unavailable && git merge origin/main
-- rating: 5/5 clear
-
-What: `/ws/live?source=camera` closes with 4503 (`live_camera.CAMERA_UNAVAILABLE`) when no camera can be read (T356). Make sure the Live screen shows a plain, specific message for that code ("No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session") with a button back to the recorded scenario, distinct from "API unreachable" and 4404.
-Interface: map close code 4503 to its own state in useLiveSession; render via the shared ui ErrorState/Button. If this already exists, tighten tests only.
-Acceptance:
-- unit test with the fake WebSocket closing 4503 shows the camera message and a working "watch a recorded session" button
-- 4404 and network-error messages unchanged (existing tests pass)
-- `cd web && npm test` and `scripts/ci.sh` pass
-
-### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
-- status: done
-- class: heavy
-- priority: 2
-- kind: test
-- deps: —
-- area: pipeline/tests/test_live_replay_parity.py
-- owner: ian-claude-heavy-3
-- claimed: 2026-10-17T19:38Z
-- pr: #374
-- rating: 4/5 the flag half of the ask compares two different questions (session_end's flag is the resident's over their own history; replay.run's is the recording's over expected.yaml's, and 17 of 38 scenarios differ by design, T236), so it is restated as the recording's flag on both sides rather than xfailed; also test_live.py::test_live_session_says_what_the_replay_says already compared the errors coarsely
-
-What: The live screen comes from live.py and the alert view from replay.py; nothing checks they agree. For every single-session scenario under tests/scenarios/, compare the errors and change flag in live `session_messages(...)`'s session_end message with `replay.run(load_scenario(...))`.
-Interface: read pipeline/src/routine_watch/live.py (session_messages, as_json), replay.py (run), scenario.py (load_scenario). Test only: if a scenario disagrees, mark it `xfail(strict=True)` with the reason and list it in the PR body; don't change pipeline code.
-Acceptance:
-- `cd pipeline && pytest tests/test_live_replay_parity.py` passes quickly (fake clock, no real sleeps).
-- `scripts/ci.sh` passes.
-
 ### T399 — Smoke: check the landing page is served
 - status: done
 - class: standard
