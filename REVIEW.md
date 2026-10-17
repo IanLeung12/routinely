@@ -1,13 +1,9 @@
 # REVIEW
 
-- last-reviewed: 369fc9b
-- next-area: tests/scenarios
+- last-reviewed: 21fc468
+- next-area: web
 
 ## Known issues filed
-- T047 flaky web CI (App.test.tsx async)
-- T048 heat calendar dark-theme contrast
-- T053 postFeedback swallows non-ok API responses into mock
-- T054 TaskMap/SkeletonView hard-coded light colours
 - T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
 - T073 live screen uses MOCK_STEPS; no session_start with task graph
 - T075 ErrorType label/colour maps x3 in web
@@ -30,3 +26,5 @@
 - T249 pause mid-session not enforced on /ws/live
 - T250 /ws/live messages have no contracts/ schema
 - T261 ci.sh/pytest don't force LIVE_API=0
+- T271 handoff quiet count includes paused residents
+- T272 duplicate scenario README test (tests/ + pipeline/tests/)
