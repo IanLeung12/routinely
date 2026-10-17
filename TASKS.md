@@ -209,7 +209,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T121 — Bug: demo alert lists placeholder errors ("skipped the task at 0:00" ×4) and grows on every page load
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -217,8 +217,9 @@ Acceptance:
 - area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts*.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T07:53Z
-- pr: —
+- pr: #123
 - source: tester
+- rating: 5/5 clear
 
 What: `GET /alerts/alert-mrs-k` builds errors via `_task_errors` with `step_id=None` and fake times 0:00/0:10 in every session, so the summary reads "Flagged for review: 8 errors this session (skipped the task at 0:00, repeated the task at 0:10, skipped the task at 0:00, ...)", and says "this session" while counting across 3–4 sessions. Each dashboard load runs the live session (T081), which appends another `mrs-k-NN` session, so the alert keeps growing during a demo. Currently hidden only because the dashboard is on mock data (T119).
 Repro: `scripts/dev.sh up`; load http://localhost:5173 twice; `curl -s localhost:8000/alerts/alert-mrs-k | python3 -m json.tool`.
