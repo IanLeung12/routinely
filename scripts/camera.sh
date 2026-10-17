@@ -5,11 +5,16 @@
 #   scripts/camera.sh                      # the built-in camera on the Live screen
 #   scripts/camera.sh --camera 1           # a different device
 #   scripts/camera.sh --record out.jsonl   # keep the capture records too (never video)
+#   scripts/camera.sh --preview            # show the camera picture under the skeleton
 #
 # In order: install the capture extra (MediaPipe + OpenCV), download the two MediaPipe
 # task bundles if they are not here yet, check the camera opens, restart the local stack
 # with the camera settings in its environment, and print the dashboard URL with the Live
 # screen pointed at the camera (`/ws/live?source=camera`, `routine_watch.live_camera`).
+#
+# `--preview` adds the real camera picture under the skeleton on the Live screen, served
+# by the capture process on 127.0.0.1 only: this device only, one frame at a time in
+# memory, never stored and never sent anywhere (PREVIEW_PORT, default 8765).
 #
 # Stop it again with `scripts/dev.sh down`. docs/DEMO.md has the walk-through, including
 # the macOS camera permission and what the screen shows without detector weights.
@@ -20,6 +25,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 CAMERA=0
 RECORD=""
+PREVIEW=0
 
 # The header comment above is the usage message: printed without its hashes, down to
 # the first line that is not a comment.
@@ -36,6 +42,10 @@ while [ $# -gt 0 ]; do
     --record)
       RECORD=${2:?--record needs a file, e.g. --record out.jsonl}
       shift 2
+      ;;
+    --preview)
+      PREVIEW=1
+      shift
       ;;
     -h | --help)
       usage
@@ -117,6 +127,22 @@ else
   echo "   skeleton and hands stream live; steps show as waiting for the object detector"
 fi
 
+# The optional local preview: the capture process serves its current frame as MJPEG on
+# loopback while the camera is open, and the Live screen offers a toggle to show it under
+# the skeleton (`routine_watch.preview`, `web/src/live/CameraPreview.tsx`). Exported after
+# the probe above, so the one-frame check never takes the port the stack is about to use.
+# 127.0.0.1 only, one frame at a time in memory, never written down (SPEC section 12).
+PREVIEW_PORT=${PREVIEW_PORT:-8765}
+if [ "$PREVIEW" = 1 ]; then
+  export CAMERA_PREVIEW=1
+  export PREVIEW_PORT
+  export VITE_PREVIEW_PORT=$PREVIEW_PORT  # the dashboard looks at the same port
+  echo "== camera preview on 127.0.0.1:$PREVIEW_PORT (this device only, never stored)"
+else
+  export CAMERA_PREVIEW=0
+  echo "== camera preview: off (add --preview to see the camera picture on this device)"
+fi
+
 # Where the records are kept, if they are: the API reads this when it opens the camera,
 # and what it writes is the JSONL a replay reads, so a session filmed now can be played
 # back offline later (`scripts/e2e.sh`, `routine_watch.replay`). Records, never video.
@@ -138,7 +164,16 @@ echo "$up"
 
 dashboard=$(printf '%s\n' "$up" | sed -n 's/^DASHBOARD_URL=//p')
 echo "LIVE_URL=${dashboard}/?source=camera&camera=${CAMERA}"
+if [ "$PREVIEW" = 1 ]; then
+  echo "PREVIEW_URL=http://127.0.0.1:${PREVIEW_PORT}/preview.mjpg"
+fi
 echo
 echo "Open LIVE_URL. The Live session card is your camera: the skeleton view on the left,"
 echo "the task map filling in on the right, errors as they are classified. Pick the"
 echo "routine to watch above it; stop everything with scripts/dev.sh down."
+if [ "$PREVIEW" = 1 ]; then
+  echo
+  echo "Press \"Show camera preview (this device only)\" on the skeleton view for the real"
+  echo "picture under it. It is served from this machine to this machine, is not recorded,"
+  echo "and reaches neither the API nor anybody you share your routines with."
+fi

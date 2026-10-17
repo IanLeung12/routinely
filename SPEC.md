@@ -211,6 +211,7 @@ Rules for the scorer:
 ## 12. Responsible design
 
 - Skeleton-only processing, no stored video, no face identification.
+- Optional local camera preview while framing a camera (`scripts/camera.sh --preview`): the capture machine may show itself its own picture under the skeleton, served on loopback only, one frame at a time in memory — never stored, never sent to the API, never visible to a supervisor.
 - Flags for review, **never a diagnosis**, with that wording kept consistent everywhere.
 - The LLM summary may only restate detected evidence and the scorer's patterns. No speculation, no new causes, and no medical advice beyond the library's check prompts.
 - Patterns are "consistent with", ranked with confidence, and always allow "no clear pattern". Every pattern in the library cites where its signals come from; patterns without a defensible source don't ship.
@@ -256,6 +257,7 @@ Diagrams: `docs/routine-watch-architecture.png` (components), `docs/routine-watc
 - **C. Placement:** the whole pipeline (capture → recogniser → task graph → errors → session score) runs on the demo laptop and works offline. It uplinks events, sessions and downsampled skeletons to the backend on Vultr (FastAPI + baseline/change detection + alert builder + dashboard), which stores in Tiger Data.
 - **Roboflow:** detector runs locally from downloaded weights. No hosted inference. Humans run training (max 2–3 runs, 50 credits/month).
 - **Hands:** use MediaPipe hand landmarks as well as pose; task steps are hand–object interactions.
+- **Local preview (optional, off by default):** the capture process itself serves its current frame as MJPEG on `127.0.0.1` (`CAMERA_PREVIEW=1`, `PREVIEW_PORT`, default 8765) from the same camera handle as capture; non-loopback clients are refused, the frame is held in memory only for as long as it is the current one, and nothing is written or transmitted.
 - **D. Beyond delirium (pattern matching):** the product flags changes and ranks the patterns they are consistent with (§7.5), delirium first. Pattern scoring is deterministic rules over features with a data-driven library; the LLM only phrases. Never diagnostic wording. MVP patterns: sudden change and slow drift.
 
 ## 17. People and supervisors (Ian, roles pivot)

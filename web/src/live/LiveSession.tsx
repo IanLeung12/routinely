@@ -9,6 +9,7 @@ import { ErrorState } from '../ui/ErrorState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
+import { CameraPreview } from './CameraPreview.tsx'
 import { SessionSummary } from './SessionSummary.tsx'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
@@ -20,6 +21,17 @@ import { useLiveSession } from './useLiveSession.ts'
  * records the session against this resident unless told otherwise, and nothing on
  * this screen tells it otherwise. */
 const DEMO_RESIDENT_ID = 'mrs-k'
+
+/** Where the capture process serves its local camera preview, when it was asked to:
+ * `PREVIEW_PORT` on the machine with the camera (`routine_watch.preview`,
+ * `scripts/camera.sh --preview`, which exports both). `undefined` leaves
+ * `CameraPreview` on its own default, which is the same 8765. */
+const PREVIEW_PORT = Number(import.meta.env.VITE_PREVIEW_PORT) || undefined
+
+/** The preview is served by the capture loop, so it only answers once this machine is
+ * actually filming: until then - and on a recorded session, where a live picture would
+ * not be of what the skeleton is doing - don't ask for it at all. */
+const noPreview = async () => false
 
 /** This resident's own record, as `GET /residents/{id}` serves it: their baseline (the
  * duration and error count their sessions usually have, averaged over the early window
@@ -167,6 +179,8 @@ export function LiveSession({
   const resident = useResident(DEMO_RESIDENT_ID)
   const baseline = resident?.baseline ?? null
   const handledEnded = useRef<LiveSessionEnded | null>(null)
+  // This machine's camera, running: the only case a local preview is offered in.
+  const cameraLive = camera !== null && frame !== null
 
   // A pause/resume toggled from the resident's page while this panel is open (SPEC
   // section 12, T275): `setRoomMonitoring` fires `monitoring-changed` on `window` after
@@ -278,7 +292,15 @@ export function LiveSession({
           <div className="live-session__layout">
             <Card>
               <SectionHeader title="Skeleton view" />
-              <SkeletonView frame={frame} />
+              {/* The real camera picture under the skeleton, for whoever is standing at
+                  this machine (T416): a toggle that only appears when the page is on
+                  localhost and the capture process answers on loopback, so everywhere
+                  else - and every supervisor - sees exactly the skeleton it saw before.
+                  Video never leaves the capture machine and is never stored (SPEC
+                  section 12). */}
+              <CameraPreview port={PREVIEW_PORT} probe={cameraLive ? undefined : noPreview}>
+                <SkeletonView frame={frame} />
+              </CameraPreview>
             </Card>
             <Card>
               <SectionHeader title="Task map" />
