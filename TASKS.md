@@ -446,14 +446,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T071 — Tests for useLiveSession and mockLiveStream
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/live/useLiveSession.test.ts, web/src/live/mockLiveStream.test.ts
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T06:01Z
 - pr: —
 
 What: The live screen's state hook and mock stream are untested. Read only `web/src/live/useLiveSession.ts`, `web/src/live/mockLiveStream.ts`, `web/src/live/LiveSession.test.tsx` (how it fakes the socket) and `.tasks/LESSONS.md` (pending effects after teardown break CI).
