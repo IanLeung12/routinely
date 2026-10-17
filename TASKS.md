@@ -192,7 +192,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T115 — Docs: CODEMAP notes for drift endpoint, evidence sources, smoke.sh, feedback causes
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -200,7 +200,8 @@ Acceptance:
 - area: docs/CODEMAP.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:58Z
-- pr: —
+- pr: #119
+- rating: 5/5 clear
 
 What: Recent merges (T050 drift endpoint, T107 evidence replays `tea_no_kettle` with a `tea_normal` ghost, T098/T108 `scripts/smoke.sh`, T100 feedback causes) aren't in the CODEMAP notes. Add 1–3 lines each.
 Interface: notes only; read the module docstrings of `pipeline/src/routine_watch/{api,evidence,feedback,drift}.py` and the header of `scripts/smoke.sh`. Run `python3 scripts/codemap.py` to regenerate the file list.
