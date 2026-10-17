@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 369fc9b
+- last-reviewed: 93c246d
 
 ## Tasks
 
@@ -514,7 +514,7 @@ Acceptance:
 - kind: feature
 - source: proposed
 - deps: T256
-- area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/routes_monitoring.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/api/monitoring.ts
+- area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/about/monitoringApi.ts
 - owner: —
 - claimed: —
 - pr: —
@@ -559,4 +559,76 @@ What: T254 added per-resident consent; nothing checks it survives `/demo/reset` 
 Interface: extend pipeline/tests/test_demo_consent.py using the FastAPI TestClient with fakes.
 Acceptance:
 - every resident from GET /residents has consent.given_by and consent.on, before and after POST /demo/reset.
+- `scripts/ci.sh` passes.
+
+### T265 — Refactor: move alert routes out of api.py into api_alerts.py
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_alerts.py (new), docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same pattern as T256 (api_live.py): move `GET /alerts`, `GET /alerts/{id}`, `POST /alerts/{id}/feedback` and their helpers (`AlertFeedbackIn`, `_alerts_by_id`, `_alert_payload`) into an `APIRouter` in `api_alerts.py` that `api.py` includes. No behaviour change.
+Interface: `routine_watch.api_alerts.router`; names tests import from `routine_watch.api` keep working (re-export), so tests need no edits.
+Acceptance:
+- api.py shrinks by the moved code; all existing pipeline tests pass unchanged.
+- docs/CODEMAP.md api.py note updated and an api_alerts.py note added.
+- `scripts/ci.sh` passes.
+
+### T266 — Live screen: "Check again" after a room is unpaused
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Once /ws/live sends `{"type":"paused"}` the hook stops for good, so after a nurse resumes the room the live screen stays on "Monitoring is paused" until a full reload. Add a "Check again" button on the paused state that reconnects.
+Interface: `useLiveSession` returns `retry(): void` that clears `paused`, resets state and opens a new socket; LiveScreen's paused panel renders a button calling it.
+Acceptance:
+- test: paused message → button shown → click → a new WebSocket is opened and, if it streams steps, the paused panel disappears.
+- test: still paused on retry → panel stays, no mock-data fallback.
+- `scripts/ci.sh` passes.
+
+### T267 — Web: visible keyboard focus and a skip-to-content link
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/index.css, web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Accessibility pass for keyboard users (Clarity/Execution). Add a global `:focus-visible` outline in the design-system accent colour (min 2 px, 3:1 contrast) and a "Skip to main content" link as the first focusable element in App, targeting `<main id="main">`.
+Interface: `.skip-link` class in index.css (visually hidden until focused); `<main id="main">` in App.tsx.
+Acceptance:
+- `cd web && npx vitest run src/App.test.tsx` still passes; PR describes a manual Tab check.
+- no layout change for mouse users.
+- `scripts/ci.sh` passes.
+
+### T268 — Test: GET /handoff window bounds
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_handoff_window.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: `GET /handoff?hours=` is declared `Query(ge=1, le=168)` in pipeline/src/routine_watch/api.py (read `shift_handoff`), but nothing tests the bounds.
+Interface: new pytest file using `fastapi.testclient.TestClient(routine_watch.api.app)`; read pipeline/tests/test_handoff.py for fixtures and fakes.
+Acceptance:
+- hours=1 and hours=168 → 200 with `window_hours` echoed; hours=0 and hours=169 → 422.
+- the summary never contains "diagnos".
 - `scripts/ci.sh` passes.
