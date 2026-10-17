@@ -518,14 +518,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T372 — Test: every error type and pattern is covered by a recorded scenario
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_scenario_coverage.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T18:46Z
 - pr: —
 - note: released by ian-claude-standard: run ended without progress; partial work on branch task/T372-wip-1833: start from it (git switch task/T372-wip-1833 && git merge origin/main)
 
