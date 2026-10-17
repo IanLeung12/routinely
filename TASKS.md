@@ -193,7 +193,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T183 — Review: overview/handoff top pattern ignores nurse-feedback weights
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
