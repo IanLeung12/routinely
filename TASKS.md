@@ -95,7 +95,7 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T225 — LiveSession: CSS file instead of inline <style>
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
