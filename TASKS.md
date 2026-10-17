@@ -391,7 +391,7 @@ Acceptance:
 * Existing live tests still pass; `scripts/ci.sh` passes.
 
 ### T220 — Live screen: settle on session_end's final error list
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -399,7 +399,8 @@ Acceptance:
 - area: web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/useLiveSession.test.ts
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T10:35Z
-- pr: —
+- pr: #213
+- rating: 5/5 clear
 
 What: After T219 the `session_end` WebSocket message carries `errors`, the session's final (healed) error list. The live screen should replace its streamed error list with it, so a step reported missed mid-session but done later no longer shows as missed once the session ends.
 Interface: read `web/src/live/useLiveSession.ts` (message union and reducer, `case 'session_end'`), `web/src/live/mockLiveStream.ts`, and the `session_end` part of the module docstring in `pipeline/src/routine_watch/live.py`. Add optional `errors` to the `session_end` message type (same shape as the `error` message's `error`); on `session_end` with `errors`, set the state's errors to it; without `errors` (older server), keep the streamed list. Add `errors` to the mock's `session_end`.
