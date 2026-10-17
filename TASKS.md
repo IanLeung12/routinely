@@ -42,7 +42,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T041 — Second task: taking medication with water
-- status: in-review
+- status: done
 - class: heavy
 - priority: 3
 - kind: feature
@@ -94,7 +94,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T052 — Demo-data banner component
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
@@ -794,7 +794,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T098 — scripts/smoke.sh: hit every API route of a running stack
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
@@ -828,7 +828,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T100 — Feedback store records "what was it?" causes per resident
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
