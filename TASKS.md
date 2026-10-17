@@ -286,7 +286,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
