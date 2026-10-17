@@ -217,7 +217,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_verifier.py -q` and `scripts/ci.sh` pass.
 
 ### T031 — On-disk API response cache + LIVE_API guard
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
