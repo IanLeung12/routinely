@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T350 — Review: wire HandoffDelta into the shift handoff rows
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
@@ -16,6 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - deps: —
 - area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
 - rating: —
+- owner: ian-claude
+- claimed: 2026-10-17T17:15Z
 
 What: T324 (#324) added `previous_flags` to `/handoff` and a `HandoffDelta` component, but nothing renders it: `Handoff.tsx` never imports `HandoffDelta`, so the "better or worse than last shift" signal is dead code on the demo screen.
 Interface: in `Handoff.tsx`, render `<HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />` in each resident row (next to the flags reason), and append the same delta text to the copy/read-aloud line built around line 147 ("…, 2 more than last shift"). No new styles; reuse `HandoffDelta.css`.
