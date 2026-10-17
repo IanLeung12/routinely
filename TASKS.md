@@ -643,14 +643,14 @@ Acceptance:
 - Run it for real against `scripts/dev.sh up`, paste the checklist in the PR, then `scripts/dev.sh down`. `scripts/ci.sh` passes.
 
 ### T382 — Refactor: move scenario loading out of replay.py into scenario.py
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/scenario.py, docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T19:06Z
 - pr: —
 
 What: replay.py (500 lines) mixes the scenario file format (pydantic models + JSONL loading) with running/comparing a replay. Split them so each is readable on its own; no behaviour change.
