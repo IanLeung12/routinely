@@ -235,7 +235,7 @@ Acceptance:
 - note added; `scripts/ci.sh` passes
 
 ### T374 — Test infra: load every web stylesheet in Vitest so tasks stop editing vite.config.ts
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
