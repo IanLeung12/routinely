@@ -181,6 +181,7 @@ def demo_reset() -> dict[str, bool]:
         raise HTTPException(status_code=404, detail="not found")
     session_log.reset()
     _feedback_store.reset()
+    get_monitoring_store().reset()
     return {"ok": True}
 
 
