@@ -301,7 +301,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_top_pattern_for.py -q` and `scripts/ci.sh` pass.
 
 ### T207 — Bug: skeleton view and evidence ghost replay show no skeleton, only object boxes
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
