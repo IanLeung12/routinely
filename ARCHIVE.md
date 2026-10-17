@@ -7640,3 +7640,124 @@ Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs
 
 What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the HeatCalendar files. Muted Fey palette: tinted cells from the status tokens, hairline gaps, small rounded cells, muted weekday labels, legend as small pills. No hex in the component; behaviour unchanged.
 Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.
+
+### T410 — Supervisor side: "People I support" + add a person
+- status: done
+- class: standard
+- priority: 0
+- kind: feature
+- source: ian
+- deps: T408
+- area: web/src/people/PeopleISupport.tsx, web/src/people/PeopleISupport.test.tsx, web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T22:02Z
+- pr: #412
+- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
+- rating: 4/5 clear, but T408 (merged before this task existed) had already implemented most of SPEC §17's supervisor routing in App.tsx outside this task's listed area, so the real gap was narrower (and less obvious) than the task text implied -- the note helped but didn't flag that
+
+What: Generalise the nurse overview into "People I support" (SPEC §17). Care-home supervisor sees the unit list as today; a family supervisor with one person goes straight to that person; anyone can **add a person** by entering an invite code (T408's mock API), with a clear "linked" confirmation. Each row/detail shows the person's context ("care home · Room 12" vs "lives alone").
+Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; existing overview behaviour kept for the care-home case; `scripts/ci.sh` passes. Screenshot in PR.
+
+### T423 — Person view: person-facing wording for status and pattern notes
+- status: done
+- class: light
+- priority: 1
+- kind: feature
+- source: orch (carved from T409)
+- deps: —
+- area: web/src/person/personNotes.ts, web/src/person/personNotes.test.ts
+- owner: max_API_light
+- claimed: 2026-10-17T20:45Z
+- pr: #393
+- rating: 5/5 clear
+
+What: Pure functions that turn existing nurse-facing data into calm, personal copy for someone watching themselves (SPEC §17 "Person view"). T409 ("My routine") will consume them.
+Why: inherits T409 — the person view is half of the roles pivot judges will see.
+Read only: `web/src/contracts.ts` (type `PatternMatch`, ~line 374), `web/src/wording.test.ts` (style of the existing wording checks).
+Interface (`web/src/person/personNotes.ts`):
+- `personStatus(state: 'normal' | 'watch' | 'flagged'): string` — e.g. normal "Your routine looks like your usual this week", watch "A few things looked a little different lately", flagged "A few things looked different today".
+- `personNote(match: PatternMatch, supervisorName?: string): { title: string; body: string }` — one entry per pattern_id: `sudden_change`, `slow_drift`, `evening_worsening`, `motor_slowing`, `executive_pattern`, `one_sided_change`, plus a generic fallback for unknown ids. Describe what was different in everyday words ("Some steps took longer than usual, mostly in the evening") and end with "Worth mentioning to <supervisorName> or your doctor." (or "Worth mentioning to your doctor or someone you trust." without a name). Never reuse the nurse-facing `name` (it has clinical terms like "delirium").
+Acceptance:
+- `web/src/person/personNotes.test.ts` (Vitest): every pattern id + the fallback returns non-empty title/body; with and without supervisor name; for all outputs, case-insensitive: no "diagnos", "patient", "delirium", "dementia", "stroke", "danger", "warning", "emergency", "urgent".
+- `cd web && npx vitest run src/person/personNotes.test.ts` and `scripts/ci.sh` pass.
+
+### T424 — Live screen: local camera preview component (toggle, video under skeleton, badge)
+- status: done
+- class: light
+- priority: 1
+- kind: feature
+- source: orch (carved from T416)
+- deps: —
+- area: web/src/live/CameraPreview.tsx, web/src/live/CameraPreview.test.tsx
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T20:47Z
+- pr: #389
+- rating: 5/5 clear
+
+What: A self-contained React component for T416's local-only camera preview. Not wired into any screen here (T416 does that).
+Why: inherits T416 — the demo is far more convincing with the real kitchen under the skeleton.
+Read only: `web/src/live/SkeletonView.tsx` (renders an `<svg>` sized `width`×`height`, default 480×360).
+Interface (`web/src/live/CameraPreview.tsx`):
+- `export function CameraPreview({ port = 8765, children, probe }: { port?: number; children: React.ReactNode; probe?: () => Promise<boolean> })`.
+- Default probe: only if `window.location.hostname` is `localhost`, `127.0.0.1` or `::1`, `fetch('http://127.0.0.1:<port>/health')` with a 1 s timeout (AbortController); true when it returns `{ ok: true }`. Any error → false, no console noise.
+- Probe false: render `children` only (no toggle, nothing else).
+- Probe true: a toggle button "Show camera preview (this device only)" (`aria-pressed`). On: an `<img src="http://127.0.0.1:<port>/preview.mjpg" alt="">` fills the box, `children` absolutely positioned on top at the same size, and a visible badge "Preview · not recorded · this device only". Off: children only.
+Acceptance:
+- `CameraPreview.test.tsx` (Vitest + Testing Library, inject `probe`): toggle hidden when probe false; hidden on a non-localhost hostname with the default probe (mock `fetch`, assert not called); toggle on shows img + badge + children; toggle off removes img; button keyboard operable.
+- `cd web && npx vitest run src/live/CameraPreview.test.tsx` and `scripts/ci.sh` pass.
+
+### T425 — Review: handoff summary counts unclear-camera rooms as "nothing to review"
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_unclear.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T20:47Z
+- pr: #390
+- rating: 5/5 clear
+
+What: T355 added `unclear_sessions` to each handoff row and a chip on screen, but `_context()` in `handoff.py` still counts a resident whose room had unclear sessions (and no flags) in "N residents with nothing to review", so the summary a nurse reads says the room was quiet while the row says check the camera — the exact silence T355 meant to fix.
+Fix: in `_context()`, add one line per resident with `unclear_sessions > 0` (e.g. "<name>: N sessions too unclear to score, check the camera view", camera wording, nothing about the resident) and exclude them from the `quiet` count. Keep `_needs_review` unchanged (unclear is not a flag).
+Acceptance:
+- Test in `test_handoff_unclear.py`: with one unclear session recorded for a quiet resident's room, the explainer context mentions the camera line and the quiet count drops by one.
+- `scripts/ci.sh` passes.
+
+### T426 — Bug: integration check still flaky ("dashboard did not render" on a cold start)
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- source: ian
+- deps: —
+- area: scripts/integration.sh, scripts/dev.sh
+- owner: ian-claude-standard
+- claimed: 2026-10-17T21:00Z
+- pr: #396
+- rating: 5/5 clear, found a real latent gap in the render check while verifying the acceptance criterion
+
+What: T367 didn't fully fix it. The hourly integration check and the tester both see `FAIL dashboard did not render (no 'Routine Watch' in DOM)` on the first run after `dev.sh up`, then pass on a re-run: Vite's cold dependency optimisation finishes after headless Chrome's 8 s budget.
+Why: a red integration check the morning of the demo (due 13:00 UTC) hides real breakage.
+Interface: in `scripts/integration.sh`, warm the dev server before the render check (fetch `/`, `/src/main.tsx` and wait until a second fetch of the page is fast) and retry the DOM check up to 3 times with a longer budget; or render against `vite preview` of a built `dist/` instead of the dev server. Don't weaken the check (it must still fail if the app really doesn't render).
+Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a row from cold; breaking `web/src/main.tsx` on purpose makes it fail.
+
+### T427 — Replays data layer: API client + mock fixture for the replays library
+- status: done
+- class: light
+- priority: 0
+- kind: feature
+- deps: T412
+- area: web/src/replays/api.ts, web/src/replays/api.test.ts, web/src/mock/replays.ts
+- owner: max_API_light
+- claimed: 2026-10-17T21:11Z
+- pr: #403
+- rating: 4/5 Repeat marker wording differs from contract perseveration; otherwise clear
+
+What: The fetch layer T413's Replays screen will consume, carved out of T413 so the screen task only builds UI. Backend routes landed in T412.
+Interface: in `web/src/replays/api.ts` export `fetchPersonReplays(personId): Promise<PersonReplays>`, `fetchReplay(replayId): Promise<Replay>`, `deleteReplay(replayId): Promise<void>`, calling `GET /people/{id}/replays`, `GET /replays/{id}`, `DELETE /replays/{id}`. Follow the base-URL/offline-fallback pattern in `web/src/evidence/api.ts` exactly (fall back to the mock when the API is unreachable or in offline mode). Types `PersonReplays`, `ReplaySummary`, `Replay`, `ReplayMarker` already exist in `web/src/contracts.ts` (~lines 431–510); do not change contracts. `web/src/mock/replays.ts`: 3 replays for Mrs. K (omission, sequence, repeat markers), 1 for Mr. D, 0 for Sam, plus one `normal` summary; skeleton frames only, no images.
+Files to read: `web/src/evidence/api.ts`, `web/src/evidence/api.test.ts`, `web/src/contracts.ts` (replay types), `web/src/mock/replay.ts`, `web/src/mock/people.ts` (person ids), `pipeline/src/routine_watch/api_residents.py` lines 179–260 (route shapes).
+Acceptance:
+- Vitest in `web/src/replays/api.test.ts`: success path (mocked fetch), fallback to mock on network error, delete sends DELETE, Sam returns an empty list.
+- `cd web && npx vitest run src/replays` and `scripts/ci.sh` pass.
