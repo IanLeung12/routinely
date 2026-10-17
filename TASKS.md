@@ -111,7 +111,7 @@ Interface:
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
 
 ### T420 — Restyle: overview Sparkline → MicroBars
-- status: blocked
+- status: in-review
 - class: light
 - priority: 0
 - kind: improvement
@@ -122,7 +122,7 @@ Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; key
 - claimed: 2026-10-17T22:05Z
 - pr: #415
 - rating: 4/5 Separate Sparkline accessibility tests and baseline bundle-budget failure were not listed
-- note: PR #415 implementation and all tests pass; PR CI fails first-load bundle budget: 92886 > 92200 bytes. Clean origin/main 3f1736c also fails at 92536 bytes; task adds 350 bytes. Requires shared bundle-budget/headroom fix outside authorized Sparkline files. Local Windows preview port test also fails unchanged on clean main.
+- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
 
 What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/MicroBars.tsx) from the same input it takes today; keep its props and export so callers don't change. Read only those files and `web/src/overview/types.ts`.
 Acceptance: existing Sparkline tests pass (update selectors only); `cd web && npx vitest run src/overview`.
