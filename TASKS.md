@@ -480,7 +480,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T184 — Test: status_for with the raw threshold gives each resident's own status
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
