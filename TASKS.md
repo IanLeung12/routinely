@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: c29b593
+- last-reviewed: 58c824d
 
 ## Tasks
 
@@ -499,3 +499,74 @@ Acceptance:
 * Unit test on `alertText` for the mock alert: contains "flagged for review" and "Consistent with", never "diagnos".
 * AlertView test: clicking Copy summary calls clipboard with `alertText(alert)` and shows "Copied".
 * `scripts/ci.sh` passes.
+
+### T200 — Demo banner: CSS classes and an announced reset error
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/demoBanner.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: DemoBanner (PR #182) uses inline styles and its "Couldn't reset the demo" text is not announced to screen readers. Move styles to `demoBanner.css` and give the error `role="alert"`.
+Interface: read only web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx and web/src/styles/ (design tokens). No behaviour change.
+Acceptance:
+- no `style={{` left in DemoBanner.tsx; classes use existing `var(--...)` tokens
+- test: a failing onReset renders an element with role="alert" containing "Couldn't reset the demo"
+- `cd web && npm test -- DemoBanner` passes; `scripts/ci.sh` passes
+
+### T201 — Scenario: medication routine abandoned halfway
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_abandoned/
+- owner: —
+- claimed: —
+- pr: —
+
+What: add a meds scenario where the resident stops after the first steps, mirroring tea_abandoned, so the second task's abandonment path is covered end to end.
+Interface: read tests/scenarios/README.md, tests/scenarios/tea_abandoned/, tests/scenarios/meds_normal/ and tasks/meds.yaml (or the meds task graph named in meds_normal/expected.yaml). Write steps.jsonl + expected.yaml only.
+Acceptance:
+- expected.yaml has `task:` set to the meds graph and the errors/flag the replay actually produces (run the replay and pin its output; comment on why)
+- `scripts/e2e.sh tests/scenarios/meds_abandoned` prints PASS; `scripts/ci.sh` passes
+
+### T202 — Scenario: medication slip corrected inside the window is not flagged
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_self_corrected/
+- owner: —
+- claimed: —
+- pr: —
+
+What: meds counterpart of tea_self_corrected: a sequence slip the resident corrects within the self-correction window, so the reduced weight is pinned for the second task too.
+Interface: read tests/scenarios/README.md, tests/scenarios/tea_self_corrected/ and tests/scenarios/meds_pill_before_water/. Write steps.jsonl + expected.yaml only.
+Acceptance:
+- expected.yaml pins `score:` and `flag: false`, with a comment saying what full weighting would score
+- `scripts/e2e.sh tests/scenarios/meds_self_corrected` prints PASS; `scripts/ci.sh` passes
+
+### T203 — Shift handoff: print-friendly layout
+- status: todo
+- class: light
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: nurses hand off on paper; a "Print" button plus `@media print` rules (hide nav/banner/buttons, black on white, no row breaks across pages) make the handoff usable as a printout.
+Interface: read only the three area files. Button calls `window.print()`.
+Acceptance:
+- "Print handoff" button; test mocks window.print and asserts it's called on click
+- handoff.css has an `@media print` block hiding `.no-print` elements and `break-inside: avoid` on rows
+- `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
