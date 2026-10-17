@@ -26,14 +26,14 @@ Acceptance:
 * No other file changed.
 
 ### T187 — Test: App shows the live routine picker with tea selected
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: test
 - deps: —
 - area: web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:00Z
 - pr: —
 
 What: T161 swapped `LiveSession` for `LiveScreen` in `App.tsx`; nothing at app level checks the picker is there. Add one test.
