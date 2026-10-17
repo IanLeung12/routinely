@@ -63,7 +63,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T106 — Evidence replay: stop fetching the alert twice
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: improvement
@@ -71,7 +71,8 @@ Acceptance:
 - area: web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/alert/AlertView.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T08:23Z
-- pr: —
+- pr: #139
+- rating: 5/5 clear
 
 What: Since T080 (#84), `AlertView` loads the alert with `fetchAlert`, then `fetchReplay(alertId)` calls `fetchAlert` again for the same alert. Change `fetchReplay` to take the already-loaded `Alert` so the screen makes one alert request.
 Interface: `fetchReplay(alert: Alert): Promise<EvidenceReplay | null>` in `web/src/evidence/api.ts`; in `AlertView.tsx`, run the replay effect once the alert has loaded (keyed on alert id). Read only these three files plus `web/src/alert/AlertView.test.tsx`.
