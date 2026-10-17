@@ -1,51 +1,50 @@
-# METRICS (last 6 h, generated 2026-10-17 09:51 UTC)
+# METRICS (last 6 h, generated 2026-10-17 10:52 UTC)
 
-- **Throughput:** 180/185 claimed tasks merged · 8 active workers · first-try success 94%
-- **Friction:** 2 PR CI failures · 9 releases (3 sessions ended early, 2 stale, 3 conflicts) · 6 blocked
-- **Main:** 0/147 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.9/5 · 34 bug/review tasks filed (all time)
+- **Throughput:** 189/196 claimed tasks merged · 7 active workers · first-try success 92%
+- **Friction:** 3 PR CI failures · 11 releases (5 sessions ended early, 2 stale, 3 conflicts) · 6 blocked
+- **Main:** 2/158 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.9/5 · 39 bug/review tasks filed (all time)
 - **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| light | 115 | 111 | 95 | 0 | 4 | 4 | 5k |
-| standard | 58 | 58 | 97 | 0 | 2 | 9 | 55k |
-| heavy | 12 | 11 | 75 | 2 | 3 | 23 | 150k |
+| light | 126 | 120 | 92 | 1 | 5 | 4 | 15k |
+| standard | 60 | 59 | 95 | 0 | 3 | 10 | 65k |
+| heavy | 10 | 10 | 80 | 2 | 3 | 20 | 150k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| feature | 51 | 51 | 96 | 2 | 3 | 7 | 45k |
-| test | 41 | 40 | 93 | 0 | 3 | 5 | 15k |
-| ? | 31 | 31 | 100 | 0 | 0 | 3 | 12k |
-| improvement | 27 | 25 | 85 | 0 | 3 | 5 | 18k |
-| bug | 23 | 21 | 91 | 0 | 0 | 8 | 75k |
+| feature | 55 | 53 | 93 | 2 | 4 | 7 | 45k |
+| test | 47 | 45 | 91 | 0 | 3 | 5 | 15k |
+| improvement | 38 | 37 | 87 | 0 | 4 | 6 | 15k |
+| bug | 29 | 27 | 93 | 1 | 0 | 10 | 75k |
+| ? | 15 | 15 | 100 | 0 | 0 | 3 | 4k |
 | docs | 12 | 12 | 100 | 0 | 0 | 4 | 15k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-standard | 45 | 44 | 96 | 0 | 2 | 7 | 55k |
-| ian-claude-light-2 | 38 | 36 | 92 | 0 | 2 | 4 | 15k |
-| ian-claude-standard-2 | 28 | 28 | 96 | 0 | 1 | 8 | 45k |
+| ian-claude-light-2 | 50 | 47 | 92 | 1 | 2 | 4 | 15k |
+| ian-claude-standard | 43 | 42 | 93 | 0 | 2 | 8 | 55k |
+| ian-claude-standard-2 | 33 | 32 | 94 | 0 | 2 | 8 | 55k |
+| ian-claude | 21 | 20 | 81 | 2 | 4 | 17 | 120k |
 | max_API_light | 21 | 20 | 90 | 0 | 1 | 5 | 4k |
-| ian-claude | 20 | 19 | 85 | 2 | 3 | 16 | 140k |
-| max-codex-light-2 | 16 | 16 | 100 | 0 | 0 | 4 | 4k |
-| max-codex-light-1 | 14 | 14 | 100 | 0 | 0 | 3 | 4k |
-| ian-claude-light | 3 | 3 | 100 | 0 | 0 | 2 | 12k |
+| max-codex-light-2 | 15 | 15 | 100 | 0 | 0 | 4 | 3k |
+| max-codex-light-1 | 13 | 13 | 100 | 0 | 0 | 3 | 4k |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| pipeline/src/routine_watch | 57 | 56 | 96 | 2 | 2 | 9 | 55k |
-| web/src/alert | 17 | 16 | 94 | 0 | 0 | 4 | 35k |
-| tests/scenarios | 17 | 17 | 100 | 0 | 0 | 8 | 10k |
-| web/src/live | 15 | 15 | 93 | 0 | 2 | 6 | 30k |
-| web/src/resident | 13 | 12 | 77 | 0 | 3 | 4 | 4k |
+| pipeline/src/routine_watch | 52 | 51 | 96 | 2 | 3 | 11 | 65k |
+| web/src/alert | 21 | 19 | 86 | 0 | 1 | 6 | 45k |
+| web/src/live | 19 | 18 | 89 | 1 | 2 | 7 | 15k |
+| tests/scenarios | 19 | 19 | 100 | 0 | 0 | 8 | 15k |
+| web/src/resident | 14 | 14 | 79 | 0 | 3 | 5 | 5k |
+| web/src/ui | 7 | 7 | 100 | 0 | 0 | 5 | 30k |
+| web/src/evidence | 6 | 5 | 67 | 0 | 1 | 5 | 4k |
 | web/src/overview | 6 | 6 | 100 | 0 | 0 | 5 | 10k |
-| scripts/smoke.sh | 6 | 5 | 83 | 0 | 0 | 4 | 35k |
-| web/src/evidence | 5 | 4 | 60 | 0 | 1 | 6 | 4k |
 
 ## Problem tasks
 - T052 (light/feature, ian-claude-standard): blocked — Demo-data banner component
@@ -60,3 +59,6 @@
 - T132 (light/improvement, ian-claude-light-2): blocked — Web tests: AlertView and PatternList time out under default parallelis
 - T143 (standard/test, ian-claude-standard-2): blocked — Pattern scenario: motor slowing after a sedating medication
 - T197 (light/improvement, ian-claude-standard): released×1 — Heat calendar legend: CSS classes instead of inline styles
+- T221 (light/improvement, ian-claude): released×1 — Copy summary uses the resident's real name, not one guessed from the i
+- T220 (light/bug, ian-claude-light-2): CI×1 — Live screen: settle on session_end's final error list
+- T149 (standard/feature, ian-claude-standard-2): released×1 — API: GET /monitoring and PUT /rooms/{room}/monitoring
