@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { fetchPausedRooms } from '../about/monitoringApi.ts'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
@@ -56,6 +57,7 @@ export function UnitOverview({
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
   const [filter, setFilter] = useState<UnitFilter>('all')
+  const [pausedRooms, setPausedRooms] = useState<string[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -64,6 +66,24 @@ export function UnitOverview({
         setResidents(fetched)
       }
     })
+    return () => {
+      cancelled = true
+    }
+  }, [refreshKey])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchPausedRooms()
+      .then((rooms) => {
+        if (!cancelled) {
+          setPausedRooms(rooms ?? [])
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPausedRooms([])
+        }
+      })
     return () => {
       cancelled = true
     }
@@ -107,17 +127,20 @@ export function UnitOverview({
         />
       ) : (
         <ul className="resident-list">
-          {sortResidents(filtered).map((resident) => (
+          {sortResidents(filtered).map((resident) => {
+            const paused = pausedRooms.includes(resident.room)
+            return (
             <li key={resident.id} className="resident-row">
               <button
                 type="button"
                 className="resident-open"
                 onClick={() => onSelect?.(resident.id)}
-                aria-label={`Open ${resident.name}, room ${resident.room}, ${resident.status}`}
+                aria-label={`Open ${resident.name}, room ${resident.room}, ${resident.status}${paused ? ', Monitoring paused' : ''}`}
               >
                 <span className="resident-identity">
                   <span className="resident-name">{resident.name}</span>
                   <span className="resident-room">Room {resident.room}</span>
+                  {paused && <span className="resident-paused-chip">Monitoring paused</span>}
                 </span>
                 <span className="resident-status">
                   <StatusChip status={resident.status} />
@@ -128,7 +151,8 @@ export function UnitOverview({
                 <Sparkline scores={resident.scores} />
               </button>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </>
