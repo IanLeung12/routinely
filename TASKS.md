@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T037 — Skeleton replay API for evidence
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -25,7 +25,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_evidence.py -q` and `scripts/ci.sh` pass.
 
 ### T038 — Session store: in-memory default + Tiger Data (TimescaleDB)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -184,7 +184,7 @@ Acceptance:
 - No real camera, network or paid API in tests; `scripts/ci.sh` passes.
 
 ### T073 — Review: live screen hard-codes the tea steps instead of the session's task graph
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
