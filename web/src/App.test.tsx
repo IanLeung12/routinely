@@ -1,42 +1,12 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveMessage } from './live/useLiveSession.ts'
 import type { ResidentSummary } from './overview/types.ts'
 import type { Alert } from './contracts.ts'
 import { mockAlerts } from './mock/alerts.ts'
+import { FakeWebSocket } from './live/testWebSocket.ts'
 import App from './App.tsx'
 
-/** Stands in for a real WebSocket (mirrors live/LiveSession.test.tsx): drives the live
- * session by calling `emit` on the latest instance instead of opening a real socket. */
-class FakeWebSocket {
-  static instances: FakeWebSocket[] = []
-  url: string
-  onmessage: ((event: { data: string }) => void) | null = null
-  onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
-
-  constructor(url: string) {
-    this.url = url
-    FakeWebSocket.instances.push(this)
-  }
-
-  close() {}
-
-  emit(message: LiveMessage) {
-    this.onmessage?.({ data: JSON.stringify(message) })
-  }
-
-  static latest(): FakeWebSocket {
-    const instance = FakeWebSocket.instances[FakeWebSocket.instances.length - 1]
-    if (!instance) {
-      throw new Error('no FakeWebSocket instance was created')
-    }
-    return instance
-  }
-}
-
 beforeEach(() => {
-  vi.stubGlobal('WebSocket', FakeWebSocket)
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('API unavailable in tests')))
 })
 
@@ -186,7 +156,6 @@ describe('App', () => {
       }
       return Promise.reject(new Error(`unexpected fetch: ${url}`))
     }))
-    vi.stubGlobal('WebSocket', FakeWebSocket)
 
     await act(async () => { render(<App />) })
 

@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/testSetup.ts'],
     // Load the live-session, overview, alert, resident, evidence, handoff and shared print
     // stylesheets into jsdom: the task map's wrapping layout is testable with getComputedStyle
     // (T120), and the overview's, alert's, resident detail's, evidence's, shift handoff's and
