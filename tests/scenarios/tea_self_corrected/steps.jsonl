@@ -1,0 +1,9 @@
+{"event_id": "tea-self-corrected:s0", "session_id": "tea-self-corrected", "step_id": "fill_kettle", "objects": ["kettle"], "t_start": 2.0, "t_end": 9.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s1", "session_id": "tea-self-corrected", "step_id": "get_cup", "objects": ["cup"], "t_start": 11.0, "t_end": 14.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s2", "session_id": "tea-self-corrected", "step_id": "boil", "objects": ["kettle"], "t_start": 16.0, "t_end": 18.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s3", "session_id": "tea-self-corrected", "step_id": "pour", "objects": ["kettle", "cup"], "t_start": 20.0, "t_end": 26.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s4", "session_id": "tea-self-corrected", "step_id": "teabag_in_cup", "objects": ["teabag", "cup"], "t_start": 28.0, "t_end": 30.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s5", "session_id": "tea-self-corrected", "step_id": "pour", "objects": ["kettle", "cup"], "t_start": 32.0, "t_end": 36.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s6", "session_id": "tea-self-corrected", "step_id": "milk", "objects": ["milk", "cup"], "t_start": 106.0, "t_end": 112.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s7", "session_id": "tea-self-corrected", "step_id": "stir", "objects": ["spoon", "cup"], "t_start": 113.5, "t_end": 119.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-self-corrected:s8", "session_id": "tea-self-corrected", "step_id": "remove_teabag", "objects": ["teabag", "spoon"], "t_start": 120.5, "t_end": 124.0, "confidence": 0.93, "source": "rule"}
