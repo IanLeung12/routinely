@@ -42,7 +42,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T349 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
-- status: claimed
+- status: blocked
 - class: light
 - priority: 1
 - kind: improvement
@@ -51,6 +51,8 @@ Acceptance:
 - area: scripts/worker.sh
 - owner: Max_codex_light
 - claimed: 2026-10-17T17:12Z
+- pr: #333
+- note: Local CI blocked by shared localhost:8000 server: all tests passed but Vitest exited on undici ERR_INVALID_ARG_TYPE Event; bash syntax and dry checks pass.
 
 What: E4's `--disallowedTools Monitor ScheduleWakeup` (MODELS.md, PR #271) never reached any running worker: worker.sh reads FLAGS once at start, and the host launcher passes a `FLAGS=` override for the heavy worker (`--model opus --effort max`) that drops it. Since then 2 light-worker sessions (T187, T307) still ended with "I'll wait for the CI monitor notification" and were released.
 Interface: in `scripts/worker.sh`, (1) inside the loop, before each claude/codex run, recompute flags from MODELS.md unless the caller set FLAGS (keep `FLAGS` env as the override); (2) for `TOOL=claude`, always append `--disallowedTools Monitor ScheduleWakeup` if the effective flags don't already contain `--disallowedTools`. Keep `MODEL=` in the prompt in sync.
