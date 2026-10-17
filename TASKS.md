@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: (none)
+- last-reviewed: ce4748f
 
 ## Tasks
 
@@ -33,11 +33,12 @@ Acceptance:
 - claimed: —
 - pr: —
 
-What: Define the data that flows between stages (SPEC §6, §7): PoseFrame (skeleton keypoints), ObjectDetection, StepEvent (step id, objects, t_start, t_end, confidence, source rule|verifier, unclear flag), TaskError (type ∈ omission|sequence|perseveration|substitution|hesitation|abandonment, step, timestamps, evidence refs, self_corrected), Session (resident, task, start/end, assisted flag, score), Alert (resident, sessions, errors, baseline comparison, summary, suggested checks, feedback).
+What: Define the data that flows between stages (SPEC §6, §7, §16): CaptureFrame (the single per-frame JSONL record: timestamp, pose skeleton keypoints, MediaPipe hand landmarks, object boxes; used by live camera, fallback video, tests and scenarios), ObjectDetection, StepEvent (step id, objects, t_start, t_end, confidence, source rule|verifier, unclear flag), TaskError (type ∈ omission|sequence|perseveration|substitution|hesitation|abandonment, step, timestamps, evidence refs, self_corrected), Session (resident, task, start/end, assisted flag, score), Alert (resident, sessions, errors, baseline comparison, summary, suggested checks, feedback).
 Interface: JSON Schema files in `contracts/`, matching pydantic models and TS types. No raw frames anywhere.
 Acceptance:
 - Round-trip test: pydantic model → JSON → validates against schema, for each type.
 - `web` type-checks against the TS types.
+- A sample `contracts/examples/capture.jsonl` (a few frames) validates against the CaptureFrame schema.
 
 ### T003 — Tea task graph definition
 - status: todo
