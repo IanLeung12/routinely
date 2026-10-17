@@ -372,14 +372,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T308 — Test: privacy panel and monitoring toggle work keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/about/PrivacyPanel.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:46Z
 - pr: —
 
 What: Prove the privacy panel opens/closes and the room monitoring pause/resume toggle works with keyboard only (Tab, Enter/Space, Escape).
