@@ -501,15 +501,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T441 — Review: deleteReplay reports success when the API refuses the delete
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/replays/api.ts, web/src/replays/api.test.ts
-- owner: —
-- claimed: —
+- owner: ian-laptop-standard
+- claimed: 2026-10-17T22:25Z
 - pr: —
 
 What: In `web/src/replays/api.ts`, `deleteReplay` (and the two fetches) fall back to the offline mock library on *any* non-ok response, not just a network error. A 500/403 from `DELETE /replays/{id}` on a mock-library id therefore resolves and hides the replay locally while the server still stores it (privacy: the person thinks their replay is gone, SPEC §17). A 404 for a real replay likewise turns into "Replay not found" only by accident.
