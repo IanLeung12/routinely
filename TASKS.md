@@ -317,7 +317,7 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T142 — Pattern scenario: evening-only worsening
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -325,7 +325,8 @@ Acceptance:
 - area: tests/scenarios/pattern_evening_worsening/
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:17Z
-- pr: —
+- pr: #136
+- rating: 5/5 clear
 
 What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `evening_worsening` so e2e proves the library ranks it top when errors cluster in evening sessions while mornings stay clean.
 Interface: `tests/scenarios/pattern_evening_worsening/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/pattern_slow_drift/` (incl. `history:` and `top_pattern: evening_worsening`). Read the `evening_worsening` entry in `pipeline/src/routine_watch/patterns_library.py` (it requires `evening_concentrated`) and how `extract_features` in `patterns.py` derives that from `hours_ago`. Don't change pipeline code; if the scenario format can't express evening sessions, set the task blocked with the reason.
