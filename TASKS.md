@@ -509,7 +509,7 @@ Acceptance:
 - New test file passes; no source changes; `scripts/ci.sh` passes.
 
 ### T259 — Shift handoff summary sentence mentions paused rooms
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -517,7 +517,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T12:20Z
-- pr: —
+- pr: #243
+- rating: 5/5 clear
 
 What: Since #238 the handoff payload lists paused rooms, but the plain-language `summary` still reads "all quiet" for a window where a room wasn't watched. Pass the paused rooms to the explainer as context so the summary says e.g. "Room 204 (Mrs. K) was paused, so no flags are expected from it."
 Interface: `_summary(rows, flagged_sessions, hours)` gains the `paused` list (or derives it from `rows[*].monitoring_paused`) and adds one context line per paused room to the `Explainer.summarise` call; the fake explainer's output must include the paused room. No contract or API change.
