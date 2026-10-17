@@ -45,8 +45,8 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 - kind: feature
 - source: ian
 - deps: T412, T427, T430, T431
-- area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts, web/src/App.tsx
-- note: released by ian-laptop-standard: run ended without progress
+- area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/mock/replays.ts, web/src/App.tsx
+- note: orch: split after a release without progress. Player work (error markers, speed, arrow keys) moved to T446; this task builds the screen + entry points from ReplayList, ReplayNotes and ReplayPlayer, passing `markers` once T446 merges (render without them otherwise).
 - owner: —
 - claimed: —
 - pr: —
@@ -353,3 +353,22 @@ Interface: test-only change. In `renderRoutine` in `MyRoutine.test.tsx`, wait lo
 Acceptance:
 - `cd web && for i in $(seq 20); do npx vitest run src/people/MyRoutine.test.tsx || break; done` with no failure.
 - `scripts/ci.sh` passes.
+
+### T446 — Replay player: error markers on the timeline, speed, arrow-key stepping
+- status: todo
+- class: light
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.markers.test.tsx, web/src/evidence/evidence.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Carved from T413 (Ian's replays library). Extend the existing skeleton `ReplayPlayer` so a supervisor can analyse a replay: error markers on the timeline that jump to the moment, a 0.5×/1×/2× speed control, and frame-by-frame stepping with arrow keys. Read only `web/src/evidence/ReplayPlayer.tsx`, `web/src/evidence/ReplayPlayer.test.tsx` (style reference) and `web/src/ui/Button.tsx`.
+Interface: add optional props, existing callers unchanged: `markers?: { t: number; label: string; kind?: string }[]` (t in seconds, same clock as `frames[i].t`). Render each marker as a `<button>` positioned along the timeline (left = t / last frame t), accessible name `"Jump to <label> at m:ss"`, class `replay-player__marker` (+ `replay-player__marker--<kind>` if given; colours from existing tokens in evidence.css). Click → position = first frame with `t >= marker.t`, playback pauses. Speed: a labelled group of three `Button`s ("0.5×", "1×", "2×", `aria-pressed` on the active one, default 1×) multiplying the frame rate. On the player group: ArrowRight/ArrowLeft step one frame and pause; Space still plays/pauses. Mention arrow keys in the group `aria-label`.
+Acceptance:
+- New `ReplayPlayer.markers.test.tsx` (Vitest + Testing Library, fake timers): markers render with accessible names; clicking one moves the "Replay position" slider to the right frame; 2× advances twice as many frames as 1× over the same time; arrow keys step and pause; no `markers` prop → no marker buttons.
+- Existing `ReplayPlayer*.test.tsx` pass unchanged.
+- `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass.
