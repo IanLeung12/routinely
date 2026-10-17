@@ -443,7 +443,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T242 — Web: monitoring API client (GET /monitoring, PUT /rooms/{room}/monitoring)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: feature
@@ -451,7 +451,8 @@ Acceptance:
 - area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T11:39Z
-- pr: —
+- pr: #230
+- rating: 5/5 clear
 
 What: T149 (#226) added the pipeline endpoints behind the room pause switch, but the web has no client for them. Add a small typed client; no UI changes.
 Interface: read `pipeline/src/routine_watch/api.py` (search `monitoring`) and `web/src/config.ts` (`apiUrl`), copy the fetch style of `web/src/resident/api.ts`. Export `fetchPausedRooms(): Promise<string[]>` (GET `${apiUrl}/monitoring`, returns `paused_rooms`) and `setRoomMonitoring(room: string, on: boolean): Promise<void>` (PUT `${apiUrl}/rooms/${encodeURIComponent(room)}/monitoring` with the JSON body the endpoint expects). Both throw on network error or non-ok response.
