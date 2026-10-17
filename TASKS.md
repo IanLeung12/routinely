@@ -477,14 +477,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T244 — Live screen: show "Monitoring paused" when /ws/live sends {"type":"paused"}
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T11:39Z
 - pr: —
 
 What: since T149 (#226), `/ws/live` sends one `{"type": "paused", "room": "<room>"}` and closes if the demo resident's room is paused. `useLiveSession` counts that as data received, ignores the unknown type, and the live screen sits empty with no explanation. Handle it explicitly.
