@@ -389,7 +389,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T275 — Live screen: notice a pause/resume made while the panel is open
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
