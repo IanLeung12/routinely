@@ -502,14 +502,14 @@ Acceptance:
 - PR body notes the viewport widths checked.
 
 ### T235 — Live screen and task map: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/liveScreen.css, web/src/live/taskMap.css
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T11:16Z
 - pr: —
 
 What: The live session view (routine picker, task map of steps, skeleton panel) has no responsive rules. Add `@media (max-width: 480px)` blocks to the two CSS files so the routine picker wraps, the task-map steps stack in one column and the skeleton panel scales to the screen width, so a nurse can follow a live session on a phone.
