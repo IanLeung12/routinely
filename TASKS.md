@@ -393,7 +393,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T131 — Push alert fires once when a live session flags a resident
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -401,7 +401,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:04Z
-- pr: —
+- pr: #124
+- rating: 5/5 clear
 
 What: SPEC §5 Nice to have 3. `notify.py` (FakeNotifier default, SupabaseNotifier when LIVE_API=1) is built but nothing calls it. When a live session's end flips a resident to flagged, send that alert through `get_notifier()` exactly once.
 Interface: in `live.py`, after the session's flag is computed, if the resident was not flagged before and is now, call `get_notifier().notify(<alert dict>)`; injectable notifier for tests. Never a real network call without LIVE_API=1.
