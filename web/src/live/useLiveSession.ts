@@ -26,12 +26,15 @@ export type LiveSessionState = {
   frame: CaptureFrame | null
   states: Record<string, StepState>
   errors: TaskError[]
+  /** First step event's `t_start` to the latest one's `t_end`, for the end-of-session
+   * summary's duration: `session_end` carries no duration of its own. */
+  stepSpan: { start: number; end: number } | null
   ended: LiveSessionEnded | null
   source: 'live' | 'mock'
 }
 
 function initialState(source: 'live' | 'mock'): LiveSessionState {
-  return { steps: [], frame: null, states: {}, errors: [], ended: null, source }
+  return { steps: [], frame: null, states: {}, errors: [], stepSpan: null, ended: null, source }
 }
 
 function liveSessionUrl(scenario: string, speed: number): string {
@@ -49,7 +52,16 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
     case 'frame':
       return { ...state, frame: message.frame, source }
     case 'step':
-      return { ...state, source }
+      return {
+        ...state,
+        stepSpan: state.stepSpan
+          ? {
+              start: Math.min(state.stepSpan.start, message.event.t_start),
+              end: Math.max(state.stepSpan.end, message.event.t_end),
+            }
+          : { start: message.event.t_start, end: message.event.t_end },
+        source,
+      }
     case 'step_state':
       return { ...state, states: { ...state.states, ...message.states }, source }
     case 'error':
