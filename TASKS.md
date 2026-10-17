@@ -63,7 +63,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T164 — Guided demo tour behind ?tour=1
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
