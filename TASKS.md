@@ -476,7 +476,7 @@ Acceptance:
 - `contracts/README.md` lists it; `scripts/ci.sh` passes
 
 ### T251 — Shift handoff payload lists rooms whose monitoring is paused
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -484,7 +484,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T12:03Z
-- pr: —
+- pr: #238
+- rating: 5/5 clear
 
 What: A nurse taking over a shift must know which rooms aren't being watched; a paused room silently produces no flags, so today the handoff can read "all quiet" for a resident nobody was monitoring (SPEC §12).
 Interface: `build_handoff(...)` adds `"paused": [{"room": str, "resident_id": str, "name": str}]` to its result, read from `get_monitoring_store().paused_rooms()` (`monitoring.py`) and the room→resident config the API already uses for `/ws/live`; empty list when nothing is paused. Each resident row whose room is paused gets `"monitoring_paused": true` (else false). Don't change `api.py` (the endpoint returns `build_handoff` as-is) or anything in `web/`.
