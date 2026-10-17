@@ -533,14 +533,14 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_stick_figure.py -q` and `scripts/ci.sh` pass
 
 ### T228 — Bug: flaky "moves focus to the h1" tests turn main CI red
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: web/src/alert/AlertView.test.tsx, web/src/resident/ResidentDetail.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T10:39Z
 - pr: —
 
 What: `main` CI failed on f679686 and 495a460 (and a rerun) in `AlertView.test.tsx > moves focus to the h1 once the alert loads` (T213, #202); the same race shows locally in `ResidentDetail.test.tsx > moves focus to the h1 once the resident loads` (T217, #208). The tests check `document.activeElement` right after `findByRole('heading')` resolves, but focus is set in an effect that can land a tick later under CI load. Also seen once: `shows a loading state for the evidence card…` timing out on `findByText('No replay available')` at the 1 s default.
