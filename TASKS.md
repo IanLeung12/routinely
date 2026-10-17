@@ -408,15 +408,16 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T275 — Live screen: notice a pause/resume made while the panel is open
-- status: claimed
+- status: todo
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T13:19Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T275-wip-1328: start from it (git switch task/T275-wip-1328 && git merge origin/main)
 
 What: Tester (TESTREPORT @1d6ee98) saw that toggling monitoring doesn't update an already-open live panel until remount or "Check again". Make the live panel react immediately.
 Interface: `setRoomMonitoring` dispatches `window.dispatchEvent(new CustomEvent('monitoring-changed', {detail: {room, paused}}))` after a successful PUT; `LiveScreen` listens for it and, for its own room, shows the paused message or re-checks (same path as "Check again"). Remove the listener on unmount.
