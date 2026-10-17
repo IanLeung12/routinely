@@ -1505,3 +1505,38 @@ Interface: new test file only.
 Acceptance:
 - pytest cases: a step id with no history is never flagged; empty input returns an empty list; a duration just above vs just below the threshold; zero-length durations; history for one step doesn't affect another step.
 - `scripts/ci.sh` passes.
+
+### T096 — Scenario: teabag added three times is perseveration, stirring twice is not
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_teabag_three_times/
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:21Z
+- pr: #97
+- note: rewritten by orchestrator: stir is once_only:false in tea.yaml by design (repeat stirring is normal), so use teabag_in_cup (once_only default true) instead.
+
+What: Repeating a once-only step after other steps is the signal behind the executive pattern (SPEC §7.5, perseveration with intact order). Add a steps-level scenario: a complete, correctly ordered tea session where `teabag_in_cup` is done again after `pour` and once more after `stir`, and `stir` itself happens twice (which must NOT count). Read only `pipeline/src/routine_watch/tasks/tea.yaml` (the `once_only` comment at the top), `tests/scenarios/tea_kettle_twice/` and `tests/scenarios/tea_substitution/` (copy their shape). Do not edit `tests/scenarios/README.md` or `tea.yaml`.
+Interface: `tests/scenarios/tea_teabag_three_times/{expected.yaml,steps.jsonl}` with a comment saying what it's for; no history, so `flag: false`.
+Acceptance:
+- `scripts/e2e.sh tests/scenarios/tea_teabag_three_times` passes and asserts perseveration error(s) on `teabag_in_cup` only, none on `stir`, and no omission/sequence errors.
+- `scripts/ci.sh` passes.
+
+### T097 — Scenario: two bad sessions 60 h apart do not flag
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_bad_sessions_far_apart/
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:17Z
+- pr: #95
+
+What: Guards the 48 h window end to end: today's bad session (teabag skipped) plus one bad session 60 hours ago and quiet older history must **not** flag. Read only `tests/scenarios/README.md` (the `history:` section) and `tests/scenarios/tea_skip_teabag_pour_twice/` (copy its shape; that one flags with a bad session 30 h ago). Do not edit `tests/scenarios/README.md`.
+Interface: `tests/scenarios/tea_bad_sessions_far_apart/{expected.yaml,steps.jsonl}` with a comment saying what it's for; `history:` has at least three quiet sessions plus the 60 h bad one; `flag: false`.
+Acceptance:
+- `scripts/e2e.sh tests/scenarios/tea_bad_sessions_far_apart` passes; changing 60 to 30 makes it flag (check locally, mention in PR).
+- `scripts/ci.sh` passes.
