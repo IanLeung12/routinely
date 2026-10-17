@@ -641,14 +641,14 @@ Acceptance:
 - `scripts/ci.sh` passes; update `docs/CODEMAP.md` data-flow notes.
 
 ### T085 — PatternList component for ranked "possible patterns" (not wired yet)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - deps: —
 - area: web/src/alert/PatternList.tsx, web/src/alert/PatternList.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:15Z
 - pr: —
 
 What: SPEC §9 screen 4 now shows "Possible patterns", ranked. Build the presentational component now so T088 only has to wire it once T084 lands the contract.
