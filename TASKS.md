@@ -506,7 +506,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T361 — Test: overview sparklines have a text alternative
-- status: claimed
+- status: done
 - class: light
 - priority: 2
 - kind: test
