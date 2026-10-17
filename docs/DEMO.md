@@ -57,6 +57,10 @@ session, and the alert list all on one page — no screen to navigate to first.
 - **Close:** nothing to click — say the lines on privacy (no video stored), that it
   only flags a change for review, the feedback loop, and prior art (SPEC §10.7, §11).
 
+- **Shift handoff:** open **Shift handoff** after the live session flags a change for review.
+  Click **Open alert** on Mrs. K's handoff row while her alert is pending review
+  to reach her alert.
+
 ## If something fails
 
 **No Wi-Fi, or the live session drops:** the dashboard already falls back to mock
