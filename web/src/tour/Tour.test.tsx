@@ -11,8 +11,8 @@ describe('Tour', () => {
       readFileSync: (path: string, encoding: 'utf8') => string
     }>('node:fs')
     const css = fs.readFileSync('src/tour/tour.css', 'utf8')
-    expect(css).toMatch(/@media\s*\(max-width:\s*480px\)/)
-    expect(css).toMatch(/\.tour\s*\{[^}]*max-width:\s*calc\(100vw - 2rem\)/)
+    expect(css).toMatch(/@media\s*\(max-width:\s*30rem\)/)
+    expect(css).toMatch(/\.tour\s*\{[^}]*max-width:\s*calc\(100vw - var\(--space-6\)\)/)
     expect(css).toMatch(/\.tour__footer,\s*\.tour__nav\s*\{[^}]*flex-wrap:\s*wrap/)
   })
 
