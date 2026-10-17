@@ -85,7 +85,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T341 — Test: pattern library urgency filter works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
