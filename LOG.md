@@ -385,3 +385,6 @@ T436 | light | codex | merged after orch branch update (bundle budget) | ~10k to
 T410 | standard | claude-sonnet | merged after orch branch update (bundle budget) | ~130k tok
 T434 | light | codex | merged after orch branch update (bundle budget) | ~7k tok
 T437 | heavy | claude-opus | merged first try | ~210k tok
+T435 | light | codex | merged after release | ~?k tok
+T442 | light | codex | merged first try | ~5k tok
+T440 | light | claude-opus | merged first try | ~75k tok
