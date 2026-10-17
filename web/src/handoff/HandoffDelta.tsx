@@ -33,6 +33,16 @@ function compare(flags: number, previousFlags: number): Comparison {
   return { tone: 'same', glyph: '=', label: 'Same as last shift' }
 }
 
+/** The same phrase the chip shows, in plain text, for a handoff that leaves the
+ * screen: the copied and read-aloud line `Handoff.tsx` builds. Null when the payload
+ * sent no comparison, so a trimmed `/handoff` leaves the line as it was rather than
+ * claiming "same" (T292, T311). One source for the wording, so a row and the note
+ * pasted from it can never say different things. */
+export function handoffDeltaLabel(flags: number, previousFlags?: number | null): string | null {
+  if (previousFlags === null || previousFlags === undefined) return null
+  return compare(flags, previousFlags).label
+}
+
 /** Is this resident's shift better or worse than the last one? (SPEC section 9.)
  *
  * A nurse coming on shift reads a handoff row's counts and has no way to tell a

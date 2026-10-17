@@ -88,6 +88,20 @@ const served: HandoffData = {
   summary: 'Flagged for review: 2 errors this session vs 0.58 normally over 14 days.',
 }
 
+/** The same unit with last shift's counts attached, the way `GET /handoff` sends them
+ * (`pipeline/src/routine_watch/handoff.py`): Mrs. K has two flagged sessions after a
+ * quiet shift, Mr. Chen is level with his, Mrs. Ahmed was quiet both times. `served`
+ * carries no `previous_flags` at all, which is the older-or-trimmed payload (T292,
+ * T311) and has nothing to compare. */
+const compared: HandoffData = {
+  ...served,
+  residents: [
+    { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, previous_flags: 0, pending_review: 1, trending: false },
+    { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 1, previous_flags: 1, pending_review: 0, trending: true },
+    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', room: '108', flags: 0, previous_flags: 0, pending_review: 0, trending: false },
+  ],
+}
+
 describe('Handoff', () => {
   it('formats the summary and one complete line per resident', () => {
     const text = handoffText(mockHandoff)
@@ -101,6 +115,24 @@ describe('Handoff', () => {
     expect(text).toContain('Error score trending up')
     expect(text).not.toMatch(/diagnos/i)
     expect(text).not.toMatch(/unavailable/i)
+  })
+
+  it("carries each row's comparison into the copied handoff line", () => {
+    const text = handoffText(compared)
+
+    expect(text).toContain(
+      'Mrs. K, Room 204: 2 flagged sessions, 1 unreviewed alert, No upward trend, '
+      + '2 more than last shift',
+    )
+    expect(text).toContain(
+      'Mr. Chen, Room 211: 1 flagged session, 0 unreviewed alerts, Error score trending up, '
+      + 'Same as last shift',
+    )
+    // With no previous count the line ends where it always did: no dangling comma,
+    // and nothing claiming a comparison the payload never sent.
+    expect(handoffText(served).split('\n')[1])
+      .toBe('Mrs. K, Room 204: 2 flagged sessions, 1 unreviewed alert, No upward trend')
+    expect(handoffText(served)).not.toMatch(/last shift/)
   })
 
   it('copies the handoff and announces success for two seconds', async () => {
@@ -144,6 +176,9 @@ describe('Handoff', () => {
       expect(screen.getByText(resident.name)).toBeTruthy()
     }
     expect(screen.getAllByRole('listitem')).toHaveLength(mockHandoff.residents.length)
+    // The mock carries last shift's counts too, so a nurse reads better or worse
+    // offline rather than only against a live pipeline.
+    expect(screen.getByText('2 more than last shift')).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toContain('Offline')
   })
 
@@ -167,6 +202,34 @@ describe('Handoff', () => {
     expect(screen.getByText('1 alert not reviewed yet')).toBeTruthy()
     expect(screen.getByText('Error score trending up')).toBeTruthy()
     expect(screen.getByText('No change flagged')).toBeTruthy()
+  })
+
+  it('says whether each row is better or worse than last shift, in words', async () => {
+    serve(compared)
+
+    render(<Handoff onBack={() => {}} />)
+
+    // Two flagged sessions is good news after four and bad news after none, so the
+    // comparison is read beside the chip that counts them, never on its own.
+    const flagsChip = await screen.findByText('2 sessions above baseline')
+    expect(flagsChip.parentElement?.textContent).toContain('2 more than last shift')
+    const chenRow = screen.getByText('Mr. Chen').closest('li')
+    expect(chenRow?.textContent).toMatch(/same as last shift/i)
+    // A quiet shift after a quiet shift gets its own phrase, not a bare "same".
+    const ahmedRow = screen.getByText('Mrs. Ahmed').closest('li')
+    expect(ahmedRow?.textContent).toContain('Nothing flagged either shift')
+  })
+
+  it('compares nothing when the payload sent no previous count', async () => {
+    serve(served)
+
+    render(<Handoff onBack={() => {}} />)
+
+    // An older or trimmed `/handoff` has no last shift to compare against, which is
+    // not the same as no change (T292, T311).
+    await screen.findByText('2 sessions above baseline')
+    expect(screen.queryByText(/than last shift/)).toBeNull()
+    expect(screen.queryByText(/either shift/)).toBeNull()
   })
 
   it("reads each row against that resident's own normal, not a shared one", async () => {

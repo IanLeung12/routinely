@@ -14,6 +14,7 @@ import { Loading } from '../ui/Loading.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { fetchHandoff } from './api.ts'
 import type { HandoffResult } from './api.ts'
+import { HandoffDelta, handoffDeltaLabel } from './HandoffDelta.tsx'
 import type { Handoff as HandoffData, HandoffResident, PausedRoom } from './types.ts'
 import './handoff.css'
 
@@ -143,11 +144,16 @@ export function handoffText(
   return [
     h.summary,
     ...(paused ? [paused] : []),
-    ...h.residents.map((resident) =>
-      `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
-      + `${plural(resident.pending_review, 'unreviewed alert')}, `
-      + (resident.trending ? 'Error score trending up' : 'No upward trend'),
-    ),
+    ...h.residents.map((resident) => {
+      // The row's own phrase, last: a nurse reading the line elsewhere needs the same
+      // "better or worse than last shift" the screen showed (T324/T350). Nothing is
+      // appended when the payload sent no comparison, so the line stays as it was.
+      const delta = handoffDeltaLabel(resident.flags, resident.previous_flags)
+      return `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
+        + `${plural(resident.pending_review, 'unreviewed alert')}, `
+        + (resident.trending ? 'Error score trending up' : 'No upward trend')
+        + (delta ? `, ${delta}` : '')
+    }),
   ].join('\n')
 }
 
@@ -318,6 +324,11 @@ export function Handoff({
                       {chip.label}
                     </span>
                   ))}
+                  {/* Beside the counts, not under them: two flagged sessions is good
+                      news after four and bad news after none, so the comparison is
+                      read with the chip that names them (T324). Same chip shape and
+                      the same wrap at phone width, so no new styles. */}
+                  <HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />
                 </span>
                 {onOpenAlert && resident.pending_review > 0 && alertIds[resident.resident_id] && (
                   <Button
