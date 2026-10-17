@@ -382,7 +382,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T250 — Review: /ws/live message protocol has no contract
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
