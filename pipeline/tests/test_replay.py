@@ -31,6 +31,7 @@ from routine_watch.contracts import (
     StepSource,
 )
 from routine_watch.replay import (
+    NO_PATTERN,
     SCENARIOS_DIR,
     Expected,
     HistorySession,
@@ -179,6 +180,30 @@ def test_tea_no_kettle_comes_from_capture_frames() -> None:
     assert result["flag"] is False
 
 
+def test_pattern_sudden_change_is_the_top_pattern() -> None:
+    result = replay(SCENARIOS_DIR / "pattern_sudden_change")
+    assert result["flag"] is True
+    assert result["top_pattern"] == "sudden_change"
+
+
+def test_pattern_slow_drift_is_the_top_pattern() -> None:
+    result = replay(SCENARIOS_DIR / "pattern_slow_drift")
+    assert result["flag"] is True
+    assert result["top_pattern"] == "slow_drift"
+
+
+def test_pattern_none_matches_no_pattern() -> None:
+    result = replay(SCENARIOS_DIR / "pattern_none")
+    assert result["flag"] is True
+    assert result["top_pattern"] == NO_PATTERN
+
+
+def test_a_flag_with_no_baseline_has_no_pattern() -> None:
+    """`tea_skip_teabag_pour_twice` has a baseline; a scenario with none never does."""
+    result = replay(SCENARIOS_DIR / "tea_normal")
+    assert result["top_pattern"] == NO_PATTERN
+
+
 def test_scenario_frames_are_valid_capture_records() -> None:
     """The scenario files really are the format the live camera produces."""
     path = SCENARIOS_DIR / "tea_no_kettle" / "frames.jsonl"
@@ -297,6 +322,7 @@ def result_for(**overrides: object) -> dict[str, object]:
         "flag": False,
         "score": 0.0,
         "assisted": False,
+        "top_pattern": NO_PATTERN,
     }
     return fields | overrides
 
@@ -327,6 +353,25 @@ def test_optional_assertions_are_only_checked_when_the_file_sets_them() -> None:
 def test_an_unknown_key_in_expected_yaml_is_a_failure() -> None:
     with pytest.raises(ValueError, match="flagg"):
         Expected.model_validate({"steps": [], "errors": [], "flag": True, "flagg": True})
+
+
+def test_top_pattern_is_only_checked_when_the_file_sets_it() -> None:
+    # Absent: a scenario without the key is unaffected by whatever the result holds.
+    assert compare(expected_for(), result_for(top_pattern="sudden_change")) == []
+    # Match.
+    drift = result_for(top_pattern="slow_drift")
+    assert compare(expected_for(top_pattern="slow_drift"), drift) == []
+    assert compare(expected_for(top_pattern="none"), result_for(top_pattern="none")) == []
+    # Mismatch.
+    diff = compare(expected_for(top_pattern="sudden_change"), result_for(top_pattern="slow_drift"))
+    assert diff and "sudden_change" in diff[0] and "slow_drift" in diff[0]
+
+
+def test_top_pattern_rejects_an_unknown_pattern_id() -> None:
+    with pytest.raises(ValueError, match="top_pattern"):
+        Expected.model_validate(
+            {"steps": [], "errors": [], "flag": True, "top_pattern": "not_a_real_pattern"}
+        )
 
 
 # -------------------------------------------------------------- broken scenarios

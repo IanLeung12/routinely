@@ -1,0 +1,48 @@
+# T113: SPEC §7.5's slow-drift pattern. Cold water and no stir - three omissions,
+# the same shape as tea_no_kettle plus one more - landing at the end of three weeks
+# of hesitation climbing night after night. `routine_watch.drift.drift` reads that
+# as a trend rather than a sudden spike, which is what the library's `slow_drift`
+# pattern needs: a steady rise over weeks, not days (SPEC §7.5).
+
+task: tea
+
+steps:
+  - get_cup
+  - teabag_in_cup
+  - pour
+  - remove_teabag
+
+errors:
+  - { type: omission, step: fill_kettle }
+  - { type: omission, step: boil }
+  - { type: omission, step: stir }
+score: 9.0 # three omissions, 3.0 each
+
+# Two quiet weeks, then a week of hesitation climbing a little further each day -
+# the steady rise `drift.drift` needs at least 7 days of to call a trend.
+history:
+  - { hours_ago: 504, errors: {} }
+  - { hours_ago: 480, errors: {} }
+  - { hours_ago: 456, errors: {} }
+  - { hours_ago: 432, errors: {} }
+  - { hours_ago: 408, errors: {} }
+  - { hours_ago: 384, errors: {} }
+  - { hours_ago: 360, errors: {} }
+  - { hours_ago: 336, errors: {} }
+  - { hours_ago: 312, errors: {} }
+  - { hours_ago: 288, errors: {} }
+  - { hours_ago: 264, errors: {} }
+  - { hours_ago: 240, errors: {} }
+  - { hours_ago: 216, errors: {} }
+  - { hours_ago: 192, errors: {} }
+  - { hours_ago: 168, errors: { hesitation: 2 } }
+  - { hours_ago: 144, errors: { hesitation: 3 } }
+  - { hours_ago: 120, errors: { hesitation: 4 } }
+  - { hours_ago: 96, errors: { hesitation: 5 } }
+  - { hours_ago: 72, errors: { hesitation: 6 } }
+  - { hours_ago: 48, errors: { hesitation: 7 } }
+  - { hours_ago: 24, errors: { hesitation: 8 } }
+
+# Yesterday's session and today's both land above this resident's own threshold.
+flag: true
+top_pattern: slow_drift
