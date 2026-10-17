@@ -565,7 +565,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T168 — Review: live push alert text uses the raw resident id ("mrs-k")
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: bug
@@ -574,7 +574,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
 - owner: max_API_light
 - claimed: 2026-10-17T08:40Z
-- pr: —
+- pr: #148
+- rating: 5/5 clear
 
 What: The push sent in `live.session_messages` says "A session just flagged a change for mrs-k to review." A nurse sees the slug, not the name. Have `_resident_flagged` look the resident up once (one `demo_residents()` call) and use `resident["name"]` in the summary.
 Interface: Read only `live.py` lines 250-290 and `tests/test_live_notify.py`. Keep `alert_id` = `f"alert-{resident_id}"` (matches `alerts.py`).
