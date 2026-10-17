@@ -116,3 +116,9 @@ T115 | light | claude-sonnet | merged first try | ~15k tok
 T109 | standard | claude-sonnet | merged after release (session ended early, WIP saved) | ~35k tok
 T116 | light | codex | merged first try | ~4k tok
 T136 | light | claude-sonnet | merged first try | ~15k tok
+T121 | standard | claude-sonnet | merged first try | ~95k tok
+T117 | light | codex | merged first try | ~5k tok
+T131 | standard | claude-sonnet | merged first try | ~45k tok
+T134 | light | claude-sonnet | merged first try | ~5k tok
+T137 | light | claude-sonnet | merged first try | ~10k tok
+T135 | light | codex | merged first try | ~4k tok

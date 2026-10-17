@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 13d85b2
+- last-reviewed: a13d35a
 
 ## Tasks
 
@@ -458,3 +458,104 @@ Interface: `tests/scenarios/pattern_executive/{steps.jsonl,expected.yaml}` in th
 Acceptance:
 - `scripts/e2e.sh` passes with the new scenario included and `top_pattern: executive_pattern`.
 - Header comment in expected.yaml explains the shape in 2-4 lines.
+
+### T142 — Pattern scenario: evening-only worsening
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/pattern_evening_worsening/
+- owner: —
+- claimed: —
+- pr: —
+
+What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `evening_worsening` so e2e proves the library ranks it top when errors cluster in evening sessions while mornings stay clean.
+Interface: `tests/scenarios/pattern_evening_worsening/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/pattern_slow_drift/` (incl. `history:` and `top_pattern: evening_worsening`). Read the `evening_worsening` entry in `pipeline/src/routine_watch/patterns_library.py` (it requires `evening_concentrated`) and how `extract_features` in `patterns.py` derives that from `hours_ago`. Don't change pipeline code; if the scenario format can't express evening sessions, set the task blocked with the reason.
+Acceptance:
+- `scripts/e2e.sh` passes with the new scenario and `top_pattern: evening_worsening`.
+- Header comment in expected.yaml explains the shape in 2-4 lines.
+
+### T143 — Pattern scenario: motor slowing after a sedating medication
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/pattern_motor_slowing/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same as T142 for SPEC §7.5's `motor_slowing` pattern: slower steps and hesitation without new sequence errors.
+Interface: `tests/scenarios/pattern_motor_slowing/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/pattern_slow_drift/`, `top_pattern: motor_slowing`. Read the `motor_slowing` entry in `pipeline/src/routine_watch/patterns_library.py` for its signals. Don't change pipeline code; if unreachable without code changes, set blocked with the reason.
+Acceptance:
+- `scripts/e2e.sh` passes with the new scenario and `top_pattern: motor_slowing`.
+- Header comment in expected.yaml explains the shape in 2-4 lines.
+
+### T144 — API: POST /demo/reset puts the demo back to its seeded history
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_demo_reset.py (new), scripts/smoke.sh
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Demo robustness (SPEC §10, §13): after a rehearsal, Mrs. K stays flagged from the live session, so the next run of demo beat 4 never happens unless the server restarts. One endpoint resets recorded live sessions and feedback so the demo can be rerun on stage in a second.
+Interface: `POST /demo/reset` → `{"ok": true}`; calls `session_log.reset()` and the equivalent reset in `routine_watch.feedback` (add a `reset()` there only if missing, in this PR). Only enabled when `OFFLINE_MODE` or a new `DEMO_RESET=1` env is set, else 404; document `DEMO_RESET` in `.env.example`.
+Acceptance:
+- Test: record a live session for mrs-k (flagged), POST /demo/reset, `/residents` shows her back at her seeded status; with the env unset the route is 404.
+- smoke.sh hits the route once; `scripts/ci.sh` passes.
+
+### T145 — Live session "Flagged for review" banner links straight to the alert
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Demo beats 4→5 (SPEC §10): when the live session flags, the nurse should get to the evidence in one tap. The banner at `LiveSession.tsx` ~line 105 says "Flagged for review" but has no way to open the alert, even though `ended.alert_id` is there.
+Interface: add optional prop `onOpenAlert?: (alertId: string) => void` to `LiveSessionProps`; when `ended.flag && ended.alert_id && onOpenAlert`, render a `<button>` "Open alert" inside the banner calling it. In `App.tsx` pass `onOpenAlert={setOpenAlert}`. Read only those two files and `useLiveSession.ts` (for the `ended` type).
+Acceptance:
+- LiveSession test: flagged session_end with alert_id shows the button and clicking calls onOpenAlert with the id; clear session shows no button.
+- `cd web && npm test -- --run` passes.
+
+### T146 — Docs: CODEMAP notes for live push alerts and placeholder alert errors
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes.
+Interface: read `pipeline/src/routine_watch/live.py` (session_messages docstring, `_resident_flagged`), `notify.py` (`get_notifier`), `alerts.py` (`_task_errors`, `_distinct_clauses`) and add 2-4 lines of notes each under the existing pipeline section. Notes only; the file list is generated.
+Acceptance:
+- `python3 scripts/codemap.py --check` (if it exists) and `scripts/ci.sh` pass.
+
+### T147 — Test: every shippable pattern has a replayable scenario
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: T141, T142, T143
+- area: pipeline/tests/test_pattern_scenarios_cover_library.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard SPEC §8 ("at least one replayable scenario per pattern") so a new pattern can't ship without one.
+Interface: read `pipeline/src/routine_watch/patterns_library.py` (the list of patterns) and `tests/scenarios/*/expected.yaml`. Test collects every `top_pattern:` value from scenarios and asserts it covers every library `pattern_id` except `one_sided_change` (SPEC keeps it out of the demo).
+Acceptance:
+- `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
