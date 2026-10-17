@@ -445,14 +445,14 @@ Acceptance:
 - If the meds graph can't express it, stop and set the task blocked with the reason (don't change pipeline code).
 
 ### T194 — smoke.sh: seeded alert survives /demo/reset
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: T178
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T09:28Z
 - pr: —
 
 What: Reset must only drop live sessions and feedback, not the seeded demo history. After smoke.sh's POST /demo/reset, check GET /alerts still returns at least one alert.
