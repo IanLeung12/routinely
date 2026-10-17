@@ -476,7 +476,7 @@ Interface: Read `web/src/overview/UnitOverview.tsx` and its test. With `@testing
 Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes; `scripts/ci.sh` passes.
 
 ### T296 — Scenarios: meds_unclear_not_error and meds_bad_sessions_far_apart
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -484,7 +484,8 @@ Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes
 - area: tests/scenarios/meds_unclear_not_error/, tests/scenarios/meds_bad_sessions_far_apart/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T14:39Z
-- pr: —
+- pr: #284
+- rating: 5/5 clear
 
 What: The meds routine lacks the two "must not flag" scenarios the tea routine has. Mirror `tests/scenarios/tea_unclear_not_error` and `tests/scenarios/tea_bad_sessions_far_apart` for meds (step names from the meds task graph and the existing `meds_*` scenarios), so a low-confidence meds moment is never counted as an error and two isolated bad meds sessions do not raise a flag.
 Interface: two new scenario dirs, each `expected.yaml` + `steps.jsonl` (format in `tests/scenarios/README.md`). No pipeline code changes; if a scenario exposes a pipeline bug, say so in the PR and leave the expectation matching SPEC §7.
