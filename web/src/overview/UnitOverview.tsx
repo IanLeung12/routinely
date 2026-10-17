@@ -11,7 +11,7 @@ import type { ResidentSummary, ResidentStatus } from './types.ts'
 
 const STATUS_ORDER: Record<ResidentStatus, number> = { flagged: 0, watch: 1, normal: 2 }
 
-type UnitFilter = 'all' | 'flagged' | 'watch'
+type UnitFilter = 'all' | 'flagged' | 'watch' | 'paused'
 
 const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -23,8 +23,13 @@ function sortResidents(residents: ResidentSummary[]): ResidentSummary[] {
   return [...residents].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
 }
 
-function applyFilter(residents: ResidentSummary[], filter: UnitFilter): ResidentSummary[] {
+function applyFilter(
+  residents: ResidentSummary[],
+  filter: UnitFilter,
+  pausedRooms: string[],
+): ResidentSummary[] {
   if (filter === 'all') return residents
+  if (filter === 'paused') return residents.filter((resident) => pausedRooms.includes(resident.room))
   return residents.filter((resident) => resident.status === filter)
 }
 
@@ -97,7 +102,7 @@ export function UnitOverview({
     return <EmptyState message="No residents on this unit yet." />
   }
 
-  const filtered = applyFilter(residents, filter)
+  const filtered = applyFilter(residents, filter, pausedRooms)
 
   return (
     <>
@@ -116,13 +121,23 @@ export function UnitOverview({
             {label}
           </Button>
         ))}
+        <Button
+          variant="secondary"
+          className="unit-filter__button"
+          aria-pressed={filter === 'paused'}
+          onClick={() => setFilter('paused')}
+        >
+          {`Paused (${pausedRooms.length})`}
+        </Button>
       </div>
       {filtered.length === 0 ? (
         <EmptyState
           message={
             filter === 'flagged'
               ? 'No residents flagged for review.'
-              : 'No residents to watch.'
+              : filter === 'paused'
+                ? 'No rooms paused.'
+                : 'No residents to watch.'
           }
         />
       ) : (

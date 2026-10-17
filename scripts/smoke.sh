@@ -37,53 +37,51 @@ get() {
   curl "${CURL_OPTS[@]}" "$1" 2>/dev/null
 }
 
+# Runs a python assertion over the parsed JSON $body (as `data`); any further
+# args are passed through to python as extra argv entries the expr can read
+# via sys.argv[2], sys.argv[3], ... PASSes/FAILs $label accordingly.
+check_json() {
+  local label="$1" body="$2" expr="$3"
+  shift 3
+  if python3 -c "
+import json, sys
+data = json.loads(sys.argv[1])
+assert $expr
+" "$body" "$@" 2>/dev/null; then
+    pass "$label"
+  else
+    fail "$label: unexpected body $body"
+  fi
+}
+
 if body=$(get "$API_URL/health"); then
   pass "GET /health -> $body"
 else
   fail "GET /health: no response from $API_URL (is 'scripts/dev.sh up' running?)"
 fi
 
+demo_room=""
 if residents=$(get "$API_URL/residents"); then
-  if python3 -c '
+  check_json "GET /residents -> non-empty, mrs-k present" "$residents" \
+    "isinstance(data, list) and data and any(r.get('id') == 'mrs-k' for r in data)"
+  demo_room=$(python3 -c '
 import json, sys
 data = json.loads(sys.argv[1])
-assert isinstance(data, list) and data, "empty list"
-assert any(r.get("id") == "mrs-k" for r in data), "mrs-k not found"
-' "$residents" 2>/dev/null; then
-    pass "GET /residents -> non-empty, mrs-k present"
-  else
-    fail "GET /residents: response was not a non-empty list containing mrs-k"
-  fi
+print(data[0]["room"])
+' "$residents" 2>/dev/null) || demo_room=""
 else
   fail "GET /residents: no response"
 fi
 
 if body=$(get "$API_URL/residents/mrs-k"); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert data.get("id") == "mrs-k"
-' "$body" 2>/dev/null; then
-    pass "GET /residents/mrs-k"
-  else
-    fail "GET /residents/mrs-k: unexpected body"
-  fi
+  check_json "GET /residents/mrs-k" "$body" "data.get('id') == 'mrs-k'"
 else
   fail "GET /residents/mrs-k: no response"
 fi
 
 if body=$(get "$API_URL/handoff"); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert data.get("window_hours") == 12, "window_hours not 12"
-assert isinstance(data.get("residents"), list) and data["residents"], "empty residents"
-assert isinstance(data.get("summary"), str) and data["summary"], "empty summary"
-' "$body" 2>/dev/null; then
-    pass "GET /handoff"
-  else
-    fail "GET /handoff: unexpected body $body"
-  fi
+  check_json "GET /handoff" "$body" \
+    "data.get('window_hours') == 12 and isinstance(data.get('residents'), list) and data['residents'] and isinstance(data.get('summary'), str) and data['summary']"
 else
   fail "GET /handoff: no response"
 fi
@@ -97,7 +95,8 @@ else
 fi
 
 ws_url="${API_URL/http/ws}/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000"
-if "$PIPELINE_PYTHON" -c '
+play_live_session() {
+  "$PIPELINE_PYTHON" -c '
 import asyncio, sys
 import websockets
 
@@ -107,7 +106,10 @@ async def main(url):
             pass
 
 asyncio.run(main(sys.argv[1]))
-' "$ws_url" 2>/dev/null; then
+' "$ws_url" 2>/dev/null
+}
+
+if play_live_session; then
   pass "live session played"
 else
   fail "live session: could not play $ws_url"
@@ -168,29 +170,13 @@ if [ -n "$replay_args" ]; then
   read -r resident_id session_id t_start t_end <<<"$replay_args"
 
   if body2=$(get "$API_URL/sessions/$session_id/replay?t_start=$t_start&t_end=$t_end"); then
-    if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert data.get("frames"), "empty frames"
-' "$body2" 2>/dev/null; then
-      pass "GET /sessions/$session_id/replay"
-    else
-      fail "GET /sessions/$session_id/replay: no frames in response"
-    fi
+    check_json "GET /sessions/$session_id/replay" "$body2" "data.get('frames')"
   else
     fail "GET /sessions/$session_id/replay: no response"
   fi
 
   if body3=$(get "$API_URL/residents/$resident_id/normal_replay?t_start=$t_start&t_end=$t_end"); then
-    if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert data.get("frames"), "empty frames"
-' "$body3" 2>/dev/null; then
-      pass "GET /residents/$resident_id/normal_replay"
-    else
-      fail "GET /residents/$resident_id/normal_replay: no frames in response"
-    fi
+    check_json "GET /residents/$resident_id/normal_replay" "$body3" "data.get('frames')"
   else
     fail "GET /residents/$resident_id/normal_replay: no response"
   fi
@@ -198,18 +184,8 @@ else
   fail "GET /sessions/<id>/replay and /residents/<id>/normal_replay: no alert error to derive session/resident/time window from"
 fi
 
-demo_room="204"
-
 if body=$(get "$API_URL/monitoring"); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert isinstance(data.get("paused_rooms"), list), "paused_rooms missing or not a list"
-' "$body" 2>/dev/null; then
-    pass "GET /monitoring -> $body"
-  else
-    fail "GET /monitoring: unexpected body $body"
-  fi
+  check_json "GET /monitoring -> $body" "$body" "isinstance(data.get('paused_rooms'), list)"
 else
   fail "GET /monitoring: no response"
 fi
@@ -221,15 +197,8 @@ else
 fi
 
 if body=$(get "$API_URL/monitoring"); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert sys.argv[2] in (data.get("paused_rooms") or []), "room not in paused_rooms"
-' "$body" "$demo_room" 2>/dev/null; then
-    pass "GET /monitoring shows $demo_room paused"
-  else
-    fail "GET /monitoring: expected $demo_room in paused_rooms, got $body"
-  fi
+  check_json "GET /monitoring shows $demo_room paused" "$body" \
+    "sys.argv[2] in (data.get('paused_rooms') or [])" "$demo_room"
 else
   fail "GET /monitoring after pause: no response"
 fi
@@ -249,15 +218,8 @@ else
 fi
 
 if body=$(get "$API_URL/monitoring"); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert sys.argv[2] not in (data.get("paused_rooms") or []), "room still in paused_rooms"
-' "$body" "$demo_room" 2>/dev/null; then
-    pass "GET /monitoring shows $demo_room resumed"
-  else
-    fail "GET /monitoring: expected $demo_room not in paused_rooms, got $body"
-  fi
+  check_json "GET /monitoring shows $demo_room resumed" "$body" \
+    "sys.argv[2] not in (data.get('paused_rooms') or [])" "$demo_room"
 else
   fail "GET /monitoring after resume: no response"
 fi
@@ -268,15 +230,7 @@ curl "${CURL_OPTS[@]}" -X PUT -H 'Content-Type: application/json' -d '{"on": tru
   "$API_URL/rooms/$demo_room/monitoring" >/dev/null 2>&1 || true
 
 if body4=$(curl "${CURL_OPTS[@]}" -X POST "$API_URL/demo/reset" 2>/dev/null); then
-  if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert data == {"ok": True}
-' "$body4" 2>/dev/null; then
-    pass "POST /demo/reset -> $body4"
-  else
-    fail "POST /demo/reset: unexpected body $body4"
-  fi
+  check_json "POST /demo/reset -> $body4" "$body4" "data == {'ok': True}"
 else
   fail "POST /demo/reset: no response (needs OFFLINE_MODE=true or DEMO_RESET=1 on the server)"
 fi
@@ -284,27 +238,9 @@ fi
 # Reset only forgets live sessions and feedback (its docstring), not the seeded
 # demo history, so playing the same session again must still flag mrs-k and show
 # up in /alerts afterwards.
-if "$PIPELINE_PYTHON" -c '
-import asyncio, sys
-import websockets
-
-async def main(url):
-    async with websockets.connect(url) as ws:
-        async for _ in ws:
-            pass
-
-asyncio.run(main(sys.argv[1]))
-' "$ws_url" 2>/dev/null; then
+if play_live_session; then
   if alerts_after_reset=$(get "$API_URL/alerts"); then
-    if python3 -c '
-import json, sys
-data = json.loads(sys.argv[1])
-assert isinstance(data, list) and len(data) > 0
-' "$alerts_after_reset" 2>/dev/null; then
-      pass "GET /alerts after reset"
-    else
-      fail "GET /alerts after reset: expected seeded demo history to survive reset, got $alerts_after_reset"
-    fi
+    check_json "GET /alerts after reset" "$alerts_after_reset" "isinstance(data, list) and len(data) > 0"
   else
     fail "GET /alerts after reset: no response"
   fi

@@ -300,6 +300,61 @@ describe('UnitOverview', () => {
 
     expect(screen.queryByText('Monitoring paused')).toBeNull()
   })
+
+  it('filters to only paused rooms and labels the button with the count', async () => {
+    stubFetch(mockResidents, ['204'])
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const pausedButton = await screen.findByRole('button', { name: 'Paused (1)' })
+    pausedButton.click()
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mrs. K'])
+    })
+    expect(screen.getByRole('button', { name: 'Paused (1)' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+  })
+
+  it('shows "Paused (0)" and keeps the other filters working when fetchPausedRooms fails', async () => {
+    stubFetch(mockResidents, new Error('network down'))
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    expect(await screen.findByRole('button', { name: 'Paused (0)' })).toBeTruthy()
+
+    screen.getByRole('button', { name: 'Flagged' }).click()
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mrs. K'])
+    })
+
+    screen.getByRole('button', { name: 'Watch' }).click()
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
+    })
+  })
+
+  it('shows "No rooms paused." when the paused filter is empty', async () => {
+    stubFetch(mockResidents, [])
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const pausedButton = await screen.findByRole('button', { name: 'Paused (0)' })
+    pausedButton.click()
+
+    expect(await screen.findByText('No rooms paused.')).toBeTruthy()
+    expect(screen.queryByRole('list')).toBeNull()
+  })
 })
 
 /** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
