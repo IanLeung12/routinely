@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 6b93111
-- next-area: contracts+api
+- last-reviewed: 3f1736c
+- next-area: scripts+ci
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
@@ -12,7 +12,6 @@
 - T124 mrs-k flagged before live session (beat 4)
 - T125 drift/evening/motor residents never watch (baseline absorbs drift)
 - T126 session_log leaks across tests; need conftest reset
-- T138 AlertContext unused/unstyled, dup of ContextTimeline
 - T182 false alarm un-flags -> alert 404, cause re-post fails
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
 - T292 web resident/handoff/monitoring types hand-mirrored (after T291)
@@ -34,5 +33,6 @@
 - T377 DEMO.md handoff beat after Close
 - T389 PrivacyPanel mobile test asserts nothing about phone CSS
 - T425 handoff summary counts unclear-camera rooms as quiet
+- T441 web replays api falls back to mock on non-ok (delete "succeeds" on 500)
 - (noted) REPLAY_DIR unset in compose (volume unused); demo replays reseed after restart if on disk
 - T436 preview.mjpg ACAO * lets any site read camera frames
