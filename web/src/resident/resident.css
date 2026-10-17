@@ -5,6 +5,12 @@
    index.css loads after this file in the dev module graph (main.tsx imports App, whose
    tree imports this, before its own `./index.css`) - without the extra specificity
    these rules lose the cascade to index.css's same-weight selectors. */
+.resident-detail__monitoring-message {
+  margin: 0;
+  color: var(--error-red-text);
+  font-size: var(--text-sm);
+}
+
 @media (max-width: 480px) {
   /* .resident-panels normally keeps a 19rem minimum column so panels don't get too
      cramped, but that minimum is wider than the viewport below ~352px and pushes the

@@ -6,6 +6,7 @@ import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { MonitoringToggle } from '../about/MonitoringToggle.tsx'
+import { fetchPausedRooms, setRoomMonitoring } from '../about/monitoringApi.ts'
 import { fetchDrift, fetchResident } from './api.ts'
 import type { ResidentDrift } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
@@ -39,6 +40,7 @@ export function ResidentDetail({
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [monitoring, setMonitoring] = useState(true)
+  const [monitoringMessage, setMonitoringMessage] = useState<string | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   /** Which resident focus has already landed on, so re-rendering after the monitoring
    * toggle changes (same resident, new data) doesn't steal focus back from the nurse. */
@@ -77,6 +79,26 @@ export function ResidentDetail({
     }
   }, [residentId, attempt])
 
+  /** Loads this room's real pause state once the resident (and so its room) is known.
+   * Keeps today's local-only "on" default if the API can't be reached (mock mode). */
+  useEffect(() => {
+    if (loaded === null || loaded.residentId !== residentId || loaded.status !== 'ok' || loaded.resident === null) {
+      return
+    }
+    const room = loaded.resident.room
+    let cancelled = false
+    fetchPausedRooms()
+      .then((pausedRooms) => {
+        if (!cancelled) {
+          setMonitoring(!pausedRooms.includes(room))
+        }
+      })
+      .catch(() => { /* API unreachable: keep the local-only "on" default. */ })
+    return () => {
+      cancelled = true
+    }
+  }, [residentId, loaded])
+
   let body: ReactNode
   if (loaded === null || loaded.residentId !== residentId) {
     body = <Loading label="Loading resident…" />
@@ -99,8 +121,22 @@ export function ResidentDetail({
         <header className="resident-detail__header">
           <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
           <span className="resident-room">Room {resident.room}</span>
-          <MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />
+          <MonitoringToggle
+            room={resident.room}
+            on={monitoring}
+            onChange={(next) => {
+              setMonitoring(next)
+              setMonitoringMessage(null)
+              setRoomMonitoring(resident.room, next).catch(() => {
+                setMonitoring(!next)
+                setMonitoringMessage("Couldn't change monitoring. Try again.")
+              })
+            }}
+          />
           <StatusChip status={resident.status} />
+          {monitoringMessage && (
+            <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
+          )}
         </header>
 
         <div className="resident-panels">
