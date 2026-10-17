@@ -117,7 +117,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T162 — Test: live websocket path finds the same errors and flag as scenario replay
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -125,7 +125,8 @@ Acceptance:
 - area: pipeline/tests/test_live_matches_replay.py (new)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:05Z
-- pr: —
+- pr: #171
+- rating: 5/5 clear
 
 What: The SPEC §10 fallback plays recorded scenarios through `live.session_messages`, while `scripts/e2e.sh` checks them through `replay.py`. Nothing asserts the two agree, so the demo could show different errors from what CI tested.
 Interface: For each `tests/scenarios/*/` playable live, run `session_messages(scenario_path(name), speed=<very fast>)`, collect error messages and the final flag message, compare with `expected.yaml` (error type/step multiset, `flag`). Read only `pipeline/src/routine_watch/live.py` and `replay.py`. Scenarios that legitimately can't play live get an explicit skip with a reason.
