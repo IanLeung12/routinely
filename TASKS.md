@@ -63,7 +63,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T076 — Tests for ContextTimeline and BaselineChart
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -71,7 +71,7 @@ Acceptance:
 - area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T07:44Z
-- pr: —
+- pr: #110
 
 What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
 Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/types.ts, and web/src/resident/format.test.ts (for test style). Use vitest + @testing-library/react like the existing tests.
