@@ -24,13 +24,13 @@ Acceptance:
 - Short "Layout" section added to README.md describing each dir.
 
 ### T002 — Event contracts
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - deps: T001
 - area: contracts/, pipeline/routine_watch/contracts.py, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T03:22Z
 - pr: —
 
 What: Define the data that flows between stages (SPEC §6, §7, §16): CaptureFrame (the single per-frame JSONL record: timestamp, pose skeleton keypoints, MediaPipe hand landmarks, object boxes; used by live camera, fallback video, tests and scenarios), ObjectDetection, StepEvent (step id, objects, t_start, t_end, confidence, source rule|verifier, unclear flag), TaskError (type ∈ omission|sequence|perseveration|substitution|hesitation|abandonment, step, timestamps, evidence refs, self_corrected), Session (resident, task, start/end, assisted flag, score), Alert (resident, sessions, errors, baseline comparison, summary, suggested checks, feedback).
