@@ -115,7 +115,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T081 — Live session result counts toward the resident's flag (demo step 4)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
