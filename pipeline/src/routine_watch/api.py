@@ -18,10 +18,11 @@ from pydantic import BaseModel
 from . import __version__
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
-from .demo import demo_residents
+from .demo import DEMO_NOW, demo_residents
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
+from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
 from .replay import ReplayError
 
@@ -140,6 +141,18 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     )
     _feedback_store.record(alert_id, alert.resident_id, feedback)
     return _alert_payload(alert)
+
+
+@app.get("/handoff")
+def shift_handoff(hours: Annotated[int, Query(ge=1, le=168)] = DEFAULT_WINDOW_H) -> dict:
+    """Shift handoff (SPEC section 9): who changed in the `hours` before now.
+
+    One row per resident - sessions flagged for review, alerts nobody has reviewed yet
+    and whether their score is trending up - plus a plain-language summary of the whole
+    window (`routine_watch.handoff`). The window ends at the demo's clock, which is also
+    what a live session is recorded against, so a session played on stage is inside it.
+    """
+    return build_handoff(DEMO_NOW, hours, feedback=_feedback_store)
 
 
 @app.get("/sessions/{session_id}/replay")
