@@ -340,15 +340,16 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T445 — Bug: flaky unit test MyRoutine "says nobody else can see this…" (lazy section not loaded within findBy's 1 s)
-- status: claimed
+- status: todo
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: web/src/people/MyRoutine.test.tsx
 - source: tester
-- owner: ian-claude-standard
-- claimed: 2026-10-17T23:01Z
+- owner: —
+- claimed: —
+- note: released by ian-claude-standard: run ended without progress; partial work on branch task/T445-wip-2322: start from it (git switch task/T445-wip-2322 && git merge origin/main)
 
 What: `scripts/ci.sh` on main @64ab65c failed in web tests: `src/people/MyRoutine.test.tsx > MyRoutine > says nobody else can see this when the person is watching themselves` → `Unable to find role="heading" and name "How this week looks"`; DOM still shows "Loading your week…". `MyRoutine.tsx` loads `RoutineSections` with `React.lazy` (line ~25), and the first test in the file pays the dynamic-import/transform cost, which exceeds `findByRole`'s default 1000 ms timeout on a loaded box. Repro: `cd web && for i in 1 2 3; do npx vitest run src/people/MyRoutine.test.tsx | grep "Tests "; done` failed 1 of 3 runs in isolation (plus the full ci.sh run). Expected: always passes. It's a test timing race, not a product bug.
 Interface: test-only change. In `renderRoutine` in `MyRoutine.test.tsx`, wait longer (e.g. `findByRole(..., {}, { timeout: 5000 })`) or preload the lazy module in a `beforeAll` (`await import('../person/routine/RoutineSections.tsx')`). Do not change `MyRoutine.tsx`. Check other tests that render lazy screens with plain `findBy*` for the same race.
