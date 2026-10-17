@@ -450,7 +450,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T325 — Test: monitoring toggle works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -458,7 +458,8 @@ Acceptance:
 - area: web/src/about/MonitoringToggle.keyboard.test.tsx
 - owner: Max_codex_light
 - claimed: 2026-10-17T16:23Z
-- pr: —
+- pr: #315
+- rating: 5/5 clear
 
 What: The privacy monitoring switch is a key trust control; prove a nurse can pause and resume it with the keyboard alone.
 Interface: read `web/src/about/MonitoringToggle.tsx`, `web/src/about/MonitoringToggle.test.tsx` and `web/src/about/PrivacyPanel.keyboard.test.tsx` (copy its user-event keyboard style). New test file only; no component changes (if a bug is found, mark the case `it.fails` and note it in the PR).
