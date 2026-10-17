@@ -224,7 +224,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T269 — Contracts: JSON Schema for GET/PUT /monitoring payloads
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
