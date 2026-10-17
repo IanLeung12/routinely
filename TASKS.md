@@ -411,14 +411,14 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` passes; `scripts/ci.sh` passes
 
 ### T201 — Scenario: medication routine abandoned halfway
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/meds_abandoned/
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:53Z
 - pr: —
 
 What: add a meds scenario where the resident stops after the first steps, mirroring tea_abandoned, so the second task's abandonment path is covered end to end.
