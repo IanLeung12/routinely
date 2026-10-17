@@ -298,14 +298,14 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T226 — Ghost replay: say the figure is a stand-in for demo recordings
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:17Z
 - pr: —
 - note: released by ian-claude-standard: run ended without progress; partial work on branch task/T226-wip-1052: start from it (git switch task/T226-wip-1052 && git merge origin/main)
 
