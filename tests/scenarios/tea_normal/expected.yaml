@@ -1,0 +1,35 @@
+# A resident makes tea with nothing wrong with it.
+#
+# The point of the scenario is the things that are *not* errors (SPEC section 7): the
+# kettle is filled before the cup is fetched one day and after it the next, and sugar
+# is skipped because it is optional. Neither may ever show up as an error, so this is
+# the scenario that catches a classifier that has become too eager.
+#
+# Written at step level: the recogniser is not here yet, and these steps are what it
+# will be asked to produce. See README.md.
+
+task: tea
+
+steps:
+  - fill_kettle
+  - get_cup # the other way round from tea_skip_teabag_pour_twice, and just as correct
+  - boil
+  - teabag_in_cup
+  - pour
+  - milk # optional, taken
+  - stir
+  - remove_teabag # sugar is optional and skipped: not an omission
+
+errors: []
+score: 0.0
+
+# Four quiet sessions over the past four days, so there is a baseline to be measured
+# against. A session this good can never flag.
+history:
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 1.0 }
+  - { hours_ago: 48, score: 0.0 }
+  - { hours_ago: 24, errors: { hesitation: 1 } }
+  - { hours_ago: 20, score: 0.0 }
+
+flag: false

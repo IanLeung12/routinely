@@ -7,6 +7,7 @@ cd "$(git rev-parse --show-toplevel)"
 echo "== repo tooling"
 python3 -m py_compile scripts/tasks.py
 bash -n scripts/worker.sh
+bash -n scripts/e2e.sh
 
 for proj in $(find . -maxdepth 2 -name pyproject.toml -not -path "./.tasks/*"); do
   d=$(dirname "$proj"); echo "== python: $d"
@@ -20,5 +21,8 @@ for pkg in */package.json; do
   d=$(dirname "$pkg"); echo "== node: $d"
   (cd "$d" && npm ci --no-audit --no-fund && npm run lint --if-present && npm test --if-present && npm run build --if-present)
 done
+
+echo "== e2e: scenario replay"
+bash scripts/e2e.sh
 
 echo "CI OK"
