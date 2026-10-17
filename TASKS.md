@@ -89,14 +89,14 @@ Acceptance:
 - `scripts/e2e.sh` passes locally and is called from `scripts/ci.sh`.
 
 ### T006 — Dev stack script
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - deps: T001
 - area: scripts/dev.sh, README.md (Run section)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:20Z
-- pr: —
+- pr: #14
 
 What: One command to bring the whole local stack up and down, used by humans and the tester.
 Interface: `scripts/dev.sh up` starts API + dashboard in the background (logs to `.dev/`), waits until healthy, prints `DASHBOARD_URL=...` and `API_URL=...`; `scripts/dev.sh down` stops everything; `scripts/dev.sh status`. Works with no API keys (`OFFLINE_MODE=true`, mock data).
