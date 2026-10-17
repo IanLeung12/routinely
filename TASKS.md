@@ -479,14 +479,14 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/pattern_motor_slowing/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:22Z
 - pr: —
 
 What: Same as T142 for SPEC §7.5's `motor_slowing` pattern: slower steps and hesitation without new sequence errors.
