@@ -461,7 +461,7 @@ What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the H
 Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.
 
 ### T423 — Person view: person-facing wording for status and pattern notes
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
