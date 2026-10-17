@@ -394,7 +394,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T131 — Push alert fires once when a live session flags a resident
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
