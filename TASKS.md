@@ -426,13 +426,13 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T043 — Live session screen (WebSocket client + mock stream)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: —
 - area: web/src/live/LiveSession.tsx, web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx, web/src/App.tsx (add the nav entry only)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:14Z
 - pr: —
 
 What: SPEC §9 screen 3 and §10 step 3: skeleton view next to the task map; steps turn green, errors flash red (omission) or amber (repeat/sequence). Consumes the T029 WebSocket protocol and falls back to a scripted mock stream, so the screen works before T029 lands and when the API is down.
