@@ -551,14 +551,14 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T440 — Bug: flaky unit test test_frames_in_thread_hands_over_every_record_in_order
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: pipeline/tests/test_api_live_camera.py
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T22:06Z
 - pr: —
 - source: orchestrator
 
