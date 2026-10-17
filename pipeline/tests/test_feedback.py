@@ -128,3 +128,12 @@ def test_replacing_cause_does_not_double_count():
     store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="forgot-step")
     store.record("alert-1", "res-1", _feedback(FeedbackVerdict.CONFIRMED), cause="other")
     assert store.cause_counts("res-1") == {"other": 1}
+
+
+def test_reset_puts_threshold_and_weights_back_to_base():
+    store = FeedbackStore()
+    store.record("alert-1", "res-1", _feedback(FeedbackVerdict.FALSE_ALARM), cause="forgot-step")
+    store.reset()
+    assert store.threshold("res-1", base=0.5) == 0.5
+    assert store.get("alert-1") is None
+    assert store.cause_of("alert-1") is None
