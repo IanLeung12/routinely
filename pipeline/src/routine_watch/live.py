@@ -68,7 +68,11 @@ Two things follow from classifying an unfinished session, and both are deliberat
   it into that resident's history, which is what makes their sparkline spike and,
   when it is the second qualifying session inside the window, puts the flag and its
   alert on the next `/residents` and `/alerts`. A session that is cut short - the
-  dashboard closing the socket - is never recorded, because it never finished.
+  dashboard closing the socket - is never recorded, because it never finished, and
+  nor is an **unclear** one (`routine_watch.quality`, SPEC section 12): too little of
+  the capture can be trusted to make it one of this resident's sessions, so it is
+  streamed and scored 0.0 like any session the pipeline cannot read, and then left
+  out of their history rather than counted toward a flag.
 
 **The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
@@ -115,6 +119,7 @@ from .contracts import (
 from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents
 from .errors import classify_errors
 from .notify import Notifier, get_notifier
+from .quality import session_quality
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
 from .stick_figure import HAND_SPAN, REST, Point, centre_of, reaching_for
 from .tasks import TaskGraph
@@ -288,7 +293,16 @@ async def session_messages(
 
     was_flagged = _resident_flagged(resident_id)
     score, assisted, _recording_flag = score_session(scenario, final, events)
-    _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
+    # An unclear session is nobody's history: there is nothing in it to trust about
+    # this resident (SPEC section 12), which is why `replay.score_session` neither
+    # scores nor flags it. Recording it anyway would have it counted all the same -
+    # `routine_watch.demo` scores a recorded session from its errors again and only
+    # leaves out assisted ones - so its errors would sit in the 24-48 h window the
+    # flag is read over and bad lighting alone could flag a change for review.
+    if session_quality(events) == "ok":
+        _record(
+            resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t
+        )
     # One reading of the resident, taken once this session is one of theirs: it is both
     # what a push alert goes out for and what `session_end` reports, so the live screen
     # cannot say anything the dashboard does not (see "the `flag` is the resident's").

@@ -202,6 +202,11 @@ export type Handoff = {
  * the window that scored above this resident's own threshold, which is the evidence a flag
  * rests on rather than the flag itself: one bad session never alerts (SPEC section 7).
  * `pending_review` counts the alerts raised for them that nobody has given a verdict on yet.
+ * `previous_flags` is the same count for the window before this one, so a nurse coming on shift
+ * can read whether this resident is getting better or worse rather than only a number.
+ * `previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it was added
+ * after the payload shipped, so an older or trimmed handoff still validates (T292, T311) and a
+ * dashboard reading it knows "no comparison sent" from "none last shift".
  */
 export type HandoffResident = {
   resident_id: string
@@ -213,6 +218,12 @@ export type HandoffResident = {
   room: string
   /** Sessions in the window above this resident's bar. */
   flags: number
+  /**
+   * The same count for the window just before this one (`[now - 2 x hours, now - hours)`),
+   * measured against the same bar, so a row can say more, fewer or the same as last shift. A
+   * count, never a verdict.
+   */
+  previous_flags?: number
   /** Alerts in the window with no verdict yet. */
   pending_review: number
   /**

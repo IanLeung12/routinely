@@ -11,8 +11,8 @@ functions the dashboard already uses - offline, deterministic, no DB::
     build_handoff(DEMO_NOW, hours=12)
     # {"window_hours": 12,
     #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "room": "204",
-    #                 "flags": 1, "pending_review": 1, "trending": False,
-    #                 "monitoring_paused": False}, ...],
+    #                 "flags": 1, "previous_flags": 0, "pending_review": 1,
+    #                 "trending": False, "monitoring_paused": False}, ...],
     #  "paused": [],
     #  "summary": "..."}
 
@@ -21,6 +21,12 @@ baseline threshold, which is the evidence a flag rests on rather than the flag i
 one bad session never alerts (SPEC section 7), so a resident can have a session above
 baseline and no alert at all. `pending_review` counts the alerts that were raised and
 that nobody has given a verdict on yet.
+
+`previous_flags` is `flags` for the window before this one - `[now - 2 x hours,
+now - hours)` - against the same resident's same bar, so a row can say whether this
+shift is worse than the last one rather than only how it was. The two windows never
+share a session: the current one owns its own lower edge, so a session exactly at
+`now - hours` counts once, in this shift.
 
 `now` is where the window ends and must be timezone-aware. Pass `demo.DEMO_NOW`: the
 synthetic history and a live session played on stage (`routine_watch.live`) are both
@@ -81,7 +87,9 @@ def build_handoff(
     Every resident is listed, quiet ones included with `flags: 0`, so a nurse can see
     that the unit was looked at rather than guess why someone is missing. Rows needing
     attention come first, each with the resident's room, so a row read aloud or pasted
-    into a handoff note says which door to walk to. `feedback` is the nurse feedback
+    into a handoff note says which door to walk to. Each row also carries
+    `previous_flags`, the same count for the shift before this one, so a nurse reads
+    better or worse rather than a bare number. `feedback` is the nurse feedback
     logged so far: it tunes the threshold each session is measured against and takes
     reviewed alerts out of `pending_review`.
 
@@ -128,6 +136,7 @@ def build_handoff(
                 "name": resident["name"],
                 "room": resident["room"],
                 "flags": len(flagged),
+                "previous_flags": _previous_flags(resident, now, hours, threshold),
                 "pending_review": pending.get(resident["id"], 0),
                 "trending": _trending(resident),
                 "monitoring_paused": room_paused,
@@ -146,16 +155,55 @@ def build_handoff(
 def _window_sessions(resident: dict, now: datetime, hours: int) -> list[tuple[str, dict, float]]:
     """The resident's sessions that ran inside the window: id, session and score.
 
+    Both edges count: a session at `now` has just finished and one at `now - hours`
+    is the oldest thing this shift is answerable for.
+    """
+    return _sessions_between(resident, now - timedelta(hours=hours), now)
+
+
+def _previous_flags(resident: dict, now: datetime, hours: int, threshold: float) -> int:
+    """`flags` for the window before this one, against the same resident's same bar.
+
+    The window the nurse going off shift had: `[now - 2 x hours, now - hours)`. Its
+    upper edge is open because `_window_sessions` owns that instant, so a session
+    exactly at `now - hours` is counted once, by this shift, rather than by both -
+    "one more than last shift" has to mean one more session, not one re-counted.
+
+    The bar is the current window's `threshold`, feedback and all (MVP 7): the two
+    counts are only comparable if they were measured the same way.
+    """
+    end = now - timedelta(hours=hours)
+    return len(
+        [
+            score
+            for _, _, score in _sessions_between(
+                resident, end - timedelta(hours=hours), end, include_end=False
+            )
+            if score > threshold
+        ]
+    )
+
+
+def _sessions_between(
+    resident: dict, start: datetime, end: datetime, *, include_end: bool = True
+) -> list[tuple[str, dict, float]]:
+    """The resident's sessions from `start` to `end`: id, session and score each.
+
     The id is `alerts.session_id_for`'s, the one that session's alert gives it, so an
     error this handoff mentions and the same error on the alert screen are one error.
+    Indexes count from the resident's whole history, so an id stays the same id
+    whichever window it is read in.
     """
-    start = now - timedelta(hours=hours)
     sessions_and_scores = zip(resident["sessions"], resident["scores"], strict=True)
     return [
         (session_id_for(resident["id"], index, session), session, point["score"])
         for index, (session, point) in enumerate(sessions_and_scores)
-        if start <= datetime.fromisoformat(session["ts"]) <= now
+        if _inside(datetime.fromisoformat(session["ts"]), start, end, include_end)
     ]
+
+
+def _inside(ts: datetime, start: datetime, end: datetime, include_end: bool) -> bool:
+    return start <= ts <= end if include_end else start <= ts < end
 
 
 def _threshold(resident: dict, feedback: FeedbackStore | None) -> float:

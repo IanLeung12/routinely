@@ -3,7 +3,7 @@
   "$defs": {
     "HandoffResident": {
       "additionalProperties": false,
-      "description": "One resident's line of the shift handoff (SPEC section 9).\n\n`flags` counts the sessions inside the window that scored above this resident's\nown threshold, which is the evidence a flag rests on rather than the flag itself:\none bad session never alerts (SPEC section 7). `pending_review` counts the alerts\nraised for them that nobody has given a verdict on yet.",
+      "description": "One resident's line of the shift handoff (SPEC section 9).\n\n`flags` counts the sessions inside the window that scored above this resident's\nown threshold, which is the evidence a flag rests on rather than the flag itself:\none bad session never alerts (SPEC section 7). `pending_review` counts the alerts\nraised for them that nobody has given a verdict on yet. `previous_flags` is the\nsame count for the window before this one, so a nurse coming on shift can read\nwhether this resident is getting better or worse rather than only a number.\n\n`previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it\nwas added after the payload shipped, so an older or trimmed handoff still\nvalidates (T292, T311) and a dashboard reading it knows \"no comparison sent\"\nfrom \"none last shift\".",
       "properties": {
         "resident_id": {
           "minLength": 1,
@@ -25,6 +25,13 @@
           "description": "Sessions in the window above this resident's bar.",
           "minimum": 0,
           "title": "Flags",
+          "type": "integer"
+        },
+        "previous_flags": {
+          "default": 0,
+          "description": "The same count for the window just before this one (`[now - 2 x hours, now - hours)`), measured against the same bar, so a row can say more, fewer or the same as last shift. A count, never a verdict.",
+          "minimum": 0,
+          "title": "Previous Flags",
           "type": "integer"
         },
         "pending_review": {
