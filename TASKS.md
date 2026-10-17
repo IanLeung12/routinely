@@ -271,7 +271,7 @@ Acceptance:
 - note added; `scripts/ci.sh` passes
 
 ### T374 — Test infra: load every web stylesheet in Vitest so tasks stop editing vite.config.ts
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -279,7 +279,8 @@ Acceptance:
 - area: web/vite.config.ts
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T19:22Z
-- pr: —
+- pr: #372
+- rating: 5/5 clear - the interface named the exact pattern; only wrinkle worth noting is that the pattern must stay unanchored because ?raw ids carry a query suffix
 
 What: every phone-width / print task appends a folder to `test.css.include` in `web/vite.config.ts`, so sibling PRs conflict on that one line (T203's PR #353 is conflicting now; LESSONS.md line 19). Replace the per-folder list with one pattern that matches all `src/**/*.css`.
 Interface: read `web/vite.config.ts` only. Set `css: { include: [/src\/.*\.css/] }` (or equivalent) and shorten the comment to say why: `?raw` CSS assertions need it and no task should have to edit this line again.
