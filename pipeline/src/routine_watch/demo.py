@@ -1,9 +1,10 @@
 """Synthetic demo residents for the dashboard (SPEC section 8). Offline, no DB yet.
 
-3-5 residents built from the synthetic generators: most normal, one with a sudden
-spike (the demo resident "Mrs. K"), one with a slow drift. Each resident's sessions
-are scored and checked against their own baseline with the same pure functions the
-pipeline uses for a live session.
+5-6 residents built from the synthetic generators, one per pattern: most normal,
+one with a sudden spike (the demo resident "Mrs. K"), one with a slow drift, one
+with evening-only worsening (sundowning), one with motor slowing after a sedating
+medication change. Each resident's sessions are scored and checked against their
+own baseline with the same pure functions the pipeline uses for a live session.
 
 A live session that has been played this run is one of those sessions. Whatever
 `routine_watch.session_log` has recorded for a resident is merged in as their newest
@@ -38,6 +39,8 @@ _RESIDENTS: tuple[dict[str, str | int], ...] = (
     {"id": "mr-chen", "name": "Mr. Chen", "room": "211", "scenario": "drift", "seed": 0},
     {"id": "mrs-ahmed", "name": "Mrs. Ahmed", "room": "108", "scenario": "normal", "seed": 0},
     {"id": "mr-silva", "name": "Mr. Silva", "room": "117", "scenario": "normal", "seed": 2},
+    {"id": "mr-nguyen", "name": "Mr. Nguyen", "room": "126", "scenario": "evening", "seed": 0},
+    {"id": "mrs-patel", "name": "Mrs. Patel", "room": "132", "scenario": "motor", "seed": 0},
 )
 
 

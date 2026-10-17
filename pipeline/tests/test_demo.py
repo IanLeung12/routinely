@@ -6,11 +6,12 @@ scoring weights can silently move a resident between tiers and leave the demo
 without its flagged resident.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
-from routine_watch.demo import DEMO_DAYS, demo_residents
+from routine_watch.demo import DEMO_DAYS, DEMO_NOW, demo_residents
+from routine_watch.synth.history import EVENING_RECENT_DAYS
 
 STATUSES = {"normal", "watch", "flagged"}
 
@@ -71,6 +72,39 @@ def test_score_points_are_sorted_by_ts() -> None:
     for resident in demo_residents():
         stamps = [datetime.fromisoformat(point["ts"]) for point in resident["scores"]]
         assert stamps == sorted(stamps), f"{resident['id']} score points are unsorted"
+
+
+def test_new_pattern_residents_appear() -> None:
+    ids = {resident["id"] for resident in demo_residents()}
+    assert {"mr-nguyen", "mrs-patel"} <= ids
+
+
+def test_evening_resident_worsens_in_the_evening() -> None:
+    """The sundowning resident's recent evening sessions must average at least
+    3x the errors of their recent morning ones (SPEC §7.5)."""
+    sessions = _by_id()["mr-nguyen"]["sessions"]
+    cutoff = DEMO_NOW - timedelta(days=EVENING_RECENT_DAYS)
+    recent = [s for s in sessions if datetime.fromisoformat(s["ts"]) >= cutoff]
+    morning = [s for s in recent if datetime.fromisoformat(s["ts"]).hour < 16]
+    evening = [s for s in recent if datetime.fromisoformat(s["ts"]).hour >= 16]
+    assert morning and evening
+
+    def total_errors(session: dict) -> int:
+        return sum(session["errors"].values())
+
+    morning_avg = sum(total_errors(s) for s in morning) / len(morning)
+    evening_avg = sum(total_errors(s) for s in evening) / len(evening)
+    assert evening_avg >= 3 * morning_avg
+
+
+def test_motor_resident_sessions_slow_down() -> None:
+    """The motor-slowing resident's sessions get longer after the sedating
+    medication starts (SPEC §7.5)."""
+    durations = [session["duration_s"] for session in _by_id()["mrs-patel"]["sessions"]]
+    half = len(durations) // 2
+    early = sum(durations[:half]) / half
+    late = sum(durations[half:]) / (len(durations) - half)
+    assert late > early
 
 
 def test_every_resident_is_presentable() -> None:
