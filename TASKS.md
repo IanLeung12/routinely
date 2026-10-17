@@ -427,7 +427,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T311 — Test: handoff payload without `paused` / `monitoring_paused` still validates and renders
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -435,7 +435,8 @@ Acceptance:
 - area: pipeline/tests/test_handoff_defaults.py, web/src/handoff/Handoff.defaults.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T15:42Z
-- pr: —
+- pr: #300
+- rating: 5/5 clear
 
 What: T292 (#297) made `Handoff.paused` and `HandoffResident.monitoring_paused` optional with defaults (false / []); lock that in on both sides so an older or trimmed payload never breaks the shift handoff.
 Interface: new test files only; read pipeline/src/routine_watch/contracts.py (Handoff, HandoffResident, PausedRoom), web/src/handoff/Handoff.tsx, web/src/handoff/mockHandoff.ts.
