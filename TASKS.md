@@ -64,14 +64,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: T157
 - area: tests/scenarios/pattern_motor_slowing/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:54Z
 - pr: —
 - note: orch: was blocked because replay.py never passes duration_s, so durations_up is unreachable in scenarios. T157 adds scenario durations; after it this is data-only (use the new duration fields).
 
