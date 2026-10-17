@@ -438,7 +438,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T120 — Bug: live task map overflows; the red/amber steps are hidden off to the right
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
