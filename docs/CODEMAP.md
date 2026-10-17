@@ -57,6 +57,7 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 - `explain_claude.py` (`get_explainer()`) and `verifier.py` (`get_verifier()`) each default to an offline fake (`TemplateExplainer`, `FakeVerifier`); they only build the real client when `LIVE_API=1` and the matching key (`ANTHROPIC_API_KEY` / `GEMINI_API_KEY`) is set. Both route real calls through `api_cache.cached_call` and take their model from an env var (`ANTHROPIC_MODEL`, `GEMINI_MODEL`), falling back to the cheapest default otherwise.
 - `web/src/` — one folder per screen (SPEC §9): `overview/`, `resident/`, `live/`, `alert/`, `evidence/`, `about/`, `handoff/`. Each has its own `api.ts` with an offline mock fallback, from `mock/` or from the screen's own folder (`live/mockLiveStream.ts`, `handoff/mockHandoff.ts`).
 - `web/src/ui/` + `web/src/index.css` — the design system (tokens, Card, StatusChip, Button, states). Use these; don't restyle per screen.
+- `web/landing.html` + `web/src/landing/` — the public one-pager for the demo URL (what it is, why it matters, how it works, the pattern wording, privacy, the stack), its own Vite entry alongside `web/index.html` (`build.rollupOptions.input` in `web/vite.config.ts`, output `dist/landing.html`). It renders on its own, with no API calls and no dashboard code, so changing it can't break the demo path; it shares only `web/src/index.css`'s tokens and `.btn`/`.card` classes. Copy stays under ~350 words, and its test checks that (T378).
 - `tests/scenarios/` — end-to-end cases (`expected.yaml` + `frames.jsonl` or `steps.jsonl`), run by `scripts/e2e.sh`.
 - `scripts/` — `ci.sh` (CI), `dev.sh` (local stack), `e2e.sh`, `codemap.py`, plus agent tooling `tasks.py`, `worker.sh`.
 - `prompts/` — agent prompts; `prompts/areas/` guides attached per task area.
@@ -64,4 +65,5 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 ## Adding things
 - New pipeline stage or rule → its own module, pure functions, a unit test, and a scenario if behaviour changes.
 - New screen → new folder under `web/src/`, built from `web/src/ui/`, with mock data and loading/empty/error states.
+- New public page (not a nurse screen) → its own Vite entry + folder, like `web/landing.html` and `web/src/landing/`.
 - New shared shape → `contracts.py` first (heavy task), then regenerate schemas + TS.
