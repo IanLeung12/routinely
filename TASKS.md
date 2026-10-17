@@ -396,13 +396,13 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T025 — Skeleton view component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/live/SkeletonView.tsx, web/src/live/SkeletonView.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:52Z
 - pr: —
 
 What: SVG drawing of one `CaptureFrame` (pose landmarks, hand landmarks, object boxes) for the live session and replay views. Never shows video, only skeleton and boxes (privacy rule). Read only the files in `area`, `web/src/contracts.ts` (types `CaptureFrame`, `Pose`, `HandLandmarks`, `Landmark`, `ObjectDetection`; do not edit it), `web/src/App.test.tsx` and `web/package.json`.
