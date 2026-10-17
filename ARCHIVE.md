@@ -684,3 +684,55 @@ Expected: calendar sits in the dark theme; every day number readable. Actual: wh
 Acceptance:
 - Vitest: no inline style contains a hex or `hsl(` literal; high-score cell (score ≥ 4) gets the light-text class/style; existing tests still pass.
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T030 — Gemini step verifier behind an interface
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: T031
+- area: pipeline/src/routine_watch/verifier.py, pipeline/tests/test_verifier.py, pipeline/pyproject.toml
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:39Z
+- pr: #56
+
+What: SPEC §6.2 and §16 A: when `recogniser.needs_verifier(event)` is true, ask a vision LLM which step happened. Fake by default; Gemini only with `LIVE_API=1`, via `api_cache`, model from `GEMINI_MODEL` (default flash-lite). Images are in-memory JPEG bytes from a ring buffer, never written to disk (the cache stores only the JSON response, keyed by a hash).
+Interface: `VerifierResult(step_id: str | None, objects: list[str], confidence: float)`; `class Verifier(Protocol): def verify(self, images: list[bytes], candidates: list[str], timeout_s: float = 3.0) -> VerifierResult | None` (None = unclear); `FakeVerifier(answers: dict | None)`; `GeminiVerifier` (REST via httpx or `google-genai`, max 8 images); `get_verifier()` returns Fake unless `LIVE_API=1` and `GEMINI_API_KEY` set; `resolve(event, verifier, images, candidates) -> StepEvent` sets `source="verifier"` on a confident answer, `unclear=True` on None/timeout/exception.
+Acceptance:
+- Tests use FakeVerifier and a stubbed HTTP transport only; no network. Timeout/exception → unclear; answer outside `candidates` → unclear.
+- `cd pipeline && uv run pytest tests/test_verifier.py -q` and `scripts/ci.sh` pass.
+
+### T049 — Slow-drift trend card component
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/resident/DriftCard.tsx, web/src/resident/DriftCard.test.tsx
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:27Z
+- pr: #44
+
+What: SPEC Nice-to-have 6: show a slow upward trend in a resident's error score, separate from the sudden-change flag. Pure presentational component; not wired into any screen yet. Read only the files in `area`, `web/src/ui/Card.tsx`, `web/src/ui/README.md` and `pipeline/src/routine_watch/drift.py` (the data it will display).
+Interface: `export function DriftCard({ slopePerDay, days, trending, minDays = 7 }: { slopePerDay: number; days: number; trending: boolean; minDays?: number })`, built on the `Card` primitive. `days < minDays` → "Not enough history yet (N of 7 days)"; `trending` → heading "Slow drift" and text "Error score rising about +0.15 per day over N days. Flagged for review." (slope to 2 dp); otherwise "No slow drift over N days". Never use the word "diagnose". `data-state="insufficient|trending|stable"`; CSS vars only, no hex.
+Acceptance:
+- Vitest covers the three states, the 2 dp formatting, and asserts the text never matches /diagnos/i.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T051 — Feedback buttons announce the recorded choice
+- status: done
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
+- source: proposed
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:38Z
+- pr: #53
+
+What: Accessibility (Execution/Clarity): after a tap, screen-reader and sighted users get a confirmation that the verdict was saved. Read only the files in `area`.
+Interface: keep the current props. Add a `<p role="status" aria-live="polite">` under the buttons: `value === 'confirmed'` → "Marked as confirmed", `'false_alarm'` → "Marked as false alarm", no value → empty. Wrap the buttons in `role="group"` with `aria-label="Nurse feedback"`. Keep `aria-pressed`.
+Acceptance:
+- Vitest: group label present; status text for each value; clicking calls `onChange` with the verdict; empty status with no value.
+- `cd web && npm run lint && npm test && npm run build` passes.
