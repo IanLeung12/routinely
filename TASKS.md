@@ -600,14 +600,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T264 — Test: consent record survives /demo/reset and shows in /handoff residents
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_demo_consent.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:27Z
 - pr: —
 
 What: T254 added per-resident consent; nothing checks it survives `/demo/reset` or that every resident in GET /residents (not just mrs-k) carries it.
