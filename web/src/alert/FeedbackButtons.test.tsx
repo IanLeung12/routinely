@@ -1,8 +1,32 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { FeedbackVerdict } from '../contracts.ts'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 
 afterEach(cleanup)
+
+const CAUSE_OPTIONS = [
+  { id: 'uti', label: 'UTI' },
+  { id: 'fatigue', label: 'Fatigue' },
+]
+
+/** A controlled wrapper like a real screen would use, so keyboard interaction actually updates
+ * `value`/`cause` instead of relying on fireEvent to bypass React state entirely. */
+function ControlledFeedbackButtons() {
+  const [value, setValue] = useState<FeedbackVerdict | null>(null)
+  const [cause, setCause] = useState<string | null>(null)
+  return (
+    <FeedbackButtons
+      value={value}
+      onChange={setValue}
+      causeOptions={CAUSE_OPTIONS}
+      cause={cause}
+      onCauseChange={setCause}
+    />
+  )
+}
 
 describe('FeedbackButtons', () => {
   it('groups the choices and leaves the status empty without a value', () => {
@@ -33,11 +57,6 @@ describe('FeedbackButtons', () => {
     fireEvent.click(screen.getByRole('button', { name: 'False alarm' }))
     expect(onChange.mock.calls).toEqual([['confirmed'], ['false_alarm']])
   })
-
-  const CAUSE_OPTIONS = [
-    { id: 'uti', label: 'UTI' },
-    { id: 'fatigue', label: 'Fatigue' },
-  ]
 
   it('hides the cause picker before confirming, even with causeOptions given', () => {
     render(<FeedbackButtons onChange={() => {}} causeOptions={CAUSE_OPTIONS} />)
@@ -79,5 +98,35 @@ describe('FeedbackButtons', () => {
     expect(screen.getByRole('button', { name: 'UTI' }).getAttribute('aria-pressed')).toBe('true')
     fireEvent.click(screen.getByRole('button', { name: 'Other' }))
     expect(onCauseChange).toHaveBeenCalledWith('other')
+  })
+
+  it('lets a keyboard-only nurse confirm the alert', async () => {
+    const user = userEvent.setup()
+    render(<ControlledFeedbackButtons />)
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Confirmed' }))
+
+    await user.keyboard('{Enter}')
+
+    expect(screen.getByRole('button', { name: 'Confirmed' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('status').textContent).toBe('Marked as confirmed')
+  })
+
+  it('lets a keyboard-only nurse pick a cause after confirming', async () => {
+    const user = userEvent.setup()
+    render(<ControlledFeedbackButtons />)
+
+    await user.tab()
+    await user.keyboard('{Enter}')
+
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'False alarm' }))
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'UTI' }))
+
+    await user.keyboard(' ')
+
+    expect(screen.getByRole('button', { name: 'UTI' }).getAttribute('aria-pressed')).toBe('true')
   })
 })
