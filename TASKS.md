@@ -460,7 +460,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T165 — Test: pattern ids are safe feedback causes
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: test
@@ -468,7 +468,8 @@ Acceptance:
 - area: pipeline/tests/test_feedback_cause_ids.py (new)
 - owner: max_API_light
 - claimed: 2026-10-17T08:45Z
-- pr: —
+- pr: #152
+- rating: 5/5 clear
 
 What: Since T129 a feedback `cause` is any pattern id or "other". Guard against a future pattern colliding with "other" or using an id the web can't round-trip.
 Interface: Read only `pipeline/src/routine_watch/patterns_library.py` and `pipeline/src/routine_watch/api.py` lines 50-90. Assert ids in `BY_ID` are unique and match `^[a-z][a-z0-9_]*$`, none equals `api.OTHER_CAUSE`, and `api.KNOWN_CAUSES == set(BY_ID) | {"other"}`.
