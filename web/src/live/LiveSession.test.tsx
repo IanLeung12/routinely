@@ -170,7 +170,7 @@ describe('LiveSession', () => {
     )
   })
 
-  it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {
+  it('shows an Open alert button beside the banner, not inside its live region', () => {
     const onOpenAlert = vi.fn()
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={onOpenAlert} />)
     const socket = FakeWebSocket.latest()
@@ -179,7 +179,17 @@ describe('LiveSession', () => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
     })
 
-    screen.getByRole('button', { name: 'Open alert' }).click()
+    // Nested in the banner, the button's label is announced again with the flag every
+    // time the live region updates; as its next sibling it is read once, on its own,
+    // and it is the shared `ui/Button` rather than a bare unstyled one (T376).
+    const banner = screen.getByRole('status')
+    const open = screen.getByRole('button', { name: 'Open alert' })
+    expect(banner.contains(open)).toBe(false)
+    expect(banner.textContent).toBe('Flagged for review')
+    expect(banner.nextElementSibling).toBe(open)
+    expect(open.classList.contains('btn')).toBe(true)
+
+    open.click()
     expect(onOpenAlert).toHaveBeenCalledWith('alert-1')
   })
 
