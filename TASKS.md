@@ -412,7 +412,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T311 — Test: handoff payload without `paused` / `monitoring_paused` still validates and renders
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
