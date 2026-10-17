@@ -691,7 +691,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T092 — PatternList styles: urgent patterns visually distinct
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -699,7 +699,7 @@ Acceptance:
 - area: web/src/alert/PatternList.tsx, web/src/alert/PatternList.css (new), web/src/alert/PatternList.test.tsx
 - owner: ian-claude
 - claimed: 2026-10-17T06:27Z
-- pr: —
+- pr: #81
 
 What: `PatternList` (merged in #73) uses class names (`pattern`, `pattern--urgent`, `pattern__urgency--*`, `pattern__confidence`) that no stylesheet defines, so urgent patterns look like every other one (SPEC §9 screen 4: "Urgent patterns are visually distinct"). Read only the files in `area`, `web/src/index.css` (tokens) and `web/src/alert/alert.css` (style reference; do not edit it).
 Interface: new `PatternList.css` imported from `PatternList.tsx`. CSS vars from `index.css` only, no hex colours (dark theme). Urgent: a thick left border and the red error token; `same_shift`: amber token; others: muted. Confidence as a small pill. Also add `aria-label="Possible patterns"` on the outer `<ul>`.
