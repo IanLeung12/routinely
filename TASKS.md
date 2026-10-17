@@ -466,7 +466,7 @@ Acceptance:
 - `cd web && npm test -- TaskMapLegend` and `scripts/ci.sh` pass
 
 ### T215 — DriftCard: CSS classes instead of inline styles
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -474,7 +474,8 @@ Acceptance:
 - area: web/src/resident/DriftCard.tsx, web/src/resident/driftCard.css, web/src/resident/DriftCard.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T10:13Z
-- pr: —
+- pr: #203
+- rating: 5/5 clear
 
 What: `DriftCard.tsx` sets text colour inline, including a `state === 'trending'` ternary. Move it to a new `web/src/resident/driftCard.css` keyed off the existing `data-state` attribute (`.drift-card[data-state="trending"] .drift-card__summary { color: var(--error-amber-text) }`). No visual change.
 Interface: read only the area files and `web/src/resident/heatCalendar.css` as the example.
