@@ -531,7 +531,7 @@ Acceptance:
 - `cd web && npx vitest run src/live/LiveSession.test.tsx` and `scripts/ci.sh` pass
 
 ### T176 — Docs: scenarios README explains session duration_s
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -539,7 +539,8 @@ Acceptance:
 - area: tests/scenarios/README.md
 - owner: max_API_light
 - claimed: 2026-10-17T08:59Z
-- pr: —
+- pr: #161
+- rating: 5/5 clear
 
 What: T157 (PR #154) let scenarios give history sessions and the expected session a `duration_s`, which is how `motor_slowing` becomes reachable; `tests/scenarios/README.md` doesn't mention it, so scenario authors won't find it.
 Interface: read `pipeline/src/routine_watch/replay.py` (`HistorySession.duration_s`, `Expected.duration_s`, docstrings near lines 98 and 142) and `pipeline/tests/test_replay_durations.py` for a worked example. Edit only the README: add a short "Session durations" section with a minimal YAML snippet showing both fields and one sentence on when to use them (duration-based patterns like motor slowing). Don't change the "scenarios here" table rows (a test parses it).
