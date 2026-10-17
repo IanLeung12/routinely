@@ -410,14 +410,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T066 — Scenario: self-corrected slip is reported but does not flag
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_self_corrected/
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:48Z
 - pr: —
 
 What: SPEC §7 says a mistake the resident fixes within a short window is a weaker "self-corrected slip", not a full error. No scenario covers it. Add a steps-level scenario where the resident pours before the teabag is in, then puts the teabag in and pours again within the window.
