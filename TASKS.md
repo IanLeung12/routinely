@@ -515,7 +515,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
 
 ### T342 — Review: unclear live sessions still go into the resident's history and can flag
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -524,7 +524,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_unclear.py
 - owner: ian-claude
 - claimed: 2026-10-17T17:02Z
-- pr: —
+- pr: #328
+- rating: 4/5 clear diagnosis and fix; the acceptance criterion's 'fake WebSocket helper from pipeline/tests/ used by test_api_live_ws.py' does not exist - that file uses fastapi's TestClient.websocket_connect, and an in-test scenario needs api_live.scenario_path monkeypatched to be reachable by ?scenario= at all
 
 What: PR #322 made `replay.score_session` return score 0.0 / flag False for an unclear session (`quality.session_quality`), but `live.session_messages` (~line 290) still calls `_record(...)` with that session's errors and `assisted=False`. `demo.py` recomputes scores from recorded errors and only skips assisted sessions, so an unclear session's errors still count toward the 24–48 h flag and a 0.0 score enters the baseline. Fix: when `session_quality(events) == "unclear"`, don't record the session into `session_log` at all (nothing to trust), and keep `was_flagged`/alert logic unchanged.
 Interface: `live.py` only; `from .quality import session_quality`. No contract change (T343 adds the `quality` field to `session_end`).
