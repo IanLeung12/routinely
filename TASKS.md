@@ -474,15 +474,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T262 — Monitoring audit trail: who paused/resumed a room and when
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: feature
 - source: proposed
 - deps: T256
 - area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/about/monitoringApi.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T12:38Z
 - pr: —
 
 What: Rationale: SPEC §12 privacy accountability; judges see that pausing a camera is logged. Record each pause/resume (room, on/off, by, at) in memory and show the last 5 on resident detail under the monitoring switch.
