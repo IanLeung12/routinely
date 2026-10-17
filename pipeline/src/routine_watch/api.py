@@ -3,8 +3,9 @@
 Takes events, sessions and downsampled skeletons from the pipeline, serves the nurse
 dashboard, and carries the live view and alerts over one WebSocket.
 
-/health, the demo /residents routes, the /alerts routes and the live WebSocket exist
-so far; later tasks add the event and session routes backed by a real database.
+/health, the demo /residents routes, the /alerts routes, the /routines builder and
+the live WebSocket exist so far; later tasks add the event and session routes backed
+by a real database.
 """
 
 import os
@@ -18,6 +19,7 @@ from .api_alerts import KNOWN_CAUSES, OTHER_CAUSE, AlertFeedbackIn  # noqa: F401
 from .api_alerts import router as _alerts_router
 from .api_live import router as _live_router
 from .api_residents import router as _residents_router
+from .api_routines import router as _routines_router
 from .api_state import _feedback_store
 from .demo import DEMO_NOW
 from .evidence import reset_demo_replays
@@ -28,6 +30,7 @@ app = FastAPI(title="Routine Watch API", version=__version__)
 app.include_router(_live_router)
 app.include_router(_alerts_router)
 app.include_router(_residents_router)
+app.include_router(_routines_router)
 
 #: The dashboard's origin(s), so the browser's CORS check lets fetch() through
 #: (SPEC section 16): comma-separated, defaults to the dev dashboard's origin.
