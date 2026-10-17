@@ -277,14 +277,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T330 — Heat calendar: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/heatCalendar.css
-- owner: —
-- claimed: 2026-10-17T16:43Z
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:26Z
 - pr: —
 - note: re-queued by orch: previous attempt blocked only by local Windows env (rolldown EPERM / port clash, see LESSONS), not the fix; branch was never pushed, so redo the small CSS change from origin/main
 
