@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T028 — Alert / evidence view screen
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
