@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 477d383
+- last-reviewed: f40d269
 
 ## Tasks
 
@@ -336,16 +336,16 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
 
 ### T346 — Test: alert time-of-day strip has accessible names
-- status: blocked
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/TimeOfDayStrip.a11y.test.tsx, web/src/alert/TimeOfDayStrip.tsx
-- owner: Max_codex_light
-- claimed: 2026-10-17T17:37Z
+- owner: —
+- claimed: —
 - pr: —
-- note: Concurrent worker.sh reset the shared checkout during CI; changes saved in WIP commit b09a18e on wip/Max_codex_light-1017-1745. Requires isolated checkout before validation and PR.
+- note: earlier attempt lost to a shared-checkout reset; its work is on branch wip/Max_codex_light-1017-1745 (commit b09a18e). Start from origin/main, cherry-pick b09a18e if useful, run scripts/ci.sh, open the PR. Use your own worktree.
 
 What: Each morning/afternoon/evening cell in the alert's time-of-day strip should be readable by a screen reader ("Evening: 3 errors"). Read `web/src/alert/TimeOfDayStrip.tsx` and `web/src/alert/TimeOfDayStrip.test.tsx`. Add the test; only if a cell has no accessible name, add an `aria-label` in `TimeOfDayStrip.tsx` (no visual change).
 Interface: new test file; at most `aria-label`/`role` attributes in the component.
@@ -589,7 +589,7 @@ Acceptance:
 - pr: —
 
 What: A resident who sits for a long time before touching the kettle and then makes tea correctly must not get an error or a flag. Guards against the abandonment timer starting before the first step.
-Interface: copy the layout of `tests/scenarios/tea_long_pause_not_error/` (`frames.jsonl`, `expected.yaml`); generate frames with the same generator/script that scenario's README or `tests/scenarios/README.md` names. Pipeline code is out of scope: if the scenario fails, file it in the PR and set the task blocked with the failing output.
+Interface: copy the layout of `tests/scenarios/tea_long_pause_not_error/` (`steps.jsonl`, `expected.yaml`); generate frames with the same generator/script that scenario's README or `tests/scenarios/README.md` names. Pipeline code is out of scope: if the scenario fails, file it in the PR and set the task blocked with the failing output.
 Acceptance:
 - `scripts/e2e.sh` runs the new scenario and it passes: zero errors, no flag.
 - `scripts/ci.sh` passes.
@@ -609,4 +609,56 @@ What: Each legend entry (done, current, missed, error…) must be readable witho
 Interface: read `web/src/live/TaskMapLegend.tsx` and `web/src/live/TaskMapLegend.test.tsx`; new test file only. If an entry relies on colour alone, set the task blocked with a note naming the entry (don't change the component).
 Acceptance:
 - One assertion per legend state, by role/name or visible text.
+- `scripts/ci.sh` passes.
+
+### T364 — Scenario: meds_late_start_normal (long idle before the first step is not an error)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_late_start_normal/, pipeline/tests/test_scenarios_meds_late_start.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Medication twin of T362: a resident idles a long time before picking up the pill bottle, then completes the routine correctly; must produce zero errors and no flag.
+Interface: copy the layout of `tests/scenarios/meds_normal/` (`steps.jsonl`, `expected.yaml`) and the test style of `pipeline/tests/test_scenarios_meds_unclear.py` (`load_scenario`, `replay`). Pipeline code is out of scope: if it fails, set the task blocked with the failing output.
+Acceptance:
+- new pytest passes; `scripts/e2e.sh` runs the scenario: zero errors, `flag: false`.
+- one line added to `tests/scenarios/README.md`.
+- `scripts/ci.sh` passes.
+
+### T365 — Test: live session summary has accessible names
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/SessionSummary.a11y.test.tsx, web/src/live/SessionSummary.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The end-of-session summary on the live screen must be readable by a screen reader: a heading, and each figure (duration, errors, quality) with a text label, not only an icon or colour.
+Interface: read `web/src/live/SessionSummary.tsx` and `web/src/live/SessionSummary.test.tsx`. Add `SessionSummary.a11y.test.tsx` using `getByRole('heading')` and `getByText`/`getByLabelText`. Only if a figure has no accessible name, add an `aria-label` in `SessionSummary.tsx` (no visual change).
+Acceptance:
+- new test passes; `cd web && npx vitest run src/live/SessionSummary` green.
+- `scripts/ci.sh` passes.
+
+### T366 — Test: unit overview error and empty states use the shared ui components
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/UnitOverview.states.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard the overview's failure paths: when the residents API rejects, the screen shows the shared ErrorState with a retry button; when it returns no residents, it shows the shared EmptyState with nurse-readable copy.
+Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/api.ts`, `web/src/ui/ErrorState.tsx`, `web/src/ui/EmptyState.tsx` and the mocking style in `web/src/overview/UnitOverview.test.tsx`. Test only; if a state is missing, note it in the PR instead of changing the component.
+Acceptance:
+- `cd web && npx vitest run src/overview/UnitOverview.states` green.
 - `scripts/ci.sh` passes.
