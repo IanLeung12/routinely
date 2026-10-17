@@ -427,7 +427,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T244 — Live screen: show "Monitoring paused" when /ws/live sends {"type":"paused"}
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
