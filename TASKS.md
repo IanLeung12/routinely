@@ -94,15 +94,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T052 — Demo-data banner component
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/README.md (add one line)
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:22Z
 - pr: #52
 
 What: Responsible design / Clarity for judges: a thin banner stating the dashboard runs on synthetic residents. Component only; wiring into `App.tsx` is a later task. Read only the files in `area` and `web/src/ui/Card.tsx` (style).
