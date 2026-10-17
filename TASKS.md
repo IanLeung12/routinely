@@ -319,7 +319,7 @@ Acceptance:
   * `cd web && npm test -- PrivacyPanel` and `scripts/ci.sh` pass
 
 ### T287 — Test: alert feedback works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
