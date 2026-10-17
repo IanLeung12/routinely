@@ -51,6 +51,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
+from urllib.parse import urlparse
 
 STAGE = "preview"
 
@@ -88,11 +89,6 @@ BOUNDARY = "routine-watch-frame"
 #: How long a connected browser waits for the next frame before the stream is ended.
 #: A camera that has stopped should close the tab's connection rather than hold it.
 IDLE_TIMEOUT_S = 5.0
-
-#: The dashboard is served from another port (5173), so its `fetch` of `/health` is
-#: cross-origin. The preview is loopback-only, so "any origin" here still means "any
-#: page on this machine".
-_CORS = (("Access-Control-Allow-Origin", "*"),)
 
 _JSON = "application/json"
 _TEXT = "text/plain; charset=utf-8"
@@ -136,27 +132,40 @@ class Response:
     content_type: str
     body: bytes = b""
     stream: bool = False
+    headers: tuple[tuple[str, str], ...] = ()
 
 
-def response_for(path: str, client: str, host: str = "") -> Response:
+def response_for(path: str, client: str, host: str = "", origin: str | None = None) -> Response:
     """The reply to one `GET`: the whole of what this server will answer.
 
     `client` is the address the request came from and `host` the `Host:` header it
     carried. Both must be loopback: the socket is bound to `127.0.0.1`, so the first is
     belt and braces, and the second is what stops a page on the internet pointing a
     name that resolves to `127.0.0.1` at this port and reading the frames through the
-    browser of whoever opens it.
+    browser of whoever opens it. An Origin header must also name a loopback host:
+    pages served from the internet must not read the local camera through CORS.
     """
     if not is_loopback(client):
         return Response(403, _TEXT, b"the camera preview is for this device only\n")
     if host and not is_loopback(host_name(host)):
         return Response(403, _TEXT, b"the camera preview answers on 127.0.0.1 only\n")
+    headers: tuple[tuple[str, str], ...] = ()
+    if origin is not None:
+        try:
+            origin_host = urlparse(origin).hostname or ""
+        except ValueError:
+            origin_host = ""
+        if not is_loopback(origin_host):
+            return Response(403, _TEXT, b"the camera preview allows loopback origins only\n")
+        headers = (("Access-Control-Allow-Origin", origin), ("Vary", "Origin"))
     route = path.partition("?")[0].rstrip("/") or "/"
     if route == HEALTH_PATH:
-        return Response(200, _JSON, json.dumps({"ok": True}).encode("utf-8"))
+        return Response(200, _JSON, json.dumps({"ok": True}).encode("utf-8"), headers=headers)
     if route == STREAM_PATH:
-        return Response(200, _MJPEG, stream=True)
-    return Response(404, _TEXT, b"the camera preview serves /preview.mjpg and /health\n")
+        return Response(200, _MJPEG, stream=True, headers=headers)
+    return Response(
+        404, _TEXT, b"the camera preview serves /preview.mjpg and /health\n", headers=headers
+    )
 
 
 # ------------------------------------------------------------- the current frame
@@ -294,7 +303,12 @@ class _Handler(BaseHTTPRequestHandler):
     sys_version = ""
 
     def do_GET(self) -> None:  # BaseHTTPRequestHandler's spelling
-        reply = response_for(self.path, self.client_address[0], self.headers.get("Host", ""))
+        reply = response_for(
+            self.path,
+            self.client_address[0],
+            self.headers.get("Host", ""),
+            self.headers.get("Origin"),
+        )
         if not self._reply(reply):
             return
         if reply.stream:
@@ -304,7 +318,7 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             self.send_response(reply.status)
             self.send_header("Content-Type", reply.content_type)
-            for name, value in _CORS:
+            for name, value in reply.headers:
                 self.send_header(name, value)
             self.send_header("Cache-Control", "no-store")
             if reply.stream:

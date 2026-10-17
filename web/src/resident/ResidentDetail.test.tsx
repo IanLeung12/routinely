@@ -1,9 +1,11 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.tsx'
 import { apiUrl } from '../config.ts'
 import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { setRole } from '../people/api.ts'
+import { SessionList } from './SessionList.tsx'
+import { ContextTimeline } from './ContextTimeline.tsx'
 import { ResidentDetail } from './ResidentDetail.tsx'
 import { fetchDrift, fetchResident } from './api.ts'
 import { dailyScores } from './days.ts'
@@ -30,6 +32,52 @@ afterEach(() => {
 })
 
 describe('ResidentDetail', () => {
+  it('shows the top pattern as context for review and keeps the range selector in the hero', async () => {
+    offline()
+    const { container } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })
+
+    expect(container.querySelector('.resident-detail__pattern')?.textContent).toContain(
+      `Consistent with ${MRS_K.top_pattern?.name}`,
+    )
+    expect(container.querySelector('.resident-detail__pattern')?.textContent).toContain('Possible change, review')
+    const hero = container.querySelector('.resident-detail__hero') as HTMLElement
+    const range = within(hero).getByRole('group', { name: 'Baseline chart time range' })
+    fireEvent.click(within(range).getByRole('button', { name: '7D' }))
+    expect(within(range).getByRole('button', { name: '7D' }).getAttribute('aria-pressed')).toBe('true')
+    expect(within(range).getByRole('button', { name: '14D' }).getAttribute('aria-pressed')).toBe('false')
+    expect(container.querySelectorAll('.session-row')).toHaveLength(MRS_K.sessions.length)
+  })
+
+  it('keeps assisted, unscored and self-corrected sessions visible with category error pills', () => {
+    const session = MRS_K.sessions[0]
+    const { container } = render(<SessionList
+      sessions={[
+        { ...session, errors: { omission: 1, substitution: 2, sequence: 1, perseveration: 2, hesitation: 1 }, self_corrected: 1 },
+        { ...session, ts: '2026-01-03T08:00:00Z', assisted: true },
+      ]}
+      scores={[]}
+      threshold={4.5}
+    />)
+    expect(container.querySelectorAll('.error-chip--red')).toHaveLength(2)
+    expect(container.querySelectorAll('.error-chip--amber')).toHaveLength(2)
+    expect(screen.getByText('assisted, not counted')).toBeTruthy()
+    expect(screen.getByText(/1 self-corrected/)).toBeTruthy()
+    expect(screen.getAllByText('—')).toHaveLength(2)
+  })
+
+  it('marks medication changes and fever readings without tinting routine temperature readings', () => {
+    const { container } = render(<ContextTimeline records={[
+      ...MRS_K.care_records,
+      { resident_id: 'mrs-k', ts: '2026-01-02T08:00:00Z', kind: 'temperature', value: 37.4, note: '' },
+    ]} />)
+    expect(container.querySelectorAll('.context-record--med_change')).toHaveLength(1)
+    expect(container.querySelectorAll('.context-record--fever')).toHaveLength(1)
+    expect(container.querySelector('.context-record--fever')?.textContent).toContain('38.1')
+    expect(container.querySelector('.context-record')?.className).not.toContain('context-record--fever')
+    expect(container.querySelector('time')?.getAttribute('datetime')).toBe('2026-01-02T08:00:00Z')
+  })
+
   it('shows the slow-drift mock card for the trending resident', async () => {
     offline()
     render(<ResidentDetail residentId="mr-chen" onBack={() => {}} />)
@@ -63,17 +111,16 @@ describe('ResidentDetail', () => {
 
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    const chart = await screen.findByRole('img', { name: /baseline chart/i })
-    const label = chart.getAttribute('aria-label') ?? ''
-    expect(label).toContain(`${MRS_K.scores.length} sessions`)
-    expect(label).toContain('latest score 5.0')
-    expect(label).toContain('flag threshold 4.5')
-    expect(label).toContain('2 sessions above it')
-    expect(screen.getByText('Latest session 5.0')).toBeTruthy()
-    // The newest point is drawn large and in the alarm colour.
-    const latest = chart.querySelector('.chart-point--latest')
-    expect(latest?.getAttribute('r')).toBe('6')
-    expect(latest?.getAttribute('class')).toContain('chart-point--above')
+    const chart = await screen.findByRole('figure', { name: 'Baseline' })
+    const summary = chart.querySelector('figcaption')?.textContent ?? ''
+    expect(summary).toContain(`${MRS_K.scores.length} sessions`)
+    expect(summary).toContain('Latest score 5.0')
+    expect(summary).toContain('flag threshold 4.5')
+    expect(summary).toContain('2 sessions above it')
+    expect(chart.querySelector('foreignObject .pill')?.textContent).toBe('5.0')
+    // The newest point is above the flag threshold, so it's drawn in the flagged colour.
+    const markers = chart.querySelectorAll('.line-chart__marker')
+    expect(markers[markers.length - 1]?.getAttribute('class')).toContain('line-chart__marker--flagged')
   })
 
   it('renders the sessions newest first with scores, errors and duration', async () => {
@@ -85,9 +132,8 @@ describe('ResidentDetail', () => {
     const rows = [...container.querySelectorAll('.session-row')]
     expect(rows[0].querySelector('.session-when')?.textContent).toBe('1 Jan, 18:02')
     expect(rows[0].querySelector('.session-score')?.textContent).toBe('5.0')
-    expect(rows[0].querySelector('.session-detail')?.textContent).toContain(
-      'skipped step ×1 · long pause ×2',
-    )
+    expect(within(rows[0] as HTMLElement).getByText('skipped step ×1')).toBeTruthy()
+    expect(within(rows[0] as HTMLElement).getByText('long pause ×2')).toBeTruthy()
     expect(rows[0].querySelector('.session-detail')?.textContent).toContain('above threshold')
     expect(rows[0].querySelector('.session-duration')?.textContent).toBe('4m 01s')
     expect(rows[0].className).toContain('session-row--above')
@@ -216,7 +262,7 @@ describe('ResidentDetail', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Mr. New' })).toBeTruthy()
     expect(screen.getAllByText('No scored sessions yet.').length).toBeGreaterThan(0)
     expect(screen.getByText('No sessions recorded yet.')).toBeTruthy()
-    expect(screen.queryByRole('img', { name: /baseline chart/i })).toBeNull()
+    expect(screen.queryByRole('figure', { name: 'Baseline' })).toBeNull()
     expect(screen.queryByRole('grid', { name: /daily error scores/i })).toBeNull()
   })
 

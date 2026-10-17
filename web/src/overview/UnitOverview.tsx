@@ -76,16 +76,25 @@ function latestScore(resident: ResidentSummary): { value: number; direction?: 'u
 
 /** Screen 1 (SPEC section 9): resident list with a status chip and an error-score
  * trend, flagged residents first. Visual first; a nurse should read it in 10s.
- * The whole row opens that resident's detail. Without `onSelect` the list is read-only. */
+ * The whole row opens that resident's detail. Without `onSelect` the list is read-only.
+ *
+ * Generalised for "People I support" (SPEC section 17): a supervisor of several people
+ * who isn't a whole care-home unit still uses this screen, scoped to `personIds` so it
+ * never shows someone outside their list. The care-home case passes the whole unit, so
+ * its behaviour is unchanged. */
 export function UnitOverview({
   onSelect,
   refreshKey,
+  personIds,
 }: {
   onSelect?: (residentId: string) => void
   /** Bump this (e.g. after a live session ends) to refetch residents. */
   refreshKey?: number | string
+  /** Scopes the list to these people. Omit to show everyone the fetch returns (the
+   * care-home unit, today). */
+  personIds?: string[]
 }) {
-  const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
+  const [fetched, setFetched] = useState<ResidentSummary[] | null>(null)
   const [source, setSource] = useState<ResidentsSource>('api')
   const [filter, setFilter] = useState<UnitFilter>(() => loadOverviewPrefs().filter)
   const [sortMode, setSortMode] = useState<SortMode>(() => loadOverviewPrefs().sort)
@@ -97,10 +106,10 @@ export function UnitOverview({
 
   useEffect(() => {
     let cancelled = false
-    fetchResidentsWithSource().then((fetched) => {
+    fetchResidentsWithSource().then((result) => {
       if (!cancelled) {
-        setResidents(fetched.residents)
-        setSource(fetched.source)
+        setFetched(result.residents)
+        setSource(result.source)
       }
     })
     return () => {
@@ -126,9 +135,11 @@ export function UnitOverview({
     }
   }, [refreshKey])
 
-  if (residents === null) {
+  if (fetched === null) {
     return <Loading label="Loading residents…" />
   }
+
+  const residents = personIds ? fetched.filter((resident) => personIds.includes(resident.id)) : fetched
 
   if (residents.length === 0) {
     return <EmptyState message="No residents on this unit yet." />

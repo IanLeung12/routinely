@@ -20,8 +20,10 @@ the size of each plus the total, and exits non-zero if the total is over
 budget.
 
 The budget lives in `BUDGET_BYTES` at the top of `scripts/check-bundle.mjs`,
-currently 92,200 bytes gzipped — about 10% over the ~84.1 KB measured right
+originally 92,200 bytes gzipped — about 10% over the ~84.1 KB measured right
 after #237 split the handoff, pattern library and tour screens into lazy
 chunks. Raise it only alongside a PR that explains the growth (a new eager
 dependency, a new always-on screen); don't raise it just to make the check
 pass.
+
+The current budget is 96,000 bytes gzipped for the redesign shell, person view and replays added as always-on screens on 2026-10-17 (measured 92,536 bytes).
