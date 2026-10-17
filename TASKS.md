@@ -480,7 +480,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T107 — Review: evidence ghost layer replays the same frames as "today"
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
