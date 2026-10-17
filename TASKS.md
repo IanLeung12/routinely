@@ -281,7 +281,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T035 — Ghost replay overlay component
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
