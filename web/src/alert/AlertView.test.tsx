@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiUrl } from '../config.ts'
 import type { Alert } from '../contracts.ts'
@@ -161,6 +161,36 @@ describe('AlertView', () => {
       `${apiUrl}/alerts/${MRS_K.alert_id}/feedback`,
       expect.objectContaining({ method: 'POST' }),
     )
+  })
+
+  it('asks what it was after confirming, and posts the pattern the nurse picks', async () => {
+    const confirmed: Alert = {
+      ...MRS_K,
+      feedback: { verdict: 'confirmed', by: 'nurse', at: '2026-10-17T10:00:00Z', cause: null },
+    }
+    const withCause: Alert = { ...confirmed, feedback: { ...confirmed.feedback!, cause: 'sudden_change' } }
+    const posted: string[] = []
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        posted.push(String(init.body))
+        return Promise.resolve({ ok: true, json: async () => (posted.length > 1 ? withCause : confirmed) })
+      }
+      return Promise.reject(new Error('offline'))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText('Current threshold: 1.2')
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmed' }))
+
+    const picker = await screen.findByRole('group', { name: 'What was it? (optional)' })
+    fireEvent.click(within(picker).getByRole('button', { name: 'Sudden change' }))
+
+    expect(await screen.findByRole('button', { name: 'Sudden change', pressed: true })).toBeTruthy()
+    expect(posted).toEqual([
+      JSON.stringify({ verdict: 'confirmed', cause: null }),
+      JSON.stringify({ verdict: 'confirmed', cause: 'sudden_change' }),
+    ])
   })
 
   it('shows an empty state when the alert is unknown', async () => {

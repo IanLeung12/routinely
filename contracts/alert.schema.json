@@ -30,6 +30,20 @@
           ],
           "default": null,
           "title": "Note"
+        },
+        "cause": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The optional answer to \"what was it?\" (SPEC section 5, MVP 8): a pattern_id from the pattern library, 'other' for a cause the library has no pattern for, or null when nobody said.",
+          "title": "Cause"
         }
       },
       "required": [

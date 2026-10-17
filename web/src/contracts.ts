@@ -39,6 +39,12 @@ export type AlertFeedback = {
   by: string
   at: string
   note?: string | null
+  /**
+   * The optional answer to "what was it?" (SPEC section 5, MVP 8): a pattern_id from the
+   * pattern library, 'other' for a cause the library has no pattern for, or null when nobody
+   * said.
+   */
+  cause?: string | null
 }
 
 /** How urgent the flag is: two bad sessions in 24-48 h, or a slow upward drift. */

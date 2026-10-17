@@ -371,6 +371,12 @@ class AlertFeedback(_Contract):
     by: Id = Field(description="Who answered.")
     at: datetime
     note: str | None = None
+    cause: Id | None = Field(
+        default=None,
+        description='The optional answer to "what was it?" (SPEC section 5, MVP 8): a '
+        "pattern_id from the pattern library, 'other' for a cause the library has no "
+        "pattern for, or null when nobody said.",
+    )
 
 
 class PatternMatch(_Contract):
