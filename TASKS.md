@@ -353,14 +353,14 @@ Acceptance:
 - No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
 
 ### T307 — Test: replay player works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/evidence/ReplayPlayer.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T15:44Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T307-wip-1531: start from it (git switch task/T307-wip-1531 && git merge origin/main)
 
