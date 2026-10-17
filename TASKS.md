@@ -148,25 +148,6 @@ Acceptance:
 - Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
 - `scripts/ci.sh` passes.
 
-### T265 — Refactor: move alert routes out of api.py into api_alerts.py
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_alerts.py (new), docs/CODEMAP.md
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T12:34Z
-- pr: #248
-- rating: 5/5 clear
-
-What: Same pattern as T256 (api_live.py): move `GET /alerts`, `GET /alerts/{id}`, `POST /alerts/{id}/feedback` and their helpers (`AlertFeedbackIn`, `_alerts_by_id`, `_alert_payload`) into an `APIRouter` in `api_alerts.py` that `api.py` includes. No behaviour change.
-Interface: `routine_watch.api_alerts.router`; names tests import from `routine_watch.api` keep working (re-export), so tests need no edits.
-Acceptance:
-- api.py shrinks by the moved code; all existing pipeline tests pass unchanged.
-- docs/CODEMAP.md api.py note updated and an api_alerts.py note added.
-- `scripts/ci.sh` passes.
-
 ### T266 — Live screen: "Check again" after a room is unpaused
 - status: done
 - class: standard
