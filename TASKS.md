@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f563195
+- last-reviewed: 82b5bb6
 
 ## Tasks
 
@@ -526,3 +526,90 @@ Interface: Read `web/src/handoff/types.ts`, `Handoff.tsx`, `mockHandoff.ts` and 
 Acceptance:
 - Tests: no line when `paused` is empty or missing; line + chip when one room is paused; `handoffText` includes it.
 - `scripts/ci.sh` passes.
+
+### T254 — Demo residents carry a consent record (who opted in, when)
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo_consent.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §12 says the resident or their substitute decision-maker opts in per room, but nothing shows that consent exists. Add a seeded consent record per demo resident so judges see consent is part of the design (Responsible design / Usefulness).
+Interface: In `demo.py`, add to each `_RESIDENTS` entry and to every `demo_residents()` dict a `consent: {"given_by": str, "on": "YYYY-MM-DD"}` field, e.g. `{"given_by": "Resident", ...}` or `{"given_by": "Substitute decision-maker (daughter)", ...}`; dates before the 14-day history starts, deterministic. `GET /residents` and `/residents/{id}` already return these dicts, so no `api.py` change.
+Acceptance:
+- New `pipeline/tests/test_demo_consent.py`: every demo resident has `consent.given_by` (non-empty) and `consent.on` (ISO date before its first session); `GET /residents/mrs-k` includes `consent`.
+- Existing demo/stability tests unchanged; `scripts/ci.sh` passes.
+
+### T255 — Resident detail: show who consented to monitoring
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T254
+- area: web/src/overview/types.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx, web/src/resident/resident.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Show T254's consent record under the monitoring switch: "Consent: Substitute decision-maker (daughter), 2026-09-28". Small grey text, nothing when the field is missing (older API / mock without it).
+Interface: Read `web/src/overview/types.ts` (resident type), `web/src/resident/ResidentDetail.tsx` (header with `MonitoringToggle`), and `pipeline/src/routine_watch/demo.py` (T254's `consent: {given_by, on}`). Add optional `consent?: { given_by: string; on: string }` to the resident type; give the three mock residents in `web/src/mock/residents.ts` a consent record.
+Acceptance:
+- Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
+- `scripts/ci.sh` passes.
+
+### T256 — Refactor: move monitoring routes and /ws/live out of api.py
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_live.py, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: `api.py` is 450 lines mixing residents, alerts, feedback, replay, monitoring and the live socket. Move `GET /monitoring`, `PUT /rooms/{room}/monitoring`, `_room_for`, `_pause_message` and `/ws/live` into a new `api_live.py` (FastAPI `APIRouter`) included by `api.py`. Pure move: no behaviour or URL change.
+Interface: `api_live.router` included with `app.include_router(...)`; keep any names tests import from `routine_watch.api` re-exported there (grep `pipeline/tests` for `from routine_watch.api import`). Add a CODEMAP note.
+Acceptance:
+- No test file changes needed except imports; all of `pipeline/tests/test_api_monitoring.py`, `test_live*.py` pass unchanged.
+- `api.py` shrinks by ≥80 lines; `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T257 — Contracts: JSON Schemas for /residents and /handoff payloads
+- status: todo
+- class: heavy
+- priority: 2
+- kind: improvement
+- source: reviewer
+- deps: T250, T251
+- area: contracts/resident.schema.json, contracts/handoff.schema.json, contracts/README.md, pipeline/tests/test_api_payload_contracts.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: REVIEW.md noted the resident and handoff payloads have no `contracts/` schema and web types are hand-mirrored (`web/src/overview/types.ts`, `web/src/handoff/types.ts`), which is how fields drift. Add schemas describing today's shapes (incl. `top_pattern`, `monitoring_paused`/`paused` from T251).
+Interface: Read `api.py` `list_residents`/`get_resident`/`shift_handoff`, `handoff.py`, `demo.py`, and the two web type files. Schemas only plus a test; don't change payload shapes. If a web type disagrees with the API, note it in the PR and file nothing else in this PR.
+Acceptance:
+- pytest validates `GET /residents`, `GET /residents/{id}` for every demo resident, and `GET /handoff` against the schemas (fakes only).
+- `contracts/README.md` lists both; `scripts/ci.sh` passes.
+
+### T258 — Test: pause flow end to end in the API (pause → handoff → live → reset)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: T251
+- area: pipeline/tests/test_pause_flow.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Pausing a room now touches four places (monitoring store, `/handoff`, `/ws/live`, `/demo/reset`) built in separate PRs. One test walks the whole flow so a regression in any shows up.
+Interface: FastAPI `TestClient` only, fakes only. Steps: `PUT /rooms/204/monitoring {"on": false}` → `GET /monitoring` lists 204 → `GET /handoff` lists Mrs. K's room as paused (T251 field) → `/ws/live` first message is `{"type":"paused","room":"204"}` → `POST /demo/reset` → `/monitoring` empty and `/ws/live` sends `session_start`. Read `pipeline/tests/test_api_monitoring.py` and `conftest.py` for fixtures.
+Acceptance:
+- New test file passes; no source changes; `scripts/ci.sh` passes.

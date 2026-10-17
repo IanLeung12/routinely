@@ -220,3 +220,5 @@ T242 | light | claude-sonnet | merged first try | ~20k tok
 T238 | standard | claude-sonnet | merged first try | ~130k tok
 T239 | standard | claude-sonnet | merged after conflict fix | ~95k tok
 T244 | standard | claude-opus | merged first try | ~95k tok
+T249 | standard | claude-sonnet | merged first try | ~45k tok
+T243 | standard | claude-sonnet | merged first try | ~65k tok
