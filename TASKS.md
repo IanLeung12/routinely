@@ -27,15 +27,16 @@ Acceptance:
 * No other file changed.
 
 ### T187 — Test: App shows the live routine picker with tea selected
-- status: claimed
+- status: todo
 - class: light
 - priority: 3
 - kind: test
 - deps: —
 - area: web/src/App.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T15:00Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T187-wip-1503: start from it (git switch task/T187-wip-1503 && git merge origin/main)
 
 What: T161 swapped `LiveSession` for `LiveScreen` in `App.tsx`; nothing at app level checks the picker is there. Add one test.
 Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/LiveScreen.tsx`. Reuse App.test's existing fetch/websocket mocks.
