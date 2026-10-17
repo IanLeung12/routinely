@@ -24,15 +24,15 @@ What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T411 — Wording pass: people, not just residents and nurses
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: ian
 - deps: T408, T409, T410
 - area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T23:26Z
 - pr: —
 - note: released by max_API_standard-2: run ended without progress
 
