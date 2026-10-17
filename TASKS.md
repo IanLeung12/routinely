@@ -394,7 +394,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T329 — Test: resident routes return 404 for an unknown resident
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -523,7 +523,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T336 — Review: unclear sessions are scored and can flag (quality.py never wired)
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
