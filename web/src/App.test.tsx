@@ -56,6 +56,19 @@ describe('App', () => {
     expect(screen.getByRole('note')).toBeTruthy()
   })
 
+  it('has a skip link before the main landmark, for keyboard users', async () => {
+    await act(async () => {
+      render(<App />)
+    })
+
+    const skipLink = screen.getByRole('link', { name: 'Skip to main content' })
+    expect(skipLink.getAttribute('href')).toBe('#main')
+    const main = screen.getByRole('main')
+    expect(main.id).toBe('main')
+    // The skip link is the first focusable element, ahead of the main landmark.
+    expect(skipLink.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('opens the mock alert evidence and returns to the overview', async () => {
     await act(async () => { render(<App />) })
     await act(async () => {
