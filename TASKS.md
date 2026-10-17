@@ -370,7 +370,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T230 — Review: live summary's "usually ~" averages the resident's whole history, drift included
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -379,7 +379,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, web/src/live/LiveSession.tsx, web/src/resident/types.ts
 - owner: ian-claude
 - claimed: 2026-10-17T11:02Z
-- pr: —
+- pr: #222
+- rating: 5/5 clear - the interface named the exact fields and where to compute them; only thing not mentioned was alerts.py's Baseline(**resident['baseline']) splat, which breaks when the payload grows
 
 What: `useResidentBaseline` in `web/src/live/LiveSession.tsx` averages `duration_s` and error totals over *every* non-assisted session of mrs-k, including the recent bad days that triggered her flag. So the end-of-session "usually ~Xs / ~N errors" is inflated by exactly the change we're flagging, and disagrees with the pipeline's baseline, which is anchored to the earliest `BASELINE_DAYS` (demo.py, SPEC §8 beat 6). It also re-implements baseline logic in the web.
 Interface: in `demo.py`, where the resident baseline is built from the early window, also compute `usual_duration_s` and `usual_errors` (mean over the same early, non-assisted sessions) and serve them inside `baseline` from `GET /residents/{id}`. Add both as optional fields to `Baseline` in `web/src/resident/types.ts`; have `LiveSession.tsx` read them instead of averaging `sessions`, and delete `average`/`sessionErrorTotal`.
