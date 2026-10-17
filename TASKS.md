@@ -465,14 +465,14 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T188 — Docs: DEMO.md covers /demo/reset and ?task=meds
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:22Z
 - pr: —
 
 What: The demo runbook doesn't say how to put the demo back between rehearsals or how to open the medication routine directly. Add both.
