@@ -547,7 +547,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T376 — Review: live "Open alert" CTA uses ui/Button and sits outside the status live region
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -556,7 +556,8 @@ Acceptance:
 - area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css, web/src/live/LiveSession.test.tsx
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T18:43Z
-- pr: —
+- pr: #360
+- rating: 5/5 clear - the interface named the exact component, class name and the live-region problem; only unstated detail was that LiveSession.test.tsx asserts summary.nextElementSibling has role=status, so the banner-row wrapper has to be conditional on the CTA
 
 What: the demo's key click (SPEC §10, DEMO.md "Alert" beat) is a raw unstyled `<button>` nested inside `<p role="status">` in `LiveSession.tsx` (~line 216). It ignores `web/src/ui/Button.tsx` and, inside a live region, screen readers re-announce the button text with the banner.
 Interface: keep the `<p role="status">` for the banner text only; render `<Button onClick={() => onOpenAlert(ended.alert_id)}>Open alert</Button>` (from `../ui/Button.tsx`) as a sibling right after it, wrapped in a `div.live-session__banner-row` if layout needs it (CSS in `liveSession.css`, use existing CSS vars, no hex colours).
