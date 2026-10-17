@@ -206,14 +206,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T268 — Test: GET /handoff window bounds
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_handoff_window.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T13:53Z
 - pr: —
 
 What: `GET /handoff?hours=` is declared `Query(ge=1, le=168)` in pipeline/src/routine_watch/api.py (read `shift_handoff`), but nothing tests the bounds.
