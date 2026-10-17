@@ -363,13 +363,13 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T049 — Slow-drift trend card component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/resident/DriftCard.tsx, web/src/resident/DriftCard.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:27Z
 - pr: —
 
 What: SPEC Nice-to-have 6: show a slow upward trend in a resident's error score, separate from the sudden-change flag. Pure presentational component; not wired into any screen yet. Read only the files in `area`, `web/src/ui/Card.tsx`, `web/src/ui/README.md` and `pipeline/src/routine_watch/drift.py` (the data it will display).
