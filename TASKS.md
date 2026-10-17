@@ -319,7 +319,7 @@ Acceptance:
 - `cd web && npx vitest run` and `scripts/ci.sh` pass.
 
 ### T157 — replay.py: scenarios can give sessions a duration so motor_slowing is reachable
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: test
