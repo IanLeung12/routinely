@@ -247,7 +247,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T183 — Review: overview/handoff top pattern ignores nurse-feedback weights
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -256,7 +256,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_api_residents.py
 - owner: ian-claude
 - claimed: 2026-10-17T09:23Z
-- pr: —
+- pr: #185
+- rating: 5/5 clear - the fix, the helper and the acceptance test were all named exactly; only unstated bit was that alerts.py is outside the listed area
 
 What: `/residents` shows `top_pattern` from `demo.py` (`score_patterns` with no weights), while the alert's `patterns[0]` is re-weighted by `FeedbackStore.pattern_weights` (T130). After a nurse answers "what was it?", the overview chip and the alert can name different patterns for the same resident. `handoff.build_handoff` also calls `build_alerts(residents)` without `feedback=`. Fix: in `api._tuned`, when the resident has pattern weights, recompute `top_pattern` with `score_patterns(features, weights=..., answers=...)` (reuse `alerts._patterns` or expose a small helper) and pass the store into `build_alerts` in handoff.
 Acceptance:
