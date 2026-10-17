@@ -374,3 +374,43 @@ Acceptance:
 - New `ReplayPlayer.markers.test.tsx` (Vitest + Testing Library, fake timers): markers render with accessible names; clicking one moves the "Replay position" slider to the right frame; 2× advances twice as many frames as 1× over the same time; arrow keys step and pause; no `markers` prop → no marker buttons.
 - Existing `ReplayPlayer*.test.tsx` pass unchanged.
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass.
+
+### T447 — DEMO.md: click path for the new screens (people, My routine, routine builder, replays)
+- status: todo
+- class: light
+- priority: 1
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+- source: proposed
+
+Why: Ian films the demo at 03:00 UTC from docs/DEMO.md, and its click path predates the people/supervisor roles, My routine, the routine builder and the replays screen, so he'd have no run order for them.
+What: Extend the "Click path" section of `docs/DEMO.md` with short steps (same bullet style) for: "People I support" + add a person, the *Myself* view ("My routine": how this week looks, privacy card), the Routines screen + routine builder (describe it → editable task map → save; note it uses a canned fake draft unless `LIVE_API=1`), and the replays library if a nav entry for it exists on main (otherwise skip it). Keep the existing SPEC §10 order; put the new steps after "Shift handoff" and before "Close" as an optional segment.
+Interface: read only `docs/DEMO.md`, `web/src/App.tsx` (nav labels), `web/src/people/PeopleISupport.tsx`, `web/src/people/MyRoutine.tsx`, `web/src/routines/RoutinesScreen.tsx`, `web/src/routines/RoutineBuilder.tsx` to get the exact button/heading text. Don't change code.
+Acceptance:
+- Every button/heading named in the new steps exists verbatim in those files.
+- Wording: "flags a change for review", never "diagnoses".
+- `scripts/ci.sh` passes.
+
+### T448 — Smoke: check the routines and replays endpoints
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+- source: proposed
+
+Why: the demo now shows the routine builder and replays, but `scripts/smoke.sh` (preflight before filming) never calls them; T443 showed these paths can break on the live API unnoticed.
+What: add checks to `scripts/smoke.sh` in the existing `get` / `check_json` / `fail` style: `GET /routines` is a non-empty JSON list whose items have `id` and `title`; `GET /routines/<first id>` has a `task_graph`; `POST /routines/draft` with a short text description returns 200 with a task graph (fake drafter by default; skip this check with a printed note if it answers 503/501); `GET /people/<a person id>/replays` returns a JSON object (take the id from the residents/people list the script already fetches, as `demo_room` is derived).
+Interface: read `scripts/smoke.sh`, `pipeline/src/routine_watch/api_routines.py` (request shape of `/routines/draft`), `pipeline/src/routine_watch/api_residents.py` lines 175–240. No changes outside `scripts/smoke.sh`.
+Acceptance:
+- `scripts/dev.sh up && scripts/smoke.sh; scripts/dev.sh down` passes on main with all new checks listed.
+- Never makes a real Gemini call (LIVE_API unset).
+- `scripts/ci.sh` passes.
