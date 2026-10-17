@@ -1,0 +1,24 @@
+# An otherwise-correct session with one unusually long gap: 100 seconds between
+# putting the teabag in and pouring, against ~2-6 seconds everywhere else. That is
+# under the abandonment threshold (120s, routine_watch.errors.ABANDON_AFTER_S), so it
+# is not abandonment, and a gap this long - a hesitation, per
+# routine_watch.hesitation - is not something classify_errors reports at all: the
+# hesitation stage is not folded into replay yet (see replay.py's module docstring).
+# The point is that a long pause on its own, below the abandonment cutoff, must never
+# surface as a task error or flag a change.
+task: tea
+
+steps:
+  - fill_kettle
+  - get_cup
+  - boil
+  - teabag_in_cup
+  - pour # 100s after teabag_in_cup, still under the 120s abandonment threshold
+  - milk
+  - stir
+  - remove_teabag
+
+errors: []
+score: 0.0
+
+flag: false
