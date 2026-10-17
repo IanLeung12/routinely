@@ -38,6 +38,22 @@ describe('AlertView', () => {
     expect(document.body.textContent?.toLowerCase()).not.toContain('diagnos')
   })
 
+  it('shows a recent care record from the resident near the alert', async () => {
+    const alert: Alert = { ...MRS_K, created_at: '2026-01-01T20:30:00Z' }
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes(`/alerts/${MRS_K.alert_id}`)) {
+        return Promise.resolve({ ok: true, json: async () => alert })
+      }
+      return Promise.reject(new Error('offline'))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    expect(await screen.findByText('Recent care records')).toBeTruthy()
+    expect(await screen.findByText('Medication change: amoxicillin')).toBeTruthy()
+  })
+
   it('shows no clear pattern when an alert has no patterns', async () => {
     const alert: Alert = { ...MRS_K, patterns: [] }
     const fetchMock = vi.fn((url: string) => {
