@@ -190,7 +190,7 @@ Acceptance:
 - `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass.
 
 ### T173 — Docs: CODEMAP note for the overview's top pattern
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: docs
@@ -198,7 +198,8 @@ Acceptance:
 - area: docs/CODEMAP.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:18Z
-- pr: —
+- pr: #175
+- rating: 5/5 clear
 
 What: T089 (PR #149) added `top_pattern` to `GET /residents` (computed in `demo.py` `_top_pattern`, only for watch/flagged residents) and shows it on the unit overview, but `docs/CODEMAP.md` notes don't mention it. Add a 1-3 line note. Also add one line that `web/src/live/LiveScreen.tsx` (T161, PR #166) wraps `LiveSession` with a tea/medication routine picker.
 Interface: Read only `docs/CODEMAP.md`, `git show 597b34d --stat`, `web/src/live/LiveScreen.tsx`, and `_top_pattern` in `pipeline/src/routine_watch/demo.py`. Edit notes only, not the generated file list. Use "consistent with" wording.
