@@ -505,7 +505,7 @@ Acceptance:
 - `cd web && npm test -- ResidentDetail` and `scripts/ci.sh` pass
 
 ### T218 — Test: DemoBanner disables Reset while resetting and clears the error on retry
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -513,7 +513,8 @@ Acceptance:
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T10:18Z
-- pr: —
+- pr: #207
+- rating: 5/5 clear
 
 What: the Reset demo button (T189, T200) is the presenter's recovery path, so pin its behaviour: the button is disabled while the reset promise is pending, and a "Couldn't reset the demo" error from a failed attempt disappears after a later successful reset. If the second case fails today, fix it in DemoBanner.tsx.
 Interface: `DemoBanner({ onReset })` with an injected fake `onReset`; read only the area files.
