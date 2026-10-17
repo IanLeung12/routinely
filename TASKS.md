@@ -359,7 +359,7 @@ Acceptance:
 - CODEMAP note for the new module; `scripts/ci.sh` passes.
 
 ### T210 — Live screen: end-of-session summary against the resident's normal
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
