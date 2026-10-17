@@ -448,15 +448,15 @@ Acceptance:
 - CODEMAP note for the new module; `scripts/ci.sh` passes.
 
 ### T210 — Live screen: end-of-session summary against the resident's normal
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/live/SessionSummary.tsx (new), web/src/live/SessionSummary.test.tsx (new), web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T10:03Z
 - pr: —
 
 What: Rationale: on demo day the live session just stops; a one-glance close ("Finished in 3m 40s, usually ~2m 50s · 2 errors, usually 0–1") makes the per-resident-baseline idea land for judges (Clarity). Shown when the `session_end` message arrives, above the existing flag/Open alert block.
