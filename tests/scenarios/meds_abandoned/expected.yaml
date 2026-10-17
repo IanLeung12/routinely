@@ -1,0 +1,19 @@
+# The resident opens the organiser and takes the pill out, then leaves a
+# 131-second silence with the water steps left undone. The unfinished routine
+# flags for review alongside a second bad session in the preceding 48 hours.
+task: meds
+steps: [get_glass, open_organiser, take_pill]
+errors:
+  - { type: omission, step: fill_glass }
+  - { type: omission, step: drink_water }
+  - { type: abandonment }
+score: 8.0
+history:
+  - { hours_ago: 192, score: 0.0 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, score: 5.0 }
+flag: true
