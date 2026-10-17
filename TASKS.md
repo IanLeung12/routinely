@@ -371,15 +371,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T450 — Safety check-in backend: alert → check-in countdown → supervisor alarm → escalation (Project KAZE)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: pipeline/src/routine_watch/checkin.py, pipeline/src/routine_watch/api_checkin.py, pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_checkin.py, pipeline/tests/test_api_checkin.py, SPEC.md
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T23:57Z
 - pr: —
 
 What: Ian is entering the **Project KAZE** challenge ("help when someone can't ask for it themselves"). Whenever an **alert** is raised for a person, the system asks the **person** to check in. If they don't within a window, it **sounds an alarm for their supervisor**, then escalates to the next supporter if nobody acknowledges. All simulated; never a real call or SMS.
