@@ -331,14 +331,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_replay.py -q` and `scripts/ci.sh` pass.
 
 ### T021 — Alerts + feedback API
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - deps: T012, T015, T016, T018
 - area: pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:46Z
-- pr: —
+- pr: #24
 
 What: Build `Alert` contracts for flagged demo residents (summary from `TemplateExplainer`, checks from `checks.suggest_checks`, errors from their latest sessions) and expose them plus the one-tap nurse feedback loop (SPEC §5 MVP 5 and 7).
 Interface: `alerts.build_alerts(residents) -> list[Alert]`; `GET /alerts`, `GET /alerts/{id}` (404 unknown), `POST /alerts/{id}/feedback` body `{verdict: "confirmed"|"false_alarm", note?}` → records in a module-level `FeedbackStore` and returns the updated alert incl. feedback and the resident's adjusted threshold. In-memory only, no DB. Deterministic alert ids.
