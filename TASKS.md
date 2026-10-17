@@ -411,7 +411,7 @@ Interface: in `scripts/integration.sh`, warm the dev server before the render ch
 Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a row from cold; breaking `web/src/main.tsx` on purpose makes it fail.
 
 ### T428 — Handoff: delta chip onto the Pill primitive
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
