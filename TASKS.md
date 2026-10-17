@@ -36,47 +36,6 @@ Acceptance: same data and states (loading/empty/error) as now; before/after scre
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
-### T407 — Redesign: landing page onto the Fey-inspired system
-- status: done
-- class: standard
-- priority: 0
-- kind: improvement
-- deps: T401, T417
-- area: web/src/landing/, web/landing.html
-- owner: ian-claude
-- claimed: 2026-10-17T21:28Z
-- pr: #405
-- rating: 4/5 clear; the only judgement call was that the chart kit's band is symmetric around the mean, so an error score needs data whose mean is well above 2 sigma to avoid a negative lower bound
-
-What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN.md`: dark premium hero, one real chart from the chart kit (a resident's score vs personal baseline band, with the end-of-line tag) as the hero visual, sections as hairline cards. Check Fey refs via the mobbin MCP. Copy unchanged unless it breaks the layout.
-Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
-
-### T409 — Person view: "My routine"
-- status: done
-- class: heavy
-- priority: 0
-- kind: feature
-- source: ian
-- deps: T408
-- area: web/src/people/MyRoutine.tsx, web/src/people/MyRoutine.test.tsx, web/src/person/routine/
-- owner: ian-claude-heavy-3
-- claimed: 2026-10-17T21:23Z
-- pr: #407
-- note: T408 already shipped a basic MyRoutine in web/src/people/MyRoutine.tsx; extend it there, put new pieces under web/src/person/routine/ (own CSS file, not people.css). Use PrivacyCard (T429) and personNotes (T423).
-- rating: 4/5 clear on the sections and wording; it pointed at PrivacyCard (T429) and personNotes (T423) as if both had landed, but T429 was still todo, so the privacy card had to be built to its interface inside this area
-
-What: What someone watching themselves sees (SPEC §17). Calm and personal; never alarming or diagnostic. Use the mobbin MCP for 2–3 references of calm personal health/habit dashboards (and follow `docs/DESIGN.md` if it has landed).
-Interface (`web/src/person/MyRoutine.tsx` + pieces):
-- Status in plain words ("Your routine looks like your usual this week" / "A few things looked different today").
-- One chart: my usual vs today/this week (reuse existing chart components or the chart kit if merged).
-- Recent sessions (task, time, what went smoothly / what was different).
-- **Notes** when a change is flagged: the same patterns, rephrased for the person ("Some steps took longer than usual for you, mostly in the evening. Worth mentioning to Lena or your doctor."), with a "tell my supervisor" button (mock). Use `personNote`/`personStatus` from `web/src/person/personNotes.ts` (T423) if merged.
-- **Who can see this**: supervisors list with remove; "Invite someone" (shows the invite code + copy link from T408's API); self-monitoring state when there's nobody.
-- Privacy: pause monitoring, "what's stored" (skeletons only, no video), and "your supervisors see exactly this".
-Acceptance:
-- Vitest for each section incl. no-supervisor and flagged states; wording test: no "diagnos", no "patient", no alarm words ("danger", "warning", "emergency") in person-facing copy.
-- Keyboard + screen-reader friendly; mobile width works; `scripts/ci.sh` passes. Screenshot in PR.
-
 ### T410 — Supervisor side: "People I support" + add a person
 - status: claimed
 - class: standard
@@ -148,38 +107,6 @@ Interface:
 - Entry points: from a person's detail ("Replays"), from an alert's error rows, and from "My routine" for the person.
 - Offline/mock fallback in `web/src/mock/replays.ts`.
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
-
-### T418 — Chart kit: BarChart (paired bars + callout)
-- status: done
-- class: light
-- priority: 0
-- kind: improvement
-- source: ian
-- deps: T401
-- area: web/src/ui/charts/BarChart.tsx, web/src/ui/charts/BarChart.test.tsx
-- owner: Max_codex_light
-- claimed: 2026-10-17T20:48Z
-- pr: #394
-- rating: 5/5 clear
-
-What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` (tokens) and `web/src/ui/` primitives. SVG `BarChart`: slim rounded bars, optional second series muted/outlined beside each bar (e.g. this week vs usual), optional callout pill above one highlighted bar (`callout={{index, label: "2.4× usual"}}`), tiny muted labels, tokens only (no hex). Props: `data: {label: string, value: number, compare?: number}[]`, `ariaLabel`, `highlight?`. Self-contained (own min/max scaling; don't import `scale.ts`).
-Acceptance: renders N bars; compare series only when present; callout shows its label; has an accessible name and a visually hidden data table; `cd web && npx vitest run src/ui/charts/BarChart.test.tsx`.
-
-### T419 — Chart kit: MicroBars (14-day tick strip)
-- status: done
-- class: light
-- priority: 0
-- kind: improvement
-- source: ian
-- deps: T401
-- area: web/src/ui/charts/MicroBars.tsx, web/src/ui/charts/MicroBars.test.tsx
-- owner: ian-claude
-- claimed: 2026-10-17T21:04Z
-- pr: #398
-- rating: 5/5 clear
-
-What: Split from T402. Read only `docs/DESIGN.md` and `web/src/index.css`. A row of thin vertical ticks (like Fey's sector rows), one per day, height = score, colour by status token (normal / watch / flagged; missing day = faint hairline). Props: `days: {date: string, score: number | null, status: 'normal'|'watch'|'flagged'}[]`, `ariaLabel`. Fixed small size (~84×20) for list rows.
-Acceptance: one tick per day; null days render as hairlines; status colours via tokens; accessible name summarises "14 days, 2 flagged"; `cd web && npx vitest run src/ui/charts/MicroBars.test.tsx`.
 
 ### T420 — Restyle: overview Sparkline → MicroBars
 - status: claimed
