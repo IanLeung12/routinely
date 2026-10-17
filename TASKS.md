@@ -534,3 +534,56 @@ Interface: `web/src/ui/errorTypes.ts` exports `ERROR_TYPE_LABEL: Record<ErrorTyp
 Acceptance:
 - Unit test covers every `ErrorType` in all three exports.
 - `scripts/ci.sh` passes.
+
+### T076 — Tests for ContextTimeline and BaselineChart
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
+Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/types.ts, and web/src/resident/format.test.ts (for test style). Use vitest + @testing-library/react like the existing tests.
+Acceptance:
+- ContextTimeline: empty list shows "No care records for this resident."; records render newest first; temperature/fluid_intake/med_change get their readable labels ("Temperature 37.9 °C", "Fluid intake 800 ml", "Medication change: ...").
+- BaselineChart: renders without crashing for typical props and for an empty series (no NaN in rendered attributes).
+- `cd web && npm test -- --run` and `scripts/ci.sh` pass.
+
+### T077 — Tests for the offline fallbacks in overview/api.ts and resident/api.ts
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/api.test.ts, web/src/resident/api.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: The demo relies on the web app falling back to mock data when the pipeline API is down (SPEC §10 fallback), but `fetchResidents`, `fetchResident` and `fetchDrift` are untested. Add tests with a stubbed `fetch` (`vi.stubGlobal`); do not change the source files.
+Interface: read only web/src/overview/api.ts, web/src/resident/api.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, and web/src/alert/api.test.ts (for the fetch-stub pattern).
+Acceptance:
+- Each function: returns the JSON body on a 200; returns the mock data on a non-OK response; returns the mock data when fetch rejects.
+- `fetchResident` returns null for an unknown id when offline; the resident id is URL-encoded in the request URL.
+- `cd web && npm test -- --run` and `scripts/ci.sh` pass.
+
+### T078 — Scenario: kettle boiled twice is a repetition flag
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_kettle_twice/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a replay scenario for the "repetition" error type (SPEC §7): the resident boils the kettle twice, then finishes the tea normally.
+Interface: copy the layout of tests/scenarios/tea_skip_teabag_pour_twice/ (frames.jsonl + expected.yaml); read tests/scenarios/README.md for the format and pipeline/src/routine_watch/tasks/tea.yaml for step ids. Do not edit README.md (separate task) or any pipeline code.
+Acceptance:
+- expected.yaml lists exactly one repetition error on the kettle step and states whether the session flags, matching what the replay produces.
+- `scripts/e2e.sh` passes with the new scenario included; `scripts/ci.sh` passes.
