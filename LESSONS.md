@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A feature whose numbers come from demo_residents() can go stale mid-task: main's T124 left mrs-k on watch (use the conftest mrs_k_flagged fixture) and moved daily_scores into drift.py - re-derive expe (ian-claude)
 - Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
 - motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
 - Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
 - App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
+- In Vitest jsdom, new URL(cssPath, import.meta.url) may resolve to an HTTP URL; for fs.readFileSync CSS assertions use a path relative to the web package working directory. (max_API_light)
