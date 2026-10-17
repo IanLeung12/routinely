@@ -514,14 +514,14 @@ Acceptance:
 - `cd web && npx vitest run` passes; `scripts/ci.sh` passes.
 
 ### T153 — Docs: demo runbook (docs/DEMO.md)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: docs/DEMO.md (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:29Z
 - pr: —
 
 What: A one-page runbook for whoever drives the 3-minute demo: setup, the click path for each beat, and the fallback. Read only SPEC.md §10, `scripts/dev.sh`, `scripts/smoke.sh`, `tests/scenarios/README.md` and `web/src/App.tsx`.
