@@ -25,7 +25,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T413 — Replays library for supervisors and the person
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -35,7 +35,8 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 - note: orch: split after a release without progress. Player work (error markers, speed, arrow keys) moved to T446; this task builds the screen + entry points from ReplayList, ReplayNotes and ReplayPlayer, passing `markers` once T446 merges (render without them otherwise).
 - owner: ian-claude-standard-3
 - claimed: 2026-10-17T23:18Z
-- pr: —
+- pr: #429
+- rating: 4/5 clear, but the listed area (Replays.tsx/test/css, mock/replays.ts, App.tsx) didn't fit the entry-point work the spec asked for (a person's detail, an alert's error rows, My routine); ResidentDetail/AlertView/MyRoutine stayed untouched and entry points went into App.tsx's shell instead -- worth naming that tradeoff in the task next time
 
 What: A "Replays" screen where a supervisor can browse a person's sessions that had errors and analyse them, and the person can see (and delete) their own (SPEC §17: they see exactly what supervisors see). Use the mobbin MCP for 2–3 references of video/recording libraries and timeline scrubbers; follow `docs/DESIGN.md` if merged.
 Interface:
