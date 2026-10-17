@@ -30,7 +30,12 @@ function pressed(name: string): string | null {
   return screen.getByRole('button', { name }).getAttribute('aria-pressed')
 }
 
-afterEach(cleanup)
+const originalUrl = window.location.href
+
+afterEach(() => {
+  cleanup()
+  window.history.replaceState(null, '', originalUrl)
+})
 
 describe('LiveScreen', () => {
   it('plays the tea scenario by default, with tea marked as the active option', () => {
@@ -100,13 +105,12 @@ describe('LiveScreen', () => {
     window.history.pushState({}, '', '/')
   })
 
-  it('falls back to tea for an unrecognised ?task value', () => {
-    window.history.pushState({}, '', '/?task=bogus')
+  it.each(['/', '/?task=tea', '/?task=foo'])('opens on tea for %s', (url) => {
+    window.history.replaceState(null, '', url)
     render(<LiveScreen />)
 
     expect(scenarioOf()).toBe('tea_skip_teabag_pour_twice')
     expect(pressed('Making tea')).toBe('true')
-
-    window.history.pushState({}, '', '/')
+    expect(pressed('Medication with water')).toBe('false')
   })
 })
