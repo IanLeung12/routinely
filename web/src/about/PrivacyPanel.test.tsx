@@ -9,7 +9,7 @@ describe('PrivacyPanel', () => {
     render(<PrivacyPanel />)
 
     const section = screen.getByRole('region', { name: 'Privacy and limits' })
-    expect(within(section).getByRole('heading', { level: 2, name: 'Privacy and limits' })).toBeTruthy()
+    expect(within(section).getByRole('heading', { level: 3, name: 'Privacy and limits' })).toBeTruthy()
     expect(within(section).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Only skeleton points and object boxes leave the camera. No video is stored.',
       'No face recognition. Each camera is linked to a room by configuration.',
