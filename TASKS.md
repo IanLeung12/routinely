@@ -535,7 +535,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T169 — Test: scenarios README lists every scenario folder
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -543,7 +543,8 @@ Acceptance:
 - area: pipeline/tests/test_scenarios_readme.py (new), tests/scenarios/README.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:50Z
-- pr: —
+- pr: #156
+- rating: 5/5 clear
 
 What: The "The scenarios here" table in `tests/scenarios/README.md` is hand-maintained and will drift as scenarios are added. Add a test that every directory under `tests/scenarios/` appears in that table as `` `name` `` and every name in the table is a real directory.
 Interface: Read only `tests/scenarios/README.md` (section "## The scenarios here") and `ls tests/scenarios/`. New `pipeline/tests/test_scenarios_readme.py` locates the repo root from `__file__` (`Path(__file__).resolve().parents[2]`). If a folder is missing from the table, add a one-line row for it (read its `expected.yaml` to describe it).
