@@ -60,7 +60,11 @@ export function TimeOfDayStrip({ buckets }: { buckets?: TimeOfDayErrors[] | null
           const rate = rates[index]
           const share = worst > 0 ? rate / worst : 0
           return (
-            <li key={bucket.bucket} className="time-of-day__bucket">
+            <li
+              key={bucket.bucket}
+              className="time-of-day__bucket"
+              aria-label={`${BUCKET_LABELS[bucket.bucket]}: ${plural(bucket.errors, 'error')}, ${plural(bucket.sessions, 'session')}`}
+            >
               <span className="time-of-day__label">
                 {BUCKET_LABELS[bucket.bucket]}{' '}
                 <span className="time-of-day__hours">{BUCKET_HOURS[bucket.bucket]}</span>
