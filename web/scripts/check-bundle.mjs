@@ -8,10 +8,14 @@ import { gzipSync } from 'node:zlib'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// The redesign shell, person view and replays are always-on screens added
-// 2026-10-17; measured first-load JS is 92536 bytes gzipped. T421's eager
-// resident detail charts bring that to 94908 bytes. Allow modest headroom
-// for those screens. Raise only alongside a PR explaining the growth.
+// Started as the gzipped entry chunk + modulepreload chunks on main right after
+// #237 landed (83848 bytes), rounded up ~10%. Raised for T442: the redesign
+// shell, the person view and the replays added 2026-10-17 are always-on screens
+// and measured 92536 bytes together, over the old 92200 budget; T421's eager
+// resident-detail charts took that to 94908, and main measures 95204 today —
+// under 800 bytes of headroom, so a new always-on screen still has to be
+// lazy(). Raise this only alongside a PR that explains the growth (a new eager
+// dependency, a new always-on screen); do not raise it to silence this check.
 const BUDGET_BYTES = 96_000
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
