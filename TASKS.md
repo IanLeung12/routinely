@@ -148,7 +148,7 @@ Acceptance:
 - existing handoff tests pass; `scripts/ci.sh` passes.
 
 ### T272 — Review: duplicate scenario-README test in tests/ and pipeline/tests/
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
