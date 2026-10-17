@@ -377,13 +377,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_capture.py -q` and `scripts/ci.sh` pass.
 
 ### T040 — Privacy guard test
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/tests/test_privacy.py
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:14Z
 - pr: —
 
 What: SPEC §8/§12 as a test: nothing that flows between stages or is stored can carry an image, and nothing says "diagnose". Read only `pipeline/tests/test_contracts.py` (style), `contracts/README.md` and the file list of `contracts/` and `tests/scenarios/`. Do not edit any other file.
