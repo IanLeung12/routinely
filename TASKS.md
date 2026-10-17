@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f19bb7b
+- last-reviewed: 171de82
 
 ## Tasks
 
@@ -482,3 +482,20 @@ Acceptance:
 - No horizontal scroll on the live screen at 375 px; step labels and error times stay readable (no text below var(--text-sm)).
 - Desktop layout unchanged.
 - `scripts/ci.sh` passes; PR body notes the viewport widths checked.
+
+### T237 — Test: de-flake AlertView "loading state for the evidence card" test under load
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `AlertView > shows a loading state for the evidence card before the replay resolves` fails intermittently under full-suite parallelism (PR #221 CI run 39028279950, and earlier per LESSONS): `findByText('No replay available')` times out at the default 1000 ms after the deferred replay fetch is released. Make it deterministic without changing app code.
+Interface: read only `web/src/alert/AlertView.test.tsx` and `web/src/evidence/ReplayPlayer.tsx` (renders `No replay available` when frames are empty). Fix the test only, e.g. release inside `act` then `await waitFor(() => expect(screen.getByText('No replay available')).toBeTruthy(), { timeout: 3000 })`, and make sure any other `/sessions/` fetches the view makes also resolve (inspect `fetchMock.mock.calls`).
+Acceptance:
+- No app code changed; only AlertView.test.tsx.
+- `cd web && for i in 1 2 3 4 5; do npx vitest run --pool=threads --maxWorkers=1 src/alert/AlertView.test.tsx || exit 1; done` passes, and `scripts/ci.sh` passes.
