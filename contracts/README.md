@@ -14,6 +14,9 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `session.schema.json` | one attempt at one task: resident, task, start and end, assisted, score |
 | `alert.schema.json` | a change flagged for review: sessions, errors, baseline comparison, summary, suggested checks, nurse feedback |
 | `live_message.schema.json` | one message on the live WebSocket (`/ws/live`): a `oneOf` keyed on `type` over `session_start`, `step_state`, `frame`, `step`, `error`, `session_end` and `paused` (SPEC section 16, decision B) |
+| `resident_summary.schema.json` | one row of the unit overview (`GET /residents`): status chip, the pattern the change is consistent with, sparkline (SPEC section 9, screen 1) |
+| `resident.schema.json` | one resident in full (`GET /residents/{id}`): that row plus consent, sessions, care records and baseline (SPEC section 9, screen 2) |
+| `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
 | `examples/capture.jsonl` | four sample frames in the capture format; made-up landmark numbers, real shape |
 
 Each schema is standalone (nested types are repeated in its `$defs`), so a validator
@@ -28,11 +31,21 @@ an envelope around the contracts above. The pipeline sends a session's messages
 every message it sends against the schema, and fails if either side knows a message
 the other does not.
 
+The last three are HTTP payloads rather than records: what a route answers with,
+built by `pipeline/src/routine_watch/demo.py` and `handoff.py` and served by
+`api.py`. The dashboard mirrors them by hand too (`web/src/overview/types.ts`,
+`web/src/handoff/types.ts`), so again nothing is generated for the web side and the
+schema is what both sides are held to:
+`pipeline/tests/test_api_payload_contracts.py` calls all three routes - every demo
+resident, one with a live session in their history, a handoff with a room paused -
+and validates what comes back.
+
 ## Changing them
 
 `pipeline/src/routine_watch/contracts.py` is the source of truth: `CONTRACTS` for the
-records, `PROTOCOLS` for the live socket. The schemas, the sample JSONL and
-`web/src/contracts.ts` are generated from the pydantic models there:
+records, `PROTOCOLS` for the live socket, `PAYLOADS` for the HTTP routes. The
+schemas, the sample JSONL and `web/src/contracts.ts` are generated from the pydantic
+models there:
 
 ```sh
 cd pipeline
