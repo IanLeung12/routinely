@@ -1,0 +1,773 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "An axis-aligned box, normalised to the frame: top-left to bottom-right, 0..1.",
+      "properties": {
+        "x1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y1",
+          "type": "number"
+        },
+        "x2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X2",
+          "type": "number"
+        },
+        "y2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y2",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CaptureFrame": {
+      "additionalProperties": false,
+      "description": "The single per-frame JSONL record (SPEC section 16).\n\nThe live camera, the pre-recorded fallback, tests and scenarios all feed the\npipeline through this one format. The frame itself is dropped after processing.",
+      "properties": {
+        "schema_version": {
+          "default": 1,
+          "description": "routine_watch.capture.FRAME_SCHEMA_VERSION when the record was written.",
+          "minimum": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Frame counter within the session, from 0.",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "t": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T",
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$defs/CaptureSource"
+        },
+        "poses": {
+          "description": "One per person in frame. Two or more means somebody is assisting.",
+          "items": {
+            "$ref": "#/$defs/Pose"
+          },
+          "title": "Poses",
+          "type": "array"
+        },
+        "hands": {
+          "items": {
+            "$ref": "#/$defs/HandLandmarks"
+          },
+          "title": "Hands",
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ObjectDetection"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": [
+        "session_id",
+        "seq",
+        "t",
+        "source",
+        "poses",
+        "hands",
+        "objects"
+      ],
+      "title": "CaptureFrame",
+      "type": "object"
+    },
+    "CaptureSource": {
+      "description": "Where a capture frame came from. All three produce the same record.",
+      "enum": [
+        "camera",
+        "video",
+        "synthetic"
+      ],
+      "title": "CaptureSource",
+      "type": "string"
+    },
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "description": "What a piece of evidence points at. Never a video clip (SPEC section 8).",
+      "enum": [
+        "step_event",
+        "skeleton_replay"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A pointer to evidence already stored: a step event, or a span of the skeleton\nreplay. Never a video clip (SPEC section 8).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "t_start": {
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when kind is step_event: the StepEvent it refers to.",
+          "title": "Event Id"
+        }
+      },
+      "required": [
+        "kind",
+        "t_start",
+        "t_end"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "HandLandmarks": {
+      "additionalProperties": false,
+      "description": "One hand. Steps are hand-object interactions (SPEC section 16).",
+      "properties": {
+        "handedness": {
+          "$ref": "#/$defs/Handedness"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "landmarks": {
+          "description": "The 21 MediaPipe hand landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 21,
+          "minItems": 21,
+          "title": "Landmarks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "handedness",
+        "score",
+        "landmarks"
+      ],
+      "title": "HandLandmarks",
+      "type": "object"
+    },
+    "Handedness": {
+      "description": "Which hand MediaPipe thinks it is looking at.",
+      "enum": [
+        "left",
+        "right"
+      ],
+      "title": "Handedness",
+      "type": "string"
+    },
+    "Landmark": {
+      "additionalProperties": false,
+      "description": "One MediaPipe landmark, normalised to the frame: x and y in 0..1, z relative.",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pose landmarks only; hand landmarks do not report it.",
+          "title": "Visibility"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Landmark",
+      "type": "object"
+    },
+    "LiveFrame": {
+      "additionalProperties": false,
+      "description": "One capture record for the skeleton view: landmarks, boxes and a timestamp,\nnever an image (SPEC section 8). Capped at `routine_watch.live.MAX_FRAME_FPS`.",
+      "properties": {
+        "type": {
+          "const": "frame",
+          "title": "Type",
+          "type": "string"
+        },
+        "frame": {
+          "$ref": "#/$defs/CaptureFrame"
+        }
+      },
+      "required": [
+        "type",
+        "frame"
+      ],
+      "title": "LiveFrame",
+      "type": "object"
+    },
+    "LivePaused": {
+      "additionalProperties": false,
+      "description": "Monitoring is off for this resident's room (SPEC section 12), so nothing is\nbeing watched: the socket sends this in place of what would have come next - the\nsession itself, or the rest of it when a nurse pauses mid-session - and closes.",
+      "properties": {
+        "type": {
+          "const": "paused",
+          "title": "Type",
+          "type": "string"
+        },
+        "room": {
+          "description": "The room whose monitoring is paused.",
+          "minLength": 1,
+          "title": "Room",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "room"
+      ],
+      "title": "LivePaused",
+      "type": "object"
+    },
+    "LiveSessionEnd": {
+      "additionalProperties": false,
+      "description": "The finished session, and the last message a session sends.",
+      "properties": {
+        "type": {
+          "const": "session_end",
+          "title": "Type",
+          "type": "string"
+        },
+        "errors": {
+          "description": "The finished session's whole list, which is what it scored: the reading to settle on, where the error messages are every reading on the way to it.",
+          "items": {
+            "$ref": "#/$defs/TaskError"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "score": {
+          "description": "Weighted sum of this session's errors.",
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "flag": {
+          "description": "Whether this resident's own history, with this session now in it, flags a change for review (SPEC section 7).",
+          "title": "Flag",
+          "type": "boolean"
+        },
+        "alert_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The alert that flag shows up in, or null when nothing is flagged.",
+          "title": "Alert Id"
+        }
+      },
+      "required": [
+        "type",
+        "errors",
+        "score",
+        "flag",
+        "alert_id"
+      ],
+      "title": "LiveSessionEnd",
+      "type": "object"
+    },
+    "LiveSessionStart": {
+      "additionalProperties": false,
+      "description": "Sent first and once: the task graph this session is following, so the dashboard\ndraws the map the session actually ran rather than assuming it is always tea.",
+      "properties": {
+        "type": {
+          "const": "session_start",
+          "title": "Type",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "task_id": {
+          "description": "The task graph being followed, e.g. 'make_tea'.",
+          "minLength": 1,
+          "title": "Task Id",
+          "type": "string"
+        },
+        "steps": {
+          "description": "Every step, in the task map's reading order.",
+          "items": {
+            "$ref": "#/$defs/LiveStep"
+          },
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "session_id",
+        "task_id",
+        "steps"
+      ],
+      "title": "LiveSessionStart",
+      "type": "object"
+    },
+    "LiveStep": {
+      "additionalProperties": false,
+      "description": "One step of the task map, as `session_start` sends it (SPEC section 10).",
+      "properties": {
+        "id": {
+          "description": "The step in the task graph, e.g. 'teabag_in_cup'.",
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "description": "How the step is shown to a nurse.",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "optional": {
+          "description": "A step the task does not require, e.g. sugar.",
+          "title": "Optional",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "optional"
+      ],
+      "title": "LiveStep",
+      "type": "object"
+    },
+    "LiveStepEvent": {
+      "additionalProperties": false,
+      "description": "One step of the task, sent once the step is over.",
+      "properties": {
+        "type": {
+          "const": "step",
+          "title": "Type",
+          "type": "string"
+        },
+        "event": {
+          "$ref": "#/$defs/StepEvent"
+        }
+      },
+      "required": [
+        "type",
+        "event"
+      ],
+      "title": "LiveStepEvent",
+      "type": "object"
+    },
+    "LiveStepStates": {
+      "additionalProperties": false,
+      "description": "The task map as it stands. Sent first with every step pending, and again\nwhenever it changes: that is the map going red and amber mid-session (SPEC\nsection 10). Always the current reading, so a step that turns out not to have been\nmissing goes back to done.",
+      "properties": {
+        "type": {
+          "const": "step_state",
+          "title": "Type",
+          "type": "string"
+        },
+        "states": {
+          "additionalProperties": {
+            "enum": [
+              "pending",
+              "done",
+              "omission",
+              "repeat",
+              "sequence"
+            ],
+            "type": "string"
+          },
+          "description": "One state per step of the task, keyed by step id.",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "States",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "states"
+      ],
+      "title": "LiveStepStates",
+      "type": "object"
+    },
+    "LiveTaskError": {
+      "additionalProperties": false,
+      "description": "One error, sent when it is first classified and once only.\n\nProvisional: an unfinished session is classified again after every step, so this\nis how it read at that moment, and `session_end` carries the list the finished\nsession settles on (`routine_watch.live`).",
+      "properties": {
+        "type": {
+          "const": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "error": {
+          "$ref": "#/$defs/TaskError"
+        }
+      },
+      "required": [
+        "type",
+        "error"
+      ],
+      "title": "LiveTaskError",
+      "type": "object"
+    },
+    "ObjectDetection": {
+      "additionalProperties": false,
+      "description": "One object box in one frame, from the local detector (SPEC section 6.1).\n\nThe detector always runs locally from downloaded weights, never hosted inference.",
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/ObjectLabel"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "box": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "track_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stable across frames while the tracker holds the object.",
+          "title": "Track Id"
+        }
+      },
+      "required": [
+        "label",
+        "confidence",
+        "box"
+      ],
+      "title": "ObjectDetection",
+      "type": "object"
+    },
+    "ObjectLabel": {
+      "description": "Classes the local detector reports (SPEC section 6.1).\n\nMaking tea first, then taking medication with water (SPEC nice-to-have 4), then\nthe two classes every task shares. A task graph says which of these count for\nwhich step, so a new task adds classes here and a `tasks/<name>.yaml` file and\nnothing else. A class the running weights were not trained on is simply never\nreported, and `routine_watch.detector.label_for` drops a class it does not know,\nso the two lists may land one training run apart.",
+      "enum": [
+        "kettle",
+        "cup",
+        "teabag",
+        "spoon",
+        "milk",
+        "sugar",
+        "pill_bottle",
+        "pill_organiser",
+        "glass",
+        "water_jug",
+        "hand",
+        "pouring"
+      ],
+      "title": "ObjectLabel",
+      "type": "string"
+    },
+    "Pose": {
+      "additionalProperties": false,
+      "description": "One person's body skeleton.",
+      "properties": {
+        "landmarks": {
+          "description": "The 33 MediaPipe pose landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 33,
+          "minItems": 33,
+          "title": "Landmarks",
+          "type": "array"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        }
+      },
+      "required": [
+        "landmarks"
+      ],
+      "title": "Pose",
+      "type": "object"
+    },
+    "StepEvent": {
+      "additionalProperties": false,
+      "description": "A step of the task, seen happening between two times (SPEC section 6.2).",
+      "properties": {
+        "event_id": {
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "step_id": {
+          "description": "The step in the task graph, e.g. 'teabag_in_cup'.",
+          "minLength": 1,
+          "title": "Step Id",
+          "type": "string"
+        },
+        "objects": {
+          "description": "Objects the step was done with.",
+          "items": {
+            "$ref": "#/$defs/ObjectLabel"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "t_start": {
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$defs/StepSource"
+        },
+        "unclear": {
+          "default": false,
+          "description": "Low confidence and the verifier could not resolve it. Never an error.",
+          "title": "Unclear",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "session_id",
+        "step_id",
+        "objects",
+        "t_start",
+        "t_end",
+        "confidence",
+        "source"
+      ],
+      "title": "StepEvent",
+      "type": "object"
+    },
+    "StepSource": {
+      "description": "What decided a step happened: the state rules, or the Gemini verifier.",
+      "enum": [
+        "rule",
+        "verifier"
+      ],
+      "title": "StepSource",
+      "type": "string"
+    },
+    "TaskError": {
+      "additionalProperties": false,
+      "description": "One everyday-action error found in a session (SPEC section 7).",
+      "properties": {
+        "error_id": {
+          "minLength": 1,
+          "title": "Error Id",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ErrorType"
+        },
+        "step_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The step the error is about. Null only when no single step applies.",
+          "title": "Step Id"
+        },
+        "t_start": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "self_corrected": {
+          "default": false,
+          "description": "The resident fixed it straight away: a weaker signal, not a full error.",
+          "title": "Self Corrected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "error_id",
+        "session_id",
+        "type",
+        "t_start",
+        "t_end",
+        "evidence"
+      ],
+      "title": "TaskError",
+      "type": "object"
+    }
+  },
+  "description": "One message on the live WebSocket (`/ws/live`, SPEC section 16 decision B).\n\nThe live view crosses the pipeline/web boundary over this one socket, so its\nmessages are a shared shape like any other: `routine_watch.live` yields the\nsession's own (`session_start`, `step_state`, `frame`, `step`, `error`,\n`session_end`), `routine_watch.api` sends `paused` instead when the room's\nmonitoring is off, and the dashboard reads them in\n`web/src/live/useLiveSession.ts`.\n\nA message is an envelope, not a record: what it carries is the contracts above,\nand nothing is stored from the socket itself.",
+  "discriminator": {
+    "mapping": {
+      "error": "#/$defs/LiveTaskError",
+      "frame": "#/$defs/LiveFrame",
+      "paused": "#/$defs/LivePaused",
+      "session_end": "#/$defs/LiveSessionEnd",
+      "session_start": "#/$defs/LiveSessionStart",
+      "step": "#/$defs/LiveStepEvent",
+      "step_state": "#/$defs/LiveStepStates"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/LiveSessionStart"
+    },
+    {
+      "$ref": "#/$defs/LiveStepStates"
+    },
+    {
+      "$ref": "#/$defs/LiveFrame"
+    },
+    {
+      "$ref": "#/$defs/LiveStepEvent"
+    },
+    {
+      "$ref": "#/$defs/LiveTaskError"
+    },
+    {
+      "$ref": "#/$defs/LiveSessionEnd"
+    },
+    {
+      "$ref": "#/$defs/LivePaused"
+    }
+  ],
+  "title": "LiveMessage"
+}
