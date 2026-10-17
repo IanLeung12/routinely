@@ -76,7 +76,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T041 — Second task: taking medication with water
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 3
 - kind: feature
@@ -84,7 +84,7 @@ Acceptance:
 - area: contracts/, pipeline/src/routine_watch/contracts.py, web/src/contracts.ts (regenerated), pipeline/src/routine_watch/tasks/meds.yaml, pipeline/tests/test_meds_graph.py, tests/scenarios/meds_normal/, tests/scenarios/meds_skip_water/
 - owner: ian-claude
 - claimed: 2026-10-17T05:44Z
-- pr: —
+- pr: #59
 
 What: SPEC Nice-to-have 4: show the graph-based approach generalises. Add detector classes `pill_bottle`, `pill_organiser`, `glass`, `water_jug` (contracts change: regenerate schemas + TS via `uv run python -m routine_watch.contracts`), a `meds.yaml` graph (get glass → fill glass; open organiser → take pill → drink water; close organiser optional), and two step-level scenarios.
 Interface: `load_task("meds")` works; existing tea graph and scenarios untouched.
