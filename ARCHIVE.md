@@ -5545,3 +5545,60 @@ Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the 
 Acceptance:
 - Both run in `scripts/e2e.sh`; the long-pause one expects zero errors and no flag.
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T290 — Alert: errors by time of day (morning / afternoon / evening)
+- status: done
+- class: heavy
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: T284
+- area: web/src/alert/TimeOfDayStrip.tsx, web/src/alert/TimeOfDayStrip.test.tsx, web/src/alert/AlertView.tsx, pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py, contracts/alert_detail.schema.json, web/src/contracts.ts
+- owner: ian-claude
+- claimed: 2026-10-17T16:19Z
+- pr: #319
+- rating: 4/5 clear on the interface and acceptance; the bucket cut at 17:00 differs from pattern_features.EVENING_HOUR (16:00) that the strip is evidence for, and the field had to land on the Alert record (not only AlertDetail) for web/src/contracts.ts to carry it, since AlertDetail is not in WEB_PAYLOADS
+
+What: Rationale: evening-only worsening (SPEC §7.5, already in pipeline/src/routine_watch/patterns.py) appears on the alert as text only; a nurse can't see why. Show a small strip of errors per session bucketed morning/afternoon/evening over the last 14 days, as visible evidence for that pattern.
+Interface: optional alert-detail field `errors_by_time_of_day: [{bucket: "morning"|"afternoon"|"evening", sessions: int, errors: int}]` (buckets <12:00, 12:00–17:00, ≥17:00 local); contracts change, so regenerate alert_detail.schema.json and update web/src/contracts.ts and every consumer in this PR. `<TimeOfDayStrip>` under the error list, caption "Errors by time of day, last 14 days"; hidden when the field is absent. No "diagnos" wording.
+Acceptance:
+- pytest: buckets from mrs-k demo history; summed errors equal the 14-day total; payload validates against the schema.
+- Vitest: three buckets with text labels (not colour only); hidden when absent.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T315 — Refactor: shared fake WebSocket helper for live tests
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/testWebSocket.ts, web/src/live/LiveSession.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:03Z
+- pr: #306
+- rating: 5/5 clear
+
+What: web/src/live/LiveSession.test.tsx is 625 lines, much of it hand-rolled WebSocket mocking. Move the fake socket and message helpers into `web/src/live/testWebSocket.ts` and use them from LiveSession.test.tsx, with no change to what is tested.
+Interface: `testWebSocket.ts` exports a fake socket class/installer and a helper to push server messages; test-only (never imported by app code).
+Acceptance:
+- Same number of test cases before and after (state both counts in the PR); LiveSession.test.tsx at least 100 lines shorter.
+- No app code changes. `scripts/ci.sh` passes.
+
+### T316 — Test: every scenario uses real task-graph step ids
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_scenario_step_ids.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T16:07Z
+- pr: #309
+- rating: 5/5 clear
+
+What: A typo in a scenario's step id silently makes it test nothing. Add a pipeline test that loads every `tests/scenarios/*/` scenario and checks each step id it references (steps.jsonl and expected.yaml errors) exists in that scenario's task graph.
+Interface: use `routine_watch.replay.load_scenario` and `routine_watch.tasks.load_task`; read pipeline/src/routine_watch/replay.py and tasks/graph.py. Parametrise over scenario folders.
+Acceptance:
+- Failure message names the scenario and the bad id (show it once locally, note in PR).
+- An existing scenario with a bad id is not fixed here: mark that case xfail with the reason and note it in the PR.
+- `scripts/ci.sh` passes.
