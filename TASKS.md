@@ -406,14 +406,14 @@ Acceptance:
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
 ### T310 — Test: pattern library urgency + level filters combine correctly
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/patterns/PatternLibrary.filters.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T15:41Z
 - pr: —
 
 What: T300 added an urgency filter next to the existing level filter; test that both together narrow the list, that clearing one keeps the other, and that "no match" shows the empty state.
