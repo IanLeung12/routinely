@@ -354,15 +354,15 @@ Acceptance:
 - existing live tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T324 — Shift handoff: "compared with the previous shift" per resident
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_previous.py, pipeline/src/routine_watch/contracts.py, contracts/handoff.schema.json, contracts/examples/, web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.test.tsx, web/src/handoff/types.ts, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T16:46Z
 - pr: —
 
 What: Rationale: a nurse coming on shift wants to know if things are getting better or worse, not just counts. Add each resident's `flags` for the previous window of the same length (`previous_flags`) to `/handoff`, and a small "up / down / same vs previous shift" indicator component.
