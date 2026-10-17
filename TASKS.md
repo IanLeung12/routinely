@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 27e50ba
+- last-reviewed: 13d85b2
 
 ## Tasks
 
@@ -517,3 +517,54 @@ Acceptance:
 - AlertView test asserts a care record from the mock resident appears on the alert screen.
 - No duplicated `describe` between the two components.
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T139 — Docs: scenario README lists only 13 of 20 scenarios
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: `tests/scenarios/README.md` has no row for meds_pill_before_water, tea_bad_sessions_far_apart, tea_kettle_twice, tea_milk_sugar, tea_self_corrected, tea_teabag_three_times (check for others); add one row each in the existing table format.
+Interface: Read only `tests/scenarios/README.md` and each missing scenario's `expected.yaml` (its header comment says what it shows).
+Acceptance:
+- Every directory under `tests/scenarios/` has exactly one row; descriptions are one line, plain words, and say whether it flags.
+- `scripts/ci.sh` passes.
+
+### T140 — Test: every scenario directory is listed in the scenario README
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: T139
+- area: tests/test_scenarios_readme.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The scenario README keeps falling behind new scenarios (T065, T139). Add a pytest that fails when a scenario directory has no row in the README, so CI catches it.
+Interface: New file `tests/test_scenarios_readme.py`: list dirs in `tests/scenarios/` that contain `expected.yaml`; assert each name appears in `tests/scenarios/README.md`. Read only `tests/scenarios/README.md` and `tests/test_tasks_py.py` (for how root tests are written and run).
+Acceptance:
+- Passes on main after T139; deleting a row makes it fail with the missing scenario's name in the message.
+- `scripts/ci.sh` passes and runs the new test (if it doesn't, say so in the PR; don't edit ci.sh).
+
+### T141 — Pattern scenario: executive pattern (perseveration with steps still in order)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/pattern_executive/
+- owner: —
+- claimed: —
+- pr: —
+
+What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `executive_pattern` so e2e proves the library ranks it top when the resident repeats steps (perseveration) while the order stays intact.
+Interface: `tests/scenarios/pattern_executive/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/pattern_slow_drift/` (incl. `history:` and `top_pattern: executive_pattern`). Read the `executive_pattern` entry in `pipeline/src/routine_watch/patterns_library.py` for what it needs. Don't change pipeline code; if the scenario can't reach the pattern without code changes, set the task blocked with the reason.
+Acceptance:
+- `scripts/e2e.sh` passes with the new scenario included and `top_pattern: executive_pattern`.
+- Header comment in expected.yaml explains the shape in 2-4 lines.
