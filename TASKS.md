@@ -545,3 +545,39 @@ Acceptance:
 - `api.test.ts` updated to pass an `Alert`; no `fetchAlert` call inside `evidence/api.ts`.
 - AlertView still shows Loading / Empty / replay states as before (existing tests pass unchanged in behaviour).
 - `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T107 — Review: evidence ghost layer replays the same frames as "today"
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/evidence.py, pipeline/tests/test_evidence.py, tests/scenarios/tea_normal/frames.jsonl
+- owner: —
+- claimed: —
+- pr: —
+
+What: `evidence.py` sets both `_ALERT_SCENARIO` and `_NORMAL_SCENARIO` to `tea_no_kettle`, so `GET /residents/{id}/normal_replay` returns exactly the frames of `GET /sessions/{id}/replay` (only `session_id` differs). On the alert screen the ghost overlay sits perfectly on top of today's skeleton, so demo step 5 ("compare against her normal routine") shows no difference.
+Fix: add a frame-level `tests/scenarios/tea_normal/frames.jsonl` (same capture format and timing as `tea_no_kettle/frames.jsonl`, but with the fill-kettle and boil contacts, so the recogniser reads all tea steps; check `tea_normal/expected.yaml` still passes via `scripts/e2e.sh`) and point `_NORMAL_SCENARIO` at `tea_normal`.
+Acceptance:
+- New test in `test_evidence.py`: for the same window, `normal_replay_frames` and `replay_frames` return different landmark/object data.
+- `scripts/ci.sh` passes (including e2e on `tea_normal`).
+
+### T108 — Review: smoke.sh skips the evidence replay routes and isn't syntax-checked in CI
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- source: reviewer
+- deps: —
+- area: scripts/smoke.sh, scripts/ci.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T037/T080 added `GET /sessions/{session_id}/replay` and `GET /residents/{resident_id}/normal_replay` (`pipeline/src/routine_watch/api.py`), which the alert screen's evidence card depends on, but `scripts/smoke.sh` only checks health/residents/alerts, so a broken replay route passes the demo-day checklist. `scripts/ci.sh` also runs `bash -n` on other scripts but not `smoke.sh`.
+Fix: in `smoke.sh`, after fetching the first alert, read its `errors[0].session_id`, `t_start`, `t_end` and `resident_id` (same inline python3 JSON parsing the script already uses) and check both replay routes return a non-empty `frames` list; add `bash -n scripts/smoke.sh` to the "repo tooling" block of `ci.sh`. Read only these two files plus the two route handlers in `api.py`.
+Acceptance:
+- PASS/FAIL lines for both new checks; FAIL (non-zero exit) on 404 or empty frames.
+- `scripts/ci.sh` passes.
