@@ -114,7 +114,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T231 — Test: integration.sh dashboard check retries instead of failing on a cold Vite start
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -122,8 +122,9 @@ Acceptance:
 - area: scripts/integration.sh
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T12:39Z
-- pr: —
+- pr: #249
 - source: integration
+- rating: 5/5 clear
 
 What: The integration run on main @ 60dce5a failed with "dashboard did not render (no 'Routine Watch' in DOM)", but the orchestrator reran `scripts/integration.sh` on the same sha at 10:52 UTC and it passed, so it is a flake (likely the headless-Chrome DOM dump racing Vite's first compile). Make the check robust, not looser.
 Interface: in `scripts/integration.sh`, the "Rendered dashboard" block (around line 45): retry the `--dump-dom` up to 3 times with a 3 s sleep between attempts before calling `fail`; keep both existing grep checks unchanged.
