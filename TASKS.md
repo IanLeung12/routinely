@@ -410,14 +410,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T243 — Resident detail: monitoring switch reads and writes the real pause state
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: feature
 - deps: T242
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T11:57Z
 - pr: —
 
 What: `ResidentDetail` keeps the monitoring switch in local `useState(true)`, so pausing a room does nothing on the server (SPEC §12). Load the initial state from `fetchPausedRooms()` and call `setRoomMonitoring()` on toggle (T242).
