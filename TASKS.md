@@ -42,7 +42,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T349 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
@@ -393,7 +393,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T338 — Test: unit overview sort combined with filters
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
