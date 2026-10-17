@@ -24,7 +24,7 @@ Acceptance:
 - Short "Layout" section added to README.md describing each dir.
 
 ### T002 — Event contracts
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - deps: T001
