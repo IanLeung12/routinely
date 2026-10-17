@@ -532,15 +532,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T125 — Review: drift/evening/motor demo residents never leave "normal" (no "watch" for demo beat 6)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:48Z
 - pr: —
 
 What: `_status` only returns `watch` when the latest score beats a threshold built from the resident's *whole* history, so a slow drift raises its own bar: `mr-chen` (drift, recent scores 8–9, threshold ≈10.1), `mr-nguyen` (evening) and `mrs-patel` (motor) all show `normal`. SPEC §10 beat 6 needs Mr. D/Chen on `watch` with the slow-drift pattern, and T089's acceptance assumes it.
