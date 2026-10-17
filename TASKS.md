@@ -176,7 +176,7 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
 
 ### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: improvement
@@ -184,7 +184,8 @@ Acceptance:
 - area: docs/DESIGN.md, web/src/index.css, web/src/ui/
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T20:21Z
-- pr: —
+- pr: #387
+- rating: 4/5 clear brief and good starting observations; the only gap was where before/after screenshots should live on a private repo (raw links don't render), so I committed them under docs/design/ which is just outside the stated area
 
 What: Ian wants the dashboard to look like Fey (finance app): quiet, premium, dark, data-first. This task sets the visual language every other redesign task builds on. Use the mobbin MCP (`search_screens` "Fey dashboard", "Fey stock chart", "Fey earnings", "Fey portfolio") to study the references; borrow structure, density and chart style, never Fey's branding or logo. Don't commit Mobbin images; link them.
 References: https://mobbin.com/screens/8487cb92-3969-4f21-a847-26177466cf9a (home), https://mobbin.com/screens/7599e963-22f6-428c-b03e-f0438e2c3291 (watchlist vs markets), https://mobbin.com/screens/d70bd977-1898-4979-a799-bd2dcb94ab25 (financials charts), https://mobbin.com/screens/f7d60fde-c660-4041-8c28-e381512275dd (bar charts), https://mobbin.com/screens/729ec564-7ed7-453d-a3f2-86f51b34c96a (comparison).
