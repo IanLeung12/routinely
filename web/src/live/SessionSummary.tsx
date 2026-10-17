@@ -1,5 +1,6 @@
 import { Card } from '../ui/Card.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
+import './sessionSummary.css'
 
 export type SessionSummaryProps = {
   durationS: number
@@ -10,6 +11,9 @@ export type SessionSummaryProps = {
   usualErrors?: number
 }
 
+// Local, not ../resident/format.ts: that formatDuration always includes "0m"
+// and pads seconds (e.g. "0m 30s"), but this screen drops the minutes part
+// entirely under a minute (e.g. "30s").
 function formatDuration(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
   const minutes = Math.floor(whole / 60)
@@ -33,10 +37,6 @@ function pluralize(count: number): string {
 export function SessionSummary({ durationS, errorCount, usualDurationS, usualErrors }: SessionSummaryProps) {
   return (
     <Card className="session-summary">
-      <style>{`
-        .session-summary__line { margin: 0; font-size: var(--text-base); }
-        .session-summary__usual { color: var(--muted); }
-      `}</style>
       <SectionHeader title="Session summary" />
       <p className="session-summary__line">
         {`Finished in ${formatDuration(durationS)}`}
