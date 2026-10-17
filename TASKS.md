@@ -374,7 +374,7 @@ Acceptance:
 * `cd pipeline && python -m pytest tests/test_handoff_alert_errors.py -q` passes; `scripts/ci.sh` passes.
 
 ### T178 — smoke.sh: check GET /handoff
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -382,7 +382,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:15Z
-- pr: —
+- pr: #174
+- rating: 5/5 clear
 
 What: `scripts/smoke.sh` hits the API routes of a running stack but skips `GET /handoff` (shift handoff screen), so a broken handoff route wouldn't show up in smoke runs.
 Interface: Read only `scripts/smoke.sh` and the `/handoff` route in `pipeline/src/routine_watch/api.py` (returns `{window_hours, residents: [...], summary: str}`, `hours` query 1-168, default 12). Add checks in the existing PASS/FAIL style.
