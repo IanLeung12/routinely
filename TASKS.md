@@ -495,7 +495,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T252 — Web: lazy-load the secondary screens to shrink the first-load bundle
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
