@@ -393,7 +393,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T065 — Docs: scenario README table lists only 4 of 8 scenarios
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
