@@ -401,7 +401,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T306 — Test: live screen works keyboard-only
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -409,7 +409,8 @@ Acceptance:
 - area: web/src/live/LiveScreen.keyboard.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T15:16Z
-- pr: —
+- pr: #296
+- rating: 5/5 clear
 
 What: The demo path runs through the live screen, but only the other screens have keyboard-only tests (T287, T295, T298). Prove a nurse can pick a routine, start the session and open its alert using only Tab/Enter/Space, with the mock live stream.
 Interface: new `web/src/live/LiveScreen.keyboard.test.tsx` only; render `LiveScreen` with the existing mock stream (`mockLiveStream.ts`, fake timers) as `LiveScreen.test.tsx` does; drive with `@testing-library/user-event` keyboard/tab only (no `click`).
