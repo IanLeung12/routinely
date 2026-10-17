@@ -186,7 +186,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T086 — Synthetic history: evening-only worsening resident scenario
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -194,7 +194,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/synth/history.py, pipeline/tests/test_history.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:05Z
-- pr: —
+- pr: #90
 
 What: SPEC §8 needs a resident whose errors are concentrated in late-day sessions (sundowning pattern, §7.5). Add an `"evening"` scenario to the history generator.
 Interface: `generate_history(resident_id, days, seed, scenario="evening")`; add `"evening"` to `SCENARIOS`. Sessions whose local hour (from `ts`) is ≥ 16 in the last ~7 days get 1–3 errors (sequence/omission/hesitation); morning sessions stay like `"normal"`. Read only `pipeline/src/routine_watch/synth/history.py` and `pipeline/tests/test_history.py`; don't touch `demo.py`.
