@@ -17,7 +17,7 @@ export type LiveMessage =
   | { type: 'step'; event: StepEvent }
   | { type: 'step_state'; states: Record<string, StepState> }
   | { type: 'error'; error: TaskError }
-  | { type: 'session_end'; score: number; flag: boolean; alert_id: string | null }
+  | { type: 'session_end'; score: number; flag: boolean; alert_id: string | null; errors?: TaskError[] }
 
 export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }
 
@@ -69,6 +69,7 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
     case 'session_end':
       return {
         ...state,
+        errors: message.errors ?? state.errors,
         ended: { score: message.score, flag: message.flag, alert_id: message.alert_id },
         source,
       }
