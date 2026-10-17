@@ -478,7 +478,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T126 — Review: live-session tests leak into session_log; add a shared reset fixture
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
