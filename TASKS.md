@@ -639,14 +639,14 @@ Acceptance:
 - `cd web && npx vitest run src/tour` passes; `scripts/ci.sh` passes.
 
 ### T388 — Bug: integration.sh can't run next to a dev stack and kills it
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: scripts/integration.sh, scripts/dev.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T19:19Z
 - pr: —
 - source: tester
 
