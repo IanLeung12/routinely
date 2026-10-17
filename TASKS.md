@@ -364,14 +364,14 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T023 — Heat calendar component
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
 - owner: max-codex-light-1
 - claimed: 2026-10-17T04:45Z
-- pr: —
+- pr: #22
 
 What: Presentational calendar grid of error score per day (SPEC Nice-to-have 2). Read only the files in `area`, `web/src/App.test.tsx` (test style) and `web/package.json`. Do not edit any other file.
 Interface: `HeatCalendar({days}: {days: {date: string /* YYYY-MM-DD */; score: number | null}[]})` renders one cell per day in week rows (Mon first), colour from neutral (low/0) to red (high) using inline style or CSS classes, `null` = grey "no session". Each cell has `title` and `aria-label` like "2026-01-03: score 4.5". Empty list renders nothing. No new dependencies.
