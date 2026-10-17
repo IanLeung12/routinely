@@ -383,7 +383,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T306 — Test: live screen works keyboard-only
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
