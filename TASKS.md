@@ -490,13 +490,13 @@ Acceptance:
 - No behaviour assertions change; only async handling.
 
 ### T048 — Bug: heat calendar ignores dark theme; dark text on dark-red cell unreadable
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:17Z
 - pr: —
 
 What: Tester found on Mrs. K's detail screen (main 7c48d9c) that the "Daily scores" calendar renders as a light-grey/white block inside the dark card, and the highest-score day ("1", score 5) shows near-black text on dark red (fails 4.5:1 contrast). Cause: hard-coded colours in `HeatCalendar.tsx` (`#bdbdbd`, `hsl(0, 80%, L%)`, default text colour). Read only the files in `area` and `web/src/index.css` (tokens; do not edit it).
