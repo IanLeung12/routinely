@@ -486,14 +486,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T330 — Heat calendar: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/heatCalendar.css
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T16:43Z
 - pr: —
 
 What: Same series as T234/T239: at 375 px the heat calendar must fit without horizontal page scroll and keep readable cells.
