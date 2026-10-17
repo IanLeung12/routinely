@@ -1,5 +1,6 @@
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { formatScore } from './format.ts'
+import './heatCalendar.css'
 
 type Day = { date: string; score: number | null }
 
@@ -64,11 +65,11 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
         })}
       </div>
       <p>
-        <span aria-hidden="true" style={{ backgroundColor: 'color-mix(in srgb, var(--error-red-bg) 20%, var(--panel))', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        <span aria-hidden="true" className="heat-swatch heat-swatch--low" />{' '}
         Lighter = fewer errors ·{' '}
-        <span aria-hidden="true" style={{ backgroundColor: 'var(--error-red-bg)', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        <span aria-hidden="true" className="heat-swatch heat-swatch--high" />{' '}
         Darker = more errors ·{' '}
-        <span aria-hidden="true" style={{ backgroundColor: 'var(--error-grey-bg)', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        <span aria-hidden="true" className="heat-swatch heat-swatch--none" />{' '}
         Grey = no session
       </p>
     </div>
