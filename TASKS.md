@@ -308,7 +308,7 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass.
 
 ### T447 — DEMO.md: click path for the new screens (people, My routine, routine builder, replays)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: docs
