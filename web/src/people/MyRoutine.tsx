@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import { PrivacyCard } from '../person/routine/PrivacyCard.tsx'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { Loading } from '../ui/Loading.tsx'
 import { Row } from '../ui/Row.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { createInvite, currentPerson, supervisorsOf, unlink } from './api.ts'
 import type { Invite, Relationship } from './types.ts'
 import './people.css'
+import '../person/routine/routine.css'
 
 const RELATIONSHIP: Record<Relationship, string> = {
   family: 'Family',
@@ -14,16 +17,35 @@ const RELATIONSHIP: Record<Relationship, string> = {
   nurse: 'Nurse',
 }
 
-/** The person's home screen (SPEC section 17). A placeholder until T409 fills it with
- * their status in plain words, their usual week against today, recent sessions and the
- * notes behind a change: what is here is the part the linking API already answers, so
- * someone can invite a supervisor and take them off again.
+/** Their week, their chart, their sessions and their notes, fetched when a person
+ * opens their own screen: a supervisor's first paint is the unit dashboard and
+ * shouldn't carry any of it (`web/scripts/check-bundle.mjs`, like App.tsx's
+ * off-path screens). The shell below - who can see this, invites, privacy - is
+ * eager, so the page has its heading and its off switch straight away. */
+const RoutineSections = lazy(() =>
+  import('../person/routine/RoutineSections.tsx').then((module) => ({
+    default: module.RoutineSections,
+  })),
+)
+
+/** The person's home screen (SPEC section 17): their own routine and nobody else's.
  *
- * Calm and plain on purpose. Never alarming, never a conclusion about health. */
+ * In SPEC's order, which is also the order the questions come in: how this week
+ * looked in plain words, their usual against the week, the sessions behind it, a
+ * note when something was different, who can see all of this, and the off switch.
+ * The pieces live in `person/routine/`; this file is the page they sit on.
+ *
+ * Calm and plain on purpose. It says what looked different and who is worth
+ * mentioning it to. It never says what a difference means. */
 export function MyRoutine({ onChange }: { onChange?: () => void }) {
   const person = currentPerson()
   const [supervisors, setSupervisors] = useState(() => supervisorsOf(person.id))
   const [invite, setInvite] = useState<Invite | null>(null)
+  const [copyStatus, setCopyStatus] = useState('')
+  /** Front-end only: there is no capture device to switch off behind this yet, so
+   * pausing says so and stays in this tab (SPEC section 17, mock linking). */
+  const [paused, setPaused] = useState(false)
+  const supervisorNames = supervisors.map((supervisor) => supervisor.name)
 
   function removeSupervisor(supervisorId: string) {
     unlink(person.id, supervisorId)
@@ -31,13 +53,31 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
     onChange?.()
   }
 
+  /** One tap to send the invite instead of reading six characters down the phone. */
+  async function copyLink(link: string) {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        setCopyStatus('Copy not available')
+        return
+      }
+      await navigator.clipboard.writeText(link)
+      setCopyStatus('Link copied')
+    } catch {
+      setCopyStatus('Copy not available')
+    }
+  }
+
   return (
     <section className="my-routine" aria-labelledby="my-routine-heading">
       <h2 id="my-routine-heading">My routine</h2>
       <p className="my-routine__lead">
-        Your usual week, how today went and a gentle note when something looked different
-        all land here. Nothing is shared with anyone you have not added yourself.
+        Your own routine: how this week went, what looked different, and who can see
+        it. Nothing is shared with anyone you have not added yourself.
       </p>
+
+      <Suspense fallback={<Loading label="Loading your week…" />}>
+        <RoutineSections personId={person.id} supervisorNames={supervisorNames} />
+      </Suspense>
 
       <Card>
         <SectionHeader title="Who can see this" />
@@ -86,9 +126,17 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
             <p className="my-routine__link">
               Or send them this link: <span className="my-routine__link-url">{invite.link}</span>
             </p>
+            <Button onClick={() => copyLink(invite.link)}>Copy link</Button>
+            <p className="my-routine__copy-status" role="status">{copyStatus}</p>
           </>
         )}
       </Card>
+
+      <PrivacyCard
+        paused={paused}
+        onTogglePause={() => setPaused((wasPaused) => !wasPaused)}
+        supervisorNames={supervisorNames}
+      />
     </section>
   )
 }
