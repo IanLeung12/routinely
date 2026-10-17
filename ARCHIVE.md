@@ -7914,3 +7914,23 @@ Acceptance:
 - no legacy tokens (`--panel`, `--border`, `--muted`, `--bg`) and no hex/px literals in the two CSS files;
 - wording unchanged ("consistent with", never "diagnose");
 - existing tests pass (update selectors only, keep behaviour); `cd web && npx vitest run src/patterns && npm run lint`.
+
+### T434 — Redesign follow-up: guided tour card on the Fey system
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T401
+- area: web/src/tour/Tour.tsx, web/src/tour/tour.css, web/src/tour/Tour.test.tsx, web/src/tour/Tour.keyboard.test.tsx
+- owner: Max_codex_light
+- claimed: 2026-10-17T22:09Z
+- pr: #413
+- rating: 5/5 clear
+- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
+
+What: Restyle the guided-tour card: `--surface-raised`, `--hairline-strong`, `--radius-lg`, the one allowed float shadow (DESIGN.md principle 3), `Button` from `web/src/ui/Button.tsx` for next/back/close. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area. Don't touch `steps.ts`.
+Why: the tour is the first thing a judge sees on the dashboard; it should match the redesigned screens under it.
+Interface: same `Tour` props/exports; behaviour and keyboard handling unchanged.
+Acceptance:
+- tokens only, no hex/px literals in `tour.css`;
+- existing tests pass (selectors only); `cd web && npx vitest run src/tour && npm run lint`.
