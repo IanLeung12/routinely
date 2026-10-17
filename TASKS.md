@@ -499,14 +499,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T277 — Bug: copied shift handoff says "Room unavailable" for every resident
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: bug
 - deps: —
 - area: contracts/handoff.schema.json, contracts/examples/, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py, web/src/handoff/types.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/handoff/mockHandoff.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T13:21Z
 - pr: —
 
 What: `handoffText()` in `web/src/handoff/Handoff.tsx` hard-codes `Room unavailable` in every resident line of the "Copy summary" text (since T151), because `GET /handoff` rows have no `room`. A nurse pasting the handoff gets no room numbers. Found in orchestrator review of #259.
