@@ -170,7 +170,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T105 — Review: Claude summary guard lets spelled-out numbers through
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: bug
@@ -184,6 +184,7 @@ Acceptance:
 - tests: fake client replying "three errors" with observed=2 → template fallback; "two errors" with observed=2 → Claude reply kept; "someone" / "once" are not treated as numbers.
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:43Z
+- pr: #109
 - `cd pipeline && uv run pytest -q` passes.
 
 ### T106 — Evidence replay: stop fetching the alert twice
