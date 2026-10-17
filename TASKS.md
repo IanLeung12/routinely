@@ -336,14 +336,14 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
 
 ### T346 — Test: alert time-of-day strip has accessible names
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/TimeOfDayStrip.a11y.test.tsx, web/src/alert/TimeOfDayStrip.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:52Z
 - pr: —
 - note: earlier attempt lost to a shared-checkout reset; its work is on branch wip/Max_codex_light-1017-1745 (commit b09a18e). Start from origin/main, cherry-pick b09a18e if useful, run scripts/ci.sh, open the PR. Use your own worktree.
 
