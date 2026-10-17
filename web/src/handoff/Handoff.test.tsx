@@ -26,10 +26,25 @@ const alerts: Alert[] = [
  * not in `residents` gets a 404, same as the real API for an id it doesn't know, so
  * `resident/api.ts` falls back to its own offline mock rather than this test needing
  * to fake every row's detail. */
-function serve(handoff: HandoffData, alertList: Alert[] = alerts, residents: Record<string, unknown> = {}) {
+function serve(
+  handoff: HandoffData,
+  alertList: Alert[] = alerts,
+  residents: Record<string, unknown> = {},
+  history: Record<string, unknown> = {},
+) {
   const fetch = vi.fn().mockImplementation((url: string) => {
     if (url.includes('/alerts')) {
       return Promise.resolve({ ok: true, json: async () => alertList })
+    }
+    const historyMatch = /\/rooms\/([^/]+)\/monitoring\/history$/.exec(url)
+    if (historyMatch) {
+      const room = decodeURIComponent(historyMatch[1])
+      if (room in history) {
+        const entry = history[room]
+        if (entry === false) return Promise.resolve({ ok: false })
+        return Promise.resolve({ ok: true, json: async () => ({ history: entry }) })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ history: [] }) })
     }
     const residentMatch = /\/residents\/([^/]+)$/.exec(url)
     if (residentMatch) {
@@ -330,6 +345,60 @@ describe('Handoff', () => {
     // Mrs. K's row is unaffected: the chip is per resident, not unit-wide.
     const kRow = screen.getByText('Mrs. K').closest('li')
     expect(kRow?.textContent).not.toContain('Monitoring paused')
+  })
+
+  it('shows who paused a room and when, from its audit trail', async () => {
+    serve(
+      {
+        ...served,
+        residents: [
+          { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 0, pending_review: 0, trending: false, monitoring_paused: true },
+        ],
+        paused: [{ room: '204', resident_id: 'mrs-k', name: 'Mrs. K' }],
+      },
+      alerts,
+      {},
+      {
+        '204': [
+          { on: false, by: 'nurse', at: '2026-10-17T13:40:00Z' },
+          { on: true, by: 'nurse', at: '2026-10-17T09:00:00Z' },
+        ],
+      },
+    )
+
+    render(<Handoff onBack={() => {}} />)
+
+    expect(
+      await screen.findByText('Monitoring paused: Mrs. K (room 204), paused by nurse at 13:40'),
+    ).toBeTruthy()
+  })
+
+  it('keeps the plain paused line when the history fetch fails', async () => {
+    serve(
+      {
+        ...served,
+        residents: [
+          { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 0, pending_review: 0, trending: false, monitoring_paused: true },
+        ],
+        paused: [{ room: '204', resident_id: 'mrs-k', name: 'Mrs. K' }],
+      },
+      alerts,
+      {},
+      { '204': false },
+    )
+
+    render(<Handoff onBack={() => {}} />)
+
+    expect(await screen.findByText('Monitoring paused: Mrs. K (room 204)')).toBeTruthy()
+  })
+
+  it('makes no history calls when no room is paused', async () => {
+    const fetch = serve(served)
+
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+
+    expect(fetch.mock.calls.some(([url]) => (url as string).includes('/monitoring/history'))).toBe(false)
   })
 
   it('includes the paused room in the copied handoff text', () => {
