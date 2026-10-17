@@ -166,6 +166,42 @@
   color: var(--error-grey-text);
 }
 
+/* Nurses check the handoff on a phone on the floor (T247): below 480px, stack each
+   row's identity, chips and alert button instead of squeezing them onto one line
+   and forcing horizontal scroll, and give controls room to tap. */
+@media (max-width: 480px) {
+  .handoff__controls {
+    flex-wrap: wrap;
+  }
+
+  .handoff__select {
+    min-height: 2.75rem;
+  }
+
+  .handoff__actions .btn {
+    min-height: 2.75rem;
+  }
+
+  .handoff__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .handoff__identity {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .handoff__chips {
+    width: 100%;
+  }
+
+  .handoff__row .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+}
+
 /* Print (T203, following the alert view's T289 and resident detail's T333): nurses
    hand off on paper, so a printed handoff is the headline, the summary and the rows -
    nothing a nurse can only tap. The shared black-on-white rules and `.no-print`
