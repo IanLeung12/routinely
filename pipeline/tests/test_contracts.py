@@ -5,11 +5,12 @@ sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so th
 tests check four things: every type round-trips through JSON into its own schema, the
 sample frames validate, nothing on disk has drifted away from the models, and what the
 dashboard still writes by hand against a schema - its `Alert` type, the feedback body
-its client posts, the monitoring bodies its client casts - names the same fields. The
-payloads it used to copy by hand (the drift card's, a pattern library entry's, both
-replay windows') are generated into `web/src/contracts.ts` instead, so a changed field
-breaks its build; what is left to test here is that they are in the generated file and
-that nothing keeps a second copy of them.
+its client posts, the two bodies its monitoring client casts inline - names the same
+fields. The payloads it used to copy by hand (the drift card's, a pattern library
+entry's, both replay windows', the overview row, the shift handoff and the monitoring
+audit trail's logged change) are generated into `web/src/contracts.ts` instead, so a
+changed field breaks its build; what is left to test here is that they are in the
+generated file and that nothing keeps a second copy of them.
 """
 
 import json
@@ -422,20 +423,17 @@ def test_the_dashboard_reads_the_whole_audit_trail() -> None:
     )
 
 
-def test_the_dashboards_monitoring_change_names_every_logged_field() -> None:
-    """The trail's rows are a hand-written type in the same client."""
-    assert ts_fields("MonitoringChange", WEB_MONITORING_API) == set(MonitoringChange.model_fields)
-
-
 def test_the_dashboards_payload_types_are_generated_not_copied() -> None:
-    """The drift card's payload, a pattern library entry and both replay windows were
-    written out by hand in three dashboard modules (`web/src/resident/api.ts`,
-    `web/src/patterns/types.ts`, `web/src/evidence/api.ts`) and held to the models by
-    a field-name test over their source. They are in `WEB_PAYLOADS` now, so the
-    dashboard imports them and a changed field fails its build instead. What is left
-    to check here is that the generated file really carries them - a model dropped
-    from `WEB_PAYLOADS` would regenerate clean - and that nobody has started a second
-    copy, time profile included."""
+    """The drift card's payload, a pattern library entry, both replay windows, the
+    overview row, the shift handoff and the monitoring audit trail's logged change
+    were written out by hand in dashboard modules (`web/src/resident/api.ts`,
+    `web/src/patterns/types.ts`, `web/src/evidence/api.ts`, `web/src/overview/types.ts`,
+    `web/src/handoff/types.ts`, `web/src/about/monitoringApi.ts`) and held to the
+    models by a field-name test over their source. They are in `WEB_PAYLOADS` now, so
+    the dashboard imports them and a changed field fails its build instead. What is
+    left to check here is that the generated file really carries them - a model
+    dropped from `WEB_PAYLOADS` would regenerate clean - and that nobody has started
+    a second copy, time profile included."""
     for model in WEB_PAYLOADS:
         assert ts_fields(model.__name__) == set(model.model_fields)
 
