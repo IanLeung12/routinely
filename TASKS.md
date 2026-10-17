@@ -449,7 +449,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T364 — Scenario: meds_late_start_normal (long idle before the first step is not an error)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
