@@ -504,3 +504,21 @@ Interface: make the test wait for the async work, e.g. stub `fetch` to reject im
 Acceptance:
 - Run the web test suite 5 times in a row (`cd web` then the test script, looped); all pass with zero "Unhandled Errors".
 - No behaviour assertions change; only async handling.
+
+### T048 — Bug: heat calendar ignores dark theme; dark text on dark-red cell unreadable
+- status: todo
+- class: light
+- priority: 1
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Tester found on Mrs. K's detail screen (main 7c48d9c) that the "Daily scores" calendar renders as a light-grey/white block inside the dark card, and the highest-score day ("1", score 5) shows near-black text on dark red (fails 4.5:1 contrast). Cause: hard-coded colours in `HeatCalendar.tsx` (`#bdbdbd`, `hsl(0, 80%, L%)`, default text colour). Read only the files in `area` and `web/src/index.css` (tokens; do not edit it).
+Interface: `HeatCalendar({days})` unchanged. Cell colours from CSS vars only (e.g. `var(--color-surface-2)` for null/low, mixing toward `var(--color-error)` or flagged-red for high); no hex/hsl literals. Text colour switches to light on high-score cells so every cell meets ≥ 4.5:1. Grid has no light background.
+Repro: `scripts/dev.sh up` → open http://localhost:5173 → click Mrs. K → look at "Daily scores". `scripts/dev.sh down`.
+Expected: calendar sits in the dark theme; every day number readable. Actual: white block; "1" cell unreadable.
+Acceptance:
+- Vitest: no inline style contains a hex or `hsl(` literal; high-score cell (score ≥ 4) gets the light-text class/style; existing tests still pass.
+- `cd web && npm run lint && npm test && npm run build` passes.
