@@ -567,7 +567,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T271 — Review: handoff summary counts a paused resident as "nothing to review"
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -576,7 +576,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T12:53Z
-- pr: —
+- pr: #254
+- rating: 5/5 clear
 
 What: T259 (#243) adds "Room X (name) was paused, so no flags are expected from it" to the handoff context, but `_context` still computes `quiet = len(rows) - len(review)` including paused residents, so a paused, otherwise-quiet room also reads as "N residents with nothing to review" — the exact "all quiet" reading T259 meant to stop.
 Interface: in `handoff._context`, exclude rows with `monitoring_paused` (and not `_needs_review`) from `quiet`; keep the paused line as is.
