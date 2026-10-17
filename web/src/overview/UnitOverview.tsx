@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResidents } from './api.ts'
@@ -54,6 +55,10 @@ export function UnitOverview({
 
   if (residents === null) {
     return <Loading label="Loading residents…" />
+  }
+
+  if (residents.length === 0) {
+    return <EmptyState message="No residents on this unit yet." />
   }
 
   return (
