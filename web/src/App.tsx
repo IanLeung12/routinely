@@ -5,10 +5,14 @@ import { Handoff } from './handoff/Handoff.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
+import { Tour } from './tour/Tour.tsx'
 import { Button } from './ui/Button.tsx'
 import { DemoBanner } from './ui/DemoBanner.tsx'
 
 export default function App() {
+  /** `?tour=1` opts into the presenter cue card; off by default so it never touches
+   * the real demo path. */
+  const showTour = new URLSearchParams(window.location.search).has('tour')
   /** Which resident's detail is open, if any. Two screens don't need a router. */
   const [openResident, setOpenResident] = useState<string | null>(null)
   const [openAlert, setOpenAlert] = useState<string | null>(null)
@@ -29,6 +33,7 @@ export default function App() {
 
   return (
     <main className="app">
+      {showTour && <Tour />}
       <DemoBanner />
       <header>
         <h1>Routine Watch</h1>
