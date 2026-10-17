@@ -280,15 +280,15 @@ Acceptance:
 - `scripts/integration.sh` passes locally on main (paste its last line in the PR); `scripts/ci.sh` passes.
 
 ### T283 — Resident detail: "What nurses said" — past feedback answers and the pattern ranking they changed
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: feature
 - deps: T278
 - area: pipeline/src/routine_watch/feedback.py, pipeline/src/routine_watch/api_residents.py, pipeline/tests/test_feedback_history.py, web/src/resident/FeedbackHistory.tsx, web/src/resident/FeedbackHistory.test.tsx, web/src/resident/feedbackHistory.css, web/src/resident/ResidentDetail.tsx, web/src/resident/api.ts, web/src/resident/types.ts
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T14:36Z
 - pr: —
 
 What: Rationale: the feedback loop (T130, Nice-to-have 8) re-weights patterns silently; judges and nurses can't see the AI learning. Expose a resident's recorded answers and current pattern weights and show them as a small card on the resident detail screen.
