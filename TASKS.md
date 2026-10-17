@@ -447,7 +447,7 @@ Acceptance:
 - `scripts/ci.sh` passes without network.
 
 ### T438 — Routine builder UI: describe it or upload a setup clip → editable task map → save
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -456,7 +456,8 @@ Acceptance:
 - area: web/src/routines/, web/src/mock/routines.ts, web/src/App.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T22:05Z
-- pr: —
+- pr: #414
+- rating: 4/5 clear, though the two task-map interpretations (reorder-the-list vs edit-deps) under 'reorder deps' were ambiguous; implemented both
 
 What: The front end for T437, built in parallel against the API shape in T437's Interface with a mock (`web/src/mock/routines.ts`) so it doesn't wait for T437. Follow `docs/DESIGN.md`; check 2–3 Mobbin references for "create from upload / AI builder" flows.
 Interface (`web/src/routines/`):
