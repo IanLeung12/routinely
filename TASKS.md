@@ -511,14 +511,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T128 — Bug: smoke.sh finds no alert since mrs-k is only flagged after her live session
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:52Z
 - pr: —
 
 What: Since T124 (#108) a fresh stack has no flagged resident until mrs-k's live session plays, so `GET /alerts` is empty and smoke.sh fails the alert and replay checks. Make smoke.sh play that session first, the same way the demo does. Read only `scripts/smoke.sh` and the `/ws/live` handler at the bottom of `pipeline/src/routine_watch/api.py`.
