@@ -566,7 +566,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T168 — Review: live push alert text uses the raw resident id ("mrs-k")
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: bug
