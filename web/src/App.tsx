@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchAlerts } from './alert/api.ts'
 import { AlertView } from './alert/AlertView.tsx'
 import { Handoff } from './handoff/Handoff.tsx'
-import { LiveSession } from './live/LiveSession.tsx'
+import { LiveScreen } from './live/LiveScreen.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
 import { Button } from './ui/Button.tsx'
@@ -54,8 +54,7 @@ export default function App() {
 
           <section>
             <h2>Live session</h2>
-            <LiveSession
-              scenario="tea_skip_teabag_pour_twice"
+            <LiveScreen
               onOpenAlert={setOpenAlert}
               onSessionEnd={() => setRefreshKey((key) => key + 1)}
             />
