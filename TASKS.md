@@ -41,7 +41,7 @@ Acceptance:
 - A sample `contracts/examples/capture.jsonl` (a few frames) validates against the CaptureFrame schema.
 
 ### T003 — Tea task graph definition
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T001
