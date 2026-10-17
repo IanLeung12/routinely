@@ -67,14 +67,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: docs
 - deps: —
 - area: docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T18:12Z
 - pr: —
 
 What: Since T152 (PR #177), each handoff row with an alert pending review has an "Open alert" button. The runbook's handoff step doesn't say so.
