@@ -348,7 +348,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T304 — Test: demo reset clears feedback history
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
