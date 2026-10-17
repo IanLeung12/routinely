@@ -578,15 +578,15 @@ Acceptance:
 - `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
 
 ### T124 — Review: Mrs. K is already flagged before the live session, so demo beat 4 never happens
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/synth/history.py (spike scenario only), pipeline/tests/test_demo.py, pipeline/tests/test_live_flag.py
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:37Z
 - pr: —
 
 What: SPEC §10 beats 2–4: dashboard shows Mrs. K's normal weeks, then the live tea session is "the second qualifying session" that triggers her flag. Today `demo_residents()` with an empty `session_log` already has `mrs-k` status `flagged` (last scores `… 5.0, 5.0, 5.0`, threshold ≈4.1) and `/alerts` already lists `alert-mrs-k`, so the live session changes nothing visible.
