@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: fa8034b
-- next-area: tests/scenarios
+- last-reviewed: cdff38c
+- next-area: web
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
@@ -33,3 +33,4 @@
 - T376 live Open alert raw <button> inside role=status
 - T377 DEMO.md handoff beat after Close
 - T389 PrivacyPanel mobile test asserts nothing about phone CSS
+- T425 handoff summary counts unclear-camera rooms as quiet

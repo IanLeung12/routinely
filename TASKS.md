@@ -595,3 +595,21 @@ Interface (`web/src/live/CameraPreview.tsx`):
 Acceptance:
 - `CameraPreview.test.tsx` (Vitest + Testing Library, inject `probe`): toggle hidden when probe false; hidden on a non-localhost hostname with the default probe (mock `fetch`, assert not called); toggle on shows img + badge + children; toggle off removes img; button keyboard operable.
 - `cd web && npx vitest run src/live/CameraPreview.test.tsx` and `scripts/ci.sh` pass.
+
+### T425 — Review: handoff summary counts unclear-camera rooms as "nothing to review"
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_unclear.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: T355 added `unclear_sessions` to each handoff row and a chip on screen, but `_context()` in `handoff.py` still counts a resident whose room had unclear sessions (and no flags) in "N residents with nothing to review", so the summary a nurse reads says the room was quiet while the row says check the camera — the exact silence T355 meant to fix.
+Fix: in `_context()`, add one line per resident with `unclear_sessions > 0` (e.g. "<name>: N sessions too unclear to score, check the camera view", camera wording, nothing about the resident) and exclude them from the `quiet` count. Keep `_needs_review` unchanged (unclear is not a flag).
+Acceptance:
+- Test in `test_handoff_unclear.py`: with one unclear session recorded for a quiet resident's room, the explainer context mentions the camera line and the quiet count drops by one.
+- `scripts/ci.sh` passes.
