@@ -4,6 +4,7 @@ import App from '../App.tsx'
 import { apiUrl } from '../config.ts'
 import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { ResidentDetail } from './ResidentDetail.tsx'
+import { fetchDrift } from './api.ts'
 import { dailyScores } from './days.ts'
 import { formatDuration, formatErrors } from './format.ts'
 import type { Resident } from './types.ts'
@@ -20,6 +21,23 @@ afterEach(() => {
 })
 
 describe('ResidentDetail', () => {
+  it('shows the slow-drift mock card for the trending resident', async () => {
+    offline()
+    render(<ResidentDetail residentId="mr-chen" onBack={() => {}} />)
+
+    const card = await screen.findByRole('region', { name: 'Slow drift' })
+    expect(card.getAttribute('data-state')).toBe('trending')
+    expect(card.textContent).toContain('Error score rising about +0.70 per day over 7 days.')
+  })
+
+  it('omits the drift card when the resident has no drift data', async () => {
+    offline()
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })
+
+    expect(screen.queryByRole('region', { name: 'Slow drift' })).toBeNull()
+  })
+
   it('falls back to the mock resident when the API is unreachable', async () => {
     offline()
 
@@ -130,7 +148,9 @@ describe('ResidentDetail', () => {
       ],
       baseline: { mean: 1.5, std: 1.5, threshold: 4.5 },
     }
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => payload })
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true, json: async () => url.endsWith('/drift') ? null : payload,
+    }))
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ResidentDetail residentId="mr-okafor" onBack={() => {}} />)
@@ -157,6 +177,26 @@ describe('ResidentDetail', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /unit overview/i }))
     expect(onBack).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('fetchDrift', () => {
+  it('fetches the API drift assessment with an encoded resident id', async () => {
+    const drift = { resident_id: 'resident/1', slope_per_day: 0.4, days: 14, trending: true }
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => drift })
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchDrift('resident/1')).toEqual(drift)
+    expect(fetchMock).toHaveBeenCalledWith(`${apiUrl}/residents/resident%2F1/drift`)
+  })
+
+  it('uses mock drift data on an unsuccessful API response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+
+    expect(await fetchDrift('mr-chen')).toEqual({
+      resident_id: 'mr-chen', slope_per_day: 0.7, days: 7, trending: true,
+    })
+    expect(await fetchDrift('nobody')).toBeNull()
   })
 })
 

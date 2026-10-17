@@ -3,9 +3,11 @@ import type { ReactNode } from 'react'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
-import { fetchResident } from './api.ts'
+import { fetchDrift, fetchResident } from './api.ts'
+import type { ResidentDrift } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
 import { ContextTimeline } from './ContextTimeline.tsx'
+import { DriftCard } from './DriftCard.tsx'
 import HeatCalendar from './HeatCalendar.tsx'
 import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
@@ -23,15 +25,17 @@ export function ResidentDetail({
 }) {
   /** Tagged with the id it was fetched for, so switching resident shows the new one
    * loading rather than the last one's chart. */
-  const [loaded, setLoaded] = useState<{ residentId: string; resident: Resident | null } | null>(
+  const [loaded, setLoaded] = useState<{
+    residentId: string; resident: Resident | null; drift: ResidentDrift | null
+  } | null>(
     null,
   )
 
   useEffect(() => {
     let cancelled = false
-    fetchResident(residentId).then((fetched) => {
+    Promise.all([fetchResident(residentId), fetchDrift(residentId)]).then(([resident, drift]) => {
       if (!cancelled) {
-        setLoaded({ residentId, resident: fetched })
+        setLoaded({ residentId, resident, drift })
       }
     })
     return () => {
@@ -60,6 +64,14 @@ export function ResidentDetail({
             <h3>Baseline</h3>
             <BaselineChart scores={resident.scores} baseline={resident.baseline} />
           </section>
+
+          {loaded.drift && (
+            <DriftCard
+              slopePerDay={loaded.drift.slope_per_day}
+              days={loaded.drift.days}
+              trending={loaded.drift.trending}
+            />
+          )}
 
           <section className="panel">
             <h3>Daily scores</h3>

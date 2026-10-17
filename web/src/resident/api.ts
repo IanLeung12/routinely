@@ -1,6 +1,21 @@
 import { apiUrl } from '../config.ts'
-import { mockResidentDetail } from '../mock/residentDetail.ts'
+import { mockResidentDetail, mockResidentDrift } from '../mock/residentDetail.ts'
 import type { Resident } from './types.ts'
+
+export type ResidentDrift = {
+  resident_id: string
+  slope_per_day: number
+  days: number
+  trending: boolean
+}
+
+export async function fetchDrift(residentId: string): Promise<ResidentDrift | null> {
+  try {
+    const response = await fetch(`${apiUrl}/residents/${encodeURIComponent(residentId)}/drift`)
+    if (response.ok) return await response.json() as ResidentDrift | null
+  } catch { /* Keep the slow-drift demo available offline. */ }
+  return mockResidentDrift(residentId)
+}
 
 /** Resident detail (SPEC section 9, screen 2). Falls back to the mock resident so the
  * screen still has something to show when the pipeline API isn't reachable, and
