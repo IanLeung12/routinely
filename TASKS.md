@@ -537,15 +537,15 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
 
 ### T342 — Review: unclear live sessions still go into the resident's history and can flag
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - source: orchestrator (review of #322)
 - deps: —
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_unclear.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T17:02Z
 - pr: —
 
 What: PR #322 made `replay.score_session` return score 0.0 / flag False for an unclear session (`quality.session_quality`), but `live.session_messages` (~line 290) still calls `_record(...)` with that session's errors and `assisted=False`. `demo.py` recomputes scores from recorded errors and only skips assisted sessions, so an unclear session's errors still count toward the 24–48 h flag and a 0.0 score enters the baseline. Fix: when `session_quality(events) == "unclear"`, don't record the session into `session_log` at all (nothing to trust), and keep `was_flagged`/alert logic unchanged.
