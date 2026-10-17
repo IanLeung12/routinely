@@ -188,14 +188,14 @@ Acceptance:
 - `cd web && npm test -- --run src/tour` and `scripts/ci.sh` pass.
 
 ### T206 — Test: alerts.top_pattern_for edge cases
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_top_pattern_for.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:23Z
 - pr: —
 
 What: `top_pattern_for` (pipeline/src/routine_watch/alerts.py, added in T183) has only API-level coverage. Add unit tests for it directly.
