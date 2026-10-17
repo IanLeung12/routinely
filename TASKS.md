@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: bug
@@ -35,6 +35,8 @@ Acceptance:
 - deps: —
 - area: pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py
 - rating: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T17:45Z
 
 What: `pattern_features.EVENING_HOUR = 16` decides the evening-only pattern, but `api_alerts.EVENING_START_HOUR = 17` buckets the strip shown as its evidence. A session at 16:xx counts as "evening" for the pattern and "afternoon" on the strip, so an alert "consistent with evening worsening" can show its errors under afternoon. The code comment admits it only holds because no demo session starts 16:00–17:00.
 Interface: in `api_alerts.py`, set `EVENING_START_HOUR = pattern_features.EVENING_HOUR` (import it, drop the hard-coded 17) and update the comment. The `TimeOfDay` docstring in `contracts.py`/schemas says "until 17:00": contracts are heavy-only, so don't touch them; note the stale docstring in the PR for a follow-up.
