@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 5cf859f
+- last-reviewed: b91b729
 
 ## Tasks
 
@@ -496,4 +496,22 @@ What: T246 added a "Monitoring paused" chip; add a "Paused (N)" button to the ex
 Interface: extend `UnitFilter` with `'paused'`; `applyFilter` uses the `pausedRooms` state already fetched via `fetchPausedRooms`. Hide the button (or show 0) when the fetch failed; never break the list.
 Acceptance:
 - Test: with room 204 paused, clicking "Paused" shows only that resident and the count reads 1; with fetch failure the other filters still work.
+- `scripts/ci.sh` passes.
+
+### T277 — Bug: copied shift handoff says "Room unavailable" for every resident
+- status: todo
+- class: heavy
+- priority: 1
+- kind: bug
+- deps: —
+- area: contracts/handoff.schema.json, contracts/examples/, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py, web/src/handoff/types.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/handoff/mockHandoff.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `handoffText()` in `web/src/handoff/Handoff.tsx` hard-codes `Room unavailable` in every resident line of the "Copy summary" text (since T151), because `GET /handoff` rows have no `room`. A nurse pasting the handoff gets no room numbers. Found in orchestrator review of #259.
+Interface: add required `room: string` to each `residents[]` row in `contracts/handoff.schema.json` (and examples), emit it from `pipeline/src/routine_watch/handoff.py` (`resident["room"]`), add `room: string` to `HandoffResident` in `web/src/handoff/types.ts` and the mock; copy line becomes `<name>, Room <room>: ...`. Show the room on the on-screen row too if it isn't already.
+Acceptance:
+- No `Room unavailable` string left in `web/src/`.
+- Pipeline test asserts every `/handoff` row has the resident's room and validates against the schema; web test asserts copied text contains `Room <room>:`.
 - `scripts/ci.sh` passes.
