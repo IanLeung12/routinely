@@ -620,7 +620,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: test
