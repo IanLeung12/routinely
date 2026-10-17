@@ -22,12 +22,15 @@ export function MonitoringHistory({ changes }: { changes: MonitoringChange[] }) 
         <ul className="monitoring-history__list">
           {recent.map((change) => (
             <li className="monitoring-history__change" key={`${change.at}-${String(change.on)}`}>
-              <span
-                className={`monitoring-history__what monitoring-history__what--${change.on ? 'on' : 'paused'}`}
-              >
-                {change.on ? 'Resumed' : 'Paused'}
+              <span className="monitoring-history__who">
+                <span
+                  className={`monitoring-history__what monitoring-history__what--${change.on ? 'on' : 'paused'}`}
+                >
+                  {change.on ? 'Resumed' : 'Paused'}
+                </span>
+                {` by ${change.by}`}
               </span>
-              {` by ${change.by} · ${formatDayTime(change.at)}`}
+              <span className="monitoring-history__when">{` · ${formatDayTime(change.at)}`}</span>
             </li>
           ))}
         </ul>
