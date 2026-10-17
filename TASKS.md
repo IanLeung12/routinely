@@ -67,7 +67,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: docs
@@ -75,7 +75,8 @@ Acceptance:
 - area: docs/DEMO.md
 - owner: Max_codex_light
 - claimed: 2026-10-17T18:12Z
-- pr: —
+- pr: #352
+- rating: 5/5 clear
 
 What: Since T152 (PR #177), each handoff row with an alert pending review has an "Open alert" button. The runbook's handoff step doesn't say so.
 Interface: Read only `docs/DEMO.md` and `web/src/handoff/Handoff.tsx` (the `Open alert` button). Add 1-3 lines to the handoff step.
