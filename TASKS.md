@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
@@ -412,7 +412,7 @@ Acceptance:
 - `scripts/ci.sh` passes; PR body notes the viewport widths checked.
 
 ### T237 — Test: de-flake AlertView "loading state for the evidence card" test under load
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
