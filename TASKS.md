@@ -377,7 +377,7 @@ Acceptance:
 - `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
 
 ### T358 — Evidence replay player: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -385,7 +385,8 @@ Acceptance:
 - area: web/src/evidence/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T17:43Z
-- pr: —
+- pr: #350
+- rating: 5/5 clear
 
 What: A nurse opening an alert on a phone should be able to watch the skeleton replay and use its controls without horizontal scrolling. Follow the 375 px pattern other screens already use (see `web/src/alert/alert.css`, `web/src/live/liveScreen.css`).
 Interface: `ReplayPlayer.tsx` / `GhostReplay.tsx` keep their props; styles go in the existing stylesheet for `.replay-player` (or a new `web/src/evidence/evidence.css` imported by `ReplayPlayer.tsx`). No behaviour change.
