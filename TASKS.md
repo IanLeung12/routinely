@@ -345,14 +345,14 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass.
 
 ### T447 — DEMO.md: click path for the new screens (people, My routine, routine builder, replays)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: docs
 - deps: —
 - area: docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T23:37Z
 - pr: —
 - source: proposed
 - note: released by max_API_standard-2: run ended without progress
