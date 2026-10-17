@@ -95,3 +95,21 @@ def test_pausing_a_different_room_does_not_affect_live():
             first = websocket.receive_json()
 
     assert first["type"] == "session_start"
+
+
+def test_pausing_a_room_mid_session_stops_it_and_does_not_record_it():
+    with TestClient(app) as client:
+        sessions_before = len(client.get(f"/residents/{DEMO_RESIDENT}").json()["sessions"])
+        url = f"/ws/live?scenario={SCENARIO}&speed={FAST}"
+        with client.websocket_connect(url) as websocket, pytest.raises(WebSocketDisconnect):
+            first = websocket.receive_json()
+            client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": False})
+            messages = [websocket.receive_json()]
+            while True:
+                messages.append(websocket.receive_json())
+        sessions_after = len(client.get(f"/residents/{DEMO_RESIDENT}").json()["sessions"])
+
+    assert first["type"] == "session_start"
+    assert messages[-1] == {"type": "paused", "room": MRS_K_ROOM}
+    assert all(message["type"] != "session_end" for message in messages)
+    assert sessions_after == sessions_before
