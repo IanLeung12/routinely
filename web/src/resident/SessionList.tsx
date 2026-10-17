@@ -1,6 +1,7 @@
 import { formatDayTime, formatDuration, formatErrors, formatScore } from './format.ts'
 import type { ResidentSession, ScorePoint } from './types.ts'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import './sessionList.css'
 
 function time(ts: string): number {
   const parsed = Date.parse(ts)
