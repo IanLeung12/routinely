@@ -121,7 +121,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_alerts.py -q` and `scripts/ci.sh` pass.
 
 ### T022 — Resident detail screen
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - deps: T012, T013
