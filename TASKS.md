@@ -466,7 +466,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T188 — Docs: DEMO.md covers /demo/reset and ?task=meds
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
