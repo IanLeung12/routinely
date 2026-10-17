@@ -392,14 +392,14 @@ Acceptance:
   * `cd web && npm test -- PrivacyPanel` and `scripts/ci.sh` pass
 
 ### T287 — Test: alert feedback works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/FeedbackButtons.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:30Z
 - pr: —
 
 What: Nurses on a shared workstation may use only the keyboard; prove the feedback flow (verdict, then cause) needs no mouse.
