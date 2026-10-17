@@ -402,7 +402,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T302 — Test: alert view works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -410,7 +410,8 @@ Acceptance:
 - area: web/src/alert/AlertView.keyboard.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T15:06Z
-- pr: —
+- pr: #294
+- rating: 5/5 clear
 
 What: Like T295 (`web/src/overview/UnitOverview.test.tsx`, keyboard section), prove a nurse can work Mrs. K's alert with Tab/Enter/Space only.
 Interface: read `web/src/alert/AlertView.tsx`, `web/src/alert/AlertView.test.tsx` (for fixtures/mocks) and `web/src/alert/FeedbackButtons.test.tsx`. New file only; use `@testing-library/user-event` `user.tab()` / `user.keyboard('{Enter}')`.
