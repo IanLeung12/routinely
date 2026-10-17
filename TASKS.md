@@ -389,7 +389,7 @@ Acceptance:
 - No production code changes. `scripts/ci.sh` passes.
 
 ### T309 — Monitoring history card: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -397,7 +397,8 @@ Acceptance:
 - area: web/src/resident/MonitoringHistory.tsx, web/src/resident/monitoringHistory.css, web/src/resident/MonitoringHistory.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T15:36Z
-- pr: —
+- pr: #299
+- rating: 5/5 clear
 
 What: The resident page's monitoring audit trail (who paused/resumed, when) should read cleanly at 375 px, matching how T239 made resident detail work on phones.
 Interface: CSS media query in monitoringHistory.css; markup changes only if needed for wrapping.
