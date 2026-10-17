@@ -187,7 +187,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_recogniser.py -q` and `scripts/ci.sh` pass.
 
 ### T012 — Demo residents API
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T007, T008, T009, T004
