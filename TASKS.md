@@ -128,14 +128,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T367 — Bug: integration check failing on main
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - deps: —
 - area: scripts/integration.sh, scripts/dev.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T19:59Z
 - pr: —
 - source: integration
 - note: area narrowed (was web/src/, which overlapped claims and kept this P0 from being handed out). T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. If it is Vite cold-start timing, make integration.sh wait for Vite readiness. If the render itself is broken, note the file and set blocked so a web task can be filed.
