@@ -137,7 +137,7 @@ def build_handoff(
         "window_hours": hours,
         "residents": rows,
         "paused": paused,
-        "summary": _summary(rows, flagged_sessions, hours),
+        "summary": _summary(rows, flagged_sessions, hours, paused),
     }
 
 
@@ -200,7 +200,12 @@ def _review_first(row: dict) -> tuple[int, int, bool, str]:
     return (-row["flags"], -row["pending_review"], not row["trending"], row["name"])
 
 
-def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: int) -> str:
+def _summary(
+    rows: list[dict],
+    flagged_sessions: list[_FlaggedSession],
+    hours: int,
+    paused: list[dict] | None = None,
+) -> str:
     """The handoff's plain-language line, written by the `Explainer` (fake by default).
 
     It is given only what the pipeline found, about one session: the most recent
@@ -212,7 +217,8 @@ def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: i
     its numbers are zeros rather than somebody else's average.
 
     The context lines say whose session it is, then carry the window's own totals
-    resident by resident.
+    resident by resident, then one line per paused room so a quiet window reads as
+    "nobody was watching" rather than "all quiet" (SPEC section 12).
     """
     latest = _latest(flagged_sessions)
     if latest is None:
@@ -226,7 +232,7 @@ def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: i
             "baseline_days": _history_days(latest.resident),
         }
     return _get_explainer().summarise(
-        distinct_clauses(errors), baseline, _context(rows, hours, latest)
+        distinct_clauses(errors), baseline, _context(rows, hours, latest, paused or [])
     )
 
 
@@ -244,13 +250,15 @@ def _history_days(resident: dict) -> int:
     )
 
 
-def _context(rows: list[dict], hours: int, latest: _FlaggedSession | None) -> list[str]:
+def _context(
+    rows: list[dict], hours: int, latest: _FlaggedSession | None, paused: list[dict]
+) -> list[str]:
     """Whose session it is, the window, then one line per resident worth a look, then
-    the quiet rest.
+    one line per paused room, then the quiet rest.
 
     These lines reach the nurse as written, whichever explainer is in play, so they are
     the handoff's own facts: whose session the sentence is about, the window's length,
-    who to look at and why.
+    who to look at and why, and which rooms nobody was watching.
     """
     review = [row for row in rows if _needs_review(row)]
     lines = []
@@ -258,10 +266,23 @@ def _context(rows: list[dict], hours: int, latest: _FlaggedSession | None) -> li
         lines.append(f"this session is {latest.resident['name']}'s")
     lines.append(f"last {hours} h, {_count(len(rows), 'resident')}")
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
+    lines.extend(_paused_line(room) for room in paused)
     quiet = len(rows) - len(review)
     if quiet:
         lines.append(f"{_count(quiet, 'resident')} with nothing to review")
     return lines
+
+
+def _paused_line(paused_room: dict) -> str:
+    """One context line for a room nobody was watching (SPEC section 12).
+
+    Wording follows SPEC section 7.5: the pipeline never diagnoses, it only says what
+    it did or did not look at.
+    """
+    return (
+        f"Room {paused_room['room']} ({paused_room['name']}) was paused, "
+        "so no flags are expected from it"
+    )
 
 
 def _reasons(row: dict) -> list[str]:
