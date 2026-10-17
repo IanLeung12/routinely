@@ -566,3 +566,121 @@ Interface: pytest only. (1) Walk every `contracts/*.schema.json`; fail if any pr
 Acceptance:
 - Test passes on current main (if it finds a real offender, report it in the PR instead of editing other files, and mark that check `xfail` with the reason).
 - `cd pipeline && uv run pytest tests/test_privacy.py -q` and `scripts/ci.sh` pass.
+
+### T039 — Capture process: MediaPipe + local detector → JSONL
+- status: done
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/detector.py, pipeline/tests/test_capture.py, pipeline/pyproject.toml (optional extra `capture`), .env.example
+- owner: ian-claude
+- claimed: 2026-10-17T05:21Z
+- pr: #54
+
+What: SPEC MVP 1–2 and §16: the privacy boundary. Webcam or video file → MediaPipe pose + hands + local object detector → one `CaptureFrame` JSONL record per frame; frames dropped after processing, never written. Roboflow weights run locally (no hosted inference, no training runs); until weights exist, `FakeDetector` returns no boxes.
+Interface: `frame_record(t, pose_landmarks, hand_landmarks, detections, source) -> CaptureFrame` (pure, tested); `class Detector(Protocol): detect(image) -> list[ObjectDetection]`, `FakeDetector`, `LocalDetector(weights_path)` (ONNX/ultralytics, import guarded); `run(source: int | Path, out: Path, fps: int = 15)`; CLI `python -m routine_watch.capture --camera 0 | --video path --out file.jsonl`. Heavy deps (mediapipe, opencv) only in the `capture` extra and imported lazily so CI doesn't need them.
+Acceptance:
+- Tests (no camera, no mediapipe needed): `frame_record` from fake landmark objects validates against `contracts/capture_frame.schema.json`; output records contain no image/bytes/base64 fields; CLI `--help` works without the extra installed.
+- `cd pipeline && uv run pytest tests/test_capture.py -q` and `scripts/ci.sh` pass.
+
+### T042 — Design system: tokens + shared UI primitives
+- status: done
+- class: standard
+- priority: 0
+- deps: —
+- area: web/src/index.css, web/src/ui/, web/src/ui/*.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:06Z
+- pr: #33
+
+What: One visual language for every screen so parallel web tasks don't drift. Keep the current calm dark theme; extend it, don't restyle.
+Interface: tokens in `web/src/index.css` (colour incl. status normal/watch/flagged and error red/amber/unclear grey, spacing scale, radii, type scale, focus ring); shared components in `web/src/ui/`: `Card`, `StatusChip` (move/replace `overview/StatusChip.tsx`), `Button` (primary/secondary/danger), `SectionHeader`, `EmptyState`, `ErrorState`, `Loading`; `web/src/ui/README.md` with one-line usage each.
+Acceptance:
+- Existing screens switched to the tokens/components with no visual regressions beyond consistency; no hard-coded hex in components.
+- Contrast ≥ 4.5:1 for text tokens; Vitest tests for each component.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T043 — Live session screen (WebSocket client + mock stream)
+- status: done
+- class: standard
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx, web/src/App.tsx (add the nav entry only)
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:14Z
+- pr: #40
+
+What: SPEC §9 screen 3 and §10 step 3: skeleton view next to the task map; steps turn green, errors flash red (omission) or amber (repeat/sequence). Consumes the T029 WebSocket protocol and falls back to a scripted mock stream, so the screen works before T029 lands and when the API is down.
+Interface: `useLiveSession(scenario: string, speed = 1): {frame, states, errors, ended: {score, flag, alert_id} | null, source: "live" | "mock"}` opening `ws(s)://<apiUrl host>/ws/live?scenario=..&speed=..`; messages exactly as T029 (`frame`, `step`, `step_state`, `error`, `session_end`). On connect error / close before any data → replay `mockLiveStream` (a short tea_skip_teabag_pour_twice-like script: a few frames, step_states incl. teabag_in_cup=omission and pour=repeat, two errors, session_end flag true) on timers. `LiveSession` renders the existing `SkeletonView` + `TaskMap`, an error ticker (type + step + m:ss), a "mock data" badge when source=mock, and on a flagged `session_end` a "Flagged for review" banner (never "diagnose").
+Acceptance:
+- Vitest with a fake WebSocket class: messages update map states and the error list; session_end shows the banner; WS failure falls back to mock with the badge (fake timers).
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T045 — Privacy & limits panel
+- status: done
+- class: light
+- priority: 2
+- deps: —
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:14Z
+- pr: #35
+
+What: A small static panel for the demo close (SPEC §10 step 6, §12): what the system stores and doesn't, and its limits. Not wired into App.tsx in this task. Read only the files in `area` and `web/src/live/TaskMap.tsx` (component style).
+Interface: `export function PrivacyPanel()` rendering a `<section aria-labelledby>` with heading "Privacy and limits" and these bullets verbatim: "Only skeleton points and object boxes leave the camera. No video is stored."; "No face recognition. Each camera is linked to a room by configuration."; "It flags a change for a nurse to review. It is not a medical assessment."; "Low-confidence moments are shown as unclear, never counted as errors."; "Pose tracking is less accurate with walkers, wheelchairs and unusual postures."; "Residents or their decision-maker opt in, and monitoring can be turned off per room."
+Acceptance:
+- Vitest: heading and all six bullets render; rendered text never contains "diagnos" (case-insensitive).
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T046 — Confidence / unclear badge component
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/alert/ConfidenceBadge.tsx, web/src/alert/ConfidenceBadge.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:26Z
+- pr: #43
+
+What: SPEC §12 "show uncertainty": a small badge shown next to a step event or alert. Read only the files in `area` and `web/src/alert/SuggestedChecks.tsx` (style).
+Interface: `export function ConfidenceBadge({ confidence, unclear }: { confidence: number; unclear?: boolean })`. `unclear` → text "Unclear" with `title="Low confidence; not counted as an error"`; otherwise confidence ≥ 0.8 → "High confidence", ≥ 0.5 → "Medium confidence", else "Low confidence"; also shows the rounded percentage (e.g. "87%"). Clamp confidence to [0,1]. Set `data-level="high|medium|low|unclear"` for styling; no hard-coded hex (CSS vars only, e.g. `var(--color-unclear)`).
+Acceptance:
+- Vitest: 0.87 → "High confidence" + "87%"; 0.6 → Medium; 0.2 → Low; unclear wins over any confidence; 1.4 clamps to "100%".
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T047 — Bug: flaky web CI ("window is not defined" after App.test.tsx)
+- status: done
+- class: light
+- priority: 0
+- deps: —
+- area: web/src/App.test.tsx, web/src/test-setup.ts, web/vite.config.ts
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:17Z
+- pr: #38
+
+What: main CI run 39005334024 failed although all 52 web tests passed: Vitest reported an unhandled `ReferenceError: window is not defined` from react-dom, originating in `src/App.test.tsx`. The test renders `<App />` and returns synchronously, while the overview's API fetch (which falls back to mock data when the API is unreachable) resolves after jsdom is torn down and triggers a React update. Timing-dependent, so it fails only sometimes.
+Interface: make the test wait for the async work, e.g. stub `fetch` to reject immediately (`vi.stubGlobal('fetch', ...)`) and `await screen.findBy...` for the fallback content, plus `afterEach(cleanup)` / `vi.unstubAllGlobals()`. If other tests render components that fetch, apply the same pattern via a shared `web/src/test-setup.ts` (`setupFiles` in the vite config).
+Acceptance:
+- Run the web test suite 5 times in a row (`cd web` then the test script, looped); all pass with zero "Unhandled Errors".
+- No behaviour assertions change; only async handling.
+
+### T048 — Bug: heat calendar ignores dark theme; dark text on dark-red cell unreadable
+- status: done
+- class: light
+- priority: 1
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:17Z
+- pr: #39
+
+What: Tester found on Mrs. K's detail screen (main 7c48d9c) that the "Daily scores" calendar renders as a light-grey/white block inside the dark card, and the highest-score day ("1", score 5) shows near-black text on dark red (fails 4.5:1 contrast). Cause: hard-coded colours in `HeatCalendar.tsx` (`#bdbdbd`, `hsl(0, 80%, L%)`, default text colour). Read only the files in `area` and `web/src/index.css` (tokens; do not edit it).
+Interface: `HeatCalendar({days})` unchanged. Cell colours from CSS vars only (e.g. `var(--color-surface-2)` for null/low, mixing toward `var(--color-error)` or flagged-red for high); no hex/hsl literals. Text colour switches to light on high-score cells so every cell meets ≥ 4.5:1. Grid has no light background.
+Repro: `scripts/dev.sh up` → open http://localhost:5173 → click Mrs. K → look at "Daily scores". `scripts/dev.sh down`.
+Expected: calendar sits in the dark theme; every day number readable. Actual: white block; "1" cell unreadable.
+Acceptance:
+- Vitest: no inline style contains a hex or `hsl(` literal; high-score cell (score ≥ 4) gets the light-text class/style; existing tests still pass.
+- `cd web && npm run lint && npm test && npm run build` passes.
