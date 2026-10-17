@@ -1,0 +1,17 @@
+.heat-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+.heat-swatch--low {
+  background-color: color-mix(in srgb, var(--error-red-bg) 20%, var(--panel));
+}
+
+.heat-swatch--high {
+  background-color: var(--error-red-bg);
+}
+
+.heat-swatch--none {
+  background-color: var(--error-grey-bg);
+}
