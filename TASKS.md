@@ -430,7 +430,7 @@ Acceptance:
 - Same test count and assertions as before (state the before/after durations in the PR).
 
 ### T134 — Unit tests for drift.daily_scores
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -485,7 +485,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T137 — StatusChip: say what "Watch" means on hover and for screen readers
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
