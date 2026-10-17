@@ -753,4 +753,5 @@ What: `_passes_guard` only checks digit tokens (`_NUMBER_RE`), so a reply like "
 Interface: in `explain_claude.py`, map number words `one`..`twenty` (whole-word, case-insensitive) to digits before the allowed-number check, so they must also be in `_allowed_numbers`. Nothing else changes.
 Acceptance:
 - tests: fake client replying "three errors" with observed=2 → template fallback; "two errors" with observed=2 → Claude reply kept; "someone" / "once" are not treated as numbers.
+- owner: —
 - `cd pipeline && uv run pytest -q` passes.
