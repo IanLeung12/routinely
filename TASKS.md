@@ -374,7 +374,7 @@ Acceptance:
 - `cd web && npm test -- DriftCard` and `scripts/ci.sh` pass
 
 ### T216 — HeatCalendar grid and cells: CSS classes instead of inline styles
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
