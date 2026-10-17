@@ -4665,3 +4665,41 @@ Acceptance:
 - test: paused message → button shown → click → a new WebSocket is opened and, if it streams steps, the paused panel disappears.
 - test: still paused on retry → panel stays, no mock-data fallback.
 - `scripts/ci.sh` passes.
+
+### T267 — Web: visible keyboard focus and a skip-to-content link
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/index.css, web/src/App.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:57Z
+- pr: #256
+- rating: 5/5 clear
+
+What: Accessibility pass for keyboard users (Clarity/Execution). Add a global `:focus-visible` outline in the design-system accent colour (min 2 px, 3:1 contrast) and a "Skip to main content" link as the first focusable element in App, targeting `<main id="main">`.
+Interface: `.skip-link` class in index.css (visually hidden until focused); `<main id="main">` in App.tsx.
+Acceptance:
+- `cd web && npx vitest run src/App.test.tsx` still passes; PR describes a manual Tab check.
+- no layout change for mouse users.
+- `scripts/ci.sh` passes.
+
+### T268 — Test: GET /handoff window bounds
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_handoff_window.py (new)
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T13:53Z
+- pr: #270
+- rating: 5/5 clear
+
+What: `GET /handoff?hours=` is declared `Query(ge=1, le=168)` in pipeline/src/routine_watch/api.py (read `shift_handoff`), but nothing tests the bounds.
+Interface: new pytest file using `fastapi.testclient.TestClient(routine_watch.api.app)`; read pipeline/tests/test_handoff.py for fixtures and fakes.
+Acceptance:
+- hours=1 and hours=168 → 200 with `window_hours` echoed; hours=0 and hours=169 → 422.
+- the summary never contains "diagnos".
+- `scripts/ci.sh` passes.
