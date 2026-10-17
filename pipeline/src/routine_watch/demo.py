@@ -100,6 +100,33 @@ def _live_sessions(resident_id: str) -> list[dict]:
     return sessions
 
 
+def _watch(history: list[dict], sessions: list[dict], scores: list[float]) -> bool:
+    score_points = [
+        {"ts": session["ts"], "score": score}
+        for session, score in zip(sessions, scores, strict=True)
+    ]
+    # A resident's own earliest sessions - not their whole history, which rises
+    # right along with a slow drift and so never gets crossed - are what "worth
+    # watching" measures against (SPEC §8 beat 6). Duration catches the motor
+    # pattern, which barely touches error counts by design (SPEC §7.5).
+    baseline_cutoff = DEMO_NOW - timedelta(days=DEMO_DAYS - BASELINE_DAYS)
+    early_history = [
+        session
+        for session in history
+        if datetime.fromisoformat(session["ts"]) < baseline_cutoff
+    ]
+    duration_points = [
+        {"ts": session["ts"], "score": session["duration_s"]} for session in sessions
+    ]
+    return _worth_watching(
+        scores[-1], [_score(session) for session in early_history], score_points
+    ) or _worth_watching(
+        sessions[-1]["duration_s"],
+        [session["duration_s"] for session in early_history],
+        duration_points,
+    )
+
+
 def demo_residents() -> list[dict]:
     """Build the demo residents end to end: deterministic, no network, no DB."""
     residents = []
@@ -129,26 +156,7 @@ def demo_residents() -> list[dict]:
             {"ts": session["ts"], "score": score}
             for session, score in zip(sessions, scores, strict=True)
         ]
-        # A resident's own earliest sessions - not their whole history, which rises
-        # right along with a slow drift and so never gets crossed - are what "worth
-        # watching" measures against (SPEC §8 beat 6). Duration catches the motor
-        # pattern, which barely touches error counts by design (SPEC §7.5).
-        baseline_cutoff = DEMO_NOW - timedelta(days=DEMO_DAYS - BASELINE_DAYS)
-        early_history = [
-            session
-            for session in history
-            if datetime.fromisoformat(session["ts"]) < baseline_cutoff
-        ]
-        duration_points = [
-            {"ts": session["ts"], "score": session["duration_s"]} for session in sessions
-        ]
-        watch = _worth_watching(
-            scores[-1], [_score(session) for session in early_history], score_points
-        ) or _worth_watching(
-            sessions[-1]["duration_s"],
-            [session["duration_s"] for session in early_history],
-            duration_points,
-        )
+        watch = _watch(history, sessions, scores)
         status = _status(flagged, watch)
 
         residents.append(
