@@ -497,7 +497,7 @@ Acceptance:
 - `scripts/ci.sh` passes (incl. `pipeline/tests/test_scenarios_readme.py`)
 
 ### T177 — Test: handoff summary and Mrs. K's alert name the same errors
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -505,7 +505,8 @@ Acceptance:
 - area: pipeline/tests/test_handoff_alert_errors.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:06Z
-- pr: —
+- pr: #167
+- rating: 5/5 clear
 
 What: T166 (PR #159) made the handoff build its errors with `alerts.task_errors` and `alerts.session_id_for` so a nurse reads the same steps and times in both places. Lock that in with a test.
 Interface: Read only `pipeline/src/routine_watch/handoff.py` (`build_handoff`, `_window_sessions`, `_latest`), `pipeline/src/routine_watch/alerts.py` (`build_alerts`, `task_errors`, `session_id_for`) and `pipeline/tests/test_handoff.py` for fixtures. New test file only; don't change source.
