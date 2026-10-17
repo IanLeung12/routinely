@@ -621,3 +621,39 @@ Interface: `fetchResidents()` returns `{ residents: ResidentSummary[], source: '
 Acceptance:
 - tests in `UnitOverview.states.test.tsx`: API rejects → notice shown and mock residents listed; API non-OK → notice shown; API OK → no notice
 - `cd web && npm test` and `scripts/ci.sh` pass
+
+### T376 — Review: live "Open alert" CTA uses ui/Button and sits outside the status live region
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: reviewer
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css, web/src/live/LiveSession.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: the demo's key click (SPEC §10, DEMO.md "Alert" beat) is a raw unstyled `<button>` nested inside `<p role="status">` in `LiveSession.tsx` (~line 216). It ignores `web/src/ui/Button.tsx` and, inside a live region, screen readers re-announce the button text with the banner.
+Interface: keep the `<p role="status">` for the banner text only; render `<Button onClick={() => onOpenAlert(ended.alert_id)}>Open alert</Button>` (from `../ui/Button.tsx`) as a sibling right after it, wrapped in a `div.live-session__banner-row` if layout needs it (CSS in `liveSession.css`, use existing CSS vars, no hex colours).
+Acceptance:
+- test: flagged session_end with alert_id → `getByRole('button', {name: 'Open alert'})` exists and is not inside `getByRole('status')`; clicking calls `onOpenAlert` with the id
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T377 — Review: DEMO.md shift-handoff step is after "Close" (out of run order)
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- source: reviewer
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: the "Shift handoff" bullet added in the last merge sits after the "Close" bullet, separated by a blank line, so the presenter reads it after closing.
+Interface: move it into the run list between "Why / not just delirium" and "Close", reword to match the other bullets (bold beat name, what to click, what appears). No other file.
+Acceptance:
+- `docs/DEMO.md` beat list is one contiguous list ending with "Close"
+- `scripts/ci.sh` passes

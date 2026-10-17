@@ -1,11 +1,9 @@
 # REVIEW
 
-- last-reviewed: 39eccf1
-- next-area: web
+- last-reviewed: e3868d9
+- next-area: pipeline
 
 ## Known issues filed
-- T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
-- T073 live screen uses MOCK_STEPS; no session_start with task graph
 - T075 ErrorType label/colour maps x3 in web
 - T105 Claude guard misses spelled-out numbers
 - T107 evidence ghost == today frames (both tea_no_kettle)
@@ -32,3 +30,5 @@
 - T350 HandoffDelta built but not rendered in Handoff.tsx
 - T351 strip evening cut 17h vs pattern_features 16h
 - (noted) LiveSession room ownership hard-coded to mrs-k; Paused(n) counts rooms not residents
+- T376 live Open alert raw <button> inside role=status
+- T377 DEMO.md handoff beat after Close
