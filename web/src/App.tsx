@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import { LiveSession } from './live/LiveSession.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
 
-/** Screens 3-4 of SPEC section 9. Each one is a later task. */
+/** Screen 4 of SPEC section 9. A later task. */
 const screens = [
-  { name: 'Live session', detail: 'Skeleton view beside the task-graph map' },
   { name: 'Alert evidence', detail: 'Summary, error list, ghost replay, suggested checks' },
 ]
 
@@ -27,6 +27,11 @@ export default function App() {
           <section>
             <h2>Unit overview</h2>
             <UnitOverview onSelect={setOpenResident} />
+          </section>
+
+          <section>
+            <h2>Live session</h2>
+            <LiveSession scenario="tea_skip_teabag_pour_twice" />
           </section>
 
           <ul className="screens">
