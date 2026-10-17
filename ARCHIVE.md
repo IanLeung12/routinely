@@ -3458,3 +3458,63 @@ Interface: read tests/scenarios/README.md, tests/scenarios/tea_self_corrected/ a
 Acceptance:
 - expected.yaml pins `score:` and `flag: false`, with a comment saying what full weighting would score
 - `scripts/e2e.sh tests/scenarios/meds_self_corrected` prints PASS; `scripts/ci.sh` passes
+
+### T204 — Review: demo tour misstates the flag rule ("two sessions in a row")
+- status: done
+- class: light
+- priority: 2
+- kind: bug
+- source: reviewer
+- deps: —
+- area: web/src/tour/steps.ts, web/src/tour/Tour.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:57Z
+- pr: #196
+- rating: 5/5 clear
+
+What: the "Alert" step (T164, #186) says an alert appears "when two sessions in a row cross a resident's own threshold". The real rule (`pipeline/src/routine_watch/change_detection.py` `flag_change`) is at least `FLAG_MIN_SESSIONS` (2) sessions above threshold within a 48-hour window, consecutive or not. A presenter reading this card would misdescribe the product to judges. Reword to "when at least two sessions within 48 hours cross a resident's own threshold".
+Interface: read only the area files.
+Acceptance:
+- Alert step copy names "within 48 hours", no "in a row"
+- Tour test asserts the Alert step body contains "48 hours"
+- `cd web && npm test -- Tour` and `scripts/ci.sh` pass
+
+### T205 — Tour: Escape closes it, arrow keys step through
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/tour/Tour.tsx, web/src/tour/Tour.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:04Z
+- pr: #200
+- rating: 5/5 clear
+
+What: The presenter drives the `?tour=1` cue card from a keyboard on stage; today only mouse clicks work. Add Escape = Close, ArrowRight = Next, ArrowLeft = Back (respecting first/last bounds).
+Interface: `Tour` in web/src/tour/Tour.tsx adds one `keydown` listener on `window` in a `useEffect` (removed on unmount/close). No other files; do not edit steps.ts (T204 owns it).
+Acceptance:
+- Escape hides the card and calls `onClose`; ArrowRight/ArrowLeft move one step and never go past step 1 or the last step.
+- New tests in Tour.test.tsx using `fireEvent.keyDown(window, { key: ... })`.
+- `cd web && npm test -- --run src/tour` and `scripts/ci.sh` pass.
+
+### T207 — Bug: skeleton view and evidence ghost replay show no skeleton, only object boxes
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/evidence.py, pipeline/tests/
+- owner: ian-claude
+- claimed: 2026-10-17T09:54Z
+- pr: #205
+- rating: 5/5 clear - repro, expected/actual and the acceptance checks all matched what I found; the only thing not spelled out was that the replay stand-ins are the tests/scenarios frames.jsonl files, which are outside the listed area, so the fix had to go in evidence.py rather than the recordings
+
+What: Tester (main 355d6b1). Every stand-in frame the demo serves is built with `poses=[]` and `hands=[]` (`live._synthetic_frames`, and the recordings behind `/sessions/{id}/replay` and `/residents/{id}/normal_replay`), so the live "Skeleton view" and the alert's "Today / Usual" ghost replay draw only labelled object boxes, never a body skeleton or hands (SPEC §5 ghost replay, §10 step 3 "skeleton view").
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`; open the dashboard, wait for the live session to flag, click "Open alert", press Play under Evidence. `curl "localhost:8000/sessions/mrs-k-22/replay?t_start=40&t_end=60"` → every frame has `"poses": [], "hands": []`.
+Expected: a simple stick-figure pose (and a hand near the active object) in each synthetic frame, moving between the objects of each step; Usual replay differs visibly from Today. Actual: boxes only.
+Interface: `_synthetic_frames` (and whatever builds the replay stand-in frames) fill `poses`/`hands` with keypoints per the `contracts/` CaptureFrame schema (no contract change); see `contracts/examples/capture.jsonl` for the shape.
+Acceptance:
+- Pipeline test: synthetic live frames and `/sessions/{id}/replay` frames have ≥1 pose with keypoints in [0,1].
+- No change to step/error/flag results: `scripts/e2e.sh` still 23/23.
+- `scripts/ci.sh` passes.
