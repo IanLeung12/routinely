@@ -524,14 +524,14 @@ Acceptance:
 - `cd web && npx vitest run src/tour/steps.test.ts` passes; `scripts/ci.sh` passes
 
 ### T360 — Guided tour: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/tour/
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T18:04Z
 - pr: —
 
 What: The `?tour=1` guided tour card must fit a 375 px phone without horizontal scroll or clipped buttons, like the other phone-width tasks (T234, T238).
