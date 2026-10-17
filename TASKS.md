@@ -501,6 +501,24 @@ Acceptance:
 - Existing UnitOverview tests still pass; `scripts/ci.sh` passes.
 - PR body notes the viewport widths checked.
 
+### T236 — Review: live session_end flag/alert_id can disagree with the resident's real status (alert 404)
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `session_messages` (live.py ~L282-305) sends `flag` from `score_session`, which judges against the *scenario's* `expected.history`, and sets `alert_id = f"alert-{resident_id}"` whenever that flag is true. But `/alerts` only has an alert when the resident (mrs-k) is flagged over her own history (`_resident_flagged`). Reproduced with `session_log.reset()` + one live run for mrs-k: `tea_kettle_twice` → `flag: True, alert_id: alert-mrs-k`, resident status `watch`, `GET /alerts/alert-mrs-k` → 404 ("View alert" dead-ends). `tea_no_kettle` → `flag: False` while she is `flagged` on the dashboard. The two demo picks (tea_skip_teabag_pour_twice, meds_skip_water) happen to agree, so this bites any other scenario or the camera path.
+Interface: after `_record(...)`, compute `resident_name = _resident_flagged(resident_id)` once (reuse it for the push check) and send `flag = resident_name is not None` and `alert_id = f"alert-{resident_id}" if resident_name else None`, so the live screen says what the dashboard says. Keep the per-recording score as-is. Update the module docstring note about `flag` (~L75).
+Acceptance:
+- New test in `pipeline/tests/test_live.py`: for mrs-k after reset, `tea_kettle_twice` and `tea_no_kettle` each end with `alert_id` non-null iff `GET /alerts/{alert_id}` returns 200 (TestClient), and `flag` equals the resident's status == flagged.
+- Existing live/notify tests still pass; `scripts/ci.sh` passes.
+
 ### T235 — Live screen and task map: usable at phone width (375 px)
 - status: claimed
 - class: standard

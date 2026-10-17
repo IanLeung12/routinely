@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 13032a4
-- next-area: pipeline
+- last-reviewed: 6076939
+- next-area: contracts+api
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -26,3 +26,4 @@
 - (noted) API resident/handoff payloads have no contracts/ schema; web types hand-mirrored
 - T222 alertText says "Change flagged" for trend alerts
 - T230 live summary "usually" averages whole history (drift), not early baseline
+- T236 live session_end flag/alert_id from scenario verdict, not resident status (alert 404)
