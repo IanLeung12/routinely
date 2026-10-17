@@ -431,7 +431,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T209 — Refactor: move feature extraction out of patterns.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
