@@ -587,3 +587,21 @@ Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`,
 Acceptance:
 * test: with a name, the first line is `Resident: <name>`; without, it falls back to the id; existing wording tests still pass
 * `cd web && npm test` and `scripts/ci.sh` pass
+
+### T222 — Review: Copy summary says "Change flagged" for slow-trend alerts
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: T221
+- area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts
+- owner: —
+- claimed: —
+- pr: —
+- source: reviewer
+
+What: `alertText` (T199/T211, #189/#198) always writes the line `Change flagged for review`, but `Alert.kind` can be `'trend'`, which the overview labels `Slow trend for review` (`web/src/App.tsx` ~line 112). A nurse pasting a trend alert into the chart records the wrong kind of finding.
+Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`, and `AlertKind` in `web/src/contracts.ts`. Replace the fixed string with `alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'`.
+Acceptance:
+* test: a `kind: 'trend'` alert's copied text contains `Slow trend for review` and not `Change flagged`; a change alert keeps `Change flagged for review`
+* `cd web && npm test` passes

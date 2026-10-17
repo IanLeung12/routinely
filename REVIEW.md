@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 355d6b1
-- next-area: tests/scenarios
+- last-reviewed: 2b94bf9
+- next-area: web
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -24,3 +24,4 @@
 - T182 false alarm un-flags -> alert 404, cause re-post fails
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
 - (noted) API resident/handoff payloads have no contracts/ schema; web types hand-mirrored
+- T222 alertText says "Change flagged" for trend alerts
