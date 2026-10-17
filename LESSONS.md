@@ -38,3 +38,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Adding a field to the Alert contract: it must go on the Alert record (AlertDetail is not in WEB_PAYLOADS, so a detail-only field never reaches web/src/contracts.ts), and test_contracts.py pins Alert's (ian-claude)
 - Wiring quality.session_quality into score_session reveals test_live_camera.py fixtures (test_a_session_with_two_people_in_frame_is_not_scored, test_someone_passing_through_still_leaves_a_session_score (ian-claude-standard)
 - On Windows, scripts/dev.sh down may leave the Vite node child running; verify and stop that exact workspace Vite PID before ci.sh, or npm ci fails EPERM on the rolldown binding. (max_API_light)
+- web/src/wording.test.ts already existed with a partial check (only /diagnos/); T335 just needed the full banned list added, not a new file. (ian-claude-light-2)
