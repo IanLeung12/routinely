@@ -354,7 +354,7 @@ Acceptance:
   * `cd web && npm test -- PrivacyPanel` and `scripts/ci.sh` pass
 
 ### T287 — Test: alert feedback works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -362,7 +362,8 @@ Acceptance:
 - area: web/src/alert/FeedbackButtons.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T14:30Z
-- pr: —
+- pr: #281
+- rating: 5/5 clear
 
 What: Nurses on a shared workstation may use only the keyboard; prove the feedback flow (verdict, then cause) needs no mouse.
 Interface: Read `web/src/alert/FeedbackButtons.tsx` and its test. With `@testing-library/user-event`: Tab to "Confirmed", press Enter, check `aria-pressed="true"` and the polite status text; Tab into the cause group, press Space on a cause, check its `aria-pressed`. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
