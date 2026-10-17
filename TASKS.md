@@ -407,23 +407,23 @@ Acceptance:
 - At 375 px: no horizontal scroll, rows wrap to two lines (who/action, then time), text >= 14 px.
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
-### T310 — Test: pattern library urgency + level filters combine correctly
-- status: blocked
-- class: standard
+### T310 — Test: pattern library urgency filter (every option, reset, empty state)
+- status: todo
+- class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/patterns/PatternLibrary.filters.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T15:41Z
+- owner: —
+- claimed: —
 - pr: —
-- note: NEEDS CLARIFICATION: task assumes an existing 'level' filter alongside T300's urgency filter, but PatternLibrary.tsx only has one filter dimension (urgency); T300's own description used 'level' as a synonym for an urgency value ('Urgent'/'Check this shift'/etc), not a second axis. There is nothing to combine - can't write a 'both filters together' test for a filter that doesn't exist, and adding one would be a feature change outside this test-only task's area.
+- note: rewritten by orchestrator: the library has one filter (urgency); there is no level filter. Test that one axis only.
 
-What: T300 added an urgency filter next to the existing level filter; test that both together narrow the list, that clearing one keeps the other, and that "no match" shows the empty state.
-Interface: new test file only; read web/src/patterns/PatternLibrary.tsx and PatternLibrary.test.tsx.
+What: The pattern library has a single urgency filter (T300). Test each option narrows the list to matching patterns, "All" restores the full list, and an urgency with no matching patterns shows the empty state.
+Interface: new test file only. Read web/src/patterns/PatternLibrary.tsx and web/src/patterns/PatternLibrary.test.tsx (copy its fetch mock). Do not change PatternLibrary.tsx.
 Acceptance:
-- Covers: urgency only, level only, both, both with zero matches (empty state text), reset.
-- Filters reachable and operable by keyboard in at least one case.
+- Covers: every urgency button, "All" reset, exactly one button has aria-pressed="true", empty state when a mocked list has no pattern of the chosen urgency.
+- At least one case operates the filter by keyboard (Tab + Enter/Space).
 - `scripts/ci.sh` passes.
 
 ### T311 — Test: handoff payload without `paused` / `monitoring_paused` still validates and renders
@@ -460,4 +460,109 @@ Interface: new test file only; read web/src/resident/ResidentDetail.tsx and its 
 Acceptance:
 - Mock feedback API returns one answer, then an empty list after a reset; the card updates to the empty-state text on re-fetch/re-mount.
 - No raw video or real API calls; fakes only.
+- `scripts/ci.sh` passes.
+
+### T313 — Scenarios: meds_two_errors_one_session and meds_pill_substitution
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_two_errors_one_session/, tests/scenarios/meds_pill_substitution/, tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Meds still lacks two cases tea has. Add a meds session with two different errors in one session (e.g. skipped water plus pill taken twice), and a substitution case mirroring `tea_substitution` if the meds graph (pipeline/src/routine_watch/tasks/meds.yaml) allows one; otherwise pick another error type tea covers and meds doesn't, and say which in the PR.
+Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/meds_pill_twice/` and `tests/scenarios/tea_substitution/`; add both to the README list. No pipeline code changes; if a scenario exposes a pipeline bug, keep the correct expected behaviour, mark it known-failing as tests/scenarios/README.md describes, and say so in the PR.
+Acceptance:
+- Both scenarios run in `scripts/e2e.sh`; the two-error one expects both error types.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a tea session with two different errors in one session, and a correct session with one unusually long gap between steps that must produce no task error (long gaps are hesitations from `hesitation.py`, not errors) and no flag.
+Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/tea_normal/` and `tests/scenarios/tea_sequence_error/`. Read pipeline/src/routine_watch/hesitation.py. Don't edit tests/scenarios/README.md (T313 owns it); list the two names in the PR body. If the README-lists-every-scenario test then fails, add a deps-free follow-up note in the PR rather than widening scope. No pipeline code changes; bugs found → known-failing + PR note.
+Acceptance:
+- Both run in `scripts/e2e.sh`; the long-pause one expects zero errors and no flag.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T315 — Refactor: shared fake WebSocket helper for live tests
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/testWebSocket.ts, web/src/live/LiveSession.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: web/src/live/LiveSession.test.tsx is 625 lines, much of it hand-rolled WebSocket mocking. Move the fake socket and message helpers into `web/src/live/testWebSocket.ts` and use them from LiveSession.test.tsx, with no change to what is tested.
+Interface: `testWebSocket.ts` exports a fake socket class/installer and a helper to push server messages; test-only (never imported by app code).
+Acceptance:
+- Same number of test cases before and after (state both counts in the PR); LiveSession.test.tsx at least 100 lines shorter.
+- No app code changes. `scripts/ci.sh` passes.
+
+### T316 — Test: every scenario uses real task-graph step ids
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_scenario_step_ids.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: A typo in a scenario's step id silently makes it test nothing. Add a pipeline test that loads every `tests/scenarios/*/` scenario and checks each step id it references (steps.jsonl and expected.yaml errors) exists in that scenario's task graph.
+Interface: use `routine_watch.replay.load_scenario` and `routine_watch.tasks.load_task`; read pipeline/src/routine_watch/replay.py and tasks/graph.py. Parametrise over scenario folders.
+Acceptance:
+- Failure message names the scenario and the bad id (show it once locally, note in PR).
+- An existing scenario with a bad id is not fixed here: mark that case xfail with the reason and note it in the PR.
+- `scripts/ci.sh` passes.
+
+### T317 — Test: each screen sets its page title
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: —
+- area: web/src/App.title.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T297 made document.title name the screen and resident. Add one App-level test that navigates to the overview, a resident, and the pattern library and checks document.title each time.
+Interface: new test file only. Read web/src/App.tsx, web/src/ui/useDocumentTitle.ts and web/src/App.test.tsx (copy its fetch mocks and navigation setup).
+Acceptance:
+- Three cases, each asserting the exact title the app sets (read it from the code, e.g. "Mrs. K — Routine Watch").
+- `scripts/ci.sh` passes.
+
+### T318 — Unit overview: sort residents by most recent change
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/overview/ResidentSort.tsx, web/src/overview/ResidentSort.test.tsx, web/src/overview/UnitOverview.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: on a busy unit the nurse wants the newest flags first. Add a small sort control ("Default order" / "Most recent change first") to the unit overview; the default keeps today's order so the demo path is unchanged.
+Interface: `ResidentSort.tsx` exports the control and a pure `sortResidents(residents, mode)`; UnitOverview uses it. Read web/src/overview/UnitOverview.tsx for the resident fields (use the latest flag/alert time it already has; if none exists, sort by status urgency and say so in the PR). No API or contract changes.
+Acceptance:
+- Unit tests for `sortResidents` (both modes, stable ties) and one UI test switching the control by keyboard.
+- Default order identical to before (existing UnitOverview tests untouched and passing).
 - `scripts/ci.sh` passes.
