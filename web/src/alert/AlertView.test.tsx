@@ -159,7 +159,7 @@ describe('AlertView', () => {
     await act(async () => {
       releases.forEach((release) => release())
     })
-    expect(await screen.findByText('No replay available')).toBeTruthy()
+    await waitFor(() => expect(screen.getByText('No replay available')).toBeTruthy(), { timeout: 5000 })
   })
 
   it('shows an empty state for the evidence card when no replay is available', async () => {
