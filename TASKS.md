@@ -45,15 +45,15 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T144 — API: POST /demo/reset puts the demo back to its seeded history
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_demo_reset.py (new), scripts/smoke.sh
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:05Z
 - pr: —
 
 What: Demo robustness (SPEC §10, §13): after a rehearsal, Mrs. K stays flagged from the live session, so the next run of demo beat 4 never happens unless the server restarts. One endpoint resets recorded live sessions and feedback so the demo can be rerun on stage in a second.
