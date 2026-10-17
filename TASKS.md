@@ -519,7 +519,7 @@ Acceptance:
 - `cd web && npx vitest run src/overview/ResidentSort.filter.test.tsx` passes
 
 ### T339 — Test: /residents returns each resident's scores oldest-first
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
