@@ -112,24 +112,6 @@ Acceptance:
 - note: fix CI on PR #52: orch changed the required text to avoid "diagnosis" (test_privacy.py). Update the component and test on branch task/T052-demo-banner, then set auto-merge.
 - `cd web && npm run lint && npm test && npm run build` passes.
 
-### T055 — Review: session scoring duplicated in replay.py and live.py
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/live.py, pipeline/tests/test_replay.py, pipeline/tests/test_live.py
-- source: reviewer
-- owner: max-codex-light-2
-- claimed: 2026-10-17T05:29Z
-- pr: #45
-
-What: `replay.run` and `live.session_messages` each re-implement session_id selection, `assisted` (≥2 poses in any frame), error counting, `session_score` and `change_flag`, so the e2e verdict and the live demo can drift apart. Extract one helper used by both. Both also crash with IndexError on a scenario with no frames and no events; raise `ReplayError` instead.
-Interface: in `replay.py` add `session_id_of(scenario: Scenario) -> str` (raises `ReplayError` when empty) and `score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]` returning `(score, assisted, flag)`. `run` and `live.session_messages` use them; output unchanged.
-Acceptance:
-- New tests: empty scenario raises `ReplayError` from `run` and from `session_messages`.
-- `scripts/ci.sh` passes with no change to existing expected outputs.
-
 ### T056 — Scenario: tea abandoned mid-task
 - status: done
 - class: light
