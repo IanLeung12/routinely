@@ -15,7 +15,7 @@ __version__ = "0.1.0"
 STAGES: tuple[str, ...] = (
     "capture",
     "recogniser",
-    "task_graph",
+    "tasks",
     "errors",
-    "baseline",
+    "change_detection",
 )

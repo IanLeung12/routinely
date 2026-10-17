@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Integration check: does the whole stack actually come up and serve the demo on current main?
+# Unit tests and scenarios run in CI; this checks the running system end to end, offline, no keys.
+#
+#   scripts/integration.sh        exit 0 = healthy; prints one line per failed check
+#
+# Uses its own ports (API 8100, dashboard 5273) so it can run next to a dev stack.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)"
+export API_PORT=${API_PORT:-8100} DASHBOARD_PORT=${DASHBOARD_PORT:-5273} OFFLINE_MODE=true LIVE_API=0
+API="http://localhost:$API_PORT"; WEB="http://localhost:$DASHBOARD_PORT"
+fails=()
+fail() { fails+=("$1"); }
+
+trap 'scripts/dev.sh down >/dev/null 2>&1' EXIT
+if ! scripts/dev.sh up >/tmp/integration-up.log 2>&1; then
+  echo "FAIL dev.sh up: $(tail -3 /tmp/integration-up.log | tr '\n' ' ')"
+  echo "  api log: $(tail -5 .dev/api.log 2>/dev/null | tr '\n' ' ')"
+  exit 1
+fi
+
+json() { curl -fsS --max-time 10 "$API$1" 2>/dev/null; }
+json /health >/dev/null || fail "GET /health"
+n=$(json /residents | python3 -c 'import sys,json;d=json.load(sys.stdin);print(len(d if isinstance(d,list) else d.get("residents",[])))' 2>/dev/null)
+[ "${n:-0}" -ge 1 ] || fail "GET /residents returned no residents"
+rid=$(json /residents | python3 -c 'import sys,json;d=json.load(sys.stdin);d=d if isinstance(d,list) else d.get("residents",[]);print(d[0].get("id") or d[0].get("resident_id"))' 2>/dev/null)
+[ -n "$rid" ] && { json "/residents/$rid" >/dev/null || fail "GET /residents/$rid"; }
+json /alerts >/dev/null || fail "GET /alerts"
+curl -fsS --max-time 10 "$WEB/" | grep -q '<div id="root"' || fail "dashboard index.html"
+
+# Live session WebSocket: at least one message within 10 s.
+(cd pipeline && timeout 20 uv run python - "$API_PORT" <<'PY') || fail "WebSocket /ws/live sent nothing"
+import asyncio, sys
+async def main():
+    try:
+        import websockets
+    except ImportError:
+        print("skip ws check: websockets not installed")
+        return
+    async with websockets.connect(f"ws://localhost:{sys.argv[1]}/ws/live?scenario=tea_skip_teabag_pour_twice&speed=20", open_timeout=10) as ws:
+        await asyncio.wait_for(ws.recv(), 10)
+asyncio.run(main())
+PY
+
+# Rendered dashboard (needs a headless Chrome; skipped if none).
+CHROME=${CHROME:-$(ls ~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell 2>/dev/null | head -1)}
+if [ -n "$CHROME" ]; then
+  dom=$("$CHROME" --no-sandbox --headless --virtual-time-budget=8000 --dump-dom "$WEB/" 2>/dev/null)
+  echo "$dom" | grep -q "Routine Watch" || fail "dashboard did not render (no 'Routine Watch' in DOM)"
+  echo "$dom" | grep -qiE "something went wrong|uncaught|cannot read prop" && fail "dashboard rendered an error"
+fi
+
+if [ ${#fails[@]} -gt 0 ]; then
+  printf 'FAIL %s\n' "${fails[@]}"
+  exit 1
+fi
+echo "OK integration (api + dashboard + live ws)"

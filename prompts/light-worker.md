@@ -19,4 +19,6 @@ Steps:
 7. If stuck: `python3 scripts/tasks.py set {{ID}} status=blocked note="<why>" --agent {{AGENT}}`
 
 The orchestrator marks it `done` after merge. If you need something only a human can provide (API key, account, Roboflow training run, hardware, a product decision), use `status=blocked note="NEEDS HUMAN: <exactly what>"`, and still ship anything that can be done without it (mocks, stubs behind an interface).
+If something non-obvious cost you a retry (a CI quirk, a tooling gotcha, a repo convention), record it in one line so nobody repeats it: `python3 scripts/tasks.py lesson "<rule>" --agent {{AGENT}}`.
+If the task note says there is a merge conflict, check out the PR branch, `git merge origin/main`, resolve, run CI, push.
 Finish with one line: `{{ID}} <in-review|blocked> PR #<N>`.
