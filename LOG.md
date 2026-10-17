@@ -238,3 +238,4 @@ T265 | standard | claude-sonnet | merged first try | ~75k tok
 T271 | light | claude-sonnet | merged first try | ~25k tok
 T245 | standard | claude-sonnet | merged first try | ~45k tok
 T267 | standard | claude-sonnet | merged first try | ~55k tok
+T246 | light | claude-sonnet | merged first try | ~15k tok

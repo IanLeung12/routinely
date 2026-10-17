@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 88693bd
+- last-reviewed: 5cf859f
 
 ## Tasks
 
@@ -511,4 +511,39 @@ Interface: `scripts/smoke.sh` only; same PASS/FAIL output lines and exit code.
 Acceptance:
 - Every existing check still runs and passes with `scripts/dev.sh up && scripts/smoke.sh; scripts/dev.sh down`.
 - No `"204"` literal left in smoke.sh; script is shorter than before.
+- `scripts/ci.sh` passes.
+
+### T275 — Live screen: notice a pause/resume made while the panel is open
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Tester (TESTREPORT @1d6ee98) saw that toggling monitoring doesn't update an already-open live panel until remount or "Check again". Make the live panel react immediately.
+Interface: `setRoomMonitoring` dispatches `window.dispatchEvent(new CustomEvent('monitoring-changed', {detail: {room, paused}}))` after a successful PUT; `LiveScreen` listens for it and, for its own room, shows the paused message or re-checks (same path as "Check again"). Remove the listener on unmount.
+Acceptance:
+- Test in LiveScreen.test.tsx: open panel for room 204, dispatch the event with paused=true → paused message shows; paused=false → panel re-checks. Event for another room changes nothing.
+- monitoringApi.test.ts: event fires only on a successful PUT.
+- `scripts/ci.sh` passes.
+
+### T276 — Unit overview: "Paused" filter
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T246 added a "Monitoring paused" chip; add a "Paused (N)" button to the existing filter group so a nurse can list paused rooms in one tap.
+Interface: extend `UnitFilter` with `'paused'`; `applyFilter` uses the `pausedRooms` state already fetched via `fetchPausedRooms`. Hide the button (or show 0) when the fetch failed; never break the list.
+Acceptance:
+- Test: with room 204 paused, clicking "Paused" shows only that resident and the count reads 1; with fetch failure the other filters still work.
 - `scripts/ci.sh` passes.
