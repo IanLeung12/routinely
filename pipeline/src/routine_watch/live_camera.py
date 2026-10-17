@@ -13,9 +13,11 @@ it is talking to::
 `frames` is the capture stream: `CaptureFrame` records as `routine_watch.capture` writes
 them, from a camera or from a video file, handed over as an async or a plain iterable.
 The message types and the order they come in are `live`'s table, which that module
-documents; the only difference is that a step lands a beat after the frames it was read
-from rather than exactly on the last of them. `tests/test_live_camera.py` holds the two
-paths to the same messages over every recorded capture stream in the repo.
+documents; the two differences are both about not knowing the future: the opening
+`session_start` waits for the first record, which is where a camera session learns its
+id, and a step lands a beat after the frames it was read from rather than exactly on the
+last of them. `tests/test_live_camera.py` holds the two paths to the same messages over
+every recorded capture stream in the repo.
 
 **A step is sent once no later frame can take it back.** The recogniser is a batch pass
 over the frames so far (`recogniser.recognise`, "a live session re-reads the frames so
@@ -105,11 +107,15 @@ async def camera_session_messages(
         found = classify_errors(events, graph, session_id=session_id, ended=False)
         return [{"type": "step", "event": event}, *sent.reading(events, found)]
 
-    for message in sent.reading(events, ()):  # the map before anything: all pending
-        yield message
-
     async for frame in _streamed(frames):
-        session_id = session_id or frame.session_id  # the stream's own id, as a replay does
+        if not records:
+            # A replay knows the session before it starts; a camera learns it from the
+            # first record, so the opening messages wait for it - which is still before
+            # anything has been read, so the client sees the same two messages first.
+            session_id = frame.session_id
+            yield _session_start(graph, session_id)
+            for message in sent.reading(events, ()):  # the map before anything: all pending
+                yield message
         records.append(frame)
         scenes += _scenes([frame])  # one scene per record: `_scenes` reads each on its own
         if last_sent is None or frame.t - last_sent >= 1.0 / MAX_FRAME_FPS - 1e-9:
@@ -146,6 +152,24 @@ async def camera_session_messages(
         "score": score,
         "flag": flag,
         "alert_id": f"alert-{session_id}" if flag else None,
+    }
+
+
+def _session_start(graph: TaskGraph, session_id: str) -> dict[str, Any]:
+    """The task graph itself, sent first and once, so the dashboard draws the map this
+    session ran rather than assuming it is always tea.
+
+    `live.session_messages` builds this inline, so it is written out again here;
+    `tests/test_live_camera.py` is what holds the two to the same message.
+    """
+    return {
+        "type": "session_start",
+        "session_id": session_id,
+        "task_id": graph.id,
+        "steps": [
+            {"id": step.id, "label": step.label, "optional": step.optional}
+            for step in graph.steps
+        ],
     }
 
 

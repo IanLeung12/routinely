@@ -210,14 +210,18 @@ def test_a_camera_session_says_what_a_replay_of_it_says(name: str, tmp_path: Pat
     assert messages[-1]["type"] == "session_end"
 
 
-def test_the_map_starts_out_all_pending() -> None:
-    """The task map is sent before anything has happened, so the dashboard can draw the
-    task from the pipeline's data rather than from a mock of it."""
-    first = camera(load_frames(RECORDINGS["make_tea"]))[0]
+def test_the_task_graph_comes_first_and_the_map_starts_out_all_pending() -> None:
+    """The task itself, then the map, both before anything has happened: the dashboard
+    draws the task from the pipeline's data rather than from a mock of it."""
+    start, then = camera(load_frames(RECORDINGS["make_tea"]))[:2]
 
-    assert first["type"] == "step_state"
-    assert set(first["states"]) == set(TEA.step_ids)
-    assert set(first["states"].values()) == {"pending"}
+    assert start["type"] == "session_start"
+    assert start["task_id"] == TEA.id
+    assert [step["id"] for step in start["steps"]] == list(TEA.step_ids)
+    assert start["session_id"] == "make-tea"  # the stream's own id, as a replay does
+    assert then["type"] == "step_state"
+    assert set(then["states"]) == set(TEA.step_ids)
+    assert set(then["states"].values()) == {"pending"}
 
 
 def test_steps_arrive_while_the_session_is_still_running() -> None:
@@ -344,7 +348,7 @@ def test_every_message_is_a_contract() -> None:
     for message in of_type(messages, "error"):
         TaskError.model_validate(message["error"])
     assert {message["type"] for message in messages} <= {
-        "frame", "step", "step_state", "error", "session_end"
+        "session_start", "frame", "step", "step_state", "error", "session_end"
     }
 
 
