@@ -501,7 +501,7 @@ Acceptance:
 - `cd web && npx vitest run src/overview/ResidentSort.filter.test.tsx` passes
 
 ### T339 — Test: /residents returns each resident's scores oldest-first
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -509,7 +509,8 @@ Acceptance:
 - area: pipeline/tests/test_api_residents_order.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T16:54Z
-- pr: —
+- pr: #325
+- rating: 5/5 clear
 
 What: The dashboard's "Most recent change first" sort (T318, `web/src/overview/ResidentSort.tsx`) assumes `scores` is oldest-first with ISO `ts`. Pin that contract on the API side so a backend change can't silently break the sort.
 Interface: read `pipeline/src/routine_watch/api_residents.py`, `api_state.py`, and an existing API test (e.g. `pipeline/tests/test_feedback_reset.py`) for the client fixture. New test file only.
