@@ -583,7 +583,7 @@ Acceptance:
 - `cd web && npx vitest run src/live/CameraPreview.test.tsx` and `scripts/ci.sh` pass.
 
 ### T425 — Review: handoff summary counts unclear-camera rooms as "nothing to review"
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
