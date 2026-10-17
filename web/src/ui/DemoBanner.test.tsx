@@ -7,7 +7,7 @@ afterEach(cleanup)
 describe('DemoBanner', () => {
   it('labels the synthetic data and review-only flags in a note', () => {
     render(<DemoBanner />)
-    expect(screen.getByRole('note').textContent).toBe('Demo mode: synthetic residents, no real patient data. Flags a change for review; never a diagnosis.')
+    expect(screen.getByRole('note').textContent).toBe('Demo mode: synthetic residents, no real patient data. Changes are flagged for review only.')
     expect(screen.queryByRole('button')).toBeNull()
   })
 

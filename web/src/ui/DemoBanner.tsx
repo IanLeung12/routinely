@@ -7,7 +7,7 @@ export function DemoBanner({ onDismiss }: { onDismiss?: () => void }) {
       border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
       fontSize: 'var(--text-sm)',
     }}>
-      <span>Demo mode: synthetic residents, no real patient data. Flags a change for review; never a diagnosis.</span>
+      <span>Demo mode: synthetic residents, no real patient data. Changes are flagged for review only.</span>
       {onDismiss && <button type="button" className="btn btn--secondary" onClick={onDismiss}>Dismiss</button>}
     </div>
   )
