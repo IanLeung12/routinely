@@ -409,7 +409,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T132 — Web tests: AlertView and PatternList time out under default parallelism
-- status: claimed
+- status: blocked
 - class: light
 - priority: 2
 - kind: improvement
@@ -418,6 +418,7 @@ Acceptance:
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:05Z
 - pr: —
+- note: NEEDS HUMAN: not reproducible — src/alert/AlertView.test.tsx and PatternList.test.tsx already resolve mocks immediately/use findBy*+getBy*; full suite (default workers) passed 246/246 in 59.7s, no test >1s in src/alert. Need repro steps (machine/CPU count) or confirmation this was already fixed.
 
 What: On a slower machine `npm test` (default workers) timed out in these two files while `--maxWorkers=2` passed (seen on T071). Make them fast and deterministic without changing what they assert. Read only those two test files, their components, and `.tasks/LESSONS.md`.
 Interface: test files only. Typical fixes: resolve mocked fetches immediately, prefer one `findBy*` then sync `getBy*` instead of many `waitFor`s, use fake timers where the component waits.
