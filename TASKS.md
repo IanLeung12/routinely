@@ -453,6 +453,7 @@ Acceptance:
 - claimed: —
 - pr: —
 - source: integration
+- note: tester @1d6ee98: scripts/integration.sh prints OK (passes); likely fixed by T231 dump-dom retry. Orchestrator: verify and close.
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 21fc468:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
