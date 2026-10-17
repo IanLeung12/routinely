@@ -456,7 +456,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T256 — Refactor: move monitoring routes and /ws/live out of api.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
