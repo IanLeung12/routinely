@@ -467,14 +467,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T329 — Test: resident routes return 404 for an unknown resident
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_api_residents_404.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:42Z
 - pr: —
 
 What: Every `/residents/{id}/...` route in `api_residents.py` should answer an unknown id with 404, not 500 or an empty 200.
