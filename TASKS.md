@@ -117,7 +117,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T162 — Test: live websocket path finds the same errors and flag as scenario replay
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
