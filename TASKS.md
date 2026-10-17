@@ -150,15 +150,15 @@ Acceptance:
 - Existing nurse/care-home flow still works as the supervisor-with-many case; `scripts/ci.sh` passes.
 
 ### T409 — Person view: "My routine"
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T408
 - area: web/src/people/MyRoutine.tsx, web/src/people/MyRoutine.test.tsx, web/src/person/routine/
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T21:23Z
 - pr: —
 - note: T408 already shipped a basic MyRoutine in web/src/people/MyRoutine.tsx; extend it there, put new pieces under web/src/person/routine/ (own CSS file, not people.css). Use PrivacyCard (T429) and personNotes (T423).
 
