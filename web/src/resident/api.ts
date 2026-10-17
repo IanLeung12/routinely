@@ -35,8 +35,9 @@ export async function fetchResident(residentId: string): Promise<Resident | null
  *
  * Throws when the API can't be reached: unlike the resident herself there is no mock
  * to stand in, and "nobody has answered yet" is a different thing to tell a nurse than
- * "we couldn't ask". A body missing a field is read as the empty one, so a resident the
- * API has nothing logged for still renders as an empty card. */
+ * "we couldn't ask". A body missing a field is read as the empty one (and as the id we
+ * asked about), so a resident the API has nothing logged for still renders as an empty
+ * card. */
 export async function fetchFeedbackHistory(residentId: string): Promise<ResidentFeedback> {
   const response = await fetch(`${apiUrl}/residents/${encodeURIComponent(residentId)}/feedback`)
   if (!response.ok) {
@@ -44,6 +45,7 @@ export async function fetchFeedbackHistory(residentId: string): Promise<Resident
   }
   const body = (await response.json()) as Partial<ResidentFeedback> | null
   return {
+    resident_id: body?.resident_id ?? residentId,
     answers: body?.answers ?? [],
     pattern_weights: body?.pattern_weights ?? {},
     pattern_names: body?.pattern_names ?? {},

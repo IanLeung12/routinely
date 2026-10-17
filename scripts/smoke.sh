@@ -8,11 +8,12 @@
 #
 # Plays mrs-k's tea_skip_teabag_pour_twice live session first (the same way the
 # demo does) so a fresh stack has a flagged resident, then checks GET /health,
-# GET /residents, GET /residents/mrs-k, GET /alerts, GET /alerts/<first id>,
-# GET /monitoring, GET /rooms/<demo room>/monitoring/history and that the
-# dashboard (DASHBOARD_PORT, default 5173) returns HTML. Also validates the
-# residents/resident/handoff/alert-detail/monitoring/room-history bodies
-# against their schemas in `contracts/`, and the first message of a fresh
+# GET /residents, GET /residents/mrs-k, GET /residents/mrs-k/feedback,
+# GET /alerts, GET /alerts/<first id>, GET /monitoring,
+# GET /rooms/<demo room>/monitoring/history and that the dashboard
+# (DASHBOARD_PORT, default 5173) returns HTML. Also validates the
+# residents/resident/feedback/handoff/alert-detail/monitoring/room-history
+# bodies against their schemas in `contracts/`, and the first message of a fresh
 # `/ws/live` session against `contracts/live_message.schema.json` (SKIP, not
 # FAIL, if jsonschema or websockets isn't importable). Prints PASS/FAIL per
 # check and exits non-zero if any failed.
@@ -151,6 +152,17 @@ if body=$(get "$API_URL/residents/mrs-k"); then
   check_schema "GET /residents/mrs-k matches schema" "$body" "contracts/resident.schema.json"
 else
   fail "GET /residents/mrs-k: no response"
+fi
+
+# What nurses said about this resident (SPEC Nice to have 8). Smoke never POSTs
+# feedback, so on a fresh stack this is the empty record - which is a real answer
+# and still has to validate, fields and all.
+if body=$(get "$API_URL/residents/mrs-k/feedback"); then
+  check_json "GET /residents/mrs-k/feedback" "$body" \
+    "data.get('resident_id') == 'mrs-k' and isinstance(data.get('answers'), list) and isinstance(data.get('pattern_weights'), dict) and isinstance(data.get('pattern_names'), dict)"
+  check_schema "GET /residents/mrs-k/feedback matches schema" "$body" "contracts/resident_feedback.schema.json"
+else
+  fail "GET /residents/mrs-k/feedback: no response"
 fi
 
 if body=$(get "$API_URL/handoff"); then
