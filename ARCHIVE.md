@@ -3272,3 +3272,76 @@ Acceptance:
 - Button is a secondary `btn`, labelled "Reset demo"; disabled while the request is in flight.
 - Tests (mock fetch): success calls reload; 404 shows the error text and doesn't reload.
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
+
+### T190 — Test: LiveScreen ignores unknown ?task values
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/LiveScreen.test.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T09:23Z
+- pr: #181
+- rating: 5/5 clear
+
+What: T186 added `?task=meds`; pin that anything else (absent, `?task=tea`, `?task=foo`) still opens the tea routine.
+Interface: read `web/src/live/LiveScreen.tsx` and its existing test; set `window.history.replaceState(null, '', '/?task=foo')` per case and restore afterwards.
+Acceptance:
+- Three cases (no query, `tea`, `foo`) all show tea selected in the picker.
+- Only the test file changes; `cd web && npm test -- LiveScreen` and `scripts/ci.sh` pass.
+
+### T191 — Test: FeedbackStore.reset() puts threshold and weights back to base
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_feedback.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:26Z
+- pr: #183
+- rating: 5/5 clear
+
+What: `FeedbackStore.reset()` (added by T144) has no unit test.
+Interface: read `pipeline/src/routine_watch/feedback.py` and `pipeline/tests/test_feedback.py`.
+Acceptance:
+- Test: log a false alarm and a cause, call `reset()`, assert threshold equals the no-feedback base, the feedback for that alert id is None, and `cause_of` is None.
+- `cd pipeline && pytest tests/test_feedback.py` and `scripts/ci.sh` pass.
+
+### T193 — Scenario: medication taken twice is a repetition error
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_pill_twice/ (new), tests/scenarios/README.md
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:27Z
+- pr: #184
+- rating: 5/5 clear
+
+What: The medication routine has skip and order scenarios but none for a repeated step, the most safety-relevant meds error. Add one.
+Interface: copy the shape of `tests/scenarios/meds_normal/` and `tests/scenarios/tea_kettle_twice/`; `frames.jsonl` + `expected.yaml` with one repetition error on the take-pill step.
+Acceptance:
+- `scripts/e2e.sh` passes including the new scenario; README lists it (the README coverage test passes).
+- If the meds graph can't express it, stop and set the task blocked with the reason (don't change pipeline code).
+
+### T195 — Unit overview: All / Flagged / Watch filter
+- status: done
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:35Z
+- pr: #187
+- rating: 5/5 clear
+
+What: Rationale: on a real unit a nurse wants only the residents needing attention in one tap (Clarity). Add a three-way filter above the resident list; All stays default so the demo path is unchanged.
+Interface: local state in `UnitOverview`; buttons with `aria-pressed`; filters on the existing resident `status`; empty filter result uses `EmptyState` "No residents flagged for review." / "No residents to watch.".
+Acceptance:
+- Tests: each filter shows only matching residents; empty case shows the message; default is All.
+- `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
