@@ -392,7 +392,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T329 — Test: resident routes return 404 for an unknown resident
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -400,7 +400,8 @@ Acceptance:
 - area: pipeline/tests/test_api_residents_404.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T16:42Z
-- pr: —
+- pr: #323
+- rating: 5/5 clear
 
 What: Every `/residents/{id}/...` route in `api_residents.py` should answer an unknown id with 404, not 500 or an empty 200.
 Interface: read `pipeline/src/routine_watch/api_residents.py` and `pipeline/src/routine_watch/api.py` (router wiring). Parametrise over every GET route under `/residents/{id}` found in `api_residents.py`.
