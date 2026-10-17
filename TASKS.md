@@ -545,7 +545,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T264 — Test: consent record survives /demo/reset and shows in /handoff residents
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
