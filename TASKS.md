@@ -462,14 +462,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T069 — Tests for ErrorList and SuggestedChecks
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/ErrorList.test.tsx, web/src/alert/SuggestedChecks.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:54Z
 - pr: —
 
 What: Both components have no tests. Read only `web/src/alert/ErrorList.tsx`, `web/src/alert/SuggestedChecks.tsx`, `web/src/contracts.ts` (types `TaskError`, `SuggestedCheck`) and `web/src/alert/FeedbackButtons.test.tsx` (test style).
