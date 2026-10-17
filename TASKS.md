@@ -7,21 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T403 — Redesign 3/6: unit overview + app shell
-- status: done
-- class: standard
-- priority: 0
-- kind: improvement
-- deps: T401
-- area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
-- owner: ian-claude-standard-3
-- claimed: 2026-10-17T21:01Z
-- pr: #404
-- rating: 4/5 clear task, but it landed just as T408 (role chooser / role-aware shell) merged into main and also rewrote App.tsx's header, which the task description didn't anticipate; had to merge origin/main mid-task and hand-reconcile the two shells
-
-What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
-Acceptance: keyboard nav and existing behaviour unchanged (tests updated for structure only); flagged resident still understood in 10 s; before/after screenshot in PR; `scripts/ci.sh` passes.
-
 ### T404 — Redesign 4/6: resident detail
 - status: todo
 - class: standard
@@ -163,47 +148,6 @@ Interface:
 - Entry points: from a person's detail ("Replays"), from an alert's error rows, and from "My routine" for the person.
 - Offline/mock fallback in `web/src/mock/replays.ts`.
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
-
-### T416 — Local camera preview: real video + skeleton overlay, this device only
-- status: done
-- class: heavy
-- priority: 0
-- kind: feature
-- source: ian
-- deps: T424
-- area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, docs/DEMO.md, SPEC.md
-- owner: ian-claude-heavy-2
-- claimed: 2026-10-17T21:04Z
-- pr: #399
-- rating: 4/5 clear: the only gap was that the split left the T424 component's video layout cropping the picture (object-fit: cover), so 'aligned to the same coordinates' needed a 3-line CSS fix outside the listed area; also worth saying the preview server starts with the camera, so the web probe has to wait for the first frame
-
-What: Ian wants to see the actual camera picture during a live session, not just the skeleton. Keep the privacy promise: video never leaves the capture machine, is never stored, never reaches the API or a remote supervisor.
-Why: the demo is far more convincing with the real kitchen and the skeleton tracking on top, and it helps frame the camera for Roboflow training clips.
-Interface:
-- `preview.py`: an MJPEG endpoint served by the **capture process itself**, bound to `127.0.0.1` only (`PREVIEW_PORT`, default 8765), off unless `CAMERA_PREVIEW=1` / `scripts/camera.sh --preview`. Frames come from the same capture loop (one camera handle; Windows can't open the webcam twice), downscaled (≤640 px, ~10 fps), held in memory for the current frame only, never written to disk. Refuses non-loopback clients.
-- Web (`web/src/live/`): "Show camera preview (this device only)" toggle on the Live screen, shown only when the page is on localhost and the preview responds. Video underneath, the existing skeleton + boxes canvas on top, aligned to the same coordinates; a visible "Preview · not recorded · this device only" badge. Falls back to skeleton-only everywhere else, quietly.
-- `scripts/camera.sh --preview` turns it on and prints the URL; `docs/DEMO.md` explains it; SPEC §12/§16 gets one line: optional local preview, loopback only, never stored or transmitted.
-Split (orch): the web toggle/overlay component is T424 (`web/src/live/CameraPreview.tsx`). This task serves `GET /preview.mjpg` and `GET /health` → `{"ok": true}` with `Access-Control-Allow-Origin: *` on the loopback server, and wires `<CameraPreview>` around the existing `<SkeletonView>` in `LiveSession.tsx`.
-Acceptance:
-- Tests: preview rejects a non-loopback client; nothing under the repo or `REPLAY_DIR`/`CAMERA_RECORD` contains image data after a session with preview on (privacy test); capture still writes the same JSONL with preview on or off.
-- Web test: toggle hidden when not on localhost or preview unreachable; badge shown when on.
-- `scripts/ci.sh` passes without opencv/mediapipe installed (lazy imports).
-
-### T417 — Chart kit: LineChart + RangeSelector (Fey style)
-- status: done
-- class: standard
-- priority: 0
-- kind: improvement
-- source: ian
-- deps: T401
-- area: web/src/ui/charts/LineChart.tsx, web/src/ui/charts/LineChart.test.tsx, web/src/ui/charts/RangeSelector.tsx, web/src/ui/charts/RangeSelector.test.tsx, web/src/ui/charts/scale.ts, web/src/ui/charts/scale.test.ts, web/src/ui/charts/charts.css
-- owner: max_API_standard
-- claimed: 2026-10-17T21:02Z
-- pr: #397
-- rating: 5/5 clear
-
-What: Split from T402 so the chart kit is built in parallel. Dependency-free SVG `LineChart` per `docs/DESIGN.md`: thin 1.25–1.5px line, at most a faint gradient, a few hairline/dashed gridlines, tiny muted axis labels, **end-of-line value tag** (pill with the latest value), optional **baseline band** (mean ± threshold), optional dotted comparison series, hover/focus crosshair + tooltip, keyboard focus across points. `RangeSelector` (7D 14D 30D) on `SegmentedControl`. `scale.ts`: linear/time scales and "nice" ticks. Check Fey chart refs via the mobbin MCP (see T401).
-Acceptance: accessible name + text alternative (summary line); tests for ticks, end tag = latest value, band drawn only when given, keyboard focus; `cd web && npm test && npm run build`.
 
 ### T418 — Chart kit: BarChart (paired bars + callout)
 - status: done
