@@ -6,10 +6,9 @@ import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResidents } from './api.ts'
 import './overview.css'
+import { ResidentSort, sortResidents, type SortMode } from './ResidentSort.tsx'
 import { Sparkline } from './Sparkline.tsx'
-import type { ResidentSummary, ResidentStatus } from './types.ts'
-
-const STATUS_ORDER: Record<ResidentStatus, number> = { flagged: 0, watch: 1, normal: 2 }
+import type { ResidentSummary } from './types.ts'
 
 type UnitFilter = 'all' | 'flagged' | 'watch' | 'paused'
 
@@ -18,10 +17,6 @@ const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'flagged', label: 'Flagged' },
   { id: 'watch', label: 'Watch' },
 ]
-
-function sortResidents(residents: ResidentSummary[]): ResidentSummary[] {
-  return [...residents].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-}
 
 function applyFilter(
   residents: ResidentSummary[],
@@ -62,6 +57,7 @@ export function UnitOverview({
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
   const [filter, setFilter] = useState<UnitFilter>('all')
+  const [sortMode, setSortMode] = useState<SortMode>('default')
   const [pausedRooms, setPausedRooms] = useState<string[]>([])
 
   useEffect(() => {
@@ -130,6 +126,7 @@ export function UnitOverview({
           {`Paused (${pausedRooms.length})`}
         </Button>
       </div>
+      <ResidentSort mode={sortMode} onChange={setSortMode} />
       {filtered.length === 0 ? (
         <EmptyState
           message={
@@ -142,7 +139,7 @@ export function UnitOverview({
         />
       ) : (
         <ul className="resident-list">
-          {sortResidents(filtered).map((resident) => {
+          {sortResidents(filtered, sortMode).map((resident) => {
             const paused = pausedRooms.includes(resident.room)
             return (
             <li key={resident.id} className="resident-row">

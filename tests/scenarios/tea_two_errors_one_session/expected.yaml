@@ -1,0 +1,22 @@
+# Two different error types in one session: pouring before the teabag goes in (a
+# sequence error, as in tea_sequence_error) and stirring with the milk carton instead
+# of a spoon (a substitution error, as in tea_substitution). The point is that the
+# classifier reports both independently rather than stopping at the first one it finds.
+task: tea
+
+steps:
+  - fill_kettle
+  - get_cup
+  - boil
+  - pour # before teabag_in_cup: sequence error
+  - teabag_in_cup
+  - milk
+  - stir # with milk instead of a spoon: substitution error
+  - remove_teabag
+
+errors:
+  - { type: sequence, step: pour }
+  - { type: substitution, step: stir }
+score: 5.0 # sequence 2.0 + substitution 3.0
+
+flag: false
