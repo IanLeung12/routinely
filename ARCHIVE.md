@@ -1244,3 +1244,21 @@ Interface: `web/src/evidence/api.ts` `fetchReplay(alertId: string): Promise<...>
 Acceptance:
 - AlertView test: replay card renders with mocked data; loading and error/empty states use `ui/` primitives; no raw video or image elements.
 - `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T061 — Live session screen accessibility pass
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/live/SkeletonView.tsx, web/src/live/SkeletonView.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:52Z
+- pr: #85
+
+What: The live screen updates continuously but a screen-reader user hears nothing. Announce step completions and raised flags through a polite `aria-live` region (one short sentence per event, e.g. "Step done: fill the kettle"), give the skeleton view a text alternative, and announce connection status changes. Do not touch `TaskMap.tsx` (T057 owns the legend next to it).
+Interface: no contract changes; use the existing `useLiveSession` messages.
+Acceptance:
+- Tests (Testing Library) assert the live region text after a mock step event and after a flag; the skeleton has an accessible name.
+- No change to the visual layout.
+- `scripts/ci.sh` passes.
