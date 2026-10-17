@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: fcc98d2
+- last-reviewed: d70e67d
 
 ## Tasks
 
@@ -553,3 +553,85 @@ Interface: copy the layout of tests/scenarios/tea_skip_teabag_pour_twice/ (frame
 Acceptance:
 - expected.yaml lists exactly one repetition error on the kettle step and states whether the session flags, matching what the replay produces.
 - `scripts/e2e.sh` passes with the new scenario included; `scripts/ci.sh` passes.
+
+### T079 — Alerts use get_explainer() instead of a hard-wired template
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts_explainer.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `alerts.py` line ~40 builds `_explainer = TemplateExplainer()`, so the merged Claude summariser (T032, `explain_claude.py`) is never used. Switch to `get_explainer()` so `LIVE_API=1` + `ANTHROPIC_API_KEY` turns on Claude summaries; default stays the template. Read only `alerts.py`, `explain.py`, `explain_claude.py`.
+Interface: in `alerts.py`, replace `_explainer = TemplateExplainer()` with a lazily-created `get_explainer()` result (a module-level `_get_explainer()` helper so tests can monkeypatch it). No other behaviour change.
+Acceptance:
+- New `pipeline/tests/test_alerts_explainer.py`: with `LIVE_API` unset, `build_alerts(...)` summaries equal the current template output; monkeypatching the helper to return a fake explainer (`summarise` returns `"FAKE"`) makes every alert summary `"FAKE"`. No network.
+- `cd pipeline && uv run pytest -q` and `scripts/ci.sh` pass.
+
+### T080 — Evidence view: skeleton replay and ghost overlay on the alert screen
+- status: todo
+- class: standard
+- priority: 1
+- kind: feature
+- deps: T037
+- area: web/src/alert/AlertView.tsx, web/src/alert/alert.css, web/src/alert/AlertView.test.tsx, web/src/evidence/api.ts, web/src/evidence/api.test.ts, web/src/mock/
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 MVP 5 and §10 step 5: the alert screen must show the skeleton replay of the flagged moment, with the ghost of the resident's normal routine. `ReplayPlayer` and `GhostReplay` exist in `web/src/evidence/` but no screen uses them. Fetch the replay from the T037 evidence API (offline mock fallback like the other `api.ts` files) and render it in an "Evidence" card on `AlertView`, starting at the first error's `t_start`.
+Interface: `web/src/evidence/api.ts` `fetchReplay(alertId: string): Promise<...>` matching T037's route/response (read `pipeline/src/routine_watch/evidence.py` after T037 merges); mock data in `web/src/mock/`.
+Acceptance:
+- AlertView test: replay card renders with mocked data; loading and error/empty states use `ui/` primitives; no raw video or image elements.
+- `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T081 — Live session result counts toward the resident's flag (demo step 4)
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_live_flag.py, docs/CODEMAP.md (notes only)
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §10 step 4: when a live (or fallback pre-recorded) session for Mrs. K finishes with qualifying errors, it must become one of her sessions, so her sparkline spikes and, being the second qualifying session in the window, the "possible delirium" flag and alert appear on the next `/residents` and `/alerts` fetch. Today `live.py` scores the session but nothing records it.
+Interface: new `session_log.py` (in-memory, process-local) `record(resident_id, session: Session) -> None`, `sessions_for(resident_id) -> list[Session]`, `reset()`; `live.py` records the finished session; `demo.py` merges logged sessions into the resident's history before scoring/flagging. Keep it swappable for T038's store later (same shape, no DB here).
+Acceptance:
+- pytest: playing `tea_skip_teabag_pour_twice` for Mrs. K via `session_messages` then calling `/residents` and `/alerts` (TestClient) shows her flagged with the new session listed; playing `tea_normal` does not flag; `reset()` restores the seeded demo.
+- `scripts/e2e.sh` and `scripts/ci.sh` pass.
+
+### T082 — Scenario: medication taken without water is an omission
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: T041
+- area: tests/scenarios/med_no_water/, tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Second-task coverage for the tester: a recorded medication session where the resident takes the pill but never pours/drinks water. Copy the shape of the scenario T041 adds for the medication task (read its `frames.jsonl` + `expected.yaml` and `tests/scenarios/README.md` only).
+Interface: `tests/scenarios/med_no_water/{frames.jsonl,expected.yaml}` expecting one `omission` error on the water step and no flag on its own; one new README row.
+Acceptance:
+- `scripts/e2e.sh` passes including the new scenario; `scripts/ci.sh` passes.
+
+### T083 — Docs: CODEMAP notes for the Claude explainer and Gemini verifier
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md (notes only)
+- owner: —
+- claimed: —
+- pr: —
+
+What: `docs/CODEMAP.md` notes don't mention `explain_claude.py` (T032) or how `get_explainer()` / `get_verifier()` choose the fake vs the real client. Add 2–4 lines: both default to offline fakes, real calls only with `LIVE_API=1` + key, through `api_cache.py`, models from `ANTHROPIC_MODEL` / `GEMINI_MODEL`. Read only `docs/CODEMAP.md`, the top docstrings of `explain_claude.py`, `verifier.py`, `api_cache.py`.
+Acceptance:
+- Notes only (generated file list untouched); `scripts/ci.sh` passes.
