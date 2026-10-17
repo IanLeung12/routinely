@@ -427,7 +427,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T276 — Unit overview: "Paused" filter
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
