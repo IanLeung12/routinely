@@ -31,6 +31,7 @@ from routine_watch.contracts import (
     TaskError,
     repo_root,
 )
+from routine_watch.demo import DEMO_RESIDENT
 from routine_watch.errors import classify_errors
 from routine_watch.live import (
     MAX_FRAME_FPS,
@@ -51,6 +52,11 @@ FRAMES = "tea_no_kettle"
 #: Pouring before the teabag goes in: the session whose error list heals, because the
 #: dependency reported missing mid-session is done later on.
 SEQUENCE = "tea_sequence_error"
+
+#: The two recordings whose own verdict and whose effect on Mrs. K disagree (T236):
+#: against its own history `tea_kettle_twice` flags and `tea_no_kettle` does not, while
+#: her history, with the session now in it, reads them the other way round.
+ONE_SIDED = ("tea_kettle_twice", FRAMES)
 
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
@@ -182,6 +188,25 @@ def test_normal_session_reports_nothing() -> None:
     assert (end["score"], end["flag"], end["alert_id"]) == (0.0, False, None)
 
 
+@pytest.mark.parametrize("scenario", [*ONE_SIDED, BAD, GOOD])
+def test_session_end_says_what_the_dashboard_says(scenario: str) -> None:
+    """The verdict a live session ends on is the resident's, the same reading
+    `/residents` and `/alerts` give a nurse (T236).
+
+    Judging the recording against the scenario's own history instead could say either
+    thing the dashboard does not: "flagged" with an `alert_id` `/alerts` 404s on, so
+    "View alert" dead-ends, or "nothing flagged" while her row has gone red.
+    """
+    end = played(scenario_path(scenario))[-1]
+    with TestClient(app) as client:
+        status = client.get(f"/residents/{DEMO_RESIDENT}").json()["status"]
+        alert = client.get(f"/alerts/alert-{DEMO_RESIDENT}")
+
+    assert end["flag"] == (status == "flagged")
+    assert (end["alert_id"] is not None) == (alert.status_code == 200)
+    assert end["alert_id"] in (None, f"alert-{DEMO_RESIDENT}")
+
+
 @pytest.mark.parametrize("scenario", ["", "nope", "../../pipeline/src", "Tea_Normal"])
 def test_unknown_scenario_closes_4404(scenario: str) -> None:
     with TestClient(app) as client, pytest.raises(WebSocketDisconnect) as closed:
@@ -305,7 +330,12 @@ def test_every_message_is_a_contract() -> None:
 @pytest.mark.parametrize("path", scenario_dirs(), ids=lambda path: path.name)
 def test_live_session_says_what_the_replay_says(path: Path) -> None:
     """A live replay and `scripts/e2e.sh` must never disagree about a recording: same
-    steps, same errors at the end, same score and the same flag."""
+    steps, same errors at the end and the same score.
+
+    Not the same flag: `session_end`'s is the resident's reading, over their own history
+    with this session in it, and the recording's own is the offline replay's
+    (`test_session_end_says_what_the_dashboard_says`, T236).
+    """
     scenario = load_scenario(path)
     messages = played(path)
     result = run(scenario)
@@ -319,7 +349,6 @@ def test_live_session_says_what_the_replay_says(path: Path) -> None:
     assert sent >= want  # the stream also keeps what healed on the way
     assert ended == want  # the end is exactly the offline replay's reading
     assert messages[-1]["score"] == result["score"]
-    assert messages[-1]["flag"] == result["flag"]
 
 
 def test_each_error_is_sent_once() -> None:

@@ -35,9 +35,10 @@ The messages, in the order a session produces them:
                  (`classify_errors(..., ended=False)`), so a session flashes
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
-``session_end``  The session's `errors`, its `score`, whether it raised a
-                 `flag`, and the `alert_id` of the resident's alert that flag
-                 shows up in. `errors` is the finished session's whole list,
+``session_end``  The session's `errors`, its `score`, whether the resident is
+                 `flag`ged now that this session is one of theirs, and the
+                 `alert_id` of the alert that flag shows up in. `errors` is the
+                 finished session's whole list,
                  each `TaskError` serialised the way the `error` message's is:
                  the list to settle on once the session is over, which the
                  `error` messages above are every reading on the way to.
@@ -69,15 +70,22 @@ Two things follow from classifying an unfinished session, and both are deliberat
   alert on the next `/residents` and `/alerts`. A session that is cut short - the
   dashboard closing the socket - is never recorded, because it never finished.
 
-**What is still the scenario's and not the camera's.** A session only flags against
+**The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
-alerts), and a scenario carries its own history in `expected.yaml`, so that is what
-the `flag` in `session_end` is judged against: it is this recording's verdict, sent
-the moment the session ends. The resident's own flag is a separate reading, over
-their own history with this session now in it, and the dashboard gets it from
-`/residents` and `/alerts` rather than from here. The frames to steps stage is
-whichever one `routine_watch.replay` uses, the stub included, so a live replay and
-`scripts/e2e.sh` always agree about what a recording means.
+alerts), and there are two histories it could be read over. A scenario carries its own
+in `expected.yaml`, which is the recording's verdict and what `routine_watch.replay`
+(and so `scripts/e2e.sh`) checks it against; the resident has theirs, with this session
+now in it, which is the reading `/residents` and `/alerts` give a nurse. `session_end`
+sends the second (`_resident_flagged`), because the live screen sits next to the
+dashboard: a flag here means that resident's row has gone red, and `alert_id` names an
+alert `/alerts` actually has, so "View alert" opens something (T236 - judging the
+scenario's history instead said "flagged" with nothing to open, and said nothing was
+flagged while her row was red). The `score` stays the recording's, to the decimal
+`routine_watch.replay` scores it: that is the number the resident's baseline is fed, and
+the frames to steps stage is whichever one `replay` uses, the stub included, so a live
+replay and `scripts/e2e.sh` always agree about what a recording means.
+`routine_watch.live_camera` has no resident to read a history over at all, so a camera
+session's `flag` is false until one is attached.
 """
 
 from __future__ import annotations
@@ -279,9 +287,13 @@ async def session_messages(
         yield message
 
     was_flagged = _resident_flagged(resident_id)
-    score, assisted, flag = score_session(scenario, final)
+    score, assisted, _recording_flag = score_session(scenario, final)
     _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
-    if not was_flagged and (resident_name := _resident_flagged(resident_id)):
+    # One reading of the resident, taken once this session is one of theirs: it is both
+    # what a push alert goes out for and what `session_end` reports, so the live screen
+    # cannot say anything the dashboard does not (see "the `flag` is the resident's").
+    resident_name = _resident_flagged(resident_id)
+    if not was_flagged and resident_name:
         (notifier or get_notifier()).send(
             {
                 "alert_id": f"alert-{resident_id}",
@@ -297,11 +309,15 @@ async def session_messages(
         # the reading it ended on (see "the end is the finished session's" above).
         "errors": final,
         "score": score,
-        "flag": flag,
-        # The alert this session shows up in, which is the resident's own
+        # Whether this resident is flagged now, over their own history (SPEC section 7),
+        # which is the flag `/residents` shows: this session's own verdict against the
+        # scenario's history is `routine_watch.replay`'s business, not a nurse's.
+        "flag": resident_name is not None,
+        # The alert that flag shows up in, which is the resident's own
         # (`routine_watch.alerts` builds one alert per flagged resident) rather than
-        # one per session: the nurse is being told about a change in a person.
-        "alert_id": f"alert-{resident_id}" if flag else None,
+        # one per session: the nurse is being told about a change in a person. Not
+        # flagged, no alert - `/alerts` would 404 on one.
+        "alert_id": f"alert-{resident_id}" if resident_name else None,
     }
 
 

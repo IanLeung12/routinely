@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import alertCss from './alert.css?raw'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { SuggestedChecks } from './SuggestedChecks.tsx'
 
@@ -69,5 +70,26 @@ describe('FeedbackButtons', () => {
     expect(
       screen.getByRole('button', { name: 'False alarm' }).getAttribute('aria-pressed'),
     ).toBe('false')
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (T238, same approach as T234's overview.css test). */
+describe('alert.css phone layout', () => {
+  it('stacks error rows, evidence and the alert context full-width below 480px', () => {
+    const mobileBlock = alertCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+    expect(mobileBlock).toBeTruthy()
+
+    expect(mobileBlock).toMatch(/\.error-list__open\s*\{[^}]*flex-wrap:\s*wrap/)
+    expect(mobileBlock).toMatch(/\.error-list__phrase\s*\{[^}]*flex-basis:\s*100%/)
+    expect(mobileBlock).toMatch(/\.alert-view__evidence\s*\{[^}]*flex-direction:\s*column/)
+    expect(mobileBlock).toMatch(/\.alert-context__record\s*\{[^}]*flex-wrap:\s*wrap/)
+  })
+
+  it('keeps feedback buttons at a 44px tap target and stacks them full-width', () => {
+    const mobileBlock = alertCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+
+    expect(mobileBlock).toMatch(/\.feedback-buttons > \[role='group'\]\s*\{[^}]*flex-direction:\s*column/)
+    expect(mobileBlock).toMatch(/\.feedback-button\s*\{[^}]*min-height:\s*2\.75rem[^}]*width:\s*100%/)
   })
 })
