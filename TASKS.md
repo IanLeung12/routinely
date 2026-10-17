@@ -427,7 +427,7 @@ Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/te
 Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
 
 ### T294 — Test: shift handoff works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -435,7 +435,8 @@ Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes;
 - area: web/src/handoff/Handoff.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T14:45Z
-- pr: —
+- pr: #285
+- rating: 5/5 clear
 
 What: Nurses at a shared workstation may use only the keyboard; prove the handoff screen's "Copy summary" and back button need no mouse.
 Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-library/user-event`: Tab to "Copy summary", press Enter, check the status text ("Copied" with a mocked `navigator.clipboard.writeText`); Tab to the back button, press Enter, check `onBack` was called. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
