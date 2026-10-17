@@ -148,7 +148,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T290 — Alert: errors by time of day (morning / afternoon / evening)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 3
 - kind: feature
