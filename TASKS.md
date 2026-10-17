@@ -300,7 +300,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T156 — Bug: overview and Alerts list don't update when the live session flags Mrs. K
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -309,7 +309,8 @@ Acceptance:
 - source: tester
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:46Z
-- pr: —
+- pr: #155
+- rating: 5/5 clear
 
 What: After the live session ends with a flag (the "Open alert" button appears and `/alerts` now returns `alert-mrs-k`), the unit overview still shows Mrs. K as "Watch", the status line still says "4 on watch · 2 normal", and the Alerts list stays empty until a page reload. The demo beat "alert appears after the second bad session" only shows via the banner button.
 Interface: when the live stream reports `session_end` (or a flag), App refetches `fetchAlerts()` and the overview refetches `fetchResidents()` (e.g. a `refreshKey` prop bumped by App).
