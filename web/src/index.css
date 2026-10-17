@@ -22,6 +22,10 @@
   --status-flagged-bg: #3a1518;
   --status-flagged-text: #f0636a;
 
+  /* Ghost replay stroke colours (today vs usual), legible on --panel. */
+  --ghost-today: #7db8ff;
+  --ghost-usual: #c7ccda;
+
   /* Error category colours (SPEC section 7): red = omission/substitution,
      amber = sequence/repeat, grey = unclear/low-confidence. */
   --error-red-bg: #3a1518;
@@ -589,4 +593,12 @@ h1 {
 .tour__nav {
   display: flex;
   gap: var(--space-2);
+}
+
+.ghost-replay__caption--today {
+  color: var(--ghost-today);
+}
+
+.ghost-replay__caption--usual {
+  color: var(--ghost-usual);
 }
