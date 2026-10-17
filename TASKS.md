@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T001 — Monorepo scaffold
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - deps: —
