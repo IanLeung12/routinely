@@ -10,12 +10,13 @@ the copies other languages read cannot drift:
     contracts/examples/capture.jsonl  a few sample frames, for fixtures and scenarios
     web/src/contracts.ts              TypeScript types for the dashboard
 
-Three kinds live here. `CONTRACTS` are the records that flow between the stages and
+Four kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
 `oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
-with: a resident, the overview's row for one, a shift handoff. The last two get a
-schema but no TypeScript, because the dashboard reads the socket and those routes
-through its own types.
+with: a resident, the overview's row for one, a shift handoff, an alert in full.
+`REQUESTS` are what the dashboard sends back: a nurse's feedback on an alert. The
+last three get a schema but no TypeScript, because the dashboard reads the socket
+and those routes through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
@@ -776,6 +777,57 @@ class Handoff(_Contract):
     )
 
 
+class AlertDetail(Alert):
+    """One alert as the routes answer it (`GET /alerts/{id}` and every row of `GET /alerts`).
+
+    The stored `Alert` plus what `routine_watch.api_alerts._alert_payload` fills in on
+    the way out: `feedback` is always there - null until somebody answers, never
+    missing - and `baseline.threshold` is this resident's bar as the care team's
+    feedback has tuned it, not the one the alert was raised against (SPEC section 5,
+    MVP 7).
+    Otherwise field for field the record, which is why the dashboard reads both
+    through the one generated `Alert` type in `web/src/contracts.ts`. The two the
+    record lets default are required here: a route sends the whole alert every time,
+    so the dashboard can read an empty answer off an empty list and a missing key is
+    a bug rather than "nothing to say".
+    """
+
+    patterns: list[PatternMatch] = Field(
+        description="The patterns this change is consistent with, best first (at most 3). "
+        "Always present: empty is the real answer for a change no pattern fits."
+    )
+    feedback: AlertFeedback | None = Field(
+        description="What the care team said, or null when nobody has answered yet. Always "
+        "present: the route reads it from the feedback store for every alert it sends."
+    )
+
+
+# --------------------------------------------------------- what the dashboard posts
+
+
+class Feedback(_Contract):
+    """The body of `POST /alerts/{id}/feedback` (SPEC section 5, MVP 7 and 8).
+
+    One tap on the alert screen: the verdict, and optionally what the nurse thinks
+    the change turned out to be. Not `AlertFeedback`: that is the record the alert
+    comes back carrying, which also says who answered and when - the server stamps
+    those, a client never sends them.
+
+    `routine_watch.api_alerts.AlertFeedbackIn` is this body as FastAPI validates it
+    and holds `cause` to the pattern library on top, which a schema cannot: the
+    library is data that moves, this is the shape that does not.
+    """
+
+    verdict: FeedbackVerdict
+    note: str | None = Field(default=None, description="Free text. Usually nobody types any.")
+    cause: Id | None = Field(
+        default=None,
+        description='The answer to "what was it?" (SPEC section 5, MVP 8): a pattern_id from '
+        "the pattern library, 'other' for a cause the library has no pattern for, or null "
+        "when nobody said.",
+    )
+
+
 #: Every top-level contract: a JSON Schema file and a TypeScript type each.
 CONTRACTS: tuple[type[_Contract], ...] = (
     CaptureFrame,
@@ -795,13 +847,20 @@ PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
 #: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
 #: for the same reason as the protocols above - the dashboard mirrors these by hand
-#: in `web/src/overview/types.ts` and `web/src/handoff/types.ts`, so the schema is
+#: in `web/src/overview/types.ts` and `web/src/handoff/types.ts`, or reads them
+#: through a record's own type (`AlertDetail` through `Alert`), so the schema is
 #: what the two sides are held to. `pipeline/tests/test_api_payload_contracts.py`
 #: validates the real routes against them.
-PAYLOADS: tuple[type[BaseModel], ...] = (ResidentSummary, Resident, Handoff)
+PAYLOADS: tuple[type[BaseModel], ...] = (ResidentSummary, Resident, Handoff, AlertDetail)
+
+#: What the dashboard sends the other way: a schema file each, no TypeScript. A
+#: request body is hand-written in the client (`web/src/alert/api.ts`) and validated
+#: by a FastAPI model (`routine_watch.api_alerts.AlertFeedbackIn`), so the schema is
+#: the third copy both are held to.
+REQUESTS: tuple[type[BaseModel], ...] = (Feedback,)
 
 #: Everything that has a schema file in `contracts/`.
-SCHEMAS: tuple[type[BaseModel], ...] = (*CONTRACTS, *PROTOCOLS, *PAYLOADS)
+SCHEMAS: tuple[type[BaseModel], ...] = (*CONTRACTS, *PROTOCOLS, *PAYLOADS, *REQUESTS)
 
 
 # ------------------------------------------------------------------- generation

@@ -1,11 +1,13 @@
 """The dashboard's HTTP payloads, against their schemas in `contracts/`.
 
-`GET /residents`, `GET /residents/{id}` and `GET /handoff` cross the pipeline/web
-boundary like any other shared shape, and the dashboard mirrors them by hand
-(`web/src/overview/types.ts`, `web/src/handoff/types.ts`), which is how fields drift.
-So `contracts/` carries a schema for each, generated from `routine_watch.contracts`
-like the rest, and these tests hold the routes to them: every demo resident, a
-resident with a live session in their history, and a handoff with a room paused.
+`GET /residents`, `GET /residents/{id}`, `GET /handoff` and the alert routes cross
+the pipeline/web boundary like any other shared shape, and the dashboard mirrors
+them by hand (`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+`web/src/alert/api.ts`), which is how fields drift. So `contracts/` carries a schema
+for each, generated from `routine_watch.contracts` like the rest, and these tests
+hold the routes to them: every demo resident, a resident with a live session in
+their history, a handoff with a room paused, and an alert before and after a nurse
+answers it - including the body she posts, the one payload travelling the other way.
 
 Fakes only - the template explainer writes the handoff's summary and the session is
 a recording replayed through the pipeline, so nothing here makes a paid call.
@@ -22,10 +24,14 @@ from pydantic import ValidationError
 
 from routine_watch import api as api_module
 from routine_watch.api import app
+from routine_watch.api_alerts import AlertFeedbackIn
 from routine_watch.contracts import (
     PAYLOADS,
+    REQUESTS,
+    AlertDetail,
     ErrorCounts,
     ErrorType,
+    Feedback,
     Handoff,
     Resident,
     ResidentSummary,
@@ -44,6 +50,9 @@ RESIDENT_IDS = [resident["id"] for resident in demo_residents()]
 
 #: mrs-k's room: the one a live session lands in (`routine_watch.live`).
 MRS_K_ROOM = next(r["room"] for r in demo_residents() if r["id"] == DEMO_RESIDENT)
+
+#: The alert mrs-k's live session raises (`routine_watch.alerts`).
+MRS_K_ALERT = f"alert-{DEMO_RESIDENT}"
 
 
 @pytest.fixture(autouse=True)
@@ -126,6 +135,86 @@ def test_the_handoff_validates_with_a_room_paused(client: TestClient) -> None:
     assert paused == {DEMO_RESIDENT}
 
 
+def test_every_alert_in_the_list_validates(client: TestClient, mrs_k_flagged: None) -> None:
+    alerts = client.get("/alerts").json()
+
+    assert [alert["resident_id"] for alert in alerts] == [DEMO_RESIDENT]
+    for alert in alerts:
+        check(AlertDetail, alert)
+
+
+def test_the_alert_detail_validates(client: TestClient, mrs_k_flagged: None) -> None:
+    detail = client.get(f"/alerts/{MRS_K_ALERT}").json()
+
+    check(AlertDetail, detail)
+    assert detail["errors"] and detail["patterns"]
+    assert detail["feedback"] is None
+
+
+def test_the_alert_still_validates_once_a_nurse_has_answered(
+    client: TestClient, mrs_k_flagged: None
+) -> None:
+    """The POST answers with the alert again, now carrying the verdict and the
+    threshold that feedback has tuned (SPEC section 5, MVP 7 and 8), so the body the
+    dashboard sent and the two payloads it gets back are all held to their schemas."""
+    detail = client.get(f"/alerts/{MRS_K_ALERT}").json()
+    body = {"verdict": "confirmed", "cause": detail["patterns"][0]["pattern_id"]}
+    check(Feedback, body)
+
+    answered = client.post(f"/alerts/{MRS_K_ALERT}/feedback", json=body)
+
+    assert answered.status_code == 200
+    check(AlertDetail, answered.json())
+    check(AlertDetail, client.get(f"/alerts/{MRS_K_ALERT}").json())
+    assert answered.json()["feedback"]["verdict"] == "confirmed"
+    assert answered.json()["feedback"]["cause"] == body["cause"]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param({"verdict": "confirmed"}, id="a-verdict-on-its-own"),
+        pytest.param({"verdict": "false_alarm", "cause": "other"}, id="a-cause-off-the-library"),
+        pytest.param({"verdict": "confirmed", "note": None, "cause": None}, id="nulls-spelled-out"),
+        pytest.param({"verdict": "false_alarm", "note": "She had a visitor."}, id="a-note"),
+    ],
+)
+def test_the_route_takes_every_feedback_body_the_schema_allows(
+    client: TestClient, mrs_k_flagged: None, body: dict[str, Any]
+) -> None:
+    check(Feedback, body)
+
+    assert client.post(f"/alerts/{MRS_K_ALERT}/feedback", json=body).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param({}, id="no-verdict"),
+        pytest.param({"verdict": "maybe"}, id="a-verdict-nobody-can-count"),
+        pytest.param({"verdict": "confirmed", "cause": ""}, id="an-empty-cause"),
+        pytest.param(
+            {"verdict": "confirmed", "frame_jpeg": "iVBORw0KGgo="}, id="a-smuggled-frame"
+        ),
+    ],
+)
+def test_the_route_refuses_every_feedback_body_the_schema_rejects(
+    client: TestClient, mrs_k_flagged: None, body: dict[str, Any]
+) -> None:
+    with pytest.raises(SchemaValidationError):
+        validator(Feedback).validate(body)
+
+    assert client.post(f"/alerts/{MRS_K_ALERT}/feedback", json=body).status_code == 422
+
+
+def test_the_route_validates_the_feedback_contract_itself() -> None:
+    """FastAPI checks the body with `api_alerts.AlertFeedbackIn`, which is the shared
+    contract plus the pattern-library check on `cause`, not a second copy of it: a
+    field can only be added to the body by adding it to `Feedback`."""
+    assert issubclass(AlertFeedbackIn, Feedback)
+    assert set(AlertFeedbackIn.model_fields) == set(Feedback.model_fields)
+
+
 def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) -> None:
     """No route may grow a field for a raw frame (SPEC section 8)."""
     payloads = {
@@ -200,5 +289,5 @@ def test_the_error_counts_cover_every_error_type() -> None:
 def test_the_contracts_readme_lists_the_payloads() -> None:
     readme = (CONTRACTS_DIR / "README.md").read_text(encoding="utf-8")
 
-    for model in PAYLOADS:
+    for model in (*PAYLOADS, *REQUESTS):
         assert f"{schema_name(model)}.schema.json" in readme

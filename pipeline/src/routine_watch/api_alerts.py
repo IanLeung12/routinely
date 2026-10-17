@@ -11,10 +11,10 @@ import time, or a test's reset would be invisible to these routes.
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import field_validator
 
 from .alerts import build_alerts
-from .contracts import Alert, AlertFeedback, FeedbackVerdict
+from .contracts import Alert, AlertFeedback, Feedback
 from .demo import demo_residents
 from .patterns_library import BY_ID as PATTERNS_BY_ID
 
@@ -32,16 +32,12 @@ _FEEDBACK_BY = "nurse"
 KNOWN_CAUSES = frozenset(PATTERNS_BY_ID) | {OTHER_CAUSE}
 
 
-class AlertFeedbackIn(BaseModel):
-    """The one-tap feedback body (SPEC section 5, MVP 7), plus "what was it?" (MVP 8)."""
-
-    verdict: FeedbackVerdict
-    note: str | None = None
-    cause: str | None = Field(
-        default=None,
-        description='The answer to "what was it?": a pattern_id, "other", or null for '
-        "no answer.",
-    )
+class AlertFeedbackIn(Feedback):
+    """The feedback body as FastAPI checks it: the shared `contracts.Feedback`
+    (`contracts/feedback.schema.json`, what the dashboard is written against) plus
+    the one check a schema cannot make - that `cause` names a pattern the library
+    really has, which is data that moves rather than shape.
+    """
 
     @field_validator("cause")
     @classmethod
