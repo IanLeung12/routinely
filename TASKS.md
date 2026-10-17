@@ -809,7 +809,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T104 — Session quality: mostly-unclear sessions are unclear, not scored
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
