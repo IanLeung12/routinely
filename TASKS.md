@@ -104,14 +104,14 @@ Acceptance:
 - `up` then `curl` both URLs return 200, `down` leaves no processes on those ports. Idempotent (`up` twice is fine).
 
 ### T007 — Session score weights
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/scoring.py, pipeline/tests/test_scoring.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:35Z
-- pr: —
+- pr: #5
 
 What: Turn per-session error counts into one session score (weighted sum, hand-set weights). Read only the files in `area`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`. Do not edit errors.py.
 Interface: `WEIGHTS: dict[str, float]` = omission 3.0, substitution 3.0, sequence 2.0, perseveration 2.0, abandonment 2.0, hesitation 1.0; `SELF_CORRECTED_WEIGHT = 0.5`; `session_score(counts: Mapping[str, int], self_corrected: int = 0, assisted: bool = False) -> float`. Assisted sessions return 0.0 (they are excluded). Unknown error type raises `ValueError`.
