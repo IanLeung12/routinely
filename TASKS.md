@@ -505,14 +505,14 @@ Acceptance:
 * `cd web && npm test -- UnitOverview.keyboard` passes; `scripts/ci.sh` passes.
 
 ### T321 — Test: shift handoff works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/handoff/Handoff.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:16Z
 - pr: —
 
 What: Add a keyboard-only test for the shift handoff screen, mirroring `web/src/alert/AlertView.keyboard.test.tsx`.
