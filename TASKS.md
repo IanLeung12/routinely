@@ -279,7 +279,7 @@ Acceptance:
 * Existing live tests still pass; `scripts/ci.sh` passes.
 
 ### T220 — Live screen: settle on session_end's final error list
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
