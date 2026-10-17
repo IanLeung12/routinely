@@ -1,0 +1,11 @@
+/* Print (T333, following the alert view's T289 approach): the shared
+   black-on-white rules live in print.css. The app shell's title and the demo
+   banner sit outside .resident-detail (they're rendered unconditionally in
+   App.tsx), but only need hiding while a resident is actually open for
+   print. */
+@media print {
+  .app:has(.resident-detail) > header,
+  .app:has(.resident-detail) > .demo-banner {
+    display: none !important;
+  }
+}

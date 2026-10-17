@@ -1,0 +1,21 @@
+# The meds counterpart of tea_late_start_normal (T362): a resident who sits for
+# 200 seconds - well over the 120s abandonment threshold
+# (routine_watch.errors.ABANDON_AFTER_S) - before touching the pill organiser or
+# the glass at all, then takes the medication correctly with normal-sized gaps
+# between every later step. Abandonment only fires on a silence *between* events
+# (classify_errors tracks `previous` as None until the first event), so the long
+# wait before the first step must never be read as abandonment, an omission, or
+# anything else that flags a change.
+task: meds
+
+steps:
+  - get_glass # first event at t=200s, after 200s of nothing
+  - open_organiser
+  - take_pill
+  - fill_glass
+  - drink_water
+
+errors: []
+score: 0.0
+
+flag: false

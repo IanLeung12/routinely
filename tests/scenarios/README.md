@@ -111,10 +111,12 @@ carry the per-step history needed to exercise it.
 | `tea_single_bad_no_flag` | steps | One bad session after quiet history produces errors without flagging a change. |
 | `tea_substitution` | steps | Stirring with milk instead of a spoon produces exactly one substitution error. |
 | `tea_unclear_not_error` | steps | An unclear, low-confidence teabag observation must not produce an error. |
+| `tea_session_unclear_no_flag` | steps | Bad lighting: over 40% of the session's events are unclear/low-confidence, so the whole session is too unclear to score, even against a history that would otherwise flag a change. |
 | `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 | `meds_abandoned` | steps | The pill comes out but the water steps never happen after a 131-second silence: abandonment plus the remaining omissions, mirroring `tea_abandoned`. |
 | `meds_pill_twice` | steps | A double dose: the pill is taken out of the organiser a second time with `drink_water` in between, a perseveration error. Flags with another recent bad session. |
+| `meds_session_unclear_no_flag` | steps | The meds counterpart of `tea_session_unclear_no_flag`: bad lighting makes over 40% of the session's events unclear, so the whole session is too unclear to score, even against a history that would otherwise flag the same double-dose session. |
 | `pattern_sudden_change` | steps | The demo's bad session on a resident whose own history has only scattered single-type slips: `top_pattern` checks the flag is consistent with `sudden_change` (SPEC §7.5). |
 | `pattern_slow_drift` | steps | Cold water, no stir, after three weeks of hesitation climbing night after night: `top_pattern` checks `slow_drift` (SPEC §7.5). |
 | `pattern_executive` | steps | The teabag goes in three times (perseveration) with the order otherwise intact, building over about a week: `top_pattern` checks `executive_pattern` (SPEC §7.5). |
@@ -122,12 +124,23 @@ carry the per-step history needed to exercise it.
 | `pattern_none` | steps | A substitution error against a resident with one earlier substitution: flags a change, but `top_pattern` checks it matches no pattern in the library. |
 | `pattern_motor_slowing` | steps | A clean session, but it and two recent sessions run 450s against this resident's usual 300s with a touch of hesitation: `top_pattern` checks `motor_slowing` (SPEC §7.5). |
 | `meds_pill_before_water` | steps | Taking the pill before filling the glass is fine, but drinking before filling is a sequence error; does not flag. |
+| `meds_unclear_not_error` | steps | An unclear, low-confidence pill observation must not produce an error. |
+| `meds_bad_sessions_far_apart` | steps | Two bad meds sessions more than 48 hours apart must not flag; guards the 48h window. |
+| `meds_single_bad_no_flag` | steps | The meds counterpart of `tea_single_bad_no_flag`: one bad session after quiet history produces errors without flagging a change. |
+| `meds_pill_three_times` | steps | The meds counterpart of `tea_teabag_three_times`: the pill comes out of the organiser three times, two perseveration errors on the once-only step. |
 | `tea_bad_sessions_far_apart` | steps | Two bad sessions more than 48 hours apart must not flag; guards the 48h window. |
 | `tea_kettle_twice` | steps | Boiling the kettle again after getting a cup is perseveration on a once-only step; flags with another recent bad session. |
 | `tea_milk_sugar` | steps | A clean tea routine with both optional steps, milk and sugar, taken; never flags. |
 | `tea_self_corrected` | steps | A sequence slip corrected within 15 seconds counts at reduced weight, so the session stays under the flag threshold despite one earlier bad session. |
 | `tea_teabag_three_times` | steps | Putting the teabag in three times produces two perseveration errors on the once-only step; does not flag. |
 | `meds_self_corrected` | steps | The meds counterpart of `tea_self_corrected`: a sequence slip on `take_pill` corrected within 15 seconds pins the reduced weight for the second task too. |
+| `meds_two_errors_one_session` | steps | Two different error types in one session: the pill comes out of the organiser twice (perseveration) and the water is never drunk (omission) - a double dose and a dry swallow together. |
+| `meds_pill_substitution` | steps | The meds counterpart of `tea_substitution`: drinking straight from the water jug instead of the glass it was poured into is exactly one substitution error on `drink_water`. |
+| `tea_two_errors_one_session` | steps | Two different error types in one session: pouring before the teabag goes in (sequence) and stirring with the milk carton instead of a spoon (substitution). |
+| `tea_long_pause_not_error` | steps | An otherwise-correct session with a 100s gap between `teabag_in_cup` and `pour`, under the 120s abandonment threshold: a long pause alone must never surface as a task error or flag a change. |
+| `tea_late_start_normal` | steps | A resident who sits for 200s before touching the kettle at all, then makes tea correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
+| `meds_long_pause_not_error` | steps | The meds counterpart of `tea_long_pause_not_error`: a 100s gap between `take_pill` and `fill_glass`, under the 120s abandonment threshold, must never surface as a task error or flag a change. |
+| `meds_late_start_normal` | steps | The meds counterpart of `tea_late_start_normal`: a resident who sits for 200s before touching the pill organiser or glass at all, then takes the medication correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
 
 ## Adding one
 

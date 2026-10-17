@@ -342,6 +342,44 @@
       ],
       "title": "TaskError",
       "type": "object"
+    },
+    "TimeOfDay": {
+      "description": "Which part of a day a session started in (SPEC section 7.5).\n\nThe three parts a nurse reads off a shift rather than clock hours, so \"errors\nonly late in the day\" is something an alert can show rather than only say:\nmorning before noon, afternoon until 17:00, evening from 17:00 on.",
+      "enum": [
+        "morning",
+        "afternoon",
+        "evening"
+      ],
+      "title": "TimeOfDay",
+      "type": "string"
+    },
+    "TimeOfDayErrors": {
+      "additionalProperties": false,
+      "description": "One part of the day, counted over the two weeks behind an alert (SPEC section\n7.5).\n\n`sessions` is how many sessions this resident started in that part of the day and\n`errors` how many errors those sessions had between them, so a reader can tell\n\"three bad evenings\" from \"one evening, three errors\". Both are counts over this\nresident's own history, not rates: the strip is evidence a nurse reads, and the\nrate is already in the pattern's own evidence lines.",
+      "properties": {
+        "bucket": {
+          "$ref": "#/$defs/TimeOfDay"
+        },
+        "sessions": {
+          "description": "Sessions started in this part of the day, assisted ones left out.",
+          "minimum": 0,
+          "title": "Sessions",
+          "type": "integer"
+        },
+        "errors": {
+          "description": "Errors in those sessions, self-corrected slips left out - the same count the session score and this resident's normal are built from (SPEC section 7).",
+          "minimum": 0,
+          "title": "Errors",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "sessions",
+        "errors"
+      ],
+      "title": "TimeOfDayErrors",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -417,6 +455,22 @@
       ],
       "default": null,
       "description": "Null until a nurse confirms it or calls it a false alarm."
+    },
+    "errors_by_time_of_day": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/TimeOfDayErrors"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Errors and sessions per part of the day over the two weeks before the alert, one entry per bucket: the visible evidence behind an evening-only pattern (SPEC section 7.5). Read off the resident's own session history by the route that serves the alert (`routine_watch.api_alerts`), so it is null on a stored record and on a resident with no sessions in that window.",
+      "title": "Errors By Time Of Day"
     }
   },
   "required": [

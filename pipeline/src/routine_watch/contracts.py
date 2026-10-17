@@ -13,10 +13,13 @@ the copies other languages read cannot drift:
 Four kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
 `oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
-with: a resident, the overview's row for one, a shift handoff, an alert in full.
-`REQUESTS` are what the dashboard sends back: a nurse's feedback on an alert. The
-last three get a schema but no TypeScript, because the dashboard reads the socket
-and those routes through its own types.
+with: a resident, the overview's row for one, their slow trend, what their nurses
+said about their alerts, a shift handoff, an alert in full, an entry of the pattern
+library, a window of skeleton replay, the rooms whose monitoring is paused.
+`REQUESTS` are what the dashboard sends back: a nurse's feedback on an alert. Every
+one of them gets a schema; `CONTRACTS` and the payloads in `WEB_PAYLOADS` also get a
+TypeScript type, and the rest do not, because the dashboard reads the socket and
+those routes through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
@@ -57,6 +60,22 @@ Confidence = Annotated[float, Field(ge=0.0, le=1.0)]
 
 #: An identifier: non-empty, otherwise opaque.
 Id = Annotated[str, Field(min_length=1)]
+
+#: A number of days, never negative.
+Days = Annotated[float, Field(ge=0.0)]
+
+#: Whether enough of a session's capture could be read to score it (SPEC section 12).
+#: `"unclear"` is a walker, a wheelchair, bad lighting - capture the pipeline cannot
+#: trust - and never an error: an unclear session is neither scored nor counted
+#: towards a flag. `routine_watch.quality.session_quality` is the rule that decides
+#: it, and re-exports this alias for the stages that read it.
+Quality = Literal["ok", "unclear"]
+
+#: How a pattern is shown to a nurse: a few words, never a paragraph. Bounded so that
+#: a map whose values are these (`ResidentFeedback.pattern_names`, keyed by pattern
+#: id) still has nowhere an image could hide (SPEC section 8), which is what
+#: `pipeline/tests/test_contracts.py` holds every map in a contract to.
+PatternName = Annotated[str, Field(min_length=1, max_length=80)]
 
 
 class _Contract(BaseModel):
@@ -138,6 +157,19 @@ class AlertKind(StrEnum):
 
     CHANGE_FLAG = "change_flag"
     TREND = "trend"
+
+
+class TimeOfDay(StrEnum):
+    """Which part of a day a session started in (SPEC section 7.5).
+
+    The three parts a nurse reads off a shift rather than clock hours, so "errors
+    only late in the day" is something an alert can show rather than only say:
+    morning before noon, afternoon until 17:00, evening from 17:00 on.
+    """
+
+    MORNING = "morning"
+    AFTERNOON = "afternoon"
+    EVENING = "evening"
 
 
 class BaselineMetric(StrEnum):
@@ -430,6 +462,28 @@ class PatternMatch(_Contract):
     )
 
 
+class TimeOfDayErrors(_Contract):
+    """One part of the day, counted over the two weeks behind an alert (SPEC section
+    7.5).
+
+    `sessions` is how many sessions this resident started in that part of the day and
+    `errors` how many errors those sessions had between them, so a reader can tell
+    "three bad evenings" from "one evening, three errors". Both are counts over this
+    resident's own history, not rates: the strip is evidence a nurse reads, and the
+    rate is already in the pattern's own evidence lines.
+    """
+
+    bucket: TimeOfDay
+    sessions: int = Field(
+        ge=0, description="Sessions started in this part of the day, assisted ones left out."
+    )
+    errors: int = Field(
+        ge=0,
+        description="Errors in those sessions, self-corrected slips left out - the same "
+        "count the session score and this resident's normal are built from (SPEC section 7).",
+    )
+
+
 class Alert(_Contract):
     """A change flagged for a human to review (SPEC section 7).
 
@@ -458,6 +512,14 @@ class Alert(_Contract):
     )
     feedback: AlertFeedback | None = Field(
         default=None, description="Null until a nurse confirms it or calls it a false alarm."
+    )
+    errors_by_time_of_day: list[TimeOfDayErrors] | None = Field(
+        default=None,
+        description="Errors and sessions per part of the day over the two weeks before "
+        "the alert, one entry per bucket: the visible evidence behind an evening-only "
+        "pattern (SPEC section 7.5). Read off the resident's own session history by the "
+        "route that serves the alert (`routine_watch.api_alerts`), so it is null on a "
+        "stored record and on a resident with no sessions in that window.",
     )
 
 
@@ -542,6 +604,12 @@ class LiveSessionEnd(_Contract):
     )
     alert_id: Id | None = Field(
         description="The alert that flag shows up in, or null when nothing is flagged."
+    )
+    quality: Quality = Field(
+        description="Whether enough of this session's capture could be read to score it "
+        "(SPEC section 12). 'unclear' - a walker, a blocked view, bad lighting - is never "
+        "an error: the session is neither scored nor counted towards a flag, so the screen "
+        "says the capture was unclear instead of showing it as a clean session."
     )
 
 
@@ -727,13 +795,99 @@ class Resident(ResidentSummary):
     baseline: ResidentBaseline
 
 
+class ResidentDrift(_Contract):
+    """One resident's slow trend (`GET /residents/{id}/drift`, SPEC section 8).
+
+    What the drift card on the resident screen draws: how fast this resident's daily
+    error score is rising, over how many days of their own history, read with a
+    robust slope so one bad day cannot tilt it (`routine_watch.drift`). A slow drift
+    is flagged for review on its own terms, separately from a sudden change
+    (SPEC section 7.5); `trending` is the whole judgement, and it is about the
+    trend, never about the resident.
+    """
+
+    resident_id: Id
+    slope_per_day: float = Field(
+        description="Daily error score gained per day. Negative means improving."
+    )
+    days: int = Field(
+        ge=0,
+        description="Days this resident has sessions on. Counted, not spanned: a gap "
+        "cannot satisfy the minimum history a trend needs.",
+    )
+    trending: bool = Field(
+        description="A rise worth a look: enough days of history and a slope above "
+        "`routine_watch.drift.drift`'s minimum. False is a real answer, not 'unknown'."
+    )
+
+
+class FeedbackAnswer(_Contract):
+    """One answer a nurse gave on one of this resident's alerts (SPEC MVP 8).
+
+    `routine_watch.feedback.FeedbackStore.history`'s row: one per alert, because
+    answering an alert again replaces its answer rather than piling a second one on
+    top. Not `AlertFeedback`, which is the verdict as the alert itself carries it:
+    this is the same answer read from the resident's side, with the alert it was
+    about named and the `by` nobody logs in to set left off.
+    """
+
+    alert_id: Id = Field(description="The alert this answer was given on.")
+    verdict: FeedbackVerdict
+    cause: Id | None = Field(
+        description='The answer to "what was it?" (SPEC section 5, MVP 8): a pattern_id '
+        "from the pattern library, 'other' for a cause the library has no pattern for, or "
+        "null when nobody said. Always sent, often null."
+    )
+    at: datetime = Field(description="When the nurse answered (wall clock).")
+
+
+class ResidentFeedback(_Contract):
+    """What this resident's nurses have said (`GET /residents/{id}/feedback`).
+
+    The record behind the feedback loop (SPEC Nice to have 8), which until this route
+    only showed up in how her next alert was ranked: every answer on her alerts
+    newest first, the pattern weights those answers add up to, and the name the
+    library shows each pattern id named here under, so the card reading this never
+    keeps its own copy of the library. All three are always sent and all three can be
+    empty - nobody having answered yet is a real answer, not a gap.
+    """
+
+    resident_id: Id
+    answers: list[FeedbackAnswer] = Field(
+        description="One row per answered alert, newest first. Empty until a nurse answers."
+    )
+    pattern_weights: dict[Id, float] = Field(
+        description="Pattern id -> confidence multiplier, one entry per pattern her nurses "
+        "have answered about (`routine_watch.feedback.FeedbackStore.pattern_weights`). A "
+        "pattern missing here is unweighted, which is read as 1.0."
+    )
+    pattern_names: dict[Id, PatternName] = Field(
+        description="Pattern id -> how the pattern library shows it, for every id named "
+        "above that the library knows. 'other' is a real answer with no pattern to name, "
+        "so it has no entry here."
+    )
+
+
 class HandoffResident(_Contract):
     """One resident's line of the shift handoff (SPEC section 9).
 
     `flags` counts the sessions inside the window that scored above this resident's
     own threshold, which is the evidence a flag rests on rather than the flag itself:
     one bad session never alerts (SPEC section 7). `pending_review` counts the alerts
-    raised for them that nobody has given a verdict on yet.
+    raised for them that nobody has given a verdict on yet. `previous_flags` is the
+    same count for the window before this one, so a nurse coming on shift can read
+    whether this resident is getting better or worse rather than only a number.
+
+    `unclear_sessions` counts what the window could *not* read: sessions in this
+    resident's room the capture was too unclear to score, which are left out of the
+    scored history altogether (SPEC section 12, T342) and so would otherwise make a
+    blocked or badly lit camera read as a quiet room. It is about the camera's view,
+    never about the resident.
+
+    `previous_flags` and `unclear_sessions` default to 0 for the same reason
+    `monitoring_paused` does: they were added after the payload shipped, so an older
+    or trimmed handoff still validates (T292, T311) and a dashboard reading it knows
+    "no comparison sent" from "none last shift".
     """
 
     resident_id: Id
@@ -744,14 +898,30 @@ class HandoffResident(_Contract):
         "(SPEC section 9) and the printed or pasted handoff is usable on its own.",
     )
     flags: int = Field(ge=0, description="Sessions in the window above this resident's bar.")
+    previous_flags: int = Field(
+        default=0,
+        ge=0,
+        description="The same count for the window just before this one "
+        "(`[now - 2 x hours, now - hours)`), measured against the same bar, so a row "
+        "can say more, fewer or the same as last shift. A count, never a verdict.",
+    )
     pending_review: int = Field(ge=0, description="Alerts in the window with no verdict yet.")
+    unclear_sessions: int = Field(
+        default=0,
+        ge=0,
+        description="Sessions in this resident's room the capture was too unclear to "
+        "score in the window (SPEC section 12). They are in nobody's history, so "
+        "without this a camera that cannot see reads as a quiet room. A count about "
+        "the camera view, never about the resident.",
+    )
     trending: bool = Field(
         description="Their error score is on a slow rise. Read over their whole history, "
         "not this window: a drift takes weeks to show (SPEC section 7.5)."
     )
     monitoring_paused: bool = Field(
+        default=False,
         description="Their room's monitoring is paused (SPEC section 12), so a quiet row "
-        "means nobody was looking rather than nothing happened."
+        "means nobody was looking rather than nothing happened.",
     )
 
 
@@ -775,7 +945,9 @@ class Handoff(_Contract):
     residents: list[HandoffResident] = Field(
         description="Every resident, the ones needing review first."
     )
-    paused: list[PausedRoom] = Field(description="Rooms whose monitoring is paused right now.")
+    paused: list[PausedRoom] = Field(
+        default_factory=list, description="Rooms whose monitoring is paused right now."
+    )
     summary: str = Field(
         min_length=1,
         description="Plain language, written from the window's own numbers (`Explainer`).",
@@ -791,10 +963,10 @@ class AlertDetail(Alert):
     feedback has tuned it, not the one the alert was raised against (SPEC section 5,
     MVP 7).
     Otherwise field for field the record, which is why the dashboard reads both
-    through the one generated `Alert` type in `web/src/contracts.ts`. The two the
+    through the one generated `Alert` type in `web/src/contracts.ts`. The three the
     record lets default are required here: a route sends the whole alert every time,
-    so the dashboard can read an empty answer off an empty list and a missing key is
-    a bug rather than "nothing to say".
+    so the dashboard can read an empty answer off an empty list or a null and a
+    missing key is a bug rather than "nothing to say".
     """
 
     patterns: list[PatternMatch] = Field(
@@ -804,6 +976,173 @@ class AlertDetail(Alert):
     feedback: AlertFeedback | None = Field(
         description="What the care team said, or null when nobody has answered yet. Always "
         "present: the route reads it from the feedback store for every alert it sends."
+    )
+    errors_by_time_of_day: list[TimeOfDayErrors] | None = Field(
+        description="One entry per part of the day - morning, afternoon, evening, in that "
+        "order - over the two weeks before the alert, or null when this resident has no "
+        "sessions in that window to read a daily pattern off. Always present: the route "
+        "fills it from her own history for every alert it sends, and the dashboard hides "
+        "the strip on a null rather than drawing three empty bars."
+    )
+
+
+class PatternTimeProfile(_Contract):
+    """How long a change of this kind takes to show up (SPEC section 7.5).
+
+    `routine_watch.patterns_library.TimeProfile` as `GET /patterns` serves it: a step
+    change over days and a drift over weeks are different patterns, so the window a
+    change has been building for is part of what the library says to look for.
+    """
+
+    onset_days: tuple[Days, Days] = Field(
+        description="The onset window in days, earliest first: how long a change of this "
+        "kind is expected to have been building."
+    )
+    tolerance_days: Days = Field(
+        description="How far outside the onset window still counts for anything."
+    )
+    note: str = Field(
+        min_length=1,
+        description="The phrase a nurse reads, kept next to the numbers it describes, e.g. "
+        "'a step change within 1-3 days'.",
+    )
+
+    @model_validator(mode="after")
+    def _window_is_ordered(self) -> PatternTimeProfile:
+        if self.onset_days[1] < self.onset_days[0]:
+            raise ValueError("onset_days must run earliest to latest")
+        return self
+
+
+class PatternLibraryEntry(_Contract):
+    """One entry of the pattern library (`GET /patterns`, SPEC section 7.5).
+
+    The library held as data (`routine_watch.patterns_library.LIBRARY`) as the route
+    reads it out: what the rule looks for and how much each signal counts, the time
+    profile it follows, what to rule out, how soon somebody should look, and where
+    the pattern comes from. A cited rules library anybody can audit, and nothing
+    about a resident - the scored answer for one change is `PatternMatch`.
+
+    The scoring machinery stays behind the route: which signals a pattern is defined
+    by, the care-record context that raises or lowers it, its confidence ceiling.
+    `routine_watch.patterns` owns all of that, so a reader gets the rule rather than
+    the arithmetic.
+    """
+
+    pattern_id: Id = Field(description="The pattern in the library, e.g. 'sudden_change'.")
+    name: str = Field(min_length=1, description="How the pattern is shown to a nurse.")
+    signals: dict[str, float] = Field(
+        min_length=1,
+        description="Signal name -> weight: what the rule looks for and how much each "
+        "signal counts. The names are `routine_watch.patterns.SIGNALS`.",
+    )
+    time_profile: PatternTimeProfile
+    checks: list[SuggestedCheck | Annotated[str, Field(min_length=1)]] = Field(
+        description="What to rule out: a shared SuggestedCheck where one fits, otherwise "
+        "the pattern's own wording, exactly as `PatternMatch.checks` carries it."
+    )
+    urgency: PatternUrgency
+    source: str = Field(
+        min_length=1,
+        description="Where the pattern comes from: a SPEC section, a clinical screen, a "
+        "citation. Never empty - an uncited rule is not a pattern (SPEC section 7.5).",
+    )
+
+
+class SessionReplay(_Contract):
+    """One window of one session's skeleton replay (`GET /sessions/{id}/replay`).
+
+    What "open evidence" plays beside an alert (SPEC section 8): the capture frames
+    around the moment an error happened - poses, hand landmarks, object boxes and
+    their timestamps, never video. The window asked for is padded, clipped to the
+    session and thinned to the requested frame rate (`routine_watch.evidence`), so
+    what comes back is whatever frames fall inside it rather than the window itself.
+    """
+
+    session_id: Id = Field(
+        description="The session asked about. Every frame carries it too, so a player "
+        "holding frames alone still knows what it is showing."
+    )
+    frames: list[CaptureFrame] = Field(
+        description="The window's frames, oldest first. Skeletons, boxes and timestamps "
+        "only: the image each was read from was dropped when it was processed."
+    )
+
+
+class NormalReplay(_Contract):
+    """The ghost layer beside `SessionReplay` (`GET /residents/{id}/normal_replay`).
+
+    The same window from one of this resident's normal sessions, for the evidence
+    view to lay their usual routine under the session being reviewed (SPEC section 9,
+    screen 4). Asked about the resident rather than a session, because the point is
+    what they normally do and not one attempt; the frames come back under a normal
+    session's own id (`routine_watch.evidence`), never the reviewed session's.
+    """
+
+    resident_id: Id
+    frames: list[CaptureFrame] = Field(
+        description="The window's frames from a normal session, oldest first. Skeletons, "
+        "boxes and timestamps only, like `SessionReplay.frames`."
+    )
+
+
+class Monitoring(_Contract):
+    """Which rooms a nurse has paused right now (`GET /monitoring`, SPEC section 12).
+
+    The state behind every pause switch in the dashboard, in one call: room names
+    only, because that is all a switch needs to know whether it is on. The handoff's
+    `paused` says the same thing about a window and names the resident too
+    (`PausedRoom`), so a nurse coming on shift can see whose room was quiet.
+    """
+
+    paused_rooms: list[Annotated[str, Field(min_length=1)]] = Field(
+        description="Every room whose monitoring is paused, sorted. Empty means the whole "
+        "unit is being watched."
+    )
+
+
+class RoomMonitoring(_Contract):
+    """One room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`).
+
+    The state the room is in now, echoed back so the dashboard draws what the server
+    believes rather than what it just sent.
+    """
+
+    room: str = Field(min_length=1)
+    on: bool = Field(
+        description="True when the room is being monitored, false when a nurse has paused it."
+    )
+
+
+class MonitoringChange(_Contract):
+    """One logged change to a room's switch (SPEC section 12).
+
+    A pause or a resume, with who made it and when: `routine_watch.monitoring`
+    appends one of these every time the switch really moves, so a camera going quiet
+    is accountable rather than silent. A tap that leaves the room as it was is not a
+    change and is not logged.
+    """
+
+    on: bool = Field(description="False is a pause, true a resume.")
+    by: str = Field(
+        min_length=1,
+        description="Who made the change. The MVP has no nurse logins, so every change is "
+        "one anonymous nurse's.",
+    )
+    at: datetime = Field(description="When the change was made (wall clock).")
+
+
+class RoomMonitoringHistory(_Contract):
+    """One room's audit trail (`GET /rooms/{room}/monitoring/history`, SPEC section 12).
+
+    What the resident screen shows under the room's switch. Empty until somebody
+    moves it, and `/demo/reset` empties it again.
+    """
+
+    room: str = Field(min_length=1)
+    history: list[MonitoringChange] = Field(
+        description="The room's changes, newest first, at most "
+        "`routine_watch.monitoring.MAX_HISTORY` of them."
     )
 
 
@@ -850,13 +1189,47 @@ CONTRACTS: tuple[type[_Contract], ...] = (
 #: to - `pipeline/tests/test_live_contract.py` validates a real session against it.
 PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
-#: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
-#: for the same reason as the protocols above - the dashboard mirrors these by hand
-#: in `web/src/overview/types.ts` and `web/src/handoff/types.ts`, or reads them
-#: through a record's own type (`AlertDetail` through `Alert`), so the schema is
-#: what the two sides are held to. `pipeline/tests/test_api_payload_contracts.py`
-#: validates the real routes against them.
-PAYLOADS: tuple[type[BaseModel], ...] = (ResidentSummary, Resident, Handoff, AlertDetail)
+#: What the dashboard's HTTP routes answer with: a schema file each, and a
+#: TypeScript type for the ones in `WEB_PAYLOADS` below. `Resident` the dashboard
+#: still mirrors by hand (`web/src/resident/types.ts`), and `AlertDetail` it reads
+#: through `Alert`'s own generated type, so for those the schema is what the two
+#: sides are held to. `pipeline/tests/test_api_payload_contracts.py` validates the
+#: real routes against them all.
+PAYLOADS: tuple[type[BaseModel], ...] = (
+    ResidentSummary,
+    Resident,
+    ResidentDrift,
+    ResidentFeedback,
+    Handoff,
+    AlertDetail,
+    PatternLibraryEntry,
+    SessionReplay,
+    NormalReplay,
+    Monitoring,
+    RoomMonitoring,
+    RoomMonitoringHistory,
+)
+
+#: The payloads the dashboard reads through a generated type instead of a copy of
+#: its own: the drift card's, what her nurses said, the pattern library's entry, both
+#: replay windows', the overview row, the shift handoff and the monitoring audit
+#: trail's logged change. They are payloads like the rest above - this is only which
+#: of them `web/src/contracts.ts` holds a type for as well, so a field changed here
+#: breaks the dashboard's build (`web/src/resident/api.ts`,
+#: `web/src/resident/types.ts`, `web/src/patterns/types.ts`,
+#: `web/src/evidence/api.ts`, `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+#: `web/src/about/monitoringApi.ts` import them) instead of a test matching field
+#: names in its source.
+WEB_PAYLOADS: tuple[type[BaseModel], ...] = (
+    ResidentDrift,
+    ResidentFeedback,
+    PatternLibraryEntry,
+    SessionReplay,
+    NormalReplay,
+    ResidentSummary,
+    Handoff,
+    MonitoringChange,
+)
 
 #: What the dashboard sends the other way: a schema file each, no TypeScript. A
 #: request body is hand-written in the client (`web/src/alert/api.ts`) and validated
@@ -887,7 +1260,9 @@ _TS_HEADER = """// Generated from pipeline/src/routine_watch/contracts.py by
 // `uv run python -m routine_watch.contracts`. Do not edit by hand.
 //
 // What flows between the pipeline stages and into the dashboard (SPEC sections 6, 7
-// and 16). Skeletons, boxes and timestamps only: no raw frames anywhere.
+// and 16), plus the route payloads the dashboard reads through these types rather
+// than a copy of its own. Skeletons, boxes and timestamps only: no raw frames
+// anywhere.
 //
 // Times inside a session (t, t_start, t_end) are seconds since the session started.
 // Wall-clock times (started_at, created_at) are ISO 8601 strings.
@@ -1025,8 +1400,14 @@ def _ts_type(node: dict[str, Any]) -> str:
     if "enum" in node:
         return " | ".join(_ts_literal(value) for value in node["enum"])
     if node.get("type") == "array":
+        if "prefixItems" in node:
+            return "[" + ", ".join(_ts_type(item) for item in node["prefixItems"]) + "]"
         item = _ts_type(node.get("items", {}))
         return f"({item})[]" if " | " in item else f"{item}[]"
+    if node.get("type") == "object":
+        values = node.get("additionalProperties")
+        if isinstance(values, dict):
+            return f"Record<string, {_ts_type(values)}>"
     return _TS_SCALARS.get(node.get("type"), "unknown")
 
 
@@ -1067,7 +1448,7 @@ def _ts_block(name: str, node: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def typescript(models: tuple[type[BaseModel], ...] = CONTRACTS) -> str:
+def typescript(models: tuple[type[BaseModel], ...]) -> str:
     """The dashboard's types, emitted from the same schemas the pipeline validates."""
     named: dict[str, dict[str, Any]] = {}
 
@@ -1102,7 +1483,7 @@ def generated_files(root: Path | None = None) -> dict[Path, str]:
     files[base / "contracts" / "examples" / "capture.jsonl"] = "".join(
         json.dumps(frame.model_dump(mode="json")) + "\n" for frame in example_capture_frames()
     )
-    files[base / "web" / "src" / "contracts.ts"] = typescript()
+    files[base / "web" / "src" / "contracts.ts"] = typescript((*CONTRACTS, *WEB_PAYLOADS))
     return files
 
 

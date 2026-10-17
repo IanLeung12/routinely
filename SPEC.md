@@ -20,9 +20,12 @@ A privacy-preserving camera system that watches residents of a care home do ever
 
 ## 3. Users
 
-- **Primary:** the charge nurse or care aide on shift, who receives the alerts and acts on them.
-- **Secondary:** the wellness director or physician, who reviews trends.
-- **Subject:** the resident, who is never shown a dashboard and is never identifiable in stored data.
+Anyone who wants support can use it, alone or with someone watching over them. Two roles:
+
+- **Person** (the one being watched over): sets it up at home or in their room and sees **their own** routine: their normal, today's sessions, gentle notes when something changed, who can see their data, and an off switch. Calm, plain language; never alarming, never diagnostic ("this looked different from your usual, worth mentioning to <supervisor> or your doctor").
+- **Supervisor**: anyone the person links: a family member, a home carer, or a nurse in a care home. Sees the alert, the evidence and the ranked patterns, and gives feedback. A supervisor can watch one person (family) or many (a care-home unit, the original nurse view).
+- A person can have no supervisor (self-monitoring), one, or several. The care-home nurse is one kind of supervisor, not the only user.
+- Linking is shown in the frontend only for now (invite code / "people I support" list, mock-backed); no account or pairing backend yet (§17).
 
 ## 4. Hackathon targets (drive scope decisions)
 
@@ -254,3 +257,13 @@ Diagrams: `docs/routine-watch-architecture.png` (components), `docs/routine-watc
 - **Roboflow:** detector runs locally from downloaded weights. No hosted inference. Humans run training (max 2–3 runs, 50 credits/month).
 - **Hands:** use MediaPipe hand landmarks as well as pose; task steps are hand–object interactions.
 - **D. Beyond delirium (pattern matching):** the product flags changes and ranks the patterns they are consistent with (§7.5), delirium first. Pattern scoring is deterministic rules over features with a data-driven library; the LLM only phrases. Never diagnostic wording. MVP patterns: sudden change and slow drift.
+
+## 17. People and supervisors (Ian, roles pivot)
+
+- The app has a role chooser on first open: **"I'm setting this up for myself"** or **"I'm supporting someone"**. The role is remembered (localStorage) and switchable from the shell; the demo can flip between them.
+- **Person view** ("My routine"): my status in plain words, my normal vs today (one chart), recent sessions, notes when something changed (the same patterns, phrased for the person: what was different + "worth mentioning to …"), who can see my data with per-supervisor remove, invite a supervisor (shows a code / link), privacy and pause. No unit-wide data, no other people.
+- **Supervisor view**: "People I support". With one person it opens straight into their detail (family case); with many it is the existing overview (care-home case). Add-a-person via invite code. Alerts, evidence, patterns and feedback as before.
+- **Mock linking:** invite codes, links and the supervisor list live in the frontend (localStorage + mock data), behind a small `web/src/people/api.ts` interface so a real backend can replace it later. Demo data ships with: Mrs. K (care home, supervised by Nurse Ana), Mr. D (lives alone, supervised by his daughter), and Sam (self-monitoring, no supervisor).
+- Wording: "resident" → "person" in shared UI; "nurse" only where it is specifically the care-home supervisor. Never "patient" in the UI (the code may keep `resident_id`).
+- Privacy is stricter for the person: they always see exactly what their supervisors see, and can pause or unlink at any time.
+- **Replays (Ian):** every session with at least one error keeps a skeleton replay (landmarks, boxes, timestamps; never video), kept 30 days by default. Supervisors browse a person's replays, jump to each error, compare with the person's normal, and add notes; the person sees the same replays and can delete any of them.

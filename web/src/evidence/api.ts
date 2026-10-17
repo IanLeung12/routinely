@@ -1,5 +1,5 @@
 import { apiUrl } from '../config.ts'
-import type { Alert, CaptureFrame } from '../contracts.ts'
+import type { Alert, CaptureFrame, NormalReplay, SessionReplay } from '../contracts.ts'
 import { mockReplays } from '../mock/replay.ts'
 
 /** The skeleton replay behind one alert's first error, plus the ghost layer: the
@@ -14,7 +14,7 @@ export type EvidenceReplay = {
 async function replayWindow(path: string, t_start: number, t_end: number): Promise<CaptureFrame[] | null> {
   const response = await fetch(`${apiUrl}${path}?t_start=${t_start}&t_end=${t_end}`)
   if (!response.ok) return null
-  const body = await response.json() as { frames: CaptureFrame[] }
+  const body = await response.json() as SessionReplay | NormalReplay
   return body.frames
 }
 

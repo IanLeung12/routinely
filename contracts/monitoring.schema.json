@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Which rooms a nurse has paused right now (`GET /monitoring`, SPEC section 12).\n\nThe state behind every pause switch in the dashboard, in one call: room names\nonly, because that is all a switch needs to know whether it is on. The handoff's\n`paused` says the same thing about a window and names the resident too\n(`PausedRoom`), so a nurse coming on shift can see whose room was quiet.",
+  "properties": {
+    "paused_rooms": {
+      "description": "Every room whose monitoring is paused, sorted. Empty means the whole unit is being watched.",
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Paused Rooms",
+      "type": "array"
+    }
+  },
+  "required": [
+    "paused_rooms"
+  ],
+  "title": "Monitoring",
+  "type": "object"
+}

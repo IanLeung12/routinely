@@ -36,8 +36,9 @@ The messages, in the order a session produces them:
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
 ``session_end``  The session's `errors`, its `score`, whether the resident is
-                 `flag`ged now that this session is one of theirs, and the
-                 `alert_id` of the alert that flag shows up in. `errors` is the
+                 `flag`ged now that this session is one of theirs, the
+                 `alert_id` of the alert that flag shows up in, and the
+                 `quality` of the capture it was all read off. `errors` is the
                  finished session's whole list,
                  each `TaskError` serialised the way the `error` message's is:
                  the list to settle on once the session is over, which the
@@ -68,7 +69,20 @@ Two things follow from classifying an unfinished session, and both are deliberat
   it into that resident's history, which is what makes their sparkline spike and,
   when it is the second qualifying session inside the window, puts the flag and its
   alert on the next `/residents` and `/alerts`. A session that is cut short - the
-  dashboard closing the socket - is never recorded, because it never finished.
+  dashboard closing the socket - is never recorded, because it never finished, and
+  nor is an **unclear** one (`routine_watch.quality`, SPEC section 12): too little of
+  the capture can be trusted to make it one of this resident's sessions, so it is
+  streamed and scored 0.0 like any session the pipeline cannot read, and then left
+  out of their history rather than counted toward a flag. `session_end` carries which
+  of the two it was in `quality`, because the score alone cannot say: 0.0 is "nothing
+  went wrong" for a clean session and "we could not read it" for an unclear one, and
+  the screen has to tell a nurse which (SPEC section 12, "show uncertainty"). What is
+  kept of an unclear session is a timestamp against the **room** it was captured in
+  (`session_log.record_unclear`), so a camera nobody can see through is handed over
+  at the end of the shift - "2 sessions too unclear to score, check the camera view"
+  (`routine_watch.handoff`) - instead of that room reading as a quiet one. Nothing of
+  the session itself is kept: not its errors, not its score, not whose it would have
+  been.
 
 **The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
@@ -115,6 +129,7 @@ from .contracts import (
 from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents
 from .errors import classify_errors
 from .notify import Notifier, get_notifier
+from .quality import session_quality
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
 from .stick_figure import HAND_SPAN, REST, Point, centre_of, reaching_for
 from .tasks import TaskGraph
@@ -287,8 +302,20 @@ async def session_messages(
         yield message
 
     was_flagged = _resident_flagged(resident_id)
-    score, assisted, _recording_flag = score_session(scenario, final)
-    _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
+    score, assisted, _recording_flag = score_session(scenario, final, events)
+    # An unclear session is nobody's history: there is nothing in it to trust about
+    # this resident (SPEC section 12), which is why `replay.score_session` neither
+    # scores nor flags it. Recording it anyway would have it counted all the same -
+    # `routine_watch.demo` scores a recorded session from its errors again and only
+    # leaves out assisted ones - so its errors would sit in the 24-48 h window the
+    # flag is read over and bad lighting alone could flag a change for review.
+    quality = session_quality(events)
+    if quality == "ok":
+        _record(
+            resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t
+        )
+    else:
+        _record_unclear(resident_id)
     # One reading of the resident, taken once this session is one of theirs: it is both
     # what a push alert goes out for and what `session_end` reports, so the live screen
     # cannot say anything the dashboard does not (see "the `flag` is the resident's").
@@ -318,17 +345,45 @@ async def session_messages(
         # one per session: the nurse is being told about a change in a person. Not
         # flagged, no alert - `/alerts` would 404 on one.
         "alert_id": f"alert-{resident_id}" if resident_name else None,
+        # Whether the capture could be read well enough to score this session at all
+        # (SPEC section 12). `unclear` is the walker, the blocked view, the bad light:
+        # the score above is 0.0 because nothing in the capture can be trusted, not
+        # because the session went well, and the live screen says which it was.
+        "quality": quality,
     }
+
+
+def _resident(resident_id: str) -> dict | None:
+    """The resident this session is being played as, or None if the unit's residents
+    (`routine_watch.demo`) have nobody by that id - a camera session with no resident
+    attached yet, or a test playing a recording as a name of its own."""
+    return next(
+        (resident for resident in demo_residents() if resident["id"] == resident_id), None
+    )
 
 
 def _resident_flagged(resident_id: str) -> str | None:
     """The resident's display name if flagged right now (SPEC section 7: over their own
     history, the same reading `/residents` and `/alerts` give a nurse), so a push
     alert goes out exactly when a session's end turns this from absent to present."""
-    resident = next(
-        (resident for resident in demo_residents() if resident["id"] == resident_id), None
-    )
+    resident = _resident(resident_id)
     return resident["name"] if resident and resident["status"] == "flagged" else None
+
+
+def _record_unclear(resident_id: str) -> None:
+    """Count one session too unclear to score against the room it was captured in
+    (`routine_watch.session_log`, SPEC section 12).
+
+    The session itself goes nowhere: it is not one of this resident's and must not
+    become one (see "the finished session becomes one of the resident's"). What is
+    recorded is when the room's camera could not be read, so the next nurse is told
+    to go and look at that camera rather than reading a room nobody could see into
+    as a quiet one. A resident the unit does not know has no room to count it
+    against, so nothing is recorded for them.
+    """
+    resident = _resident(resident_id)
+    if resident is not None:
+        session_log.record_unclear(resident["room"], DEMO_NOW)
 
 
 def _record(

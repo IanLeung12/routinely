@@ -12,7 +12,7 @@ describe('Sparkline', () => {
       { ts: '2026-01-03', score: 2 },
     ]} />)
 
-    const svg = screen.getByRole('img', { name: 'Error score over the last 3 sessions, latest 2.0' })
+    const svg = screen.getByRole('img', { name: 'Error score over the last 3 sessions, latest 2.0, rising' })
     const points = svg.querySelector('polyline')?.getAttribute('points')?.split(' ')
     expect(points).toHaveLength(3)
     expect(points?.map((point) => Number(point.split(',')[0]))).toEqual([2, 60, 118])
@@ -27,7 +27,7 @@ describe('Sparkline', () => {
     ]} />)
 
     expect(screen.getByRole('img', {
-      name: 'Error score over the last 3 sessions, latest 2.4',
+      name: 'Error score over the last 3 sessions, latest 2.4, rising',
     })).toBeTruthy()
   })
 
@@ -42,7 +42,7 @@ describe('Sparkline', () => {
     }
     if (values.length === 0) {
       expect(container.querySelector('polyline')).toBeNull()
-      expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+      expect(screen.getByRole('img', { name: 'No error score history yet' })).toBeTruthy()
     } else {
       expect(container.querySelector('polyline')?.getAttribute('points')?.split(' ')).toHaveLength(values.length)
     }

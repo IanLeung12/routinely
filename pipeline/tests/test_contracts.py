@@ -4,8 +4,14 @@ The pydantic models in `routine_watch.contracts` are the source. The JSON Schema
 sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so these
 tests check four things: every type round-trips through JSON into its own schema, the
 sample frames validate, nothing on disk has drifted away from the models, and what the
-dashboard writes by hand against a schema - its `Alert` type, the feedback body its
-client posts - still names the same fields.
+dashboard still writes by hand against a schema - its `Alert` type, the feedback body
+its client posts, the two bodies its monitoring client casts inline - names the same
+fields. The payloads it used to copy by hand (the drift card's, what her nurses said,
+a pattern library entry's, both replay windows', the overview row, the shift handoff
+and the monitoring audit trail's logged change) are generated into
+`web/src/contracts.ts` instead, so a
+changed field breaks its build; what is left to test here is that they are in the
+generated file and that nothing keeps a second copy of them.
 """
 
 import json
@@ -24,6 +30,7 @@ from routine_watch.contracts import (
     HAND_LANDMARK_COUNT,
     POSE_LANDMARK_COUNT,
     SCHEMAS,
+    WEB_PAYLOADS,
     Alert,
     AlertDetail,
     AlertFeedback,
@@ -36,16 +43,23 @@ from routine_watch.contracts import (
     EvidenceKind,
     EvidenceRef,
     Feedback,
+    FeedbackAnswer,
     Handedness,
     HandLandmarks,
+    Monitoring,
+    MonitoringChange,
     ObjectDetection,
     ObjectLabel,
+    PatternTimeProfile,
     Pose,
+    RoomMonitoringHistory,
     Session,
     StepEvent,
     StepSource,
     SuggestedCheck,
     TaskError,
+    TimeOfDay,
+    TimeOfDayErrors,
     example_capture_frames,
     schema_name,
     stale_files,
@@ -60,8 +74,36 @@ WEB_CONTRACTS = REPO / "web" / "src" / "contracts.ts"
 #: The dashboard's feedback client, which writes the POST body out by hand.
 WEB_ALERT_API = REPO / "web" / "src" / "alert" / "api.ts"
 
+#: The dashboard's monitoring client, which casts the bodies of the pause switch's
+#: routes by hand (SPEC section 12).
+WEB_MONITORING_API = REPO / "web" / "src" / "about" / "monitoringApi.ts"
+
+#: Every source file the dashboard is written in: where a second copy of a generated
+#: payload would turn up if somebody wrote one.
+WEB_SOURCES = [
+    path
+    for path in sorted((REPO / "web" / "src").rglob("*"))
+    if path.suffix in {".ts", ".tsx"}
+]
+
+#: The one field of the audit trail its client has no use for: it asked about the
+#: room, so the answer naming it again tells the screen nothing new.
+TRAIL_ROOM = {"room"}
+
 #: What the server stamps on a stored verdict, so a nurse's POST never sends it.
 SERVER_STAMPED = {"by", "at"}
+
+#: What a map's values may be where a schema cannot list its fields: a closed enum
+#: (the live protocol's `step_state`, keyed by step id) or a number (a pattern
+#: entry's signal weights). Neither leaves anywhere for an image to go.
+MAP_VALUE_TYPES = {"number", "integer", "boolean"}
+
+#: A string may be a map's values too, but only a short one the schema caps the length
+#: of: a pattern's display name (`ResidentFeedback.pattern_names`) is a few words, and
+#: this many characters is far too few for even a thumbnail. An uncapped string in a
+#: map is the one place an image could still be smuggled through a contract, so it
+#: stays banned.
+MAX_MAP_STRING = 200
 
 #: Nothing in a contract may name an image, a frame or a clip (SPEC section 8).
 BANNED_FIELD_WORDS = (
@@ -145,6 +187,11 @@ def _alert() -> Alert:
         ),
         summary="Three errors making tea this morning, against 0.2 a day for this resident.",
         suggested_checks=[SuggestedCheck.INFECTION_OR_UTI, SuggestedCheck.HYDRATION],
+        errors_by_time_of_day=[
+            TimeOfDayErrors(bucket=TimeOfDay.MORNING, sessions=14, errors=3),
+            TimeOfDayErrors(bucket=TimeOfDay.AFTERNOON, sessions=0, errors=0),
+            TimeOfDayErrors(bucket=TimeOfDay.EVENING, sessions=9, errors=11),
+        ],
     )
 
 
@@ -180,6 +227,37 @@ def walk_objects(node: object) -> list[dict]:
         for child in node:
             found += walk_objects(child)
     return found
+
+
+def closed_to_images(extra: object) -> bool:
+    """Whether one object's `additionalProperties` leaves nowhere for an image.
+
+    Every contract forbids unknown fields outright. A map is the exception - its
+    fields cannot be listed - and then its values have to be a closed enum, a number,
+    or a string the schema caps at `MAX_MAP_STRING`, any of which still leaves nowhere
+    for an image to go.
+    """
+    if extra is False:
+        return True
+    if not isinstance(extra, dict):
+        return False
+    if "enum" in extra or extra.get("type") in MAP_VALUE_TYPES:
+        return True
+    return extra.get("type") == "string" and 0 < extra.get("maxLength", 0) <= MAX_MAP_STRING
+
+
+def carries_a_contract(node: dict) -> bool:
+    """Whether a property is nothing but a reference to another contract, or a list of
+    them, so this loop checks it where that contract is defined.
+
+    That is how the live protocol's envelope holds a `frame` (one CaptureFrame, which
+    is skeletons, boxes and timestamps) and a replay payload holds `frames` (a list
+    of the same) without either having a field of its own to hide an image in.
+    """
+    if set(node) == {"$ref"}:
+        return True
+    items = node.get("items")
+    return node.get("type") == "array" and isinstance(items, dict) and set(items) == {"$ref"}
 
 
 def test_contracts_dir_is_documented() -> None:
@@ -218,21 +296,36 @@ def test_schema_rejects_a_smuggled_frame(model: type, sample: object) -> None:
 def test_no_schema_can_carry_a_raw_frame() -> None:
     for path in sorted(CONTRACTS_DIR.glob("*.schema.json")):
         for node in walk_objects(json.loads(path.read_text())):
-            # Every object forbids unknown fields. A map is the exception - the live
-            # protocol's `step_state` is keyed by step id, so its fields cannot be
-            # listed - and then its values have to be a closed enum, which still
-            # leaves nowhere for an image to go.
-            extra = node["additionalProperties"]
-            assert extra is False or "enum" in extra, path.name
+            assert closed_to_images(node["additionalProperties"]), path.name
             for field, sub in node.get("properties", {}).items():
-                # A property that is only a reference carries another contract, and
-                # this loop checks that contract where it is defined: that is how the
-                # live protocol's envelope holds a `frame` (one CaptureFrame, which is
-                # skeletons, boxes and timestamps) without a field of its own.
-                if set(sub) == {"$ref"}:
+                if carries_a_contract(sub):
                     continue
                 banned = [word for word in BANNED_FIELD_WORDS if word in field]
                 assert not banned, f"{path.name}: {field} looks like raw video"
+
+
+@pytest.mark.parametrize(
+    ("extra", "closed"),
+    [
+        pytest.param(False, True, id="no-unknown-fields-at-all"),
+        pytest.param({"type": "number"}, True, id="a-map-of-numbers"),
+        pytest.param({"enum": ["pending", "done"]}, True, id="a-map-of-one-closed-enum"),
+        pytest.param({"type": "string", "maxLength": 80}, True, id="a-map-of-short-strings"),
+        pytest.param({"type": "string"}, False, id="a-map-of-strings-of-any-length"),
+        pytest.param(
+            {"type": "string", "maxLength": 100_000},
+            False,
+            id="a-map-of-strings-big-enough-for-an-image",
+        ),
+        pytest.param(True, False, id="a-map-of-anything-at-all"),
+    ],
+)
+def test_what_counts_as_closed_to_images(extra: object, closed: bool) -> None:
+    """The rule the sweep above holds every map in a contract to (SPEC section 8): a
+    map's values may be a number, a closed enum or a string the schema caps short, and
+    nothing else. A longer-form string is where an image could still be smuggled
+    through a contract, so it is not a shape a map may have."""
+    assert closed_to_images(extra) is closed
 
 
 def test_example_capture_jsonl_validates() -> None:
@@ -289,22 +382,38 @@ def test_an_alert_needs_at_least_one_session() -> None:
         Alert.model_validate(_alert().model_dump() | {"session_ids": []})
 
 
-def ts_fields(type_name: str) -> set[str]:
-    """The field names of one generated type in `web/src/contracts.ts`."""
-    source = WEB_CONTRACTS.read_text(encoding="utf-8")
+def ts_fields(type_name: str, path: Path = WEB_CONTRACTS) -> set[str]:
+    """The field names of one TypeScript object type, generated or hand-written."""
+    source = path.read_text(encoding="utf-8")
     block = re.search(rf"^export type {type_name} = \{{$(.*?)^\}}$", source, re.S | re.M)
-    assert block, f"web/src/contracts.ts has no type {type_name}"
+    assert block, f"{path.name} has no type {type_name}"
     return set(re.findall(r"^  (\w+)\??:", block.group(1), re.M))
+
+
+def ts_read_fields(function: str, path: Path = WEB_MONITORING_API) -> set[str]:
+    """The fields one client function reads a response body through.
+
+    The monitoring client casts the bodies of the pause switch's routes inline
+    (`as { paused_rooms: string[] }`) instead of naming a type, which is still a
+    hand-written copy of a payload and still drifts.
+    """
+    source = path.read_text(encoding="utf-8")
+    body = re.search(rf"^(?:export )?async function {function}\b.*?^\}}$", source, re.S | re.M)
+    assert body, f"{path.name} has no function {function}"
+    cast = re.search(r"\bas \{([^}]*)\}", body.group(0))
+    assert cast, f"{function} no longer casts the body it reads"
+    return set(re.findall(r"(\w+)\??:", cast.group(1)))
 
 
 def test_the_alert_detail_is_the_record_with_nothing_left_out() -> None:
     """`GET /alerts/{id}` and every row of `GET /alerts` dump the whole alert
     (`api_alerts._alert_payload`), so the detail is the stored record's fields with
-    the two it lets default always sent: an empty list and a null, never a gap."""
+    the three it lets default always sent: an empty list, a nurse's verdict and the
+    time-of-day strip the route reads off her history, never a gap."""
     assert set(AlertDetail.model_fields) == set(Alert.model_fields)
     assert all(field.is_required() for field in AlertDetail.model_fields.values())
     optional = {name for name, f in Alert.model_fields.items() if not f.is_required()}
-    assert optional == {"patterns", "feedback"}
+    assert optional == {"patterns", "feedback", "errors_by_time_of_day"}
 
 
 def test_the_detail_schema_fails_an_alert_that_left_its_feedback_out() -> None:
@@ -342,3 +451,61 @@ def test_the_dashboard_posts_exactly_the_feedback_body() -> None:
 
     posted = set(re.findall(r"(?:^|,)\s*(\w+)", body.group(1)))
     assert posted == set(Feedback.model_fields)
+
+
+def test_the_dashboard_reads_exactly_the_monitoring_state() -> None:
+    """`fetchPausedRooms` casts `GET /monitoring`'s body by hand (SPEC section 12),
+    so a field added to the state on either side alone fails here."""
+    assert ts_read_fields("fetchPausedRooms") == set(Monitoring.model_fields)
+
+
+def test_the_dashboard_reads_the_whole_audit_trail() -> None:
+    """`fetchMonitoringHistory` leaves out only the `room` it asked about: anything
+    else the route grows has to reach the screen, and anything the screen reads has
+    to be something the route sends."""
+    assert ts_read_fields("fetchMonitoringHistory") | TRAIL_ROOM == set(
+        RoomMonitoringHistory.model_fields
+    )
+
+
+def test_the_dashboards_payload_types_are_generated_not_copied() -> None:
+    """The drift card's payload, what her nurses said, a pattern library entry, both
+    replay windows, the overview row, the shift handoff and the monitoring audit
+    trail's logged change were written out by hand in dashboard modules
+    (`web/src/resident/api.ts`, `web/src/resident/types.ts`,
+    `web/src/patterns/types.ts`, `web/src/evidence/api.ts`, `web/src/overview/types.ts`,
+    `web/src/handoff/types.ts`, `web/src/about/monitoringApi.ts`) and held to the
+    models by a field-name test over their source. They are in `WEB_PAYLOADS` now, so
+    the dashboard imports them and a changed field fails its build instead. What is
+    left to check here is that the generated file really carries them - a model
+    dropped from `WEB_PAYLOADS` would regenerate clean - and that nobody has started
+    a second copy, time profile and feedback answer included."""
+    for model in WEB_PAYLOADS:
+        assert ts_fields(model.__name__) == set(model.model_fields)
+
+    copied = {model.__name__ for model in WEB_PAYLOADS} | {
+        PatternTimeProfile.__name__,
+        FeedbackAnswer.__name__,
+    }
+    for path in WEB_SOURCES:
+        if path == WEB_CONTRACTS:
+            continue
+        source = path.read_text(encoding="utf-8")
+        for name in sorted(copied):
+            assert f"type {name} = {{" not in source, f"{path.relative_to(REPO)}: {name}"
+
+
+def test_a_logged_change_is_what_the_monitoring_store_writes() -> None:
+    """The route serves the store's own trail (`routine_watch.monitoring`), so what
+    the store appends has to validate as the contract - including the `by` and `at`
+    that make a paused camera accountable rather than silent (SPEC section 12)."""
+    from routine_watch.monitoring import MonitoringStore
+
+    store = MonitoringStore()
+    store.set("204", False)
+    store.set("204", True, by="Ward B")
+
+    trail = store.history("204")
+
+    validator(RoomMonitoringHistory).validate({"room": "204", "history": trail})
+    assert [set(change) for change in trail] == [set(MonitoringChange.model_fields)] * 2

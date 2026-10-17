@@ -57,4 +57,50 @@ describe('SessionSummary', () => {
     expect(screen.getByText('Session summary').className).toBe('section-header__title')
     expect(card.querySelector('[style]')).toBeNull()
   })
+
+  it('shows the comparison for a session the capture could be read (quality "ok")', () => {
+    render(<SessionSummary durationS={220} errorCount={2} usualDurationS={170} quality="ok" />)
+
+    expect(summaryLine().textContent).toBe('Finished in 3m 40s (usually ~2m 50s) · 2 errors')
+    expect(screen.queryByText(/unclear/i)).toBeNull()
+  })
+
+  /** SPEC section 12: low-confidence capture is unclear, never an error. The pipeline
+   * scores such a session 0.0 and leaves it out of the resident's history, so showing
+   * the comparison here would read as a session that went perfectly (T343). */
+  describe('unclear capture', () => {
+    it("says the session wasn't scored, and why, instead of the comparison", () => {
+      render(<SessionSummary durationS={220} errorCount={2} usualDurationS={170} usualErrors={1} quality="unclear" />)
+
+      expect(screen.getByText("Capture unclear — this session wasn't scored")).toBeTruthy()
+      expect(screen.getByText(/low light, the view blocked, or a walker or wheelchair/)).toBeTruthy()
+      expect(screen.getByText(/Nothing in it is counted as an error/)).toBeTruthy()
+    })
+
+    it('shows no score, no duration and no comparison with the resident\'s normal', () => {
+      render(<SessionSummary durationS={220} errorCount={2} usualDurationS={170} usualErrors={1} quality="unclear" />)
+
+      expect(summaryLine()).toBeNull()
+      expect(screen.queryByText(/Finished in/)).toBeNull()
+      expect(screen.queryByText(/2 errors/)).toBeNull()
+      expect(screen.queryByText(/usually/)).toBeNull()
+    })
+
+    it('keeps the heading, and announces the notice as a status', () => {
+      render(<SessionSummary durationS={220} errorCount={2} quality="unclear" />)
+
+      expect(screen.getByRole('heading', { name: 'Session summary' })).toBeTruthy()
+      const status = screen.getByRole('status')
+      expect(status.textContent).toContain("Capture unclear — this session wasn't scored")
+    })
+
+    it('never uses the word "diagnose" or any of its forms, and never calls this a failure', () => {
+      render(<SessionSummary durationS={220} errorCount={2} quality="unclear" />)
+
+      // SPEC section 12: unclear capture is uncertainty to show, not an error to
+      // report - neither the resident's nor the camera's.
+      expect(document.body.textContent).not.toMatch(/diagnos/i)
+      expect(document.body.textContent).not.toMatch(/failed|failure/i)
+    })
+  })
 })

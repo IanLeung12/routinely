@@ -8,9 +8,19 @@
 #
 # Plays mrs-k's tea_skip_teabag_pour_twice live session first (the same way the
 # demo does) so a fresh stack has a flagged resident, then checks GET /health,
-# GET /residents, GET /residents/mrs-k, GET /alerts, GET /alerts/<first id> and
-# that the dashboard (DASHBOARD_PORT, default 5173) returns HTML. Prints
-# PASS/FAIL per check and exits non-zero if any failed.
+# GET /residents, GET /residents/mrs-k, GET /residents/mrs-k/feedback,
+# GET /alerts, GET /alerts/<first id>, GET /monitoring,
+# GET /rooms/<demo room>/monitoring/history and that the dashboard
+# (DASHBOARD_PORT, default 5173) returns HTML, and that its public landing
+# page at /landing.html also returns HTML containing "Routine Watch" and
+# differs from the dashboard's own response (Vite's dev server falls back to
+# index.html for any unknown path, so a landing page missing from the build
+# would otherwise still answer 200 with HTML). Also validates the
+# residents/resident/feedback/handoff/alert-detail/monitoring/room-history
+# bodies against their schemas in `contracts/`, and the first message of a
+# fresh `/ws/live` session against `contracts/live_message.schema.json` (SKIP, not
+# FAIL, if jsonschema or websockets isn't importable). Prints PASS/FAIL per
+# check and exits non-zero if any failed.
 # Never sets LIVE_API, never POSTs feedback. POSTs /demo/reset once, last, since
 # that one is meant to mutate state (it only answers when OFFLINE_MODE or
 # DEMO_RESET is set, which `scripts/dev.sh` and the tester's stack always are).
@@ -54,6 +64,73 @@ assert $expr
   fi
 }
 
+# Validates $body against the JSON Schema at $schema_file (one of
+# contracts/*.schema.json) using jsonschema from the pipeline venv. Validates
+# every element if $body is a JSON list (e.g. GET /residents' rows), the whole
+# body otherwise. Prints SKIP instead of FAIL if jsonschema isn't importable,
+# since the running stack catching contract drift is the point, not pinning
+# down which Python has the dev dependency.
+check_schema() {
+  local label="$1" body="$2" schema_file="$3"
+  local out status
+  out=$("$PIPELINE_PYTHON" -c "
+import json, sys
+try:
+    from jsonschema import Draft202012Validator
+except ImportError:
+    sys.exit(2)
+schema = json.load(open(sys.argv[2]))
+data = json.loads(sys.argv[1])
+validator = Draft202012Validator(schema)
+for item in (data if isinstance(data, list) else [data]):
+    validator.validate(item)
+" "$body" "$schema_file" 2>&1)
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    pass "$label"
+  elif [ "$status" -eq 2 ]; then
+    echo "SKIP: $label (jsonschema not importable)"
+  else
+    fail "$label: $out"
+  fi
+}
+
+# Connects to $ws_url, reads just the first message (a fresh connection's is
+# always session_start) with a 5s timeout, and validates it against
+# $schema_file. SKIPs instead of FAILing if websockets or jsonschema isn't
+# importable from the pipeline venv.
+check_live_message_schema() {
+  local label="$1" ws_url="$2" schema_file="$3"
+  local out status
+  out=$("$PIPELINE_PYTHON" -c "
+import asyncio, json, sys
+try:
+    import websockets
+except ImportError:
+    sys.exit(2)
+try:
+    from jsonschema import Draft202012Validator
+except ImportError:
+    sys.exit(2)
+
+async def first_message(url):
+    async with websockets.connect(url, open_timeout=5, close_timeout=5) as ws:
+        return await asyncio.wait_for(ws.recv(), timeout=5)
+
+message = asyncio.run(first_message(sys.argv[1]))
+schema = json.load(open(sys.argv[2]))
+Draft202012Validator(schema).validate(json.loads(message))
+" "$ws_url" "$schema_file" 2>&1)
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    pass "$label"
+  elif [ "$status" -eq 2 ]; then
+    echo "SKIP: $label (websockets or jsonschema not importable)"
+  else
+    fail "$label: $out"
+  fi
+}
+
 if body=$(get "$API_URL/health"); then
   pass "GET /health -> $body"
 else
@@ -64,6 +141,7 @@ demo_room=""
 if residents=$(get "$API_URL/residents"); then
   check_json "GET /residents -> non-empty, mrs-k present" "$residents" \
     "isinstance(data, list) and data and any(r.get('id') == 'mrs-k' for r in data)"
+  check_schema "GET /residents rows match schema" "$residents" "contracts/resident_summary.schema.json"
   demo_room=$(python3 -c '
 import json, sys
 data = json.loads(sys.argv[1])
@@ -75,13 +153,26 @@ fi
 
 if body=$(get "$API_URL/residents/mrs-k"); then
   check_json "GET /residents/mrs-k" "$body" "data.get('id') == 'mrs-k'"
+  check_schema "GET /residents/mrs-k matches schema" "$body" "contracts/resident.schema.json"
 else
   fail "GET /residents/mrs-k: no response"
+fi
+
+# What nurses said about this resident (SPEC Nice to have 8). Smoke never POSTs
+# feedback, so on a fresh stack this is the empty record - which is a real answer
+# and still has to validate, fields and all.
+if body=$(get "$API_URL/residents/mrs-k/feedback"); then
+  check_json "GET /residents/mrs-k/feedback" "$body" \
+    "data.get('resident_id') == 'mrs-k' and isinstance(data.get('answers'), list) and isinstance(data.get('pattern_weights'), dict) and isinstance(data.get('pattern_names'), dict)"
+  check_schema "GET /residents/mrs-k/feedback matches schema" "$body" "contracts/resident_feedback.schema.json"
+else
+  fail "GET /residents/mrs-k/feedback: no response"
 fi
 
 if body=$(get "$API_URL/handoff"); then
   check_json "GET /handoff" "$body" \
     "data.get('window_hours') == 12 and isinstance(data.get('residents'), list) and data['residents'] and isinstance(data.get('summary'), str) and data['summary']"
+  check_schema "GET /handoff matches schema" "$body" "contracts/handoff.schema.json"
 else
   fail "GET /handoff: no response"
 fi
@@ -135,6 +226,7 @@ alert_body=""
 if [ -n "$first_alert_id" ]; then
   if alert_body=$(get "$API_URL/alerts/$first_alert_id"); then
     pass "GET /alerts/$first_alert_id"
+    check_schema "GET /alerts/$first_alert_id matches schema" "$alert_body" "contracts/alert_detail.schema.json"
   else
     fail "GET /alerts/$first_alert_id: no response"
   fi
@@ -142,14 +234,31 @@ else
   fail "GET /alerts/<first id>: no alert id to test (empty /alerts, or /alerts failed)"
 fi
 
+dashboard_body=""
 if body=$(get "$DASHBOARD_URL"); then
   if printf '%s' "$body" | grep -qi '<html'; then
     pass "GET $DASHBOARD_URL -> HTML"
   else
     fail "GET $DASHBOARD_URL: response did not look like HTML"
   fi
+  dashboard_body="$body"
 else
   fail "GET $DASHBOARD_URL: no response (is 'scripts/dev.sh up' running?)"
+fi
+
+# Vite's dev server falls back to serving index.html for any unknown path, so
+# a landing page that's gone missing from the build still answers 200 with
+# HTML; compare against $dashboard_body (the dashboard's own response, above)
+# to tell a real landing page apart from that fallback.
+if body=$(get "$DASHBOARD_URL/landing.html"); then
+  if printf '%s' "$body" | grep -qi '<html' && printf '%s' "$body" | grep -q 'Routine Watch' \
+    && [ "$body" != "$dashboard_body" ]; then
+    pass "GET $DASHBOARD_URL/landing.html -> HTML"
+  else
+    fail "GET $DASHBOARD_URL/landing.html: response did not look like the landing page"
+  fi
+else
+  fail "GET $DASHBOARD_URL/landing.html: no response (is 'scripts/dev.sh up' running?)"
 fi
 
 replay_args=""
@@ -186,9 +295,24 @@ fi
 
 if body=$(get "$API_URL/monitoring"); then
   check_json "GET /monitoring -> $body" "$body" "isinstance(data.get('paused_rooms'), list)"
+  check_schema "GET /monitoring matches schema" "$body" "contracts/monitoring.schema.json"
 else
   fail "GET /monitoring: no response"
 fi
+
+if [ -n "$demo_room" ]; then
+  if body=$(get "$API_URL/rooms/$demo_room/monitoring/history"); then
+    check_json "GET /rooms/$demo_room/monitoring/history" "$body" "data.get('room') == sys.argv[2]" "$demo_room"
+    check_schema "GET /rooms/$demo_room/monitoring/history matches schema" "$body" "contracts/room_monitoring_history.schema.json"
+  else
+    fail "GET /rooms/$demo_room/monitoring/history: no response"
+  fi
+else
+  echo "SKIP: GET /rooms/<room>/monitoring/history (no demo_room)"
+fi
+
+live_message_ws_url="${API_URL/http/ws}/ws/live?scenario=tea_skip_teabag_pour_twice&speed=20"
+check_live_message_schema "first /ws/live message matches schema" "$live_message_ws_url" "contracts/live_message.schema.json"
 
 if body=$(curl "${CURL_OPTS[@]}" -X PUT -H 'Content-Type: application/json' -d '{"on": false}' "$API_URL/rooms/$demo_room/monitoring" 2>/dev/null); then
   pass "PUT /rooms/$demo_room/monitoring on=false -> $body"

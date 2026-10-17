@@ -52,7 +52,8 @@ twice a second of session time is near enough for a task map at a tenth of the c
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, AsyncIterator, Iterable, Sequence
+import threading
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -60,6 +61,7 @@ from typing import Any
 from .contracts import CaptureFrame, StepEvent, TaskError
 from .errors import classify_errors
 from .live import MAX_FRAME_FPS, StepState, step_states
+from .quality import session_quality
 from .recogniser import FLICKER_GAP_S, _Scene, _scenes, _spans, recognise
 from .replay import Expected, ReplayError, Scenario, score_session
 from .tasks import TaskGraph, load_task
@@ -70,6 +72,18 @@ STAGE = "live_camera"
 #: over the whole session, so this is what keeps a long session cheap; a step arrives at
 #: most this late, which a task map does not notice.
 REREAD_EVERY_S = 0.5
+
+#: Close code for `?source=camera` when there is no camera session to be had: no camera
+#: at that index, no `capture` extra, no MediaPipe bundles, or a camera that opened and
+#: saw nothing. 4000-4999 is the application's own range, and the dashboard reads any
+#: close before the first message as "fall back to the recorded demo" (SPEC section 10).
+CAMERA_UNAVAILABLE = 4503
+
+#: How many records may be waiting to be read before the camera starts dropping the
+#: newest ones: about two seconds at `capture.DEFAULT_FPS`. A live view is better off
+#: current than complete, and the reading is of the whole session so far, so a session
+#: long enough to read slowly is exactly the one that must not also fall behind.
+MAX_PENDING_FRAMES = 30
 
 
 async def camera_session_messages(
@@ -147,7 +161,7 @@ async def camera_session_messages(
     for message in sent.reading(events, final):
         yield message
 
-    score, _, flag = score_session(_as_session(graph, records, events, session_id), final)
+    score, _, flag = score_session(_as_session(graph, records, events, session_id), final, events)
     yield {
         "type": "session_end",
         # The finished session's errors, the same authoritative list `live`'s
@@ -156,6 +170,12 @@ async def camera_session_messages(
         "score": score,
         "flag": flag,
         "alert_id": f"alert-{session_id}" if flag else None,
+        # Whether the camera saw enough of it to be scored at all (SPEC section 12): a
+        # walker, a blocked view or a dim kitchen reads as `unclear`, which is the one
+        # thing a live session can say about its own capture and the reason the score
+        # beside it is 0.0. `live.session_messages` sends the same field off the same
+        # rule, so neither path can say more about a recording than the other.
+        "quality": session_quality(events),
     }
 
 
@@ -276,6 +296,80 @@ def _as_session(
         frames=tuple(records),
         events=tuple(events),
     )
+
+
+async def frames_in_thread(
+    open_frames: Callable[[], Iterator[CaptureFrame]],
+    *,
+    max_pending: int = MAX_PENDING_FRAMES,
+) -> AsyncIterator[CaptureFrame]:
+    """A blocking capture stream as an async one, read on a thread of its own.
+
+    `open_frames` is called once, on that thread, and must return the records as they
+    are read - `capture.camera_frames` is the one that matters. Opening a camera and
+    reading a frame off it both block for as long as the camera feels like, and MediaPipe
+    is a tenth of a second of arithmetic per frame, so none of it can happen on the event
+    loop: the API would stop answering for the length of the session. This is the seam
+    between the two, and `camera_session_messages` takes what comes out of it::
+
+        frames = frames_in_thread(lambda: camera_frames(0))
+        async for message in camera_session_messages(frames):
+            ...
+
+    Whatever `open_frames` raises is raised here instead, at the record it happened on,
+    so a camera that will not open reads as `CaptureError` on the first `__anext__` -
+    which is how `/ws/live?source=camera` knows to close rather than stream nothing.
+
+    **Closing this closes the camera.** The thread is asked to stop as soon as the
+    consumer stops reading (the socket closing, mid-session), and the capture stream is
+    closed on the thread itself, which is where the camera was opened: one frame later at
+    worst, nothing is being filmed. The thread is a daemon so a camera blocked on a frame
+    that never comes cannot hold the API open either.
+
+    A consumer slower than the camera drops records rather than lagging behind it: once
+    `max_pending` are waiting the newest is thrown away. The pipeline reads session time
+    off the records themselves, so a gap costs a little precision and nothing else.
+    """
+    loop = asyncio.get_running_loop()
+    queue: asyncio.Queue[CaptureFrame | BaseException | None] = asyncio.Queue()
+    stop = threading.Event()
+
+    def hand_over(item: CaptureFrame | BaseException | None) -> None:
+        """One record (or the exception, or the end) over to the event loop."""
+        try:
+            loop.call_soon_threadsafe(queue.put_nowait, item)
+        except RuntimeError:
+            stop.set()  # the loop has closed: there is nobody left to read this
+
+    def read() -> None:
+        frames: Iterator[CaptureFrame] | None = None
+        try:
+            frames = open_frames()  # the camera is opened here, never on the event loop
+            for frame in frames:
+                if stop.is_set():
+                    return
+                if queue.qsize() < max_pending:
+                    hand_over(frame)
+        except BaseException as exc:  # every one of them is raised again on the far side
+            hand_over(exc)
+        finally:
+            close = getattr(frames, "close", None)
+            if close is not None:
+                close()  # the camera is released here, on the thread that opened it
+            hand_over(None)
+
+    thread = threading.Thread(target=read, name="routine-watch-capture", daemon=True)
+    thread.start()
+    try:
+        while True:
+            item = await queue.get()
+            if item is None:
+                return  # the stream is over, which for a camera is the human stopping it
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+    finally:
+        stop.set()
 
 
 async def _streamed(

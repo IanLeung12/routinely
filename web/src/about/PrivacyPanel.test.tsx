@@ -5,7 +5,7 @@ import { PrivacyPanel } from './PrivacyPanel.tsx'
 afterEach(cleanup)
 
 describe('PrivacyPanel', () => {
-  it('labels the section with its heading and renders all six statements verbatim', () => {
+  it('labels the section with its heading and renders all seven statements verbatim', () => {
     render(<PrivacyPanel />)
 
     const section = screen.getByRole('region', { name: 'Privacy and limits' })
@@ -16,7 +16,8 @@ describe('PrivacyPanel', () => {
       'It flags a change for a nurse to review. It is not a medical assessment.',
       'Low-confidence moments are shown as unclear, never counted as errors.',
       'Pose tracking is less accurate with walkers, wheelchairs and unusual postures.',
-      'Residents or their decision-maker opt in, and monitoring can be turned off per room.',
+      "Residents or their decision-maker opt in; who consented and when is shown on each resident's page.",
+      'Monitoring can be paused per room; every pause and resume is logged with who and when.',
     ])
     expect(section.textContent).not.toMatch(/diagnos/i)
   })

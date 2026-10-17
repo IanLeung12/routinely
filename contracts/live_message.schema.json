@@ -341,6 +341,15 @@
           ],
           "description": "The alert that flag shows up in, or null when nothing is flagged.",
           "title": "Alert Id"
+        },
+        "quality": {
+          "description": "Whether enough of this session's capture could be read to score it (SPEC section 12). 'unclear' - a walker, a blocked view, bad lighting - is never an error: the session is neither scored nor counted towards a flag, so the screen says the capture was unclear instead of showing it as a clean session.",
+          "enum": [
+            "ok",
+            "unclear"
+          ],
+          "title": "Quality",
+          "type": "string"
         }
       },
       "required": [
@@ -348,7 +357,8 @@
         "errors",
         "score",
         "flag",
-        "alert_id"
+        "alert_id",
+        "quality"
       ],
       "title": "LiveSessionEnd",
       "type": "object"

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`).\n\nThe state the room is in now, echoed back so the dashboard draws what the server\nbelieves rather than what it just sent.",
+  "properties": {
+    "room": {
+      "minLength": 1,
+      "title": "Room",
+      "type": "string"
+    },
+    "on": {
+      "description": "True when the room is being monitored, false when a nurse has paused it.",
+      "title": "On",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "room",
+    "on"
+  ],
+  "title": "RoomMonitoring",
+  "type": "object"
+}

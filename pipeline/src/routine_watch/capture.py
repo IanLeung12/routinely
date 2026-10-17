@@ -15,6 +15,10 @@ the detector only ever runs locally from downloaded weights, never hosted infere
 The output file is exactly what `routine_watch.replay` and the scenarios read, so a
 recording made here can be replayed through the whole pipeline with no camera.
 
+`camera_frames` is the same stream without the file in the middle: `/ws/live?source=camera`
+reads it on a background thread and plays it through the pipeline as it arrives
+(`routine_watch.live_camera`, `scripts/camera.sh`), optionally keeping the records too.
+
 Three pieces, each behind an interface with a fake default, so the module is importable
 and testable with none of the heavy dependencies installed:
 
@@ -95,6 +99,10 @@ _MODEL_URLS = {
 
 #: Where the local detector's weights are, when no `--weights` is given.
 WEIGHTS_ENV = "DETECTOR_WEIGHTS"
+
+#: Where a live camera session also writes its records, when it is asked to keep them
+#: (`scripts/camera.sh --record`). Records, never video.
+RECORD_ENV = "CAMERA_RECORD"
 
 #: A video file claiming a frame rate outside this is lying; fall back to `--fps`.
 _SANE_FPS = (1.0, 240.0)
@@ -285,6 +293,61 @@ class _Counts:
     last_t: float = 0.0
 
 
+def frame_stream(
+    images: Iterable[tuple[float, Any]],
+    *,
+    landmarker: Landmarker,
+    detector: Detector,
+    source: CaptureSource | str,
+    session_id: str,
+    limit: int | None = None,
+) -> Iterator[CaptureFrame]:
+    """One record per frame, handed over as the frame is read and then dropped.
+
+    `images` yields `(t, image)` pairs: seconds since the session started, and whatever
+    the landmarker and detector take. The camera, a video file and the fakes in tests
+    all go through here, so this is the loop that keeps the privacy promise - each frame
+    is read by the two models, turned into a record, and dropped before the next one.
+    There is no path from here to an image, because `CaptureFrame` has no field that
+    could hold one (SPEC section 8).
+
+    Two readers: `record_stream` writes the records to disk, and a live session reads
+    them as they arrive (`routine_watch.live_camera`, via `camera_frames`). Both see the
+    same records in the same order, which is what makes a live session and a replay of
+    the recording it wrote agree.
+    """
+    for seq, (t, image) in enumerate(images):
+        if limit is not None and seq >= limit:
+            return
+        seen = landmarker.landmark(image, t)
+        detections = detector.detect(image)
+        del image  # the frame is gone from here on; only the record survives
+
+        yield frame_record(
+            t, seen.poses, seen.hands, detections, source, session_id=session_id, seq=seq
+        )
+
+
+def recorded(frames: Iterable[CaptureFrame], out: Path) -> Iterator[CaptureFrame]:
+    """`frames`, with each record also written to `out` as one JSONL line.
+
+    What that file holds is exactly what `routine_watch.replay` and the scenarios read,
+    so a live camera session kept this way can be replayed through the whole pipeline
+    afterwards with no camera (`scripts/camera.sh --record`). Records only - landmarks,
+    boxes and timestamps - because that is all a record can hold (SPEC section 8).
+
+    Lines are flushed as they are written so the live view can tail the file, and the
+    file is closed when the stream ends, whether that is the last frame, a Ctrl-C or a
+    reader that stopped reading.
+    """
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8", buffering=1) as handle:
+        for frame in frames:
+            handle.write(frame.model_dump_json() + "\n")
+            yield frame
+
+
 def record_stream(
     images: Iterable[tuple[float, Any]],
     out: Path,
@@ -297,38 +360,29 @@ def record_stream(
 ) -> CaptureResult:
     """Write one JSONL record per frame, then forget the frame.
 
-    `images` yields `(t, image)` pairs: seconds since the session started, and whatever
-    the landmarker and detector take. The camera, a video file and the fakes in tests
-    all go through here, so this is the loop that keeps the privacy promise - each frame
-    is read by the two models, turned into a record, and dropped before the next one.
-
-    Lines are flushed as they are written so the live view can tail the file, and Ctrl-C
-    ends the recording cleanly with everything so far on disk.
+    `frame_stream` read into `recorded`, which is the capture process's whole job, plus
+    the summary it prints. Ctrl-C ends the recording cleanly with everything so far on
+    disk.
     """
-    out.parent.mkdir(parents=True, exist_ok=True)
     counts = _Counts()
-    with out.open("w", encoding="utf-8", buffering=1) as handle:
-        try:
-            for seq, (t, image) in enumerate(images):
-                if limit is not None and seq >= limit:
-                    break
-                seen = landmarker.landmark(image, t)
-                detections = detector.detect(image)
-                del image  # the frame is gone from here on; only the record survives
-
-                record = frame_record(
-                    t, seen.poses, seen.hands, detections, source, session_id=session_id, seq=seq
-                )
-                handle.write(record.model_dump_json() + "\n")
-
-                counts.frames += 1
-                counts.with_people += bool(seen.poses)
-                counts.with_objects += bool(detections)
-                if counts.first_t is None:
-                    counts.first_t = record.t
-                counts.last_t = record.t
-        except KeyboardInterrupt:
-            pass  # the human stopped the recording; what is written is still a session
+    stream = frame_stream(
+        images,
+        landmarker=landmarker,
+        detector=detector,
+        source=source,
+        session_id=session_id,
+        limit=limit,
+    )
+    try:
+        for record in recorded(stream, out):
+            counts.frames += 1
+            counts.with_people += bool(record.poses)
+            counts.with_objects += bool(record.objects)
+            if counts.first_t is None:
+                counts.first_t = record.t
+            counts.last_t = record.t
+    except KeyboardInterrupt:
+        pass  # the human stopped the recording; what is written is still a session
 
     return CaptureResult(
         session_id=session_id,
@@ -355,6 +409,24 @@ def model_path(explicit: str | Path | None, env_var: str, default: str) -> Path:
         return candidate
     from_root = repo_root() / candidate
     return from_root if from_root.exists() else candidate
+
+
+def missing_models() -> dict[Path, str]:
+    """The MediaPipe task bundles this machine has not got yet, and where to get them.
+
+    Keyed by where each bundle belongs - `MEDIAPIPE_POSE_MODEL` / `MEDIAPIPE_HAND_MODEL`
+    when they are set, `models/` otherwise - with its download URL: free, no key, no
+    credits, and not in git. Empty once both are there, which is what lets
+    `scripts/camera.sh` download them every run without downloading them twice.
+    """
+    return {
+        path: _MODEL_URLS[default]
+        for default, env_var in (
+            (DEFAULT_POSE_MODEL, POSE_MODEL_ENV),
+            (DEFAULT_HAND_MODEL, HAND_MODEL_ENV),
+        )
+        if not (path := model_path(None, env_var, default)).is_file()
+    }
 
 
 def _model_file(explicit: str | Path | None, env_var: str, default: str) -> Path:
@@ -551,6 +623,74 @@ def default_session_id(source: CaptureSource, now: datetime | None = None) -> st
     return f"{source.value}-{stamp}"
 
 
+def _env_int(name: str, fallback: int) -> int:
+    """An int from the environment, ignoring anything that is not one."""
+    try:
+        return int(os.environ[name])
+    except (KeyError, ValueError):
+        return fallback
+
+
+def weights_path(explicit: str | Path | None = None) -> Path | None:
+    """Where the local detector's weights are: the argument, then `DETECTOR_WEIGHTS`,
+    then nowhere.
+
+    Nowhere is a real answer and the default one: `build_detector` reads it as
+    `FakeDetector`, so capture runs with no object detector at all and the session has
+    skeletons and hands in it but no objects (`routine_watch.detector`).
+    """
+    chosen = explicit if explicit is not None else os.environ.get(WEIGHTS_ENV)
+    return Path(chosen).expanduser() if chosen else None
+
+
+def camera_frames(
+    index: int = 0,
+    *,
+    fps: float | None = None,
+    weights: str | Path | None = None,
+    pose_model: str | Path | None = None,
+    hand_model: str | Path | None = None,
+    session_id: str | None = None,
+    record: str | Path | None = None,
+    limit: int | None = None,
+) -> Iterator[CaptureFrame]:
+    """This machine's camera as a stream of records, for a live session to read.
+
+    The other half of `run`: the same frames, the same two models and the same records,
+    handed to a reader as they are made instead of written to a file.
+    `/ws/live?source=camera` reads this on a background thread
+    (`routine_watch.live_camera.frames_in_thread`) and plays it through the pipeline, so
+    the dashboard shows the kitchen it is pointed at.
+
+    `fps`, `weights` and `record` fall back to `CAPTURE_FPS`, `DETECTOR_WEIGHTS` and
+    `CAMERA_RECORD` from the environment, which is how `scripts/camera.sh` configures the
+    API it starts. With no weights the detector is `FakeDetector`: skeleton and hands
+    still stream, there are just no object boxes for the recogniser to read steps from.
+    With `record` every record is also written there as JSONL, which makes the session
+    replayable offline afterwards - records, never video (SPEC section 8).
+
+    The camera and MediaPipe are opened on the first record and raise `CaptureError`
+    there - no camera at that index, no `capture` extra, no task bundles - so a reader
+    can tell "there is no camera here" from "the session ended". Both are let go of when
+    the stream is closed, which is as soon as the dashboard's socket closes.
+    """
+    detector = build_detector(weights_path(weights))  # bad weights before MediaPipe starts
+    landmarker = MediaPipeLandmarker(pose_model=pose_model, hand_model=hand_model)
+    records = frame_stream(
+        camera_images(index, fps if fps is not None else _env_int("CAPTURE_FPS", DEFAULT_FPS)),
+        landmarker=landmarker,
+        detector=detector,
+        source=CaptureSource.CAMERA,
+        session_id=session_id or default_session_id(CaptureSource.CAMERA),
+        limit=limit,
+    )
+    keep = record if record is not None else (os.environ.get(RECORD_ENV) or None)
+    try:
+        yield from (recorded(records, Path(keep)) if keep else records)
+    finally:
+        landmarker.close()
+
+
 def run(
     source: int | str | Path,
     out: Path,
@@ -599,14 +739,6 @@ def run(
 
 
 # ------------------------------------------------------------------------- the CLI
-
-
-def _env_int(name: str, fallback: int) -> int:
-    """An int from the environment, ignoring anything that is not one."""
-    try:
-        return int(os.environ[name])
-    except (KeyError, ValueError):
-        return fallback
 
 
 def main(argv: list[str] | None = None) -> int:

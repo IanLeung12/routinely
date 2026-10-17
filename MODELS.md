@@ -10,9 +10,9 @@ Score each task 0–2 on: context needed, ambiguity, modules touched, risk (core
 - 7+ or touches `contracts/` or cross-module integration → `heavy`.
 
 ## Flags
-- claude/light: --model sonnet --effort low
-- claude/standard: --model sonnet --effort high
-- claude/heavy: --model opus --effort high
+- claude/light: --disallowedTools Monitor ScheduleWakeup --model sonnet --effort low
+- claude/standard: --disallowedTools Monitor ScheduleWakeup --model sonnet --effort high
+- claude/heavy: --disallowedTools Monitor ScheduleWakeup --model opus --effort high
 - codex/light: -c model_reasoning_effort=low
 - codex/standard: -c model_reasoning_effort=medium
 - codex/heavy: -c model_reasoning_effort=high

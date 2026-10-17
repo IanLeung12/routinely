@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react'
 import type { CaptureFrame } from '../contracts.ts'
 import SkeletonView from '../live/SkeletonView.tsx'
 import Button from '../ui/Button.tsx'
+import './evidence.css'
+import { prefersReducedMotion } from './reducedMotion.ts'
 
 type ReplayPlayerProps = {
   frames: CaptureFrame[]
   autoPlay?: boolean
   fps?: number
-}
-
-function prefersReducedMotion() {
-  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 export function ReplayPlayer({ frames, autoPlay = false, fps = 10 }: ReplayPlayerProps) {
@@ -54,23 +52,25 @@ export function ReplayPlayer({ frames, autoPlay = false, fps = 10 }: ReplayPlaye
       }}
     >
       <SkeletonView frame={frames[current]} />
-      <Button onClick={togglePlay} aria-pressed={playing}>
-        {playing ? 'Pause' : 'Play'}
-      </Button>
-      <input
-        type="range"
-        aria-label="Replay position"
-        aria-valuetext={valueText}
-        min={0}
-        max={last}
-        step={1}
-        value={current}
-        onChange={(event) => {
-          const position = Number(event.target.value)
-          setPlayback({ position, playing: playing && position < last })
-        }}
-      />
-      <output aria-label="Replay time">{time}</output>
+      <div className="replay-player__controls">
+        <Button onClick={togglePlay} aria-pressed={playing}>
+          {playing ? 'Pause' : 'Play'}
+        </Button>
+        <input
+          type="range"
+          aria-label="Replay position"
+          aria-valuetext={valueText}
+          min={0}
+          max={last}
+          step={1}
+          value={current}
+          onChange={(event) => {
+            const position = Number(event.target.value)
+            setPlayback({ position, playing: playing && position < last })
+          }}
+        />
+        <output aria-label="Replay time">{time}</output>
+      </div>
     </div>
   )
 }

@@ -35,11 +35,9 @@ from test_recogniser import (
 
 from routine_watch import live, live_camera
 from routine_watch.capture import (
-    DEFAULT_FPS,
     FakeLandmarker,
     Hand,
     Landmarks,
-    frame_record,
     record_stream,
 )
 from routine_watch.contracts import (
@@ -51,6 +49,7 @@ from routine_watch.contracts import (
     Landmark,
     ObjectDetection,
     ObjectLabel,
+    Pose,
     StepEvent,
     TaskError,
 )
@@ -58,7 +57,7 @@ from routine_watch.detector import FakeDetector
 from routine_watch.live import as_json, session_messages
 from routine_watch.live_camera import camera_session_messages
 from routine_watch.recogniser import recognise
-from routine_watch.replay import ASSISTED_MIN_S, SCENARIOS_DIR, ReplayError
+from routine_watch.replay import SCENARIOS_DIR, ReplayError
 from routine_watch.tasks import TaskGraphError, load_task
 
 #: The make-tea graph is immutable and cached, so every test shares one.
@@ -73,11 +72,6 @@ FAST = 1000.0
 #: resident who has no history to be flagged over either: both ends say nothing flagged,
 #: and what is compared stays the steps, the errors, the map and the score.
 NOBODY = "no-such-resident"
-
-#: Frames at the capture rate for as long as a second person has to stay before the
-#: session counts as assisted (`replay.assisted_of`), and for a moment less than that.
-ASSISTED_FRAMES = int(ASSISTED_MIN_S * DEFAULT_FPS) + 1
-PASSING_FRAMES = int(ASSISTED_MIN_S * DEFAULT_FPS) - 1
 
 #: Every recorded capture stream in the repo: the one scenario written at frame level,
 #: and the recogniser's fixture clips.
@@ -175,12 +169,15 @@ def blank_frame(seq: int, t: float, session: str = "camera-1") -> CaptureFrame:
     )
 
 
-def crowded_frame(seq: int, t: float, people: int = 2) -> CaptureFrame:
-    """A record with `people` people in it, built through the capture boundary itself."""
-    person = [Landmark(x=0.5, y=0.5, z=0.0)] * POSE_LANDMARK_COUNT
-    return frame_record(
-        t, [person] * people, [], [], CaptureSource.CAMERA, session_id="helped-1", seq=seq
-    )
+def crowd(frames: Sequence[CaptureFrame], people: int) -> list[CaptureFrame]:
+    """The same frames, with `people` poses dropped into every one of them.
+
+    Keeps whatever hands and objects the frames already carry, so the steps they
+    recognise as stay real (session_quality, SPEC section 12) - only how many people
+    are in frame changes.
+    """
+    pose = Pose(landmarks=[Landmark(x=0.5, y=0.5, z=0.0)] * POSE_LANDMARK_COUNT, score=0.9)
+    return [frame.model_copy(update={"poses": [pose] * people}) for frame in frames]
 
 
 def hand_on(where: BoundingBox) -> Hand:
@@ -402,14 +399,22 @@ def test_an_async_stream_reads_the_same_as_a_list() -> None:
     assert camera(streamed()) == camera(frames)
 
 
+def unfinished_tea() -> list[CaptureFrame]:
+    """`get_cup`, `fill_kettle` and `boil`, then the recording stops: three real,
+    confident steps (enough to clear `quality.session_quality`'s floor) with the rest
+    of the task left undone, so the session is genuinely incomplete rather than just
+    unclear."""
+    frames = load_frames(RECORDINGS["make_tea"])
+    return [frame for frame in frames if frame.t <= 8.5]
+
+
 def test_a_session_with_two_people_in_frame_is_not_scored() -> None:
     """The verdict is `replay.score_session`'s, frames and all: someone who stays to help
     means the session was assisted, and an assisted session is left out of the resident's
     baseline rather than scored against it (SPEC section 7)."""
-    helped = camera([crowded_frame(seq, seq / DEFAULT_FPS) for seq in range(ASSISTED_FRAMES)])
-    alone = camera(
-        [crowded_frame(seq, seq / DEFAULT_FPS, people=1) for seq in range(ASSISTED_FRAMES)]
-    )
+    unfinished = unfinished_tea()
+    helped = camera(crowd(unfinished, 2))
+    alone = camera(crowd(unfinished, 1))
 
     assert helped[-1]["score"] == 0.0
     assert alone[-1]["score"] > 0.0  # the same session with nobody helping: scored, badly
@@ -419,11 +424,10 @@ def test_someone_passing_through_still_leaves_a_session_scored() -> None:
     """The other half of the same rule: a second person has to stay for `ASSISTED_MIN_S`
     before the session counts as assisted, so a passer-by does not quietly zero a
     resident's session (`replay.assisted_of`)."""
-    passing = [crowded_frame(seq, seq / DEFAULT_FPS) for seq in range(PASSING_FRAMES)]
-    after = [  # they move on; the resident is alone again for the rest of the session
-        crowded_frame(seq, seq / DEFAULT_FPS, people=1)
-        for seq in range(PASSING_FRAMES, ASSISTED_FRAMES * 2)
-    ]
+    unfinished = unfinished_tea()
+    # Under ASSISTED_MIN_S (2.0s) of company, then alone for the rest of the session.
+    passing = crowd([frame for frame in unfinished if frame.t < 1.5], 2)
+    after = crowd([frame for frame in unfinished if frame.t >= 1.5], 1)
 
     assert camera(passing + after)[-1]["score"] > 0.0
 

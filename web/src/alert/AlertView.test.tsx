@@ -5,6 +5,7 @@ import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
 import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { alertText } from './alertText.ts'
+import alertCss from './alert.css?raw'
 import { AlertView } from './AlertView.tsx'
 
 const MRS_K = mockAlerts[0]
@@ -138,7 +139,7 @@ describe('AlertView', () => {
 
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(screen.getByRole('slider', { name: /replay position/i })).toBeTruthy()
-    expect(screen.getByRole('img', { name: /today and usual skeleton replay/i })).toBeTruthy()
+    expect(screen.getByRole('img', { name: /today's routine drawn over the usual routine/i })).toBeTruthy()
     expect(container.querySelectorAll('video, img')).toHaveLength(0)
   })
 
@@ -313,5 +314,61 @@ describe('AlertView', () => {
     const emptyState = await screen.findByText('No change flagged for review.')
     expect(emptyState.className).toBe('empty-state')
     expect(screen.queryByText('Loading alert…')).toBeNull()
+  })
+
+  it('marks the back button, replay evidence and feedback as no-print, keeping the rest printable', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText(MRS_K.summary)
+
+    expect(screen.getByRole('button', { name: /back/i }).className).toContain('no-print')
+
+    const evidenceHeading = screen.getByRole('heading', { name: 'Evidence' })
+    expect(evidenceHeading.closest('.card')?.className).toContain('no-print')
+
+    const feedbackHeading = screen.getByRole('heading', { name: 'Feedback' })
+    expect(feedbackHeading.closest('.card')?.className).toContain('no-print')
+
+    const errorsHeading = screen.getByRole('heading', { name: 'Errors' })
+    expect(errorsHeading.closest('.card')?.className ?? '').not.toContain('no-print')
+
+    const patternsHeading = screen.getByRole('heading', { name: 'Possible patterns' })
+    expect(patternsHeading.closest('.card')?.className ?? '').not.toContain('no-print')
+
+    const checksHeading = screen.getByRole('heading', { name: 'Suggested checks' })
+    expect(checksHeading.closest('.card')?.className ?? '').not.toContain('no-print')
+  })
+
+  it('prints the alert when the Print button is clicked, and hides the button itself', async () => {
+    offline()
+    const printSpy = vi.fn()
+    vi.stubGlobal('print', printSpy)
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText(MRS_K.summary)
+
+    const printButton = screen.getByRole('button', { name: 'Print' })
+    expect(printButton.className).toContain('no-print')
+
+    fireEvent.click(printButton)
+
+    expect(printSpy).toHaveBeenCalledTimes(1)
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (verified against a real Chrome print preview of the Mrs. K
+ * alert for T289: resident, errors, patterns, rule-outs and checks print in black on
+ * white over 1-2 pages, with no dark backgrounds, nav, replay or feedback buttons).
+ * The shared no-print/black-on-white rules moved to print.css in T353; see
+ * print.test.ts. This file keeps the screen-specific app-shell rule. */
+describe('alert.css print layout', () => {
+  it('hides the app shell header and demo banner while an alert is open', () => {
+    const printBlock = alertCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
+    expect(printBlock).toBeTruthy()
+
+    expect(printBlock).toMatch(/\.app:has\(\.alert-view\) > header\s*,/)
+    expect(printBlock).toMatch(/\.app:has\(\.alert-view\) > \.demo-banner\s*\{[^}]*display:\s*none/)
   })
 })

@@ -1,0 +1,21 @@
+.context-timeline,
+.context-record {
+  min-width: 0;
+}
+
+.context-when,
+.context-what,
+.context-note {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .context-timeline .context-record {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

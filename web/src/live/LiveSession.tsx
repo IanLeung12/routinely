@@ -5,6 +5,7 @@ import type { Resident } from '../resident/types.ts'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { ErrorState } from '../ui/ErrorState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
@@ -12,7 +13,7 @@ import { SessionSummary } from './SessionSummary.tsx'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
-import type { LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
+import type { LiveCamera, LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 /** `routine_watch.demo.DEMO_RESIDENT`: whoever is on camera, the live WS always
@@ -56,6 +57,29 @@ function stepLabel(steps: LiveStep[], stepId: string | null | undefined): string
 
 function errorText(steps: LiveStep[], error: TaskError): string {
   return `${describeError(error.type, stepLabel(steps, error.step_id))} · ${formatClock(error.t_start)}`
+}
+
+/** Strips `?source=camera` (and `?camera=`) from the dashboard URL and reloads, landing
+ * back on the recorded scenario this screen otherwise falls back to (T394). A full
+ * reload, not a state change, because the camera is picked once from the URL when the
+ * screen first mounts (`LiveScreen.tsx`). */
+function watchRecordedSession() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('source')
+  url.searchParams.delete('camera')
+  window.location.assign(url.toString())
+}
+
+/** The verdict for a finished session, and nothing else. It is a `role="status"` live
+ * region, so anything nested inside it is read out again with the banner text every
+ * time the region updates - which is why the "Open alert" button sits beside it rather
+ * than in it (T376). */
+function FlagBanner({ flag }: { flag: boolean }) {
+  return (
+    <p role="status" className={`live-session__banner live-session__banner--${flag ? 'flagged' : 'clear'}`}>
+      {flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+    </p>
+  )
 }
 
 /** Drives the screen-reader-only live region: one short sentence per step completion,
@@ -104,6 +128,11 @@ function useAnnouncement(
 export type LiveSessionProps = {
   scenario: string
   speed?: number
+  /** Watch this machine's camera instead of the recorded `scenario` (T356): set by
+   * `?source=camera` on the dashboard URL, which `scripts/camera.sh` prints. The API
+   * sends the same messages from either, so only the socket and the two lines below -
+   * the badge and the object-detector note - know the difference. */
+  camera?: LiveCamera | null
   onOpenAlert?: (alertId: string) => void
   /** Called once per `session_end`, so the overview and alerts list can refetch
    * without a page reload (the dashboard has no other source of truth for them). */
@@ -114,11 +143,26 @@ export type LiveSessionProps = {
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
-export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
-  const { steps, frame, states, errors, stepSpan, ended, paused: wsPaused, source, retry } = useLiveSession(
-    scenario,
-    speed,
-  )
+export function LiveSession({
+  scenario,
+  speed = 1,
+  camera = null,
+  onOpenAlert,
+  onSessionEnd,
+}: LiveSessionProps) {
+  const {
+    steps,
+    frame,
+    states,
+    errors,
+    stepSpan,
+    ended,
+    paused: wsPaused,
+    objectsSeen,
+    source,
+    cameraUnavailable,
+    retry,
+  } = useLiveSession(scenario, speed, camera)
   const announcement = useAnnouncement(steps, states, errors, source)
   const resident = useResident(DEMO_RESIDENT_ID)
   const baseline = resident?.baseline ?? null
@@ -179,15 +223,27 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
 
       <SectionHeader
         title="Live session"
-        action={source === 'mock' ? <span className="live-session__mock-badge">Mock data</span> : null}
+        action={
+          source === 'mock' ? (
+            <span className="live-session__mock-badge">Mock data</span>
+          ) : camera ? (
+            <span className="live-session__camera-badge">Live camera</span>
+          ) : null
+        }
       />
 
-      {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
-          `paused` message and closes without playing anything, so say so instead of
-          showing an empty skeleton view and task map. "Check again" reopens the socket,
-          which is how the screen recovers once a nurse turns monitoring back on, without
-          needing a full reload (T266). */}
-      {paused ? (
+      {/* `/ws/live?source=camera` closes with `live_camera.CAMERA_UNAVAILABLE` when no
+          camera on this machine could be read (T356): no message was sent first, so
+          falling back to mock data here would look like a camera is live when there is
+          none. Say so plainly instead, distinct from a dropped connection or an unknown
+          scenario (T394), with a way back to the recorded scenario this screen plays by
+          default. */}
+      {cameraUnavailable ? (
+        <Card>
+          <ErrorState message="No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session." />
+          <Button onClick={watchRecordedSession}>Watch a recorded session</Button>
+        </Card>
+      ) : paused ? (
         <Card>
           <div role="status">
             <EmptyState message={`Monitoring is paused for room ${paused.room}`} />
@@ -206,18 +262,16 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
                 errorCount={errors.length}
                 usualDurationS={baseline?.usual_duration_s}
                 usualErrors={baseline?.usual_errors}
+                quality={ended.quality}
               />
-              <p
-                role="status"
-                className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
-              >
-                {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
-                {ended.flag && ended.alert_id && onOpenAlert && (
-                  <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
-                    Open alert
-                  </button>
-                )}
-              </p>
+              {ended.flag && ended.alert_id && onOpenAlert ? (
+                <div className="live-session__banner-row">
+                  <FlagBanner flag />
+                  <Button onClick={() => onOpenAlert(ended.alert_id as string)}>Open alert</Button>
+                </div>
+              ) : (
+                <FlagBanner flag={ended.flag} />
+              )}
             </>
           )}
 
@@ -230,6 +284,18 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
               <SectionHeader title="Task map" />
               <TaskMap steps={steps} states={states} />
               <TaskMapLegend />
+              {/* A camera whose frames carry no object boxes: the local detector has no
+                  weights to run (`DETECTOR_WEIGHTS`, SPEC section 6.1), and a step is a
+                  hand on an object, so none will ever be recognised. The skeleton view
+                  next to this is still live, so say which half is missing instead of
+                  leaving a task map that looks stuck (T356). */}
+              {camera && frame && !objectsSeen && (
+                <p className="live-session__detector-note" role="status">
+                  Waiting for object detector. The skeleton and hands are live; steps stay
+                  pending until the detector reports the objects in view (set
+                  DETECTOR_WEIGHTS to run it).
+                </p>
+              )}
             </Card>
           </div>
 

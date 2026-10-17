@@ -20,6 +20,7 @@ import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
 import { SuggestedChecks } from './SuggestedChecks.tsx'
+import { TimeOfDayStrip } from './TimeOfDayStrip.tsx'
 import './alert.css'
 
 const HEADING_ID = 'alert-view-heading'
@@ -197,6 +198,9 @@ export function AlertView({
         <Button variant="secondary" onClick={() => { void copySummary(alert) }}>
           Copy summary
         </Button>
+        <Button variant="secondary" className="no-print" onClick={() => window.print()}>
+          Print
+        </Button>
         {copyStatus && <p role="status">{copyStatus}</p>}
 
         {resident !== null && resident.alertId === alertId && resident.records !== null && (
@@ -209,9 +213,10 @@ export function AlertView({
         <Card>
           <AlertSectionHeading title="Errors" />
           <ErrorList errors={alert.errors} onOpen={(error) => onOpenEvidence?.(error)} />
+          <TimeOfDayStrip buckets={alert.errors_by_time_of_day} />
         </Card>
 
-        <Card>
+        <Card className="no-print">
           <AlertSectionHeading title="Evidence" />
           {replay === null || replay.alertId !== alertId ? (
             <Loading label="Loading replay…" />
@@ -235,7 +240,7 @@ export function AlertView({
           <SuggestedChecks checks={alert.suggested_checks} />
         </Card>
 
-        <Card>
+        <Card className="no-print">
           <AlertSectionHeading title="Feedback" />
           <FeedbackButtons
             value={alert.feedback?.verdict ?? null}
@@ -252,7 +257,7 @@ export function AlertView({
 
   return (
     <section className="alert-view" aria-labelledby={heading ? HEADING_ID : undefined}>
-      <button type="button" className="back-button" onClick={onBack}>
+      <button type="button" className="back-button no-print" onClick={onBack}>
         ← Back
       </button>
       {heading}

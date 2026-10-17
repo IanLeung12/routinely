@@ -51,3 +51,15 @@ export type Resident = ResidentSummary & {
   care_records: CareRecord[]
   baseline: Baseline
 }
+
+/** What this resident's nurses have said and the pattern ranking it changed
+ * (`GET /residents/{id}/feedback`, SPEC Nice to have 8): one `FeedbackAnswer` row per
+ * answered alert (answering one again replaces its row), the confidence multipliers
+ * those answers add up to - anything missing is unweighted, i.e. 1.0 - and how the
+ * pipeline's library names every pattern id they mention, so the card never keeps its
+ * own copy of the library.
+ *
+ * Generated from the pipeline's contracts (`web/src/contracts.ts`) and re-exported
+ * here with the rest of the resident screen's shapes, so a field added on either side
+ * alone fails the dashboard's build. */
+export type { FeedbackAnswer, ResidentFeedback } from '../contracts.ts'

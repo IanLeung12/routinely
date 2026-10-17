@@ -16,9 +16,17 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `live_message.schema.json` | one message on the live WebSocket (`/ws/live`): a `oneOf` keyed on `type` over `session_start`, `step_state`, `frame`, `step`, `error`, `session_end` and `paused` (SPEC section 16, decision B) |
 | `resident_summary.schema.json` | one row of the unit overview (`GET /residents`): status chip, the pattern the change is consistent with, sparkline (SPEC section 9, screen 1) |
 | `resident.schema.json` | one resident in full (`GET /residents/{id}`): that row plus consent, sessions, care records and baseline (SPEC section 9, screen 2) |
+| `resident_drift.schema.json` | one resident's slow trend (`GET /residents/{id}/drift`): the robust slope behind the drift card, the days of their own history it is read over, and whether it is worth a look (SPEC section 8) |
+| `resident_feedback.schema.json` | what this resident's nurses said (`GET /residents/{id}/feedback`): every answer on her alerts newest first, the pattern weights they add up to, and the name the library shows each of those pattern ids under (SPEC Nice to have 8) |
 | `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
 | `alert_detail.schema.json` | an alert as a route answers it (`GET /alerts/{id}`, and each row of `GET /alerts`): the `alert` record with `patterns` and `feedback` always sent and the resident's feedback-tuned threshold applied |
+| `pattern_library_entry.schema.json` | one entry of the pattern library (`GET /patterns`): signals and weights, time profile, what to rule out, urgency and where the pattern comes from - the rule, not a verdict on a resident (SPEC section 7.5) |
+| `session_replay.schema.json` | one window of a session's skeleton replay (`GET /sessions/{id}/replay`): the capture frames the evidence view plays, never video (SPEC section 8) |
+| `normal_replay.schema.json` | the same window from a normal session (`GET /residents/{id}/normal_replay`): the ghost layer the evidence view lays under it |
 | `feedback.schema.json` | the body of `POST /alerts/{id}/feedback`: the nurse's verdict, an optional note, and the optional answer to "what was it?" (SPEC section 5, MVP 7 and 8) |
+| `monitoring.schema.json` | every room whose monitoring a nurse has paused (`GET /monitoring`): the state behind the dashboard's pause switches (SPEC section 12) |
+| `room_monitoring.schema.json` | one room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`): the room and whether it is on now |
+| `room_monitoring_history.schema.json` | one room's audit trail (`GET /rooms/{room}/monitoring/history`): who paused or resumed it and when, newest first (SPEC section 12) |
 | `examples/capture.jsonl` | four sample frames in the capture format; made-up landmark numbers, real shape |
 
 Each schema is standalone (nested types are repeated in its `$defs`), so a validator
@@ -33,20 +41,35 @@ an envelope around the contracts above. The pipeline sends a session's messages
 every message it sends against the schema, and fails if either side knows a message
 the other does not.
 
-The last three are HTTP payloads rather than records: what a route answers with,
-built by `pipeline/src/routine_watch/demo.py` and `handoff.py` and served by
-`api.py`. The dashboard mirrors them by hand too (`web/src/overview/types.ts`,
-`web/src/handoff/types.ts`), so again nothing is generated for the web side and the
-schema is what both sides are held to:
-`pipeline/tests/test_api_payload_contracts.py` calls all three routes - every demo
-resident, one with a live session in their history, a handoff with a room paused -
-and validates what comes back.
+Everything from `resident_summary.schema.json` down is an HTTP payload rather than
+a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
+`drift.py`, `feedback.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and
+`monitoring.py` and served by `api.py` and its route modules, plus the one body that
+travels the other way. Eight of them are generated for the web side as well
+(`WEB_PAYLOADS`): `resident_drift`, `resident_feedback`, `pattern_library_entry`,
+`session_replay`, `normal_replay`, `resident_summary`, `handoff` and the monitoring
+audit trail's `monitoring_change` are TypeScript types in `web/src/contracts.ts`,
+which the dashboard imports (`web/src/resident/api.ts`, `web/src/resident/types.ts`,
+`web/src/patterns/types.ts`, `web/src/evidence/api.ts`,
+`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+`web/src/about/monitoringApi.ts`), so changing one of those fields breaks its build.
+The rest the dashboard still mirrors by hand (`web/src/alert/api.ts`) or reads
+through a record's own generated type (`alert_detail` through `Alert`, `resident`
+through `resident_summary`), so for those the schema is what both sides are held to.
+Either way,
+`pipeline/tests/test_api_payload_contracts.py` calls every one of those routes -
+every demo resident, one with a live session in their history, every resident's
+drift, every resident's feedback record before and after a nurse answers, a handoff
+with a room paused, an alert before and after a nurse answers it, every pattern in
+the library, the replay window behind a real alert's first error in both layers, and
+a room paused and resumed - and validates what comes back.
 
 ## Changing them
 
 `pipeline/src/routine_watch/contracts.py` is the source of truth: `CONTRACTS` for the
 records, `PROTOCOLS` for the live socket, `PAYLOADS` for what the HTTP routes answer
-with, `REQUESTS` for what the dashboard posts back. The schemas, the sample JSONL and
+with, `REQUESTS` for what the dashboard posts back, and `WEB_PAYLOADS` for which of
+the payloads get a TypeScript type too. The schemas, the sample JSONL and
 `web/src/contracts.ts` are generated from the pydantic models there:
 
 ```sh

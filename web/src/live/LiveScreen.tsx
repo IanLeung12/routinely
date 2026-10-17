@@ -4,14 +4,29 @@ import { LiveSession } from './LiveSession.tsx'
 import type { LiveSessionEnded } from './useLiveSession.ts'
 import './liveScreen.css'
 
-/** The two recorded tasks a judge can watch. SPEC section 5, Nice to have 4 asks for
- * "a second task, such as getting dressed or taking medication with water, to show it
+/** The two tasks a judge can watch. SPEC section 5, Nice to have 4 asks for "a second
+ * task, such as getting dressed or taking medication with water, to show it
  * generalises": both options below run the same graph, error, score and flag chain off
- * their own task file, so the only difference between them is the scenario name. */
-const TASKS: { scenario: string; label: string }[] = [
-  { scenario: 'tea_skip_teabag_pour_twice', label: 'Making tea' },
-  { scenario: 'meds_skip_water', label: 'Medication with water' },
+ * their own task file, so the only difference between them is which recording to play -
+ * or, on a camera, which graph to read the kitchen against (`task`). */
+const TASKS: { scenario: string; task: string; label: string }[] = [
+  { scenario: 'tea_skip_teabag_pour_twice', task: 'tea', label: 'Making tea' },
+  { scenario: 'meds_skip_water', task: 'meds', label: 'Medication with water' },
 ]
+
+/** Which camera the Live screen is pointed at, from the dashboard URL: `?source=camera`
+ * turns it on and `?camera=N` picks the device, 0 being the laptop's own. `null` - no
+ * `?source=camera` - plays the recorded scenario, which is the demo's own path and the
+ * fallback for a camera that fails (SPEC section 10). `scripts/camera.sh` starts the
+ * stack and prints the URL; `docs/DEMO.md` has the whole run. */
+function cameraIndexFrom(search: string): number | null {
+  const params = new URLSearchParams(search)
+  if (params.get('source') !== 'camera') {
+    return null
+  }
+  const index = Number.parseInt(params.get('camera') ?? '', 10)
+  return Number.isNaN(index) || index < 0 ? 0 : index
+}
 
 export type LiveScreenProps = {
   onOpenAlert?: (alertId: string) => void
@@ -21,10 +36,11 @@ export type LiveScreenProps = {
 /** Screen 3's task picker (SPEC section 9): the live session, with a switch above it for
  * which routine to watch. Tea is the demo path and stays the default. */
 export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
-  const [scenario, setScenario] = useState(() => {
+  const [watching, setWatching] = useState(() => {
     const task = new URLSearchParams(window.location.search).get('task')
-    return task === 'meds' ? TASKS[1].scenario : TASKS[0].scenario
+    return task === 'meds' ? TASKS[1] : TASKS[0]
   })
+  const [cameraIndex] = useState(() => cameraIndexFrom(window.location.search))
   const labelId = useId()
 
   return (
@@ -34,13 +50,13 @@ export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
           Routine to watch
         </p>
         {TASKS.map((task) => {
-          const active = task.scenario === scenario
+          const active = task.scenario === watching.scenario
           return (
             <Button
               key={task.scenario}
               variant={active ? 'primary' : 'secondary'}
               aria-pressed={active}
-              onClick={() => setScenario(task.scenario)}
+              onClick={() => setWatching(task)}
             >
               {task.label}
             </Button>
@@ -51,8 +67,9 @@ export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
       {/* `key` starts the picked routine from scratch: a fresh socket, an empty task map,
           and `onSessionEnd` free to fire again for the second task. */}
       <LiveSession
-        key={scenario}
-        scenario={scenario}
+        key={watching.scenario}
+        scenario={watching.scenario}
+        camera={cameraIndex === null ? null : { index: cameraIndex, task: watching.task }}
         onOpenAlert={onOpenAlert}
         onSessionEnd={onSessionEnd}
       />

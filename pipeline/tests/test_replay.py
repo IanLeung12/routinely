@@ -167,6 +167,26 @@ def test_tea_skip_teabag_pour_twice_flags_the_two_errors() -> None:
     # A second session above this resident's own threshold inside 48 h.
     assert result["flag"] is True
     assert result["baseline"]["threshold"] < result["score"]
+    assert result["quality"] == "ok"
+
+
+def test_an_unclear_session_never_scores_or_flags() -> None:
+    """SPEC section 12: a session hard to read (bad lighting, a walker) must not push
+    a resident toward a flag just because recognition could not keep up with it -
+    the same history that flags a clean read must not flag an unclear one."""
+    scenario = load_scenario(SCENARIOS_DIR / "tea_skip_teabag_pour_twice")
+
+    # Three of the seven events unclear or low-confidence: over the 40% threshold.
+    unclear_events = tuple(
+        event.model_copy(update={"unclear": True, "confidence": 0.2})
+        if event.step_id in ("fill_kettle", "boil", "get_cup")
+        else event
+        for event in scenario.events
+    )
+    result = run(replace(scenario, events=unclear_events))
+    assert result["quality"] == "unclear"
+    assert result["score"] == 0.0
+    assert result["flag"] is False
 
 
 def test_tea_no_kettle_comes_from_capture_frames() -> None:

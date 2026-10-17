@@ -1,18 +1,30 @@
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Two pages: the nurse's dashboard at `/` and the public landing page at
+    // `/landing.html` (T378). Keeping the landing page in its own entry means a
+    // change to it can't break the demo path, and vice versa.
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('index.html', import.meta.url)),
+        landing: fileURLToPath(new URL('landing.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
-    // Load the live-session, overview, alert and resident stylesheets into jsdom: the
-    // task map's wrapping layout is testable with getComputedStyle (T120), and the
-    // overview's, alert's and resident detail's phone media queries are readable via
-    // `?raw` (T234, T238, T239 — jsdom doesn't evaluate @media itself, and Vitest stubs
-    // out CSS imports that don't match here even with `?raw`). Other CSS stays stubbed
-    // out, which is both faster and enough: those screens are tested through the DOM.
-    css: { include: [/src\/live\//, /src\/overview\//, /src\/alert\//, /src\/resident\//] },
+    setupFiles: ['src/testSetup.ts'],
+    // Load every stylesheet under src/ into jsdom. Vitest stubs out CSS imports that
+    // don't match this pattern even with `?raw`, so layout tests (getComputedStyle) and
+    // media-query tests (jsdom doesn't evaluate @media, so they read the CSS text) need
+    // it. One pattern instead of a folder list: no task should have to edit this line.
+    // Unanchored on purpose - `?raw` imports arrive as `src/x.css?raw`.
+    css: { include: [/src\/.*\.css/] },
   },
 })

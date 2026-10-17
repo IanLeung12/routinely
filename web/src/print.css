@@ -1,0 +1,23 @@
+/* Shared print rules (T289, T333, T353): nurses bring a flagged alert or a
+   resident's summary to care conferences on paper, so printing either should
+   show the content in black on white - not the dashboard's dark theme, the
+   nav, or anything interactive that has no meaning on paper. `html, body,
+   body *` (not just the screen's own root class) because the dark theme's
+   colours are set on `:root` and inherited by the page canvas in index.css,
+   outside any single component. Screens that need to hide their own
+   app-shell chrome (e.g. the header while a resident or alert is open) keep
+   that one rule in their own CSS file. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  body * {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border-color: #000 !important;
+  }
+}

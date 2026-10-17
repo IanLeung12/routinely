@@ -2,9 +2,31 @@ import type { CaptureFrame } from '../contracts.ts'
 
 const connections = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24]]
 
-function nearest(frames: CaptureFrame[], t: number) {
-  return frames.reduce<CaptureFrame | undefined>((closest, frame) =>
-    !closest || Math.abs(frame.t - t) < Math.abs(closest.t - t) ? frame : closest, undefined)
+/** Which frame of a recording is closest to `t`, or -1 when it has no frames. */
+function nearestIndex(frames: CaptureFrame[], t: number) {
+  return frames.reduce((closest, frame, index) =>
+    closest < 0 || Math.abs(frame.t - t) < Math.abs(frames[closest].t - t) ? index : closest, -1)
+}
+
+/** A recording and which of its frames is on screen; index -1 means it has none. */
+type Layer = { frames: CaptureFrame[], index: number }
+
+/** Where the drawn frame sits in its own recording. Only called with a frame to draw. */
+function position({ frames, index }: Layer) {
+  return `frame ${index + 1} of ${frames.length} at ${frames[index].t.toFixed(1)} s`
+}
+
+/** What the drawing says in words, for a nurse on a screen reader who can't see the two
+ * skeletons: which recordings are drawn over each other, and where in them this frame
+ * sits (web guide: accessible, never colour alone). */
+function comparison(today: Layer, usual: Layer) {
+  if (today.index >= 0 && usual.index >= 0) {
+    return `Today's routine drawn over the usual routine, ${position(today)}`
+  }
+  if (today.index >= 0) {
+    return `Today's routine, with no usual routine to compare it with, ${position(today)}`
+  }
+  return `The usual routine, with nothing recorded today to compare it with, ${position(usual)}`
 }
 
 export default function GhostReplay({ today, normal, t, width = 480, height = 360 }: {
@@ -14,14 +36,19 @@ export default function GhostReplay({ today, normal, t, width = 480, height = 36
   width?: number
   height?: number
 }) {
-  if (today.length === 0 && normal.length === 0) return <p>No skeleton data</p>
+  const layers = {
+    normal: { frames: normal, index: nearestIndex(normal, t) },
+    today: { frames: today, index: nearestIndex(today, t) },
+  }
+  if (layers.today.index < 0 && layers.normal.index < 0) return <p>No skeleton data</p>
 
   return (
-    <figure>
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Today and usual skeleton replay">
+    <figure className="ghost-replay">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={comparison(layers.today, layers.normal)}>
         {(['normal', 'today'] as const).map(layer => {
-          const frame = nearest(layer === 'normal' ? normal : today, t)
-          if (!frame) return null
+          const { frames, index: frameIndex } = layers[layer]
+          if (frameIndex < 0) return null
+          const frame = frames[frameIndex]
           const color = layer === 'normal' ? 'var(--ghost-usual)' : 'var(--ghost-today)'
           return (
             <g key={layer} data-layer={layer} opacity={layer === 'normal' ? 0.4 : 1} fill={color} stroke={color}>

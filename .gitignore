@@ -17,4 +17,6 @@ models/
 .cache/
 .worker.out
 .dev/
+.dev-integration/
 .mergeq-state.json
+.env.bak*

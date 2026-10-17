@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockResidents } from '../mock/residents.ts'
 import overviewCss from './overview.css?raw'
@@ -28,6 +29,7 @@ function rowNames() {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  sessionStorage.clear()
 })
 
 describe('UnitOverview', () => {
@@ -161,11 +163,13 @@ describe('UnitOverview', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
-    expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'All (6)' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
-    expect(screen.getByRole('button', { name: 'Watch' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Watch (3)' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
   })
@@ -181,12 +185,12 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
 
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
-    expect(screen.getByRole('button', { name: 'Flagged' }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Flagged (1)' }).getAttribute('aria-pressed')).toBe(
       'true',
     )
   })
@@ -202,7 +206,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (3)' }).click()
 
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
@@ -220,7 +224,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(noneFlagged.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (0)' }).click()
 
     expect(await screen.findByText('No residents flagged for review.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
@@ -237,7 +241,7 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(noneWatch.length)
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (0)' }).click()
 
     expect(await screen.findByText('No residents to watch.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
@@ -254,12 +258,12 @@ describe('UnitOverview', () => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
 
-    screen.getByRole('button', { name: 'All' }).click()
+    screen.getByRole('button', { name: 'All (6)' }).click()
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
@@ -330,12 +334,12 @@ describe('UnitOverview', () => {
 
     expect(await screen.findByRole('button', { name: 'Paused (0)' })).toBeTruthy()
 
-    screen.getByRole('button', { name: 'Flagged' }).click()
+    screen.getByRole('button', { name: 'Flagged (1)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mrs. K'])
     })
 
-    screen.getByRole('button', { name: 'Watch' }).click()
+    screen.getByRole('button', { name: 'Watch (3)' }).click()
     await waitFor(() => {
       expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
     })
@@ -354,6 +358,64 @@ describe('UnitOverview', () => {
 
     expect(await screen.findByText('No rooms paused.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
+  })
+
+  it('opens a resident with Tab + Enter, keyboard-only', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+    const onSelect = vi.fn()
+    const user = userEvent.setup()
+
+    render(<UnitOverview onSelect={onSelect} />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const mrsKOpen = screen.getByRole('button', { name: /^Open Mrs\. K, room 204/ })
+
+    // Tab through the filter group (All, Flagged, Watch, Paused) to reach the first resident row.
+    for (let i = 0; i < 20 && document.activeElement !== mrsKOpen; i++) {
+      await user.tab()
+    }
+    await waitFor(() => {
+      expect(document.activeElement).toBe(mrsKOpen)
+    })
+
+    await user.keyboard('{Enter}')
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
+    expect(onSelect).toHaveBeenCalledWith('mrs-k')
+  })
+
+  it('activates the Watch status filter with Tab + Space, keyboard-only', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+    const user = userEvent.setup()
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const watchButton = screen.getByRole('button', { name: 'Watch (3)' })
+
+    for (let i = 0; i < 20 && document.activeElement !== watchButton; i++) {
+      await user.tab()
+    }
+    await waitFor(() => {
+      expect(document.activeElement).toBe(watchButton)
+    })
+
+    await user.keyboard(' ')
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
+    })
+    expect(watchButton.getAttribute('aria-pressed')).toBe('true')
   })
 })
 

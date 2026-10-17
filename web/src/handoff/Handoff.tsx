@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { fetchAlerts } from '../alert/api.ts'
+import { fetchMonitoringHistory } from '../about/monitoringApi.ts'
+import type { MonitoringChange } from '../about/monitoringApi.ts'
 import type { Alert } from '../contracts.ts'
 import { fetchResident } from '../resident/api.ts'
 import { formatScore } from '../resident/format.ts'
@@ -12,6 +14,7 @@ import { Loading } from '../ui/Loading.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { fetchHandoff } from './api.ts'
 import type { HandoffResult } from './api.ts'
+import { HandoffDelta, handoffDeltaLabel } from './HandoffDelta.tsx'
 import type { Handoff as HandoffData, HandoffResident, PausedRoom } from './types.ts'
 import './handoff.css'
 
@@ -25,13 +28,28 @@ type Chip = {
   key: string
   label: string
   /** `handoff__chip--` modifier: carries the colour, never the meaning. */
-  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused'
+  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused' | 'unclear'
   /** Decorative, so the row is scannable without reading; the label says it in words. */
   glyph: string
 }
 
 function plural(n: number, noun: string): string {
   return n === 1 ? `${n} ${noun}` : `${n} ${noun}s`
+}
+
+/** "2 sessions too unclear to score - check the camera view", or null when the window
+ * read every session in that room (and when an older or trimmed `/handoff` sent no
+ * count at all, which is not the same as none).
+ *
+ * The room's camera, never the resident: a session too unclear to score is left out
+ * of the resident's history entirely (`pipeline/src/routine_watch/live.py`, SPEC
+ * section 12), so without this line a blocked or badly lit camera makes that room
+ * read as a quiet one. One source for the wording, so the row and a note pasted from
+ * it can't drift apart. Local to this screen: the row's chip and the copied line are
+ * both built here. */
+function unclearLabel(unclearSessions?: number | null): string | null {
+  if (!unclearSessions || unclearSessions <= 0) return null
+  return `${plural(unclearSessions, 'session')} too unclear to score — check the camera view`
 }
 
 function needsReview(resident: HandoffResident): boolean {
@@ -64,6 +82,13 @@ function chipsFor(resident: HandoffResident): Chip[] {
   if (resident.monitoring_paused) {
     chips.push({ key: 'paused', label: 'Monitoring paused', tone: 'paused', glyph: '⏸' })
   }
+  // Grey, the way "unclear" reads everywhere else in the dashboard (SPEC section 7:
+  // never counted as an error), and before the quiet chip: a room whose camera could
+  // not be read is not a room with nothing to say.
+  const unclear = unclearLabel(resident.unclear_sessions)
+  if (unclear) {
+    chips.push({ key: 'unclear', label: unclear, tone: 'unclear', glyph: '◌' })
+  }
   if (chips.length === 0) {
     chips.push({ key: 'quiet', label: 'No change flagged', tone: 'quiet', glyph: '✓' })
   }
@@ -94,12 +119,32 @@ function baselineLine(mean: number | null | undefined): string | null {
   return `Usually ${formatScore(mean)} errors a session`
 }
 
+/** 'HH:MM' in the nurse's own timezone: unlike the resident screens (which read UTC
+ * off the pipeline, SPEC section 9), who paused a room and when is written by a nurse
+ * on this shift, so the time on screen should match their own clock (T281). */
+function formatLocalTime(ts: string): string {
+  const date = new Date(ts)
+  if (Number.isNaN(date.getTime())) return ts
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
 /** One line naming every paused room, or null when nothing was paused (SPEC section
  * 12): a nurse reads this above the rows, so a quiet paused room reads as "nobody was
- * watching" rather than "all quiet". */
-function pausedLine(paused: PausedRoom[] | undefined): string | null {
+ * watching" rather than "all quiet". `pauseDetails` names who paused each room and
+ * when, read from the room's own audit trail (T281); a room missing from it (history
+ * fetch failed or found no pause entry) just keeps today's plain line. */
+function pausedLine(
+  paused: PausedRoom[] | undefined,
+  pauseDetails: Record<string, MonitoringChange | null> = {},
+): string | null {
   if (!paused || paused.length === 0) return null
-  return `Monitoring paused: ${paused.map((room) => `${room.name} (room ${room.room})`).join(', ')}`
+  return `Monitoring paused: ${paused.map((room) => {
+    const change = pauseDetails[room.room]
+    const detail = change ? `, paused by ${change.by} at ${formatLocalTime(change.at)}` : ''
+    return `${room.name} (room ${room.room})${detail}`
+  }).join(', ')}`
 }
 
 /** The one line a nurse reads first, before any row. */
@@ -113,16 +158,29 @@ function headline(residents: HandoffResident[], hours: number): string {
 /** The handoff as plain text, for pasting into a shift note or a message. One line
  * per resident, each naming the room: the text leaves the screen behind, so a nurse
  * reading it elsewhere still knows which door the row is about. */
-export function handoffText(h: HandoffData): string {
-  const paused = pausedLine(h.paused)
+export function handoffText(
+  h: HandoffData,
+  pauseDetails: Record<string, MonitoringChange | null> = {},
+): string {
+  const paused = pausedLine(h.paused, pauseDetails)
   return [
     h.summary,
     ...(paused ? [paused] : []),
-    ...h.residents.map((resident) =>
-      `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
-      + `${plural(resident.pending_review, 'unreviewed alert')}, `
-      + (resident.trending ? 'Error score trending up' : 'No upward trend'),
-    ),
+    ...h.residents.map((resident) => {
+      // The row's own phrase, last: a nurse reading the line elsewhere needs the same
+      // "better or worse than last shift" the screen showed (T324/T350). Nothing is
+      // appended when the payload sent no comparison, so the line stays as it was.
+      const delta = handoffDeltaLabel(resident.flags, resident.previous_flags)
+      // Last, after the counts and the comparison: what the camera could not read is
+      // about the room, so it reads as the note on the end of the line rather than
+      // as one more thing the resident did.
+      const unclear = unclearLabel(resident.unclear_sessions)
+      return `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
+        + `${plural(resident.pending_review, 'unreviewed alert')}, `
+        + (resident.trending ? 'Error score trending up' : 'No upward trend')
+        + (delta ? `, ${delta}` : '')
+        + (unclear ? `, ${unclear}` : '')
+    }),
   ].join('\n')
 }
 
@@ -151,6 +209,9 @@ export function Handoff({
    * it from the resident detail endpoint instead - one fetch per row, fine for the
    * demo's unit size. */
   const [baselines, setBaselines] = useState<Record<string, number | null>>({})
+  /** room -> the newest audit entry that paused it, or null once fetched with none
+   * found. Keyed by room rather than resident, same as `Handoff.paused` (T281). */
+  const [pauseDetails, setPauseDetails] = useState<Record<string, MonitoringChange | null>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -195,6 +256,32 @@ export function Handoff({
   }, [loaded])
 
   useEffect(() => {
+    if (loaded === null) return
+    const paused = loaded.result.handoff.paused ?? []
+    if (paused.length === 0) return
+    let cancelled = false
+    Promise.all(
+      paused.map((room) =>
+        fetchMonitoringHistory(room.room)
+          .then((history) => [room.room, history.find((change) => !change.on) ?? null] as const)
+          .catch(() => [room.room, null] as const),
+      ),
+    ).then((entries) => {
+      if (cancelled) return
+      setPauseDetails((previous) => {
+        const next = { ...previous }
+        for (const [room, change] of entries) {
+          next[room] = change
+        }
+        return next
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loaded])
+
+  useEffect(() => {
     if (copyStatus !== 'Copied') return
     const timeout = window.setTimeout(() => setCopyStatus(''), 2000)
     return () => window.clearTimeout(timeout)
@@ -206,7 +293,7 @@ export function Handoff({
         setCopyStatus('Copy not available')
         return
       }
-      await navigator.clipboard.writeText(handoffText(handoff))
+      await navigator.clipboard.writeText(handoffText(handoff, pauseDetails))
       setCopyStatus('Copied')
     } catch {
       setCopyStatus('Copy not available')
@@ -229,13 +316,23 @@ export function Handoff({
         <Card>
           <SectionHeader title={`Last ${handoff.window_hours} hours`} />
           <p className="handoff__summary">{handoff.summary}</p>
-          <Button variant="secondary" onClick={() => { void copySummary(handoff) }}>
-            Copy summary
-          </Button>
-          {copyStatus && <p role="status">{copyStatus}</p>}
+          {/* Both actions and the copy's own status in one group: a nurse taps these
+              on screen, and none of them say anything on paper, so the whole group is
+              `no-print` (print.css hides it, T353). */}
+          <div className="handoff__actions no-print">
+            <Button variant="secondary" onClick={() => { void copySummary(handoff) }}>
+              Copy summary
+            </Button>
+            {/* Nurses hand off on paper (T203). The browser's own print dialog, so the
+                nurse keeps their printer, page size and "save as PDF". */}
+            <Button variant="secondary" onClick={() => window.print()}>
+              Print handoff
+            </Button>
+            {copyStatus && <p role="status">{copyStatus}</p>}
+          </div>
         </Card>
-        {pausedLine(handoff.paused) && (
-          <p className="handoff__paused">{pausedLine(handoff.paused)}</p>
+        {pausedLine(handoff.paused, pauseDetails) && (
+          <p className="handoff__paused">{pausedLine(handoff.paused, pauseDetails)}</p>
         )}
         {handoff.residents.length === 0 ? (
           <EmptyState message="No residents on this unit yet." />
@@ -264,10 +361,16 @@ export function Handoff({
                       {chip.label}
                     </span>
                   ))}
+                  {/* Beside the counts, not under them: two flagged sessions is good
+                      news after four and bad news after none, so the comparison is
+                      read with the chip that names them (T324). Same chip shape and
+                      the same wrap at phone width, so no new styles. */}
+                  <HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />
                 </span>
                 {onOpenAlert && resident.pending_review > 0 && alertIds[resident.resident_id] && (
                   <Button
                     aria-label={`Open ${resident.name}'s alert`}
+                    className="no-print"
                     onClick={() => onOpenAlert(alertIds[resident.resident_id])}
                   >
                     Open alert
@@ -283,14 +386,14 @@ export function Handoff({
 
   return (
     <section className="handoff" aria-label="Shift handoff">
-      <button type="button" className="back-button" onClick={onBack}>
+      <button type="button" className="back-button no-print" onClick={onBack}>
         ← Back
       </button>
       <h2 className="handoff__title">Shift handoff</h2>
       <p className="handoff__lead">
         Who changed while you were away. Everything here is flagged for a nurse to review.
       </p>
-      <div className="handoff__controls">
+      <div className="handoff__controls no-print">
         <label className="handoff__label" htmlFor="handoff-window">
           Window
         </label>

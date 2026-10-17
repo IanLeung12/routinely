@@ -4,14 +4,12 @@ import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
-import { fetchResidents } from './api.ts'
+import { fetchResidentsWithSource, type ResidentsSource } from './api.ts'
 import './overview.css'
+import { loadOverviewPrefs, saveOverviewPrefs, type UnitFilter } from './overviewPrefs.ts'
+import { ResidentSort, sortResidents, type SortMode } from './ResidentSort.tsx'
 import { Sparkline } from './Sparkline.tsx'
-import type { ResidentSummary, ResidentStatus } from './types.ts'
-
-const STATUS_ORDER: Record<ResidentStatus, number> = { flagged: 0, watch: 1, normal: 2 }
-
-type UnitFilter = 'all' | 'flagged' | 'watch' | 'paused'
+import type { ResidentSummary } from './types.ts'
 
 const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -19,8 +17,14 @@ const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'watch', label: 'Watch' },
 ]
 
-function sortResidents(residents: ResidentSummary[]): ResidentSummary[] {
-  return [...residents].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+function countForFilter(
+  filterId: UnitFilter,
+  residents: ResidentSummary[],
+  pausedRooms: string[],
+): number {
+  if (filterId === 'all') return residents.length
+  if (filterId === 'paused') return pausedRooms.length
+  return residents.filter((resident) => resident.status === filterId).length
 }
 
 function applyFilter(
@@ -61,14 +65,21 @@ export function UnitOverview({
   refreshKey?: number | string
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
-  const [filter, setFilter] = useState<UnitFilter>('all')
+  const [source, setSource] = useState<ResidentsSource>('api')
+  const [filter, setFilter] = useState<UnitFilter>(() => loadOverviewPrefs().filter)
+  const [sortMode, setSortMode] = useState<SortMode>(() => loadOverviewPrefs().sort)
   const [pausedRooms, setPausedRooms] = useState<string[]>([])
 
   useEffect(() => {
+    saveOverviewPrefs({ filter, sort: sortMode })
+  }, [filter, sortMode])
+
+  useEffect(() => {
     let cancelled = false
-    fetchResidents().then((fetched) => {
+    fetchResidentsWithSource().then((fetched) => {
       if (!cancelled) {
-        setResidents(fetched)
+        setResidents(fetched.residents)
+        setSource(fetched.source)
       }
     })
     return () => {
@@ -106,6 +117,11 @@ export function UnitOverview({
 
   return (
     <>
+      {source === 'demo' && (
+        <p role="status" className="overview__demo-notice">
+          Showing demo residents: the Routine Watch service isn't reachable.
+        </p>
+      )}
       <p role="status" className="resident-summary">
         {summarize(residents)}
       </p>
@@ -118,7 +134,7 @@ export function UnitOverview({
             aria-pressed={filter === id}
             onClick={() => setFilter(id)}
           >
-            {label}
+            {`${label} (${countForFilter(id, residents, pausedRooms)})`}
           </Button>
         ))}
         <Button
@@ -127,9 +143,10 @@ export function UnitOverview({
           aria-pressed={filter === 'paused'}
           onClick={() => setFilter('paused')}
         >
-          {`Paused (${pausedRooms.length})`}
+          {`Paused (${countForFilter('paused', residents, pausedRooms)})`}
         </Button>
       </div>
+      <ResidentSort mode={sortMode} onChange={setSortMode} />
       {filtered.length === 0 ? (
         <EmptyState
           message={
@@ -142,7 +159,7 @@ export function UnitOverview({
         />
       ) : (
         <ul className="resident-list">
-          {sortResidents(filtered).map((resident) => {
+          {sortResidents(filtered, sortMode).map((resident) => {
             const paused = pausedRooms.includes(resident.room)
             return (
             <li key={resident.id} className="resident-row">

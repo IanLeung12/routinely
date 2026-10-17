@@ -9,7 +9,7 @@ Rules for staying cheap:
 - Run only the task's test command while working, then `scripts/ci.sh` once before pushing. It must pass (it runs ruff; `uv run --with ruff ruff check --fix .` fixes most lint).
 - Give up after 2 failed attempts instead of looping.
 
-**You are non-interactive: ending your reply ends the session.** Never stop to "wait" for CI; run it in the foreground and finish only when the task is in-review or blocked.
+**You are non-interactive: ending your reply ends the session.** Never stop to "wait" for CI. Never use `run_in_background`, `Monitor` or `ScheduleWakeup`: no notification will arrive. Run `scripts/ci.sh` and `gh pr checks <N> --watch` in the foreground with the Bash tool's max timeout (600000 ms); rerun if it times out. Finish when the task is in-review or blocked; don't wait for the merge.
 
 Steps:
 1. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main` (if the task already has a `pr:`, check out that PR's branch instead and fix it)

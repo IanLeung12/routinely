@@ -167,3 +167,14 @@
     min-width: 0;
   }
 }
+
+/* Print (SPEC section 9 follow-up): the shared black-on-white rules live in
+   print.css. The app shell's title and the demo banner sit outside
+   .alert-view (they're rendered unconditionally in App.tsx), but only need
+   hiding while an alert is actually open for print. */
+@media print {
+  .app:has(.alert-view) > header,
+  .app:has(.alert-view) > .demo-banner {
+    display: none !important;
+  }
+}

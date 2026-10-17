@@ -48,15 +48,41 @@ describe('GhostReplay', () => {
     expect(container.querySelector('[data-layer]')?.getAttribute('data-layer')).toBe(layer)
   })
 
+  it.each([
+    ['today', "Today's routine, with no usual routine to compare it with, frame 1 of 1 at 0.0 s"],
+    ['normal', 'The usual routine, with nothing recorded today to compare it with, frame 1 of 1 at 0.0 s'],
+  ] as const)('says there is nothing to compare when only the %s recording has frames', (layer, label) => {
+    render(<GhostReplay today={layer === 'today' ? [frame(0)] : []} normal={layer === 'normal' ? [frame(0)] : []} t={0} />)
+    expect(screen.getByRole('img', { name: label })).toBeTruthy()
+  })
+
   it('renders a message when neither recording has frames', () => {
     render(<GhostReplay today={[]} normal={[]} t={0} />)
     expect(screen.getByText('No skeleton data')).toBeTruthy()
     expect(screen.queryByRole('img')).toBeNull()
   })
 
-  it('names the drawing for screen readers', () => {
-    render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
-    expect(screen.getByRole('img', { name: 'Today and usual skeleton replay' })).toBeTruthy()
+  it('tells a screen reader what is being compared, and moves the label with the frame', () => {
+    const today = [frame(0), frame(2), frame(4)]
+    const normal = [frame(0), frame(3)]
+    const { rerender } = render(<GhostReplay today={today} normal={normal} t={0} />)
+    const labelAt = () => screen.getByRole('img').getAttribute('aria-label') ?? ''
+
+    const first = labelAt()
+    expect(first).toBe("Today's routine drawn over the usual routine, frame 1 of 3 at 0.0 s")
+
+    rerender(<GhostReplay today={today} normal={normal} t={4} />)
+    const last = labelAt()
+    expect(last).toBe("Today's routine drawn over the usual routine, frame 3 of 3 at 4.0 s")
+    expect(last).not.toBe(first)
+  })
+
+  it('never calls the comparison a diagnosis', () => {
+    for (const [today, normal] of [[[frame(0)], [frame(0)]], [[frame(1)], []], [[], [frame(1)]]]) {
+      const { unmount } = render(<GhostReplay today={today} normal={normal} t={1} />)
+      expect(screen.getByRole('img').getAttribute('aria-label')).not.toMatch(/diagnos/i)
+      unmount()
+    }
   })
 
   it('warns that the body is a stand-in, not tracked motion', () => {

@@ -1,9 +1,17 @@
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchResident } from '../resident/api.ts'
 import type { Resident } from '../resident/types.ts'
-import type { LiveMessage } from './useLiveSession.ts'
 import { LiveSession } from './LiveSession.tsx'
+import {
+  detection,
+  errorMessage,
+  FakeWebSocket,
+  frameMessage,
+  installFakeWebSocket,
+  sessionStart,
+  stepMessage,
+} from './testWebSocket.ts'
 
 vi.mock('../resident/api.ts', () => ({
   fetchResident: vi.fn(),
@@ -35,46 +43,8 @@ const MRS_K: Resident = {
   baseline: { mean: 1, std: 0.5, threshold: 2, usual_duration_s: 170, usual_errors: 1 },
 }
 
-/** Stands in for a real WebSocket (SPEC section 9, screen 3): tests drive it by calling
- * `emit`/`fail` on the latest instance instead of opening a real socket. */
-class FakeWebSocket {
-  static instances: FakeWebSocket[] = []
-  url: string
-  closed = false
-  onmessage: ((event: { data: string }) => void) | null = null
-  onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
-
-  constructor(url: string) {
-    this.url = url
-    FakeWebSocket.instances.push(this)
-  }
-
-  close() {
-    this.closed = true
-  }
-
-  emit(message: LiveMessage) {
-    this.onmessage?.({ data: JSON.stringify(message) })
-  }
-
-  fail() {
-    this.onerror?.()
-    this.onclose?.()
-  }
-
-  static latest(): FakeWebSocket {
-    const instance = FakeWebSocket.instances[FakeWebSocket.instances.length - 1]
-    if (!instance) {
-      throw new Error('no FakeWebSocket instance was created')
-    }
-    return instance
-  }
-}
-
 beforeEach(() => {
-  FakeWebSocket.instances = []
-  vi.stubGlobal('WebSocket', FakeWebSocket)
+  installFakeWebSocket()
   vi.mocked(fetchResident).mockResolvedValue(null)
 })
 
@@ -101,15 +71,15 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'medication',
-        steps: [
-          { id: 'open_box', label: 'Open the pill box', optional: false },
-          { id: 'take_pill', label: 'Take the pill', optional: false },
-        ],
-      })
+      socket.emit(
+        sessionStart(
+          [
+            { id: 'open_box', label: 'Open the pill box', optional: false },
+            { id: 'take_pill', label: 'Take the pill', optional: false },
+          ],
+          { task_id: 'medication' },
+        ),
+      )
     })
 
     const map = screen.getByRole('list', { name: 'Task steps' })
@@ -131,15 +101,12 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [
+      socket.emit(
+        sessionStart([
           { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
           { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
-        ],
-      })
+        ]),
+      )
       socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
     expect(screen.getByText('Fill the kettle').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(
@@ -148,18 +115,7 @@ describe('LiveSession', () => {
     expect(screen.queryByText('Mock data')).toBeNull()
 
     act(() => {
-      socket.emit({
-        type: 'error',
-        error: {
-          error_id: 'live-error-1',
-          session_id: 'live-session',
-          type: 'omission',
-          step_id: 'teabag_in_cup',
-          t_start: 72,
-          t_end: 72,
-          evidence: [],
-        },
-      })
+      socket.emit(errorMessage({ step_id: 'teabag_in_cup', t_start: 72, t_end: 72 }))
     })
     expect(screen.getByText('skipped Put the teabag in the cup · 1:12')).toBeTruthy()
 
@@ -174,38 +130,35 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'step',
-        event: {
-          event_id: 'e1',
-          session_id: 'live-session',
-          step_id: 'fill_kettle',
-          objects: [],
-          t_start: 0,
-          t_end: 1,
-          confidence: 0.9,
-          source: 'rule',
-        },
-      })
-      socket.emit({
-        type: 'step',
-        event: {
-          event_id: 'e2',
-          session_id: 'live-session',
-          step_id: 'pour',
-          objects: [],
-          t_start: 219,
-          t_end: 220,
-          confidence: 0.9,
-          source: 'rule',
-        },
-      })
+      socket.emit(stepMessage({ step_id: 'fill_kettle', t_start: 0, t_end: 1 }))
+      socket.emit(stepMessage({ event_id: 'e2', step_id: 'pour', t_start: 219, t_end: 220 }))
       socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
     })
 
     const summary = screen.getByText('Session summary').closest('.card') as HTMLElement
     expect(within(summary).getByText('Finished in 3m 40s · 0 errors')).toBeTruthy()
     expect(summary.nextElementSibling?.getAttribute('role')).toBe('status')
+  })
+
+  it('says the capture was unclear instead of summarising a session nobody could read', async () => {
+    // SPEC section 12: the pipeline scores an unclear session 0.0 and keeps it out of
+    // this resident's history, so the summary says so rather than showing her a
+    // session that looks like her best one (T343).
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(stepMessage({ step_id: 'fill_kettle', t_start: 0, t_end: 1 }))
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null, quality: 'unclear' })
+    })
+
+    const summary = screen.getByText('Session summary').closest('.card') as HTMLElement
+    await waitFor(() => {
+      expect(within(summary).getByText(/Capture unclear/)).toBeTruthy()
+    })
+    expect(within(summary).queryByText(/Finished in/)).toBeNull()
+    expect(within(summary).queryByText(/usually/)).toBeNull()
   })
 
   it("shows the resident's usual duration and errors from the baseline, not their recent sessions", async () => {
@@ -246,7 +199,7 @@ describe('LiveSession', () => {
     )
   })
 
-  it('shows an Open alert button when flagged and calls onOpenAlert with the id', () => {
+  it('shows an Open alert button beside the banner, not inside its live region', () => {
     const onOpenAlert = vi.fn()
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={onOpenAlert} />)
     const socket = FakeWebSocket.latest()
@@ -255,7 +208,17 @@ describe('LiveSession', () => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
     })
 
-    screen.getByRole('button', { name: 'Open alert' }).click()
+    // Nested in the banner, the button's label is announced again with the flag every
+    // time the live region updates; as its next sibling it is read once, on its own,
+    // and it is the shared `ui/Button` rather than a bare unstyled one (T376).
+    const banner = screen.getByRole('status')
+    const open = screen.getByRole('button', { name: 'Open alert' })
+    expect(banner.contains(open)).toBe(false)
+    expect(banner.textContent).toBe('Flagged for review')
+    expect(banner.nextElementSibling).toBe(open)
+    expect(open.classList.contains('btn')).toBe(true)
+
+    open.click()
     expect(onOpenAlert).toHaveBeenCalledWith('alert-1')
   })
 
@@ -365,12 +328,11 @@ describe('LiveSession', () => {
     expect(secondSocket).not.toBe(firstSocket)
 
     act(() => {
-      secondSocket.emit({
-        type: 'session_start',
-        session_id: 'live-session-2',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      secondSocket.emit(
+        sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }], {
+          session_id: 'live-session-2',
+        }),
+      )
       secondSocket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
 
@@ -421,12 +383,7 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      socket.emit(sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }]))
     })
 
     // Let the resident fetch resolve so the panel knows its own room is 204 (T275): the
@@ -465,12 +422,11 @@ describe('LiveSession', () => {
     expect(firstSocket.closed).toBe(true)
 
     act(() => {
-      secondSocket.emit({
-        type: 'session_start',
-        session_id: 'live-session-2',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      secondSocket.emit(
+        sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }], {
+          session_id: 'live-session-2',
+        }),
+      )
     })
 
     expect(screen.queryByText('Monitoring is paused for room 204')).toBeNull()
@@ -485,12 +441,7 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }],
-      })
+      socket.emit(sessionStart([{ id: 'fill_kettle', label: 'Fill the kettle', optional: false }]))
     })
     await act(async () => {})
 
@@ -523,32 +474,18 @@ describe('LiveSession', () => {
     expect(announcer.getAttribute('aria-live')).toBe('polite')
 
     act(() => {
-      socket.emit({
-        type: 'session_start',
-        session_id: 'live-session',
-        task_id: 'tea',
-        steps: [
+      socket.emit(
+        sessionStart([
           { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
           { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
-        ],
-      })
+        ]),
+      )
       socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
     expect(announcer.textContent).toBe('Step done: Fill the kettle')
 
     act(() => {
-      socket.emit({
-        type: 'error',
-        error: {
-          error_id: 'live-error-1',
-          session_id: 'live-session',
-          type: 'omission',
-          step_id: 'teabag_in_cup',
-          t_start: 72,
-          t_end: 72,
-          evidence: [],
-        },
-      })
+      socket.emit(errorMessage({ step_id: 'teabag_in_cup', t_start: 72, t_end: 72 }))
     })
     expect(announcer.textContent).toBe('Flag raised: skipped Put the teabag in the cup · 1:12')
   })
@@ -576,7 +513,7 @@ describe('LiveSession', () => {
     })
 
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
-    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1' })
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1', quality: 'ok' })
 
     rerender(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
@@ -592,7 +529,7 @@ describe('LiveSession', () => {
     })
 
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
-    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null })
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null, quality: 'ok' })
   })
 
   it('does not throw when onSessionEnd is omitted', () => {
@@ -621,5 +558,121 @@ describe('LiveSession', () => {
     })
 
     expect(screen.queryByText('Mock data')).toBeNull()
+  })
+
+  // ------------------------------------------------------- the camera (T356)
+
+  const CAMERA = { index: 0, task: 'tea' }
+
+  it('watches the camera the screen was pointed at, not a recording', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+
+    expect(FakeWebSocket.latest().url).toContain('source=camera&camera=0&task=tea')
+    expect(screen.getByText('Live camera')).toBeTruthy()
+  })
+
+  it('says it is waiting for the object detector while a camera sends frames with no objects', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage())
+    })
+
+    // Without the local detector's weights there are no object boxes, so a step - a hand
+    // on an object - can never be recognised: say so rather than show a stuck task map.
+    expect(screen.getByText(/Waiting for object detector/)).toBeTruthy()
+  })
+
+  it('stops saying it once the detector reports something in view', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage())
+    })
+    act(() => {
+      socket.emit(frameMessage({ seq: 1, t: 0.1, objects: [detection({ label: 'kettle' })] }))
+    })
+
+    expect(screen.queryByText(/Waiting for object detector/)).toBeNull()
+  })
+
+  it('says nothing about the detector on a recorded session', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(sessionStart([{ id: 'boil', label: 'Boil the kettle', optional: false }]))
+      socket.emit(frameMessage({ source: 'synthetic' }))
+    })
+
+    expect(screen.queryByText(/Waiting for object detector/)).toBeNull()
+    expect(screen.queryByText('Live camera')).toBeNull()
+  })
+
+  // ---------------------------------------------- the camera that won't open (T394)
+
+  it('says plainly that no camera could be opened when the socket closes 4503, not the mock stream', () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4503)
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(
+      screen.getByText(
+        'No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText('Mock data')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+  })
+
+  it('sends the nurse back to the recorded scenario from the camera-unavailable message', () => {
+    const originalUrl = window.location.href
+    window.history.pushState(null, '', '/?source=camera&camera=0')
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4503)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Watch a recorded session' }))
+
+    expect(assign).toHaveBeenCalledOnce()
+    const url = new URL(assign.mock.calls[0][0] as string)
+    expect(url.searchParams.has('source')).toBe(false)
+    expect(url.searchParams.has('camera')).toBe(false)
+
+    vi.unstubAllGlobals()
+    window.history.replaceState(null, '', originalUrl)
+  })
+
+  it('leaves the 4404 and offline fallback messages unchanged', () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4404)
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.queryByText(/No camera could be opened/)).toBeNull()
+    expect(screen.getByText('Mock data')).toBeTruthy()
   })
 })

@@ -153,7 +153,14 @@ def test_a_message_cannot_smuggle_a_field_past_the_schema() -> None:
             id="state-the-task-map-cannot-draw",
         ),
         pytest.param(
-            {"type": "session_end", "errors": [], "score": -1.0, "flag": False, "alert_id": None},
+            {
+                "type": "session_end",
+                "errors": [],
+                "score": -1.0,
+                "flag": False,
+                "alert_id": None,
+                "quality": "ok",
+            },
             id="score-below-zero",
         ),
     ],

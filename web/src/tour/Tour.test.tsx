@@ -6,6 +6,16 @@ import { Tour } from './Tour.tsx'
 afterEach(cleanup)
 
 describe('Tour', () => {
+  it('limits the phone card width and wraps its navigation buttons', async () => {
+    const fs = await vi.importActual<{
+      readFileSync: (path: string, encoding: 'utf8') => string
+    }>('node:fs')
+    const css = fs.readFileSync('src/tour/tour.css', 'utf8')
+    expect(css).toMatch(/@media\s*\(max-width:\s*480px\)/)
+    expect(css).toMatch(/\.tour\s*\{[^}]*max-width:\s*calc\(100vw - 2rem\)/)
+    expect(css).toMatch(/\.tour__footer,\s*\.tour__nav\s*\{[^}]*flex-wrap:\s*wrap/)
+  })
+
   it('starts on step 1 and never uses diagnostic language', () => {
     render(<Tour />)
     expect(screen.getByText(`1 of ${TOUR_STEPS.length}`)).toBeTruthy()

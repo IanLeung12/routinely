@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch.api import app
 from routine_watch.contracts import AlertFeedback, FeedbackVerdict
 from routine_watch.demo import DEMO_NOW, demo_residents
@@ -128,10 +128,10 @@ def test_no_resident_is_flagged_by_default() -> None:
 
 @pytest.fixture
 def feedback_store():
-    """A clean feedback store for the API module, which keeps one global (SPEC MVP 7)."""
-    api_module._feedback_store = FeedbackStore()
-    yield api_module._feedback_store
-    api_module._feedback_store = FeedbackStore()
+    """A clean feedback store for `api_state`, which keeps one global (SPEC MVP 7)."""
+    api_state.reset()
+    yield api_state._feedback_store
+    api_state.reset()
 
 
 def _answer(

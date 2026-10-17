@@ -10,8 +10,14 @@ python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py scri
 bash -n scripts/integration.sh
 python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh
+bash -n scripts/camera.sh
 bash -n scripts/e2e.sh
 bash -n scripts/smoke.sh
+bash -n scripts/preflight.sh
+
+echo "== repo tooling: tests/"
+command -v uv >/dev/null || python3 -m pip install -q uv
+uv run --with pytest --no-project python -m pytest -q tests
 
 for proj in $(find . -maxdepth 2 -name pyproject.toml -not -path "./.tasks/*"); do
   d=$(dirname "$proj"); echo "== python: $d"
@@ -26,7 +32,8 @@ done
 for pkg in */package.json; do
   [ -f "$pkg" ] || continue
   d=$(dirname "$pkg"); echo "== node: $d"
-  (cd "$d" && npm ci --no-audit --no-fund && npm run lint --if-present && npm test --if-present && npm run build --if-present)
+  # check:bundle is the first-load JS budget (T260); --if-present so only web/ runs it.
+  (cd "$d" && npm ci --no-audit --no-fund && npm run lint --if-present && npm test --if-present && npm run build --if-present && npm run check:bundle --if-present)
 done
 
 echo "== e2e: scenario replay"

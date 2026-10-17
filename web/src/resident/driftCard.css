@@ -9,3 +9,11 @@
 .drift-card[data-state="trending"] .drift-card__summary {
   color: var(--error-amber-text);
 }
+
+@media (max-width: 480px) {
+  .drift-card {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.25rem;
+  }
+}

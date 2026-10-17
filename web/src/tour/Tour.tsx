@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { TOUR_STEPS } from './steps.ts'
+import './tour.css'
 
 /** Presenter cue card for the guided demo (SPEC section 10). Mounted by App.tsx only
  * behind `?tour=1`, so it can never show up on the real demo path. */
