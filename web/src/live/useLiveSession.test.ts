@@ -125,6 +125,37 @@ describe('useLiveSession', () => {
     expect(result.current.errors).toEqual([streamedOmission])
   })
 
+  it('reports the paused room from a paused message and never falls back to mock data', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal'))
+    const socket = FakeWebSocket.latest()
+
+    // What `GET /ws/live` does when the demo resident's room is paused (SPEC section
+    // 12): one `paused` message, then the socket closes with no session played.
+    act(() => {
+      socket.emit({ type: 'paused', room: '204' })
+      socket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(result.current.paused).toEqual({ room: '204' })
+    expect(result.current.source).toBe('live')
+    expect(result.current.steps).toEqual([])
+    expect(result.current.ended).toBeNull()
+  })
+
+  it('leaves paused null for a session that plays normally', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal'))
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null })
+    })
+
+    expect(result.current.paused).toBeNull()
+  })
+
   it('closes the socket on unmount', () => {
     const { unmount } = renderHook(() => useLiveSession('tea_normal'))
     const socket = FakeWebSocket.latest()
