@@ -11,8 +11,9 @@ function sortResidents(residents: ResidentSummary[]): ResidentSummary[] {
 }
 
 /** Screen 1 (SPEC section 9): resident list with a status chip and an error-score
- * sparkline, flagged residents first. Visual first; a nurse should read it in 10s. */
-export function UnitOverview() {
+ * sparkline, flagged residents first. Visual first; a nurse should read it in 10s.
+ * The whole row opens that resident's detail. Without `onSelect` the list is read-only. */
+export function UnitOverview({ onSelect }: { onSelect?: (residentId: string) => void }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
 
   useEffect(() => {
@@ -35,12 +36,19 @@ export function UnitOverview() {
     <ul className="resident-list">
       {sortResidents(residents).map((resident) => (
         <li key={resident.id} className="resident-row">
-          <div className="resident-identity">
-            <span className="resident-name">{resident.name}</span>
-            <span className="resident-room">Room {resident.room}</span>
-          </div>
-          <StatusChip status={resident.status} />
-          <Sparkline scores={resident.scores} />
+          <button
+            type="button"
+            className="resident-open"
+            onClick={() => onSelect?.(resident.id)}
+            aria-label={`Open ${resident.name}, room ${resident.room}, ${resident.status}`}
+          >
+            <span className="resident-identity">
+              <span className="resident-name">{resident.name}</span>
+              <span className="resident-room">Room {resident.room}</span>
+            </span>
+            <StatusChip status={resident.status} />
+            <Sparkline scores={resident.scores} />
+          </button>
         </li>
       ))}
     </ul>
