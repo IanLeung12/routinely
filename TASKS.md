@@ -353,15 +353,15 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T156 — Bug: overview and Alerts list don't update when the live session flags Mrs. K
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: web/src/App.tsx, web/src/App.test.tsx, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - source: tester
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:46Z
 - pr: —
 
 What: After the live session ends with a flag (the "Open alert" button appears and `/alerts` now returns `alert-mrs-k`), the unit overview still shows Mrs. K as "Watch", the status line still says "4 on watch · 2 normal", and the Alerts list stays empty until a page reload. The demo beat "alert appears after the second bad session" only shows via the banner button.
