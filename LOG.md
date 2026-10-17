@@ -380,3 +380,8 @@ T409 | standard | claude-opus | merged first try | ~?k tok
 T430 | light | codex | merged first try | ~7k tok
 T421 | standard | claude-sonnet | merged first try | ~140k tok
 T438 | standard | claude-sonnet | merged first try | ~150k tok
+T433 | light | codex | merged after orch branch update (bundle budget) | ~8k tok
+T436 | light | codex | merged after orch branch update (bundle budget) | ~10k tok
+T410 | standard | claude-sonnet | merged after orch branch update (bundle budget) | ~130k tok
+T434 | light | codex | merged after orch branch update (bundle budget) | ~7k tok
+T437 | heavy | claude-opus | merged first try | ~210k tok
