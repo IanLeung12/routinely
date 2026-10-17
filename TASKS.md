@@ -257,7 +257,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T094 — Tests: change-detection edge cases
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -265,7 +265,7 @@ Acceptance:
 - area: pipeline/tests/test_change_detection_edges.py (new)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:09Z
-- pr: —
+- pr: #92
 
 What: `pipeline/tests/test_change_detection.py` covers the happy paths of the flag rule (SPEC §7: two or more sessions above the baseline threshold within 48 h; one bad session never alerts) but not the boundaries. Read only `pipeline/src/routine_watch/change_detection.py` and the existing test file. Don't edit source; if a boundary case reveals a bug, mark that test `xfail(strict=True, reason=...)` and say so in the PR.
 Interface: new test file only.
