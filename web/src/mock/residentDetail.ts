@@ -53,6 +53,18 @@ type CareRow = { ts: string; kind: CareRecordKind; value: number | string; note?
 /** Mrs. K is the demo resident: a flat fortnight, then two bad sessions in one morning
  * and evening, which is what a change flag needs (SPEC section 7). */
 const SESSIONS: Record<string, SessionRow[]> = {
+  'mr-nguyen': [
+    { ts: '2025-12-31T08:00:00+00:00', errors: {}, duration_s: 130 },
+    { ts: '2025-12-31T18:00:00+00:00', errors: { omission: 1, sequence: 1 }, duration_s: 210 },
+    { ts: '2026-01-01T08:00:00+00:00', errors: {}, duration_s: 132 },
+    { ts: '2026-01-01T18:00:00+00:00', errors: { omission: 1, sequence: 1 }, duration_s: 220 },
+  ],
+  'mrs-patel': [
+    { ts: '2025-12-29T08:00:00+00:00', errors: {}, duration_s: 135 },
+    { ts: '2025-12-30T08:00:00+00:00', errors: { hesitation: 1 }, duration_s: 170 },
+    { ts: '2025-12-31T08:00:00+00:00', errors: {}, duration_s: 205 },
+    { ts: '2026-01-01T08:00:00+00:00', errors: { hesitation: 1 }, duration_s: 240 },
+  ],
   'mrs-k': [
     { ts: '2025-12-25T08:10:00+00:00', errors: {}, duration_s: 132 },
     { ts: '2025-12-25T18:05:00+00:00', errors: {}, duration_s: 141 },
@@ -116,6 +128,14 @@ const SESSIONS: Record<string, SessionRow[]> = {
 }
 
 const CARE_RECORDS: Record<string, CareRow[]> = {
+  'mrs-patel': [
+    {
+      ts: '2025-12-30T07:00:00+00:00',
+      kind: 'med_change',
+      value: 'zopiclone',
+      note: 'night sedation started',
+    },
+  ],
   'mrs-k': [
     { ts: '2025-12-30T08:00:00+00:00', kind: 'temperature', value: 36.8 },
     {
