@@ -111,28 +111,31 @@ def list_residents() -> list[dict]:
     return [{field: resident[field] for field in _SUMMARY_FIELDS} for resident in demo_residents()]
 
 
-@app.get("/residents/{resident_id}")
-def get_resident(resident_id: str) -> dict:
-    """Resident detail (SPEC section 9): sessions, care records and baseline."""
+def _resident_or_404(resident_id: str) -> dict:
+    """The demo resident with this id, or a 404 (SPEC section 9)."""
     for resident in demo_residents():
         if resident["id"] == resident_id:
             return resident
     raise HTTPException(status_code=404, detail="resident not found")
 
 
+@app.get("/residents/{resident_id}")
+def get_resident(resident_id: str) -> dict:
+    """Resident detail (SPEC section 9): sessions, care records and baseline."""
+    return _resident_or_404(resident_id)
+
+
 @app.get("/residents/{resident_id}/drift")
 def resident_drift(resident_id: str) -> dict:
     """Daily score trend (SPEC section 8): backs the drift card with one point per day."""
-    for resident in demo_residents():
-        if resident["id"] == resident_id:
-            result = drift(daily_scores(resident["scores"]))
-            return {
-                "resident_id": resident_id,
-                "slope_per_day": result.slope_per_day,
-                "days": result.days,
-                "trending": result.trending,
-            }
-    raise HTTPException(status_code=404, detail="resident not found")
+    resident = _resident_or_404(resident_id)
+    result = drift(daily_scores(resident["scores"]))
+    return {
+        "resident_id": resident_id,
+        "slope_per_day": result.slope_per_day,
+        "days": result.days,
+        "trending": result.trending,
+    }
 
 
 @app.get("/alerts")
