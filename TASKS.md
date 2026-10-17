@@ -478,7 +478,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T055 — Review: session scoring duplicated in replay.py and live.py
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -487,7 +487,7 @@ Acceptance:
 - source: reviewer
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:29Z
-- pr: —
+- pr: #45
 
 What: `replay.run` and `live.session_messages` each re-implement session_id selection, `assisted` (≥2 poses in any frame), error counting, `session_score` and `change_flag`, so the e2e verdict and the live demo can drift apart. Extract one helper used by both. Both also crash with IndexError on a scenario with no frames and no events; raise `ReplayError` instead.
 Interface: in `replay.py` add `session_id_of(scenario: Scenario) -> str` (raises `ReplayError` when empty) and `score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]` returning `(score, assisted, flag)`. `run` and `live.session_messages` use them; output unchanged.
