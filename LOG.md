@@ -59,3 +59,4 @@ T064 | light | codex | merged first try | ~3k tok
 T032 | standard | claude-sonnet | merged first try | ~45k tok
 T066 | light | codex | merged first try | ~4k tok
 T069 | light | codex | merged first try | ~3k tok
+T077 | light | claude-sonnet | merged first try | ~?k tok
