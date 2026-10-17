@@ -439,14 +439,14 @@ Acceptance:
 - `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
 
 ### T384 — Ghost replay: aria-label says what is being compared
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T19:41Z
 - pr: —
 
 What: The ghost replay SVG's label is the fixed "Today and usual skeleton replay"; a screen-reader user gets no information. Describe the comparison in words.
