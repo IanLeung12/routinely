@@ -518,14 +518,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T060 — Tests for resident date/format helpers
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/format.test.ts, web/src/resident/days.test.ts
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:35Z
 - pr: —
 
 What: `web/src/resident/format.ts` and `days.ts` drive every date and score on the resident screen but have no direct tests. Add them; no source changes (if you find a bug, add a skipped test with a comment and note it in the PR).
