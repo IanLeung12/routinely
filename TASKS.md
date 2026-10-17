@@ -465,7 +465,7 @@ Acceptance:
 - existing FeedbackButtons tests pass; `scripts/ci.sh` passes
 
 ### T233 — Test: de-flake DemoBanner reset test under load
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
