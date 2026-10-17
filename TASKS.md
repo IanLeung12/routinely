@@ -484,14 +484,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T370 — Alert time-of-day strip: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/alert/TimeOfDayStrip.css, web/src/alert/TimeOfDayStrip.mobile.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T18:48Z
 - pr: —
 
 What: The morning/afternoon/evening strip on the alert view must fit 375 px: the three buckets stay readable (stack or shrink), labels never truncate.
