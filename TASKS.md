@@ -428,14 +428,14 @@ Acceptance:
 - Same test count and assertions as before (state the before/after durations in the PR).
 
 ### T134 — Unit tests for drift.daily_scores
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_drift.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:07Z
 - pr: —
 
 What: PR #117 (T125) moved `daily_scores` from `api.py` into `pipeline/src/routine_watch/drift.py`; it now feeds both the drift card and the demo "watch" status but has no direct tests. Read only `pipeline/src/routine_watch/drift.py` and `pipeline/tests/test_drift.py`.
