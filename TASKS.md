@@ -203,7 +203,7 @@ Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/te
 Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
 
 ### T294 — Test: shift handoff works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
