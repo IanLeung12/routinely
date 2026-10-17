@@ -73,7 +73,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_care_records.py -q` passes.
 
 ### T005 — Scenario replay harness (e2e)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - deps: T002, T003
