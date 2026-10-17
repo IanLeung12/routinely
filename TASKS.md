@@ -393,7 +393,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T325 — Test: monitoring toggle works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
