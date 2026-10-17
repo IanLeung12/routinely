@@ -355,3 +355,4 @@ T355 | heavy | claude-opus | merged first try | ~?k tok
 T386 | light | codex | merged first try | ~3k tok
 T399 | light | claude-sonnet | merged first try | ~?k tok
 T367 | standard | claude-opus | merged first try | ~?k tok
+T389 | light | codex | merged first try | ~?k tok
