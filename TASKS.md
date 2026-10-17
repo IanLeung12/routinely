@@ -114,14 +114,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T231 — Test: integration.sh dashboard check retries instead of failing on a cold Vite start
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/integration.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T12:39Z
 - pr: —
 - source: integration
 
