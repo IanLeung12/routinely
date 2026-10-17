@@ -56,13 +56,13 @@ Acceptance:
 - Tests: "fill kettle" and "get cup" in either order are both valid; "pour" requires "teabag in cup"; optional steps can be skipped.
 
 ### T004 — Synthetic care-record generator
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: T001
 - area: pipeline/routine_watch/synth/care_records.py, pipeline/tests/test_care_records.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:22Z
 - pr: —
 
 What: Generate fake care-record context for demo residents: medication changes, temperature readings, daily fluid intake. Read only the files in `area` and `pipeline/pyproject.toml`.
