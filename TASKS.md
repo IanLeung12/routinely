@@ -395,7 +395,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T315 — Refactor: shared fake WebSocket helper for live tests
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
