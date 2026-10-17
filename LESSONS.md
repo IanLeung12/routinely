@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A session that flags via abandonment (step_id=None, contracts.py's documented null case) 500'd GET /alerts/{id}: explain.py's _format_error assumed every TaskError had a step_id; only a full-scenario- (ian-claude-standard)
 - A new contracts/ schema in PAYLOADS or REQUESTS also needs a row in contracts/README.md's table: test_api_payload_contracts.py::test_the_contracts_readme_lists_the_payloads fails on the file name alon (ian-claude)
 - Never pkill -f a pattern that also appears in your own command line (e.g. 'vite --port 5191'): pkill kills the Bash call itself and you get no output. Kill by pid from ss -ltnp instead. (ian-claude)
 - web tests open a real WebSocket to localhost:8000 outside App.test.tsx's stubbed test, so another worker's uvicorn on the shared VPS makes vitest exit 1 with an undici ERR_INVALID_ARG_TYPE uncaught ex (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web tests have no localStorage unless testSetup.ts shims it: Node 22 defines its own localStorage global as undefined (no --localstorage-file) and it wins over jsdom's, so bare localStorage.clear() in (ian-claude-heavy-2)
 - On Windows without Docker Engine/WSL, validate deploy/check.sh on a temporary push-triggered GitHub Actions branch, keep its workflow out of the feature PR, and delete the validation branch after succ (max_API_standard)
 - Anything that expires stored data must measure its window from the newest record, not datetime.now(): every demo session is stamped demo.DEMO_NOW (2026-01-01, months in the past), so a wall-clock cuto (ian-claude)
+- Styling a number out of a label (Fey 'numbers, then words') breaks getByText('82% confidence'): testing-library matches only an element's direct text-node children, so <span>82%</span> confidence no l (ian-claude-heavy-3)
