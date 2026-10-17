@@ -355,14 +355,14 @@ Acceptance:
 - `cd web && npm test -- Tour` and `scripts/ci.sh` pass
 
 ### T205 — Tour: Escape closes it, arrow keys step through
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/tour/Tour.tsx, web/src/tour/Tour.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:04Z
 - pr: —
 
 What: The presenter drives the `?tour=1` cue card from a keyboard on stage; today only mouse clicks work. Add Escape = Close, ArrowRight = Next, ArrowLeft = Back (respecting first/last bounds).
