@@ -4,7 +4,7 @@ import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
-import { fetchResidents } from './api.ts'
+import { fetchResidentsWithSource, type ResidentsSource } from './api.ts'
 import './overview.css'
 import { loadOverviewPrefs, saveOverviewPrefs, type UnitFilter } from './overviewPrefs.ts'
 import { ResidentSort, sortResidents, type SortMode } from './ResidentSort.tsx'
@@ -65,6 +65,7 @@ export function UnitOverview({
   refreshKey?: number | string
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
+  const [source, setSource] = useState<ResidentsSource>('api')
   const [filter, setFilter] = useState<UnitFilter>(() => loadOverviewPrefs().filter)
   const [sortMode, setSortMode] = useState<SortMode>(() => loadOverviewPrefs().sort)
   const [pausedRooms, setPausedRooms] = useState<string[]>([])
@@ -75,9 +76,10 @@ export function UnitOverview({
 
   useEffect(() => {
     let cancelled = false
-    fetchResidents().then((fetched) => {
+    fetchResidentsWithSource().then((fetched) => {
       if (!cancelled) {
-        setResidents(fetched)
+        setResidents(fetched.residents)
+        setSource(fetched.source)
       }
     })
     return () => {
@@ -115,6 +117,11 @@ export function UnitOverview({
 
   return (
     <>
+      {source === 'demo' && (
+        <p role="status" className="overview__demo-notice">
+          Showing demo residents: the Routine Watch service isn't reachable.
+        </p>
+      )}
       <p role="status" className="resident-summary">
         {summarize(residents)}
       </p>
