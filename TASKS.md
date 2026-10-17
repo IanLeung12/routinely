@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: ebdd9d6
+- last-reviewed: 1e4fdef
 
 ## Tasks
 
@@ -622,3 +622,37 @@ Acceptance:
 What: One-line note in the web section of `docs/CODEMAP.md` (notes only, not the generated list) that `web/src/testSetup.ts` stubs WebSocket for every test and tests needing a socket use `web/src/live/testWebSocket.ts`.
 Acceptance:
 - note added; `scripts/ci.sh` passes
+
+### T374 — Test infra: load every web stylesheet in Vitest so tasks stop editing vite.config.ts
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- deps: T368
+- area: web/vite.config.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: every phone-width / print task appends a folder to `test.css.include` in `web/vite.config.ts`, so sibling PRs conflict on that one line (T203's PR #353 is conflicting now; LESSONS.md line 19). Replace the per-folder list with one pattern that matches all `src/**/*.css`.
+Interface: read `web/vite.config.ts` only. Set `css: { include: [/src\/.*\.css/] }` (or equivalent) and shorten the comment to say why: `?raw` CSS assertions need it and no task should have to edit this line again.
+Acceptance:
+- `cd web && npm test` passes with no other file changed (if a test becomes slower or breaks because its CSS is now loaded, say so in the PR rather than widening scope)
+- `scripts/ci.sh` passes
+
+### T375 — Unit overview: say when it is showing demo data because the API is unreachable
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/overview/api.ts, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.states.test.tsx, web/src/overview/overview.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: `fetchResidents()` silently falls back to `mockResidents` when `/residents` fails (T366 rating), so a nurse or judge can't tell live data from demo data. Keep the fallback (demo robustness) but surface it as a one-line notice above the list.
+Interface: `fetchResidents()` returns `{ residents: ResidentSummary[], source: 'api' | 'demo' }` via a new `fetchResidentsWithSource()` (keep `fetchResidents()` returning the array so `web/src/App.tsx` is untouched). UnitOverview renders `<p role="status" class="overview__demo-notice">Showing demo residents: the Routine Watch service isn't reachable.</p>` when `source === 'demo'`, nothing otherwise.
+Acceptance:
+- tests in `UnitOverview.states.test.tsx`: API rejects → notice shown and mock residents listed; API non-OK → notice shown; API OK → no notice
+- `cd web && npm test` and `scripts/ci.sh` pass
