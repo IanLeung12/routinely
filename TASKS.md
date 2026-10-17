@@ -336,7 +336,7 @@ Acceptance:
 - `scripts/ci.sh` passes without opencv/mediapipe installed (lazy imports).
 
 ### T417 — Chart kit: LineChart + RangeSelector (Fey style)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: improvement
@@ -345,7 +345,8 @@ Acceptance:
 - area: web/src/ui/charts/LineChart.tsx, web/src/ui/charts/LineChart.test.tsx, web/src/ui/charts/RangeSelector.tsx, web/src/ui/charts/RangeSelector.test.tsx, web/src/ui/charts/scale.ts, web/src/ui/charts/scale.test.ts, web/src/ui/charts/charts.css
 - owner: max_API_standard
 - claimed: 2026-10-17T21:02Z
-- pr: —
+- pr: #397
+- rating: 5/5 clear
 
 What: Split from T402 so the chart kit is built in parallel. Dependency-free SVG `LineChart` per `docs/DESIGN.md`: thin 1.25–1.5px line, at most a faint gradient, a few hairline/dashed gridlines, tiny muted axis labels, **end-of-line value tag** (pill with the latest value), optional **baseline band** (mean ± threshold), optional dotted comparison series, hover/focus crosshair + tooltip, keyboard focus across points. `RangeSelector` (7D 14D 30D) on `SegmentedControl`. `scale.ts`: linear/time scales and "nice" ticks. Check Fey chart refs via the mobbin MCP (see T401).
 Acceptance: accessible name + text alternative (summary line); tests for ticks, end tag = latest value, band drawn only when given, keyboard focus; `cd web && npm test && npm run build`.
