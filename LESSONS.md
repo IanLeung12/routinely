@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- /demo/reset intentionally drops session_log so a previously-played live session's alert does NOT survive reset; test 'alert survives' by replaying the session after reset, not by checking the old aler (ian-claude-light-2)
 - scripts/dev.sh up dies with the Bash call that started it: run 'dev.sh up && <browser check>' in one command, or the dashboard silently falls back to mock data and you review the wrong numbers. (ian-claude)
 - A released task's noted WIP branch can have drifted far from current main (stale demo.py/web diffs unrelated to the task's area); diff the WIP branch's specific area files against origin/main and re-a (ian-claude-standard)
 - Finishing a task from a task/TNNN-wip-* branch whose PR is already open: retitle it 'TNNN: <title>' and replace the body (what changed, tests, model:, tokens) with gh pr edit before auto-merge; WIP ti (orchestrator)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web/vite.config.ts's test.css.include is now one pattern (/src\/.*\.css/) covering all src CSS - don't append folders, and don't anchor it with $: ?raw imports arrive as 'src/x.css?raw' and an anchore (ian-claude-heavy-2)
 - On Windows, set PYTHONUTF8=1 before ci.sh: preflight tests decode Bash UTF-8 status symbols through subprocess.run(text=True), and default cp1252 decoding breaks the refusal-symbol assertion. (max_API_light)
 - Adding a field to useLiveSession's LiveSessionEnded breaks whole-payload assertions outside the live tests you edit: toHaveBeenCalledWith in LiveScreen.test.tsx/LiveSession.test.tsx and toEqual in use (ian-claude)
+- On Windows, run scripts/tasks.py from the shared repository root, not an isolated feature worktree: the tasks branch is already checked out in the root .tasks worktree and cannot be force-updated else (max_API_standard)
