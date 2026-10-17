@@ -410,7 +410,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T279 — Smoke: validate live API bodies against the contracts/ JSON Schemas
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -418,7 +418,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T13:43Z
-- pr: —
+- pr: #268
+- rating: 5/5 clear
 
 What: smoke.sh checks a few fields of each body by hand; the running stack can still drift from the published schemas. Add schema checks for the bodies it already fetches so the tester catches contract drift against a real stack, not just in unit tests.
 Interface: reuse the `check_json` helper (T274) or add a `check_schema <label> <body> <schema file>` helper using `jsonschema` from the pipeline venv. Validate GET /residents rows (contracts/resident_summary.schema.json), GET /residents/mrs-k (resident.schema.json), GET /handoff (handoff.schema.json) and GET /alerts/<first id> (alert_detail.schema.json). If `jsonschema` is not importable, print SKIP for these checks rather than FAIL.
