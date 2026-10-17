@@ -16,6 +16,12 @@ _FAST = 1000.0
 
 
 @pytest.fixture(autouse=True)
+def _no_live_api(monkeypatch):
+    """Unit tests never make real paid API calls, even if LIVE_API=1 is exported."""
+    monkeypatch.setenv("LIVE_API", "0")
+
+
+@pytest.fixture(autouse=True)
 def _empty_log():
     """Every test starts and ends with the seeded demo and nothing recorded."""
     session_log.reset()
