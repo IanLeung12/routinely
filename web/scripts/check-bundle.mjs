@@ -14,9 +14,13 @@ import { fileURLToPath } from 'node:url'
 // and measured 92536 bytes together, over the old 92200 budget; T421's eager
 // resident-detail charts took that to 94908, and main measures 95204 today —
 // under 800 bytes of headroom, so a new always-on screen still has to be
-// lazy(). Raise this only alongside a PR that explains the growth (a new eager
-// dependency, a new always-on screen); do not raise it to silence this check.
-const BUDGET_BYTES = 96_000
+// lazy(). Raised again for T413: the replays library itself is lazy(), but its
+// shell-level entry points (a top-bar "Replays" button, the state and routing
+// that opens it, and wiring AlertView's existing onOpenEvidence hook) are
+// necessarily eager, measured 96132 bytes. Raise this only alongside a PR that
+// explains the growth (a new eager dependency, a new always-on screen); do not
+// raise it to silence this check.
+const BUDGET_BYTES = 96_400
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
 const distDir = join(webDir, 'dist')
