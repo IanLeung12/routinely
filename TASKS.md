@@ -709,7 +709,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T090 — "What was it?" picker in the feedback buttons (UI only)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -717,7 +717,7 @@ Acceptance:
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T06:19Z
-- pr: —
+- pr: #76
 
 What: SPEC §5 MVP 8: after "Confirmed", the nurse can optionally say what it turned out to be. Add the picker to the component only; posting it is a later task.
 Interface: new optional props `causeOptions?: {id: string; label: string}[]`, `cause?: string | null`, `onCauseChange?: (id: string) => void`. When `value === 'confirmed'` and `causeOptions` is given, render a labelled group "What was it? (optional)" with one toggle button per option plus "Other" (`id: 'other'`), `aria-pressed` on the selected one. Without these props the component behaves exactly as today. Read only those two files.
