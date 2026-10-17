@@ -6137,3 +6137,43 @@ Acceptance:
 - at ≤480 px rows stack (date/time above score/errors), no horizontal scroll, text wraps
 - new `SessionList.mobile.test.tsx` checks the stylesheet has the 480 px media rule and the list still renders every session
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
+
+### T346 — Test: alert time-of-day strip has accessible names
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/TimeOfDayStrip.a11y.test.tsx, web/src/alert/TimeOfDayStrip.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:52Z
+- pr: #347
+- note: earlier attempt lost to a shared-checkout reset; its work is on branch wip/Max_codex_light-1017-1745 (commit b09a18e). Start from origin/main, cherry-pick b09a18e if useful, run scripts/ci.sh, open the PR. Use your own worktree.
+- rating: 5/5 clear
+
+What: Each morning/afternoon/evening cell in the alert's time-of-day strip should be readable by a screen reader ("Evening: 3 errors"). Read `web/src/alert/TimeOfDayStrip.tsx` and `web/src/alert/TimeOfDayStrip.test.tsx`. Add the test; only if a cell has no accessible name, add an `aria-label` in `TimeOfDayStrip.tsx` (no visual change).
+Interface: new test file; at most `aria-label`/`role` attributes in the component.
+Acceptance:
+- every cell has an accessible name with its part of day and count (`getByRole(..., { name })` / `toHaveAccessibleName`), including zero-count cells
+- `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass
+
+### T349 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
+- status: done
+- class: light
+- priority: 1
+- kind: improvement
+- source: retro
+- deps: —
+- area: scripts/worker.sh
+- owner: Max_codex_light
+- claimed: 2026-10-17T17:12Z
+- pr: #333
+- note: Hosted CI passed. Local bash syntax and dry checks passed; shellcheck unavailable. Local full CI passed all tests but Vitest reported shared localhost:8000 WebSocket Event error.
+- rating: 5/5 clear
+
+What: E4's `--disallowedTools Monitor ScheduleWakeup` (MODELS.md, PR #271) never reached any running worker: worker.sh reads FLAGS once at start, and the host launcher passes a `FLAGS=` override for the heavy worker (`--model opus --effort max`) that drops it. Since then 2 light-worker sessions (T187, T307) still ended with "I'll wait for the CI monitor notification" and were released.
+Interface: in `scripts/worker.sh`, (1) inside the loop, before each claude/codex run, recompute flags from MODELS.md unless the caller set FLAGS (keep `FLAGS` env as the override); (2) for `TOOL=claude`, always append `--disallowedTools Monitor ScheduleWakeup` if the effective flags don't already contain `--disallowedTools`. Keep `MODEL=` in the prompt in sync.
+Acceptance:
+- `bash -n scripts/worker.sh` and shellcheck (if installed) pass
+- a dry check (e.g. `FLAGS='--model opus' TOOL=claude` with the claude call echoed, not run) shows `--disallowedTools Monitor ScheduleWakeup` in the command line; no change to codex flags
+- `scripts/ci.sh` passes
