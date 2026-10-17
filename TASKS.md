@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T062 — Nurse shift handoff summary (separate screen)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 3
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_handoff.py, web/src/handoff/, web/src/App.tsx (one nav entry)
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T07:47Z
 - pr: —
 - source: proposed
 
