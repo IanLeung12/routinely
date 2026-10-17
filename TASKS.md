@@ -540,14 +540,14 @@ Acceptance:
 - `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
 
 ### T358 — Evidence replay player: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/evidence/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T17:43Z
 - pr: —
 
 What: A nurse opening an alert on a phone should be able to watch the skeleton replay and use its controls without horizontal scrolling. Follow the 375 px pattern other screens already use (see `web/src/alert/alert.css`, `web/src/live/liveScreen.css`).
