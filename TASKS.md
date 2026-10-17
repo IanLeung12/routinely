@@ -249,7 +249,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
 
 ### T033 — Slow-drift trend detector
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
