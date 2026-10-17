@@ -489,7 +489,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T261 — Review: tests can hit paid APIs if LIVE_API=1 is exported in the shell
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -498,7 +498,8 @@ Acceptance:
 - area: scripts/ci.sh, pipeline/tests/conftest.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T12:25Z
-- pr: —
+- pr: #244
+- rating: 5/5 clear
 
 What: `scripts/ci.sh` and pytest never force `LIVE_API` off (only e2e.sh/integration.sh do), and `.env.example` documents `LIVE_API`. An agent or teammate with `LIVE_API=1` exported who runs `scripts/ci.sh` makes real Claude/Gemini calls from unit tests (AGENTS.md: tests never make real calls).
 Interface: in `scripts/ci.sh` add `export LIVE_API=0` right after the `cd` line. In `pipeline/tests/conftest.py` add an autouse fixture doing `monkeypatch.setenv("LIVE_API", "0")` so plain `pytest` is safe too; a test that checks the live path can still override it with its own monkeypatch.
