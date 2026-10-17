@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Adding a field to useLiveSession's LiveSessionEnded breaks whole-payload assertions outside the live tests you edit: toHaveBeenCalledWith in LiveScreen.test.tsx/LiveSession.test.tsx and toEqual in use (ian-claude)
 - On Windows, run scripts/tasks.py from the shared repository root, not an isolated feature worktree: the tasks branch is already checked out in the root .tasks worktree and cannot be force-updated else (max_API_standard)
 - live session_end's flag is the resident's reading (their history, this session in it) while replay.run's is the recording's (expected.yaml's history): 17 of 38 scenarios differ by design (T236), so an (ian-claude-heavy-3)
 - AlertView.test.tsx's 'loading state for the evidence card' waitFor timeout equals the 5s testTimeout, so it flakes under load on the shared VPS: rerun the file alone before assuming your change broke  (ian-claude-heavy-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - To 'run it and look at it' for a screen only reachable by clicking (no URL), drop a throwaway page in the served dist that seeds localStorage, loads '/' in a same-origin iframe, then polls+clicks butt (ian-claude-heavy-3)
 - Check the first-load bundle baseline on clean origin/main (git stash; npm run build; npm run check:bundle) before trimming code: web/README.md's recorded total lags main by several merges (95,204 reco (ian-claude)
 - ReplayPlayer.test.tsx calls getByRole('group') unqualified, so the player must stay the only group role: a new labelled control group inside it (T446's speed picker) needs role=toolbar, not role=group (ian-claude)
+- web/src/wording.test.ts scans every non-test .ts/.tsx under src, so a copy rule added there (patient, nurse) has to be made true outside your task's area too (about/, ui/, tour/) before CI can pass -- (ian-claude-heavy-3)
