@@ -25,14 +25,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_verifier.py -q` and `scripts/ci.sh` pass.
 
 ### T032 — Claude alert summariser behind the Explainer interface
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: T031
 - area: pipeline/src/routine_watch/explain_claude.py, pipeline/tests/test_explain_claude.py, pipeline/pyproject.toml
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:50Z
 - pr: —
 
 What: SPEC §6.4: Claude writes the plain-language summary from the detected evidence only. Template stays the default and the fallback.
