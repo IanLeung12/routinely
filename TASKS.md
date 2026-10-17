@@ -596,15 +596,16 @@ Acceptance:
 - tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.
 
 ### T392 — Test: scripts/camera.sh argument handling (no camera needed)
-- status: claimed
+- status: todo
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_camera_script.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T19:31Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-standard: run ended without progress; partial work on branch task/T392-wip-1934: start from it (git switch task/T392-wip-1934 && git merge origin/main)
 
 What: scripts/camera.sh (T356) has no tests. Cover the parts that run before any install or camera: `--help` prints the header usage, unknown args and a non-numeric `--camera` exit 2 with a message, missing values for `--camera`/`--record` fail.
 Interface: new pytest file running `bash scripts/camera.sh ...` via subprocess with a short timeout; must never reach the pip install / camera / dev.sh steps (only invoke paths that exit during argument parsing).
