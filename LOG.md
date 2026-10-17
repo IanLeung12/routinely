@@ -188,3 +188,7 @@ T211 | light | claude-sonnet | merged first try | ~30k tok
 T209 | standard | claude-sonnet | merged (2 commits) | ~95k tok
 T205 | light | claude-sonnet | merged first try | ~15k tok
 T214 | light | claude-sonnet | merged first try | ~15k tok
+T213 | standard | claude-sonnet | merged first try | ~65k tok
+T215 | light | claude-sonnet | merged first try | ~15k tok
+T210 | standard | claude-sonnet | merged first try | ~75k tok
+T207 | standard | claude-opus | merged first try | ~200k tok

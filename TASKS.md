@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 43c3234
+- last-reviewed: a1b6bcc
 
 ## Tasks
 
@@ -499,3 +499,89 @@ Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`,
 Acceptance:
 * test: a `kind: 'trend'` alert's copied text contains `Slow trend for review` and not `Change flagged`; a change alert keeps `Change flagged for review`
 * `cd web && npm test` passes
+
+### T223 — SessionSummary: CSS file instead of inline <style>, reuse formatDuration
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/SessionSummary.tsx, web/src/live/sessionSummary.css, web/src/live/SessionSummary.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `SessionSummary.tsx` (from PR #204) injects a `<style>` block, against the CSS-class cleanup done in T214/T215 (see `web/src/resident/driftCard.css` for the pattern), and re-implements `formatDuration` that `web/src/resident/format.ts` already exports.
+Interface: move the two rules into `web/src/live/sessionSummary.css` imported by the component; use `formatDuration` from `../resident/format.ts` only if its output matches the current strings in `SessionSummary.test.tsx`, otherwise keep the local one and add a one-line comment why.
+Acceptance:
+- no `<style>` element left in `SessionSummary.tsx`; rendered text unchanged
+- existing SessionSummary tests pass unchanged (only add, don't loosen)
+- `cd web && npx vitest run src/live/SessionSummary.test.tsx` and `scripts/ci.sh` pass
+
+### T224 — LiveScreen: CSS file instead of inline <style>
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/LiveScreen.tsx, web/src/live/liveScreen.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/live/LiveScreen.tsx` (line ~31) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215).
+Interface: new `web/src/live/liveScreen.css` imported by `LiveScreen.tsx`; same class names, same rules.
+Acceptance:
+- no `<style>` element left in `LiveScreen.tsx`; no visual or text change
+- `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
+
+### T225 — LiveSession: CSS file instead of inline <style>
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T220
+- area: web/src/live/LiveSession.tsx, web/src/live/liveSession.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/live/LiveSession.tsx` (line ~140) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215). Waits for T220, which edits the same file.
+Interface: new `web/src/live/liveSession.css` imported by `LiveSession.tsx`; same class names, same rules.
+Acceptance:
+- no `<style>` element left in `LiveSession.tsx`; no visual or text change
+- `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
+
+### T226 — Ghost replay: say the figure is a stand-in for demo recordings
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T207 (PR #205) the demo's recordings get a made-up body (`pipeline/src/routine_watch/stick_figure.py`) so the ghost replay has something to draw. A judge or nurse should not mistake it for tracked motion, so add a small muted caption under the replay: "Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box."
+Interface: read `web/src/evidence/GhostReplay.tsx` and its test only. Caption is plain text under the existing canvas/caption row, using existing muted text tokens (`var(--muted)`), readable on the dark card (see T208 for the contrast bug to avoid).
+Acceptance:
+- caption renders under the ghost replay; test asserts the text
+- `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
+
+### T227 — Test: stand-in skeleton never changes what the recogniser reads
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_stick_figure.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `evidence._with_skeleton` adds poses/hands to box-only frames and promises "a frame read by the recogniser still says exactly what it did before". Pin that promise for every frame-level scenario.
+Interface: read `pipeline/src/routine_watch/evidence.py` (`_with_skeleton`), `pipeline/src/routine_watch/stick_figure.py`, `pipeline/src/routine_watch/replay.py` (`load_scenario`, `SCENARIOS_DIR`). For each scenario dir under `tests/scenarios/` with a `frames.jsonl`, assert the recogniser's step/error output on the original frames equals the output on `_with_skeleton`-mapped frames (use whatever function `replay.py` already uses to turn frames into errors).
+Acceptance:
+- parametrized over all frame scenarios; fails if a stand-in landmark changes any error
+- `cd pipeline && python -m pytest tests/test_stick_figure.py -q` and `scripts/ci.sh` pass
