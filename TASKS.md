@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 085dc7c
+- last-reviewed: 27e50ba
 
 ## Tasks
 
@@ -516,3 +516,72 @@ Interface: test files only. Typical fixes: resolve mocked fetches immediately, p
 Acceptance:
 - `cd web && npx vitest run src/alert --reporter=verbose` shows no single test over 1 s; `npm run lint && npm test && npm run build` passes twice with no flakes.
 - Same test count and assertions as before (state the before/after durations in the PR).
+
+### T134 — Unit tests for drift.daily_scores
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_drift.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: PR #117 (T125) moved `daily_scores` from `api.py` into `pipeline/src/routine_watch/drift.py`; it now feeds both the drift card and the demo "watch" status but has no direct tests. Read only `pipeline/src/routine_watch/drift.py` and `pipeline/tests/test_drift.py`.
+Interface: new tests in `pipeline/tests/test_drift.py` only; no source changes.
+Acceptance:
+- Tests cover: several sessions on one day are averaged into one point; output is sorted by date even when input is not; empty input gives `[]`; timestamps with a `+00:00` offset parse.
+- `scripts/ci.sh` passes.
+
+### T135 — demo.py: pull the "worth watching" status out of demo_residents()
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `demo_residents()` grew an inline ~25-line block computing `watch` (early-history cutoff, score points, duration points). Move it into one helper `_watch(history, sessions, scores) -> bool` so the loop body reads as baseline → flag → watch → status. Behaviour must not change. Read only `pipeline/src/routine_watch/demo.py` and `pipeline/tests/test_demo.py`.
+Interface: private helper in `demo.py`; `demo_residents()` output identical.
+Acceptance:
+- A test asserts each demo resident's `status` (snapshot of ids → status before the refactor) is unchanged.
+- `demo_residents()` body is shorter by ≥15 lines; `scripts/ci.sh` passes.
+
+### T136 — Test: demo_residents() is stable across repeated calls
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo_stability.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The tester saw the demo alert grow on every page load (T121). Guard the demo data source against that class of bug: calling `demo_residents()` and `build_alerts(demo_residents())` repeatedly with no live sessions recorded must return identical results. Read only `pipeline/src/routine_watch/demo.py`, `pipeline/src/routine_watch/alerts.py`, `pipeline/tests/conftest.py`.
+Interface: new file `pipeline/tests/test_demo_stability.py`; uses the existing session-log reset fixture from `conftest.py`.
+Acceptance:
+- Three consecutive calls give equal resident lists (status, scores, session count) and equal alert lists (ids, error counts, summary text).
+- If it fails on current main because T121 is unmerged, mark that test `xfail(strict=True, reason="T121")` and say so in the PR.
+- `scripts/ci.sh` passes.
+
+### T137 — StatusChip: say what "Watch" means on hover and for screen readers
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/ui/StatusChip.tsx, web/src/ui/StatusChip.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Now that demo residents reach "watch" (T125), a nurse needs to know in 10 s what each chip means. Add a short `title` + `aria-label` per status: flagged = "Change flagged for review", watch = "Worth watching: trending away from their usual routine", normal = "Within their usual range". Read only `web/src/ui/StatusChip.tsx`, its test and `web/src/ui/README.md`.
+Interface: `StatusChip` props unchanged.
+Acceptance:
+- Test asserts each status renders its label text and accessible name; no wording says "diagnos".
+- `cd web && npm run lint && npm test && npm run build` passes.
