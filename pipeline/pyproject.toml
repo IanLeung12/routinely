@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.115",
     "httpx2>=2.13",  # fastapi.testclient, and verifier.py's Gemini REST calls
     "pydantic>=2.9",
+    "python-multipart>=0.0.18",  # the routine builder's multipart upload (POST /routines/draft)
     "pyyaml>=6.0",  # the task graphs in src/routine_watch/tasks/*.yaml
     "uvicorn>=0.32",
     "websockets>=13",  # uvicorn serves /ws/live only if a websocket library is there
