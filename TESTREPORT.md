@@ -14,4 +14,5 @@
 - 4 Robustness: not run (level 3 not fully passing yet; waiting on live/evidence screens)
 
 ## Open bug tasks
+- T047 (priority 0, filed by Ian): flaky web CI "window is not defined" — not reproduced in this run
 - T048 (priority 1): heat calendar ignores dark theme
