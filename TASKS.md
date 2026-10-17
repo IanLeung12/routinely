@@ -445,7 +445,7 @@ Acceptance:
 - Docstrings of `HistorySession`/`Expected` say how to write a duration.
 
 ### T158 — Docs: CODEMAP note for the "what was it?" cause path
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
@@ -463,7 +463,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T159 — Resident detail: real empty states for sessions and heat calendar
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
