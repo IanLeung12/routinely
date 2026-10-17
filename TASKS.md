@@ -607,3 +607,25 @@ Acceptance:
 - Asserts the set of `pattern_id`s in mockPatterns.ts equals LIBRARY's, and per pattern the `urgency` and `checks` list match.
 - If the mock has already drifted, do not edit web/; mark the failing case `xfail` with the reason and list the drift in the PR body.
 - `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
+
+### T353 — Live camera on the dashboard: one command, laptop webcam → /ws/live
+- status: todo
+- class: heavy
+- priority: 0
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/api_live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/capture.py, scripts/camera.sh, pipeline/tests/test_api_live_camera.py, docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants to try the real camera locally. `capture.py --camera 0` already writes JSONL and `live_camera.camera_session_messages()` already turns a frame stream into live messages, but `/ws/live` only plays recorded scenarios. Wire them together so the dashboard's Live screen shows his webcam session.
+Interface:
+- `/ws/live?source=camera[&camera=0]` streams `camera_session_messages()` from a capture iterator running in a background thread (same pause handling as scenarios). Default stays the recorded scenario.
+- `scripts/camera.sh`: on a laptop, `uv sync --extra capture`, download the two MediaPipe task bundles into `models/` if missing (URLs in `capture._MODEL_URLS`), start the stack (`dev.sh up`), and print the dashboard URL with the Live screen pointed at the camera (a `?source=camera` toggle or query param in `web/src/live/` if needed). Optional `--record out.jsonl` also saves the capture stream (never video).
+- Without detector weights (`DETECTOR_WEIGHTS`), skeleton and hands still stream live and steps show as "waiting for object detector"; say so on screen instead of looking broken.
+- macOS: note camera permission for the terminal in `docs/DEMO.md`; Windows/Linux index 0 default.
+Acceptance:
+- Test with a fake capture iterator: `/ws/live?source=camera` yields session_start, frames, steps, session_end like a scenario.
+- `scripts/ci.sh` passes without mediapipe/opencv installed (lazy imports).
+- `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
