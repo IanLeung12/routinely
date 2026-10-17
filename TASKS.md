@@ -460,7 +460,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T440 — Bug: flaky unit test test_frames_in_thread_hands_over_every_record_in_order
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
