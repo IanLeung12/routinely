@@ -251,7 +251,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_checks.py -q` and `scripts/ci.sh` pass.
 
 ### T016 — Alert summary template (offline explainer)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
