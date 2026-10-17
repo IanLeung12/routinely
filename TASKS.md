@@ -240,7 +240,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T113 — Pattern scenarios: one replayable scenario per pattern
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: test
