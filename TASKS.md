@@ -7,25 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T089 — Unit overview shows the top pattern for flagged/watch residents
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- deps: T084
-- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py, web/src/overview/, web/src/mock/residents.ts
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T08:33Z
-- pr: #149
-- rating: 5/5 clear
-
-What: SPEC §9 screen 1 and demo step 6 ("Mr. D on watch, slow drift"): each flagged or watch resident row shows its top pattern name next to the status chip.
-Interface: `GET /residents` items gain `top_pattern: {pattern_id, name, urgency} | null` from T084's scorer; `web/src/overview/types.ts` `ResidentSummary.top_pattern`; `UnitOverview` renders it as text (not colour alone); normal residents show nothing.
-Acceptance:
-- pytest: Mrs. K's `top_pattern.pattern_id == "sudden_change"`, drift resident's is `slow_drift`, normal residents `null`.
-- Vitest: row shows pattern text for flagged resident, none for normal.
-- `scripts/ci.sh` passes.
-
 ### T114 — api.py: one resident lookup helper instead of copy-pasted loops
 - status: claimed
 - class: light
@@ -80,42 +61,6 @@ Acceptance:
 - Tests: no feedback → identical ranking to today; two confirmed `slow_drift` causes raise its confidence for that resident only; weights stay within bounds after many answers.
 - Wording stays "consistent with"; no "diagnose".
 - `scripts/ci.sh` passes.
-
-### T141 — Pattern scenario: executive pattern (perseveration with steps still in order)
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: tests/scenarios/pattern_executive/
-- owner: ian-claude-standard
-- claimed: 2026-10-17T08:10Z
-- pr: #132
-- rating: 5/5 clear
-
-What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `executive_pattern` so e2e proves the library ranks it top when the resident repeats steps (perseveration) while the order stays intact.
-Interface: `tests/scenarios/pattern_executive/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/pattern_slow_drift/` (incl. `history:` and `top_pattern: executive_pattern`). Read the `executive_pattern` entry in `pipeline/src/routine_watch/patterns_library.py` for what it needs. Don't change pipeline code; if the scenario can't reach the pattern without code changes, set the task blocked with the reason.
-Acceptance:
-- `scripts/e2e.sh` passes with the new scenario included and `top_pattern: executive_pattern`.
-- Header comment in expected.yaml explains the shape in 2-4 lines.
-
-### T142 — Pattern scenario: evening-only worsening
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: tests/scenarios/pattern_evening_worsening/
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T08:17Z
-- pr: #136
-- rating: 5/5 clear
-
-What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `evening_worsening` so e2e proves the library ranks it top when errors cluster in evening sessions while mornings stay clean.
-Interface: `tests/scenarios/pattern_evening_worsening/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/pattern_slow_drift/` (incl. `history:` and `top_pattern: evening_worsening`). Read the `evening_worsening` entry in `pipeline/src/routine_watch/patterns_library.py` (it requires `evening_concentrated`) and how `extract_features` in `patterns.py` derives that from `hours_ago`. Don't change pipeline code; if the scenario format can't express evening sessions, set the task blocked with the reason.
-Acceptance:
-- `scripts/e2e.sh` passes with the new scenario and `top_pattern: evening_worsening`.
-- Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
 - status: todo
