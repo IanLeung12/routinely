@@ -687,3 +687,110 @@ Interface: in `docs/DEMO.md`, add one line to the setup/"before you start" secti
 Acceptance:
 - One short addition, matching the existing bullet style; no change to the run order.
 - `scripts/ci.sh` passes.
+
+### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
+- status: todo
+- class: heavy
+- priority: 0
+- kind: improvement
+- deps: —
+- area: docs/DESIGN.md, web/src/index.css, web/src/ui/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants the dashboard to look like Fey (finance app): quiet, premium, dark, data-first. This task sets the visual language every other redesign task builds on. Use the mobbin MCP (`search_screens` "Fey dashboard", "Fey stock chart", "Fey earnings", "Fey portfolio") to study the references; borrow structure, density and chart style, never Fey's branding or logo. Don't commit Mobbin images; link them.
+References: https://mobbin.com/screens/8487cb92-3969-4f21-a847-26177466cf9a (home), https://mobbin.com/screens/7599e963-22f6-428c-b03e-f0438e2c3291 (watchlist vs markets), https://mobbin.com/screens/d70bd977-1898-4979-a799-bd2dcb94ab25 (financials charts), https://mobbin.com/screens/f7d60fde-c660-4041-8c28-e381512275dd (bar charts), https://mobbin.com/screens/729ec564-7ed7-453d-a3f2-86f51b34c96a (comparison).
+What we observed (starting point, verify against the refs):
+- Near-black page (~#0b0b0d) with a faint warm radial vignette on detail pages; cards one step lighter (~#141416) with 1px hairline borders (white ~6–8% alpha), radius ~12px, generous padding, few shadows.
+- Type: neutral sans, small sizes (12–14px body, 15–16px card titles, semibold), muted grey secondary text, tabular numerals, numbers right-aligned.
+- Colour is rare and meaningful: positive green and negative red shown as small tinted pills (text colour on ~15% alpha background); a secondary series in soft purple; dotted lines for "expected/forecast" series.
+- Lists: dense rows with hairline separators, value pill on the right.
+- Controls: segmented time-range pills (1M 3M YTD 1Y) with the active one on a grey chip; floating rounded "dock" navigation.
+Interface:
+- `docs/DESIGN.md`: the brief: principles, tokens table, chart rules (see T402), status mapping, do/don't, reference links. Short (≤150 lines).
+- Tokens in `web/src/index.css`: surfaces (page, card, raised, hairline), text (primary, secondary, muted), accent + status (normal = neutral/green, watch = amber, flagged = red/pink) each with a tinted-background variant, chart palette (primary line, comparison purple, baseline band, forecast dotted), radii, spacing scale, type scale, `font-variant-numeric: tabular-nums` utility.
+- `web/src/ui/`: update Card, StatusChip (tinted pill), Button, SectionHeader; add `Pill` (value/delta pill), `SegmentedControl` (time range), `Row` (dense list row with hairline). Keep existing exports working so screens don't break before their own redesign task.
+Acceptance:
+- Text contrast ≥ 4.5:1 on its surface for every text token (nurses, not traders: Fey's faintest greys are too light; keep the look but meet contrast). Never colour alone for status.
+- Vitest tests for new primitives; `cd web && npm run lint && npm test && npm run build`; `scripts/ci.sh` passes.
+- Before/after screenshots of the overview in the PR (dev server), labelled.
+
+### T402 — Redesign 2/6: chart kit in Fey style + restyle existing charts
+- status: todo
+- class: heavy
+- priority: 1
+- kind: improvement
+- deps: T401
+- area: web/src/ui/charts/, web/src/overview/Sparkline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/HeatCalendar.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The graphs are what Ian likes most in Fey. Build a small, dependency-free SVG chart kit following `docs/DESIGN.md` and move our charts onto it. Study the chart references in T401 with the mobbin MCP first.
+Interface (`web/src/ui/charts/`):
+- `LineChart`: thin (1.25–1.5px) primary line, no heavy area fill (at most a very faint gradient), hairline or dashed gridlines only at a few ticks, tiny muted axis labels, **end-of-line value tag** (pill at the right edge with the latest value), optional **personal-baseline band** (mean ± threshold as a soft band) and optional dotted comparison series, hover/focus crosshair with a small tooltip, keyboard focus over points.
+- `BarChart`: slim rounded bars, paired series (e.g. this week vs baseline) with the second series muted/outlined, callout pill above a highlighted bar ("2.4× baseline").
+- `MicroBars`: row of thin vertical ticks (like Fey's sector rows) for a resident's last 14 days, coloured by status.
+- `RangeSelector`: uses `SegmentedControl` (7D 14D 30D).
+- Restyle: `Sparkline` → MicroBars or mini LineChart; `BaselineChart` → LineChart with baseline band + end tag + range selector; HeatCalendar → muted Fey palette (tinted cells, hairline gaps); drift card → LineChart with dotted trend.
+Acceptance:
+- Every chart has an accessible name and a text alternative (summary line or table) for screen readers.
+- Unit tests for scales/ticks and that the end tag shows the latest value; existing chart tests still pass (update selectors, not behaviour).
+- Before/after screenshots of Mrs. K's detail in the PR.
+
+### T403 — Redesign 3/6: unit overview + app shell
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: T401, T402
+- area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
+Acceptance: keyboard nav and existing behaviour unchanged (tests updated for structure only); flagged resident still understood in 10 s; before/after screenshot in PR; `scripts/ci.sh` passes.
+
+### T404 — Redesign 4/6: resident detail
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: T401, T402
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/SessionList.tsx, web/src/resident/ContextTimeline.tsx, web/src/resident/*.css, web/src/resident/ResidentDetail.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Fey "stock detail" layout for a resident: header (name, status pill, top pattern), hero BaselineChart card with range selector, then a two-column grid of cards (heat calendar, sessions as dense rows with error pills, care-record timeline with tinted markers for new meds/fever). Faint warm vignette background per `docs/DESIGN.md`.
+Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
+
+### T405 — Redesign 5/6: alert / evidence view
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: T401, T402
+- area: web/src/alert/, web/src/evidence/, web/src/patterns/
+- owner: —
+- claimed: —
+- pr: —
+
+What: The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
+Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
+
+### T406 — Redesign 6/6: live session + handoff
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: T401, T402
+- area: web/src/live/, web/src/handoff/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
+Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
