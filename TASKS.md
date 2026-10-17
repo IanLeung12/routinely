@@ -527,7 +527,7 @@ Acceptance:
 - tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.
 
 ### T392 — Test: scripts/camera.sh argument handling (no camera needed)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
