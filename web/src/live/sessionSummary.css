@@ -6,3 +6,13 @@
 .session-summary__usual {
   color: var(--muted);
 }
+
+@media (max-width: 480px) {
+  .session-summary {
+    min-width: 0;
+  }
+
+  .session-summary__line {
+    overflow-wrap: anywhere;
+  }
+}
