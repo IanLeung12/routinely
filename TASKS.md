@@ -828,7 +828,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T100 — Feedback store records "what was it?" causes per resident
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -836,7 +836,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/feedback.py, pipeline/tests/test_feedback.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:29Z
-- pr: —
+- pr: #80
 
 What: The dashboard now has a "What was it?" picker (#76, SPEC §5 MVP 8). Prepare the backend half without touching contracts or the API (both busy): the store keeps an optional cause per alert and counts causes per resident, which the pattern feedback loop (Nice to have 8) will use later.
 Interface: `FeedbackStore.record(alert_id, resident_id, feedback, cause: str | None = None)` (existing callers unchanged); `FeedbackStore.cause_of(alert_id) -> str | None`; `FeedbackStore.cause_counts(resident_id) -> dict[str, int]` counting only `confirmed` alerts; re-recording an alert replaces its cause. Cause ids are free strings (pattern ids or `"other"`). Thresholds behave exactly as before.
