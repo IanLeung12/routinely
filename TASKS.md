@@ -283,7 +283,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T185 — demo.py: one flag rule shared by demo_residents and status_for
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
