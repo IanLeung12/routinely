@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T030 — Gemini step verifier behind an interface
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: T031
 - area: pipeline/src/routine_watch/verifier.py, pipeline/tests/test_verifier.py, pipeline/pyproject.toml
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:39Z
 - pr: —
 
 What: SPEC §6.2 and §16 A: when `recogniser.needs_verifier(event)` is true, ask a vision LLM which step happened. Fake by default; Gemini only with `LIVE_API=1`, via `api_cache`, model from `GEMINI_MODEL` (default flash-lite). Images are in-memory JPEG bytes from a ring buffer, never written to disk (the cache stores only the JSON response, keyed by a hash).
