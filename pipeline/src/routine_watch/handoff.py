@@ -11,7 +11,9 @@ functions the dashboard already uses - offline, deterministic, no DB::
     build_handoff(DEMO_NOW, hours=12)
     # {"window_hours": 12,
     #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "flags": 1,
-    #                 "pending_review": 1, "trending": False}, ...],
+    #                 "pending_review": 1, "trending": False,
+    #                 "monitoring_paused": False}, ...],
+    #  "paused": [],
     #  "summary": "..."}
 
 `flags` counts the resident's sessions in the window that scored above their own
@@ -49,6 +51,7 @@ from .drift import daily_scores, drift
 from .explain import Explainer
 from .explain_claude import get_explainer
 from .feedback import FeedbackStore
+from .monitoring import get_monitoring_store
 
 #: A nursing shift, and so the window the handoff looks back over by default.
 DEFAULT_WINDOW_H = 12
@@ -80,6 +83,12 @@ def build_handoff(
     attention come first. `feedback` is the nurse feedback logged so far: it tunes the
     threshold each session is measured against and takes reviewed alerts out of
     `pending_review`.
+
+    A paused room produces no flags at all (SPEC section 12), which would otherwise
+    read as "all quiet" for a resident nobody was watching. `paused` lists every room
+    the monitoring store (`monitoring.get_monitoring_store`) currently has paused, and
+    each resident row in that room gets `monitoring_paused: True` so a nurse can tell
+    "nothing happened" from "nobody was looking".
     """
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware: pass demo.DEMO_NOW")
@@ -90,9 +99,11 @@ def build_handoff(
     pending = _pending_by_resident(
         build_alerts(residents, feedback=feedback), now, hours, feedback
     )
+    paused_rooms = set(get_monitoring_store().paused_rooms())
 
     rows = []
     flagged_sessions: list[_FlaggedSession] = []
+    paused: list[dict] = []
     for resident in residents:
         threshold = _threshold(resident, feedback)
         flagged = [
@@ -101,6 +112,15 @@ def build_handoff(
             if score > threshold
         ]
         flagged_sessions.extend(flagged)
+        room_paused = resident["room"] in paused_rooms
+        if room_paused:
+            paused.append(
+                {
+                    "room": resident["room"],
+                    "resident_id": resident["id"],
+                    "name": resident["name"],
+                }
+            )
         rows.append(
             {
                 "resident_id": resident["id"],
@@ -108,6 +128,7 @@ def build_handoff(
                 "flags": len(flagged),
                 "pending_review": pending.get(resident["id"], 0),
                 "trending": _trending(resident),
+                "monitoring_paused": room_paused,
             }
         )
     rows.sort(key=_review_first)
@@ -115,6 +136,7 @@ def build_handoff(
     return {
         "window_hours": hours,
         "residents": rows,
+        "paused": paused,
         "summary": _summary(rows, flagged_sessions, hours),
     }
 
