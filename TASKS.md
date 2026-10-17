@@ -421,14 +421,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T386 — Test: demo banner reset works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/ui/DemoBanner.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T19:56Z
 - pr: —
 
 What: The presenter resets the demo from the banner; it must work without a mouse like every other screen's keyboard test.
