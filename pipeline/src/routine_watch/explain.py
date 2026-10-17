@@ -11,9 +11,25 @@ def _format_timestamp(t_start: float) -> str:
     return f"{minutes}:{seconds:02d}"
 
 
+_PHRASES = {
+    "omission": "skipped {step}",
+    "perseveration": "repeated {step}",
+    "sequence": "{step} out of order",
+    "substitution": "wrong object for {step}",
+    "hesitation": "long pause at {step}",
+    "abandonment": "stopped before {step}",
+}
+
+
 def _format_error(error: dict) -> str:
-    step = error["type"].replace("_", " ")
-    return f"{step} at {_format_timestamp(error['t_start'])}"
+    step = error["step_id"].replace("_", " ")
+    template = _PHRASES.get(error["type"])
+    if template is None:
+        error_type = error["type"].replace("_", " ")
+        phrase = f"{error_type} at {step}"
+    else:
+        phrase = template.format(step=step)
+    return f"{phrase} at {_format_timestamp(error['t_start'])}"
 
 
 class TemplateExplainer:
