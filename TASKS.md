@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 171de82
+- last-reviewed: a825bee
 
 ## Tasks
 
@@ -427,3 +427,72 @@ Interface: read only `web/src/alert/AlertView.test.tsx` and `web/src/evidence/Re
 Acceptance:
 - No app code changed; only AlertView.test.tsx.
 - `cd web && for i in 1 2 3 4 5; do npx vitest run --pool=threads --maxWorkers=1 src/alert/AlertView.test.tsx || exit 1; done` passes, and `scripts/ci.sh` passes.
+
+### T238 — Alert view: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/alert.css, web/src/alert/PatternList.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses open alerts from a phone (push alert, SPEC §5 nice-to-have 3), but the alert screen has no responsive rules. Add a `@media (max-width: 480px)` block to `alert.css` and `PatternList.css` (same breakpoint as T235's `live/liveScreen.css`) so the header, error list, pattern cards, suggested checks and feedback buttons stack without horizontal scroll.
+Interface: CSS only in the two files listed; no markup or class name changes. If the ghost replay figure (styled in `web/src/index.css`) still overflows, note it in the PR instead of editing index.css.
+Acceptance:
+- No horizontal scroll on `/alerts/<id>` at 375 px; feedback buttons wrap and stay ≥44 px tall tap targets.
+- Desktop layout unchanged.
+- `scripts/ci.sh` passes; PR body notes the viewport widths checked (e.g. Playwright screenshot at 375 and 1280).
+
+### T239 — Resident detail: usable at phone width (375 px)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/driftCard.css, web/src/resident/heatCalendar.css, web/src/resident/resident.css (new), web/src/resident/ResidentDetail.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The resident detail screen (baseline chart, slow-drift card, heat calendar, sessions, care records) has no responsive rules. Add `@media (max-width: 480px)` rules so it reads on a phone: chart and calendar scale to the card width (or scroll inside their own card, never the page), lists stack.
+Interface: CSS in the listed files; `resident.css` is new and imported by ResidentDetail.tsx for any rules not owned by DriftCard/HeatCalendar. Don't move rules out of `web/src/index.css` (T234 owns that pattern for the overview); add overrides instead.
+Acceptance:
+- No page-level horizontal scroll on `/residents/mrs-k` at 375 px; desktop layout unchanged.
+- Existing resident tests still pass; `scripts/ci.sh` passes; PR body notes the widths checked.
+
+### T240 — Pattern library: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/patterns/PatternLibrary.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: The pattern library page has no responsive rules. Add a `@media (max-width: 480px)` block to `PatternLibrary.css` so each pattern card's signals, rule-outs and sources stack in one column with no horizontal scroll.
+Interface: read only `web/src/patterns/PatternLibrary.tsx` (for class names) and `web/src/patterns/PatternLibrary.css`; for the breakpoint style copy `web/src/live/taskMap.css`'s `@media (max-width: 480px)` block. CSS only, no markup changes.
+Acceptance:
+- No horizontal scroll on the pattern library at 375 px; desktop unchanged.
+- `scripts/ci.sh` passes.
+
+### T241 — Test: no user-facing web copy says "diagnose" or "has <condition>"
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/wording.test.ts (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: The wording rule (AGENTS.md: the product flags a change for review, lists patterns it is "consistent with", never "diagnoses") is only checked per component. Add one guard test that scans every non-test `web/src/**/*.ts(x)` file's string literals and JSX text for `diagnos` (case-insensitive) and fails with the file and line.
+Interface: `web/src/wording.test.ts` using `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true })`, skipping `*.test.*` and `contracts.ts`. Strip `//` and `/* */` comments before matching (LiveSession.tsx and PatternList.tsx mention "never diagnoses" in comments, which is fine).
+Acceptance:
+- Test passes on current main; temporarily adding `'Diagnosed with X'` to any component makes it fail with that file named (say so in the PR body).
+- `scripts/ci.sh` passes.
