@@ -84,6 +84,6 @@ T093 | light | claude-sonnet | merged first try | ~18k tok
 T080 | standard | claude-sonnet | merged first try | ~95k tok
 T061 | standard | claude-sonnet | merged first try | ~?k tok
 T101 | standard | claude-sonnet | merged first try | ~45k tok
-T081 | standard | claude-opus | merged first try | ~?k tok
+T081 | heavy | claude-opus | merged first try | ~?k tok
 T108 | light | claude-sonnet | merged first try | ~?k tok
 T075 | light | claude-sonnet | merged first try | ~?k tok
