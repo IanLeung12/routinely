@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T114 — api.py: one resident lookup helper instead of copy-pasted loops
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
@@ -462,7 +462,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T165 — Test: pattern ids are safe feedback causes
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: test
