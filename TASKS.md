@@ -81,15 +81,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T103 — Room monitoring pause toggle (component only)
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/about/MonitoringToggle.tsx (new), web/src/about/MonitoringToggle.test.tsx (new)
 - source: proposed
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:15Z
 - pr: —
 
 What: Responsible design made visible for judges (SPEC §12: "per room and can be turned off"): a per-room monitoring on/paused switch. Component only; wiring and API are later tasks. Read only `web/src/about/PrivacyPanel.tsx` (style) and `web/src/ui/Button.tsx`.
