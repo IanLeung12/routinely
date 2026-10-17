@@ -81,7 +81,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T088 — Alert screen shows ranked possible patterns
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
