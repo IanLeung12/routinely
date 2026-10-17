@@ -313,13 +313,13 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T046 — Confidence / unclear badge component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/alert/ConfidenceBadge.tsx, web/src/alert/ConfidenceBadge.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:26Z
 - pr: —
 
 What: SPEC §12 "show uncertainty": a small badge shown next to a step event or alert. Read only the files in `area` and `web/src/alert/SuggestedChecks.tsx` (style).
