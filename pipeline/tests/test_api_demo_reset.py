@@ -54,6 +54,17 @@ def test_reset_also_clears_logged_feedback(monkeypatch: pytest.MonkeyPatch):
         assert api_module._feedback_store.get(MRS_K_ALERT) is None
 
 
+def test_reset_also_resumes_paused_room_monitoring(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DEMO_RESET", "1")
+    with TestClient(app) as client:
+        client.put("/rooms/204/monitoring", json={"on": False})
+        assert client.get("/monitoring").json()["paused_rooms"] == ["204"]
+
+        client.post("/demo/reset")
+
+        assert client.get("/monitoring").json()["paused_rooms"] == []
+
+
 def test_reset_is_404_without_offline_mode_or_demo_reset(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("OFFLINE_MODE", raising=False)
     monkeypatch.delenv("DEMO_RESET", raising=False)
