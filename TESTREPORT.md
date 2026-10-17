@@ -13,7 +13,7 @@
   - alert: now lists the live session's own errors (skipped teabag 1:10, repeated pour 1:30) alongside the earlier session's (T155 fixed)
   - evidence: replay plays with skeleton + object boxes; "Today / Usual" caption readable (T208 fixed)
   - "Consistent with ..." patterns + rule-outs, suggested checks, Copy summary
-  - "Confirmed": "Marked as confirmed", threshold 2.4 → 2.3
+  - "Confirmed": "Marked as confirmed", threshold 2.4 → 2.3; feedback buttons render unstyled → T232 (P1, cosmetic)
   - pattern library page (T118) renders with signals, rule-outs, sources
 - 4 Robustness: PASS
   - corrupted frames (truncated line / garbage lines / empty file) via e2e.sh: clean line-numbered error, no traceback
@@ -21,4 +21,4 @@
   - API killed: dashboard falls back to mock data (live view labelled "Mock data"), no crash
 
 ## Open bug tasks
-- none
+- T232 (P1): alert feedback buttons render unstyled
