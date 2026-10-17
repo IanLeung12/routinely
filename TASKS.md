@@ -608,14 +608,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T119 — Bug: API sends no CORS headers, so the dashboard silently shows mock data
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/api.py (middleware only), pipeline/tests/test_api_cors.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:29Z
 - pr: —
 - source: tester
 
