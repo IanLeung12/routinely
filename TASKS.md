@@ -130,22 +130,6 @@ Acceptance:
 - Vitest: three buckets with text labels (not colour only); hidden when absent.
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
-### T295 — Test: unit overview opens a resident keyboard-only
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: web/src/overview/UnitOverview.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T14:48Z
-- pr: #288
-- rating: 5/5 clear
-
-What: The first demo step is opening Mrs. K from the unit overview; prove a keyboard user can do it.
-Interface: Read `web/src/overview/UnitOverview.tsx` and its test. With `@testing-library/user-event`: Tab until a resident row's control is focused, press Enter, assert the select/open callback fires with that resident's id; also Tab to a status filter and activate it with Space. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
-Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes; `scripts/ci.sh` passes.
-
 ### T296 — Scenarios: meds_unclear_not_error and meds_bad_sessions_far_apart
 - status: done
 - class: standard
