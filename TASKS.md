@@ -147,14 +147,14 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass
 
 ### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: T242
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx, web/src/overview/overview.css
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T12:59Z
 - pr: —
 
 What: A nurse scanning the unit can't tell which rooms are paused (SPEC §12 privacy pause). On load, call `fetchPausedRooms()` and show a small grey "Monitoring paused" chip on each resident card whose `resident.room` is in the list.
