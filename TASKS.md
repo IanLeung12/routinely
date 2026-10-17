@@ -224,7 +224,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T097 — Scenario: two bad sessions 60 h apart do not flag
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -452,7 +452,7 @@ Acceptance:
 - Tests for all three states in ResidentDetail.test.tsx; `scripts/ci.sh` passes.
 
 ### T110 — Live task map: step state not conveyed by colour alone
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
