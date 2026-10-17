@@ -35,6 +35,6 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 - Roboflow credits are scarce (50/month). Never call Roboflow's hosted inference API in code, tests or CI; run the detector locally from downloaded weights. Never start a Roboflow training run; humans do that.
 - Wording: the product **flags a change for review** and lists patterns it is **"consistent with"** plus what to rule out (SPEC §7.5). Never "diagnoses", never "has <condition>".
 - Keep PRs small. Prefer boring, readable code over clever code.
-- `main` is protected: PRs only, CI must pass, and the branch must be up to date with `main`. You don't update it yourself: `scripts/mergeq.py` (host cron) re-tests auto-merge PRs one at a time on top of the latest `main`. Never force-push.
+- `main` is protected: PRs only, CI must pass. `scripts/mergeq.py` (host cron) sends PRs with merge conflicts back to the board so the next worker can fix them. Never force-push.
 - Lessons: your prompt includes `LESSONS.md` from the board. Add one with `tasks.py lesson` when a gotcha costs you a retry.
 - Tasks whose `area` overlaps work in flight aren't handed out until that work merges, so keep to your task's files.
