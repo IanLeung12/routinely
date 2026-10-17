@@ -9,6 +9,8 @@ Rules for staying cheap:
 - Run only the task's test command while working, then `scripts/ci.sh` once before pushing. It must pass (it runs ruff; `uv run --with ruff ruff check --fix .` fixes most lint).
 - Give up after 2 failed attempts instead of looping.
 
+**You are non-interactive: ending your reply ends the session.** Never stop to "wait" for CI; run it in the foreground and finish only when the task is in-review or blocked.
+
 Steps:
 1. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main` (if the task already has a `pr:`, check out that PR's branch instead and fix it)
 2. Implement and test.

@@ -3,7 +3,7 @@ You have already been assigned this task (status is `claimed`, owner is you):
 
 {{TASK}}
 
-Do it end to end without asking anyone:
+Do it end to end without asking anyone. **You are non-interactive: ending your reply ends the session.** Never stop to "wait" for something; run CI and `gh pr checks --watch` in the foreground and only finish when the task is in-review, done or blocked.
 1. Read `AGENTS.md`. Read only the parts of `SPEC.md` and the code that this task needs.
 2. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main` (if the task already has a `pr:`, check out that PR's branch instead and fix it)
 3. Implement it. Stay inside the task's `area`. Write or update tests.
