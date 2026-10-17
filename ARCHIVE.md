@@ -3932,3 +3932,40 @@ Interface: read `web/src/evidence/GhostReplay.tsx` and its test only. Caption is
 Acceptance:
 - caption renders under the ghost replay; test asserts the text
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
+
+### T227 — Test: stand-in skeleton never changes what the recogniser reads
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_stick_figure.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:22Z
+- pr: #224
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T227-wip-1053: start from it (git switch task/T227-wip-1053 && git merge origin/main)
+- rating: 5/5 clear
+
+What: `evidence._with_skeleton` adds poses/hands to box-only frames and promises "a frame read by the recogniser still says exactly what it did before". Pin that promise for every frame-level scenario.
+Interface: read `pipeline/src/routine_watch/evidence.py` (`_with_skeleton`), `pipeline/src/routine_watch/stick_figure.py`, `pipeline/src/routine_watch/replay.py` (`load_scenario`, `SCENARIOS_DIR`). For each scenario dir under `tests/scenarios/` with a `frames.jsonl`, assert the recogniser's step/error output on the original frames equals the output on `_with_skeleton`-mapped frames (use whatever function `replay.py` already uses to turn frames into errors).
+Acceptance:
+- parametrized over all frame scenarios; fails if a stand-in landmark changes any error
+- `cd pipeline && python -m pytest tests/test_stick_figure.py -q` and `scripts/ci.sh` pass
+
+### T228 — Bug: flaky "moves focus to the h1" tests turn main CI red
+- status: done
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: web/src/alert/AlertView.test.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T10:39Z
+- pr: #215
+- rating: 5/5 clear
+
+What: `main` CI failed on f679686 and 495a460 (and a rerun) in `AlertView.test.tsx > moves focus to the h1 once the alert loads` (T213, #202); the same race shows locally in `ResidentDetail.test.tsx > moves focus to the h1 once the resident loads` (T217, #208). The tests check `document.activeElement` right after `findByRole('heading')` resolves, but focus is set in an effect that can land a tick later under CI load. Also seen once: `shows a loading state for the evidence card…` timing out on `findByText('No replay available')` at the 1 s default.
+Interface: read only the two test files. In both focus tests, replace the bare `expect(document.activeElement).toBe(heading)` with `await waitFor(() => expect(document.activeElement).toBe(heading))`. In AlertView's evidence loading-state test, wrap `releases.forEach(...)` in `await act(async () => { ... })` before the `findByText`. Do not change component code or loosen any other assertion.
+Acceptance:
+- `cd web && for i in 1 2 3 4 5; do npx vitest run || break; done` passes all 5 full runs
+- `scripts/ci.sh` passes
