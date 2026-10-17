@@ -219,7 +219,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T014 — Hesitation detector
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
