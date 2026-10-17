@@ -223,6 +223,7 @@ export function mockResidentDetail(residentId: string): Resident | null {
     name: summary.name,
     room: summary.room,
     status: summary.status,
+    top_pattern: summary.top_pattern,
     scores,
     sessions,
     care_records: careRecords,

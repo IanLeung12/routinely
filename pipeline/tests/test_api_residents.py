@@ -27,7 +27,7 @@ def test_list_residents_returns_summary_fields() -> None:
     body = response.json()
     assert len(body) == len(demo_residents())
     for resident in body:
-        assert set(resident) == {"id", "name", "room", "status", "scores"}
+        assert set(resident) == {"id", "name", "room", "status", "top_pattern", "scores"}
         assert resident["scores"]
         for point in resident["scores"]:
             assert set(point) == {"ts", "score"}
@@ -35,6 +35,32 @@ def test_list_residents_returns_summary_fields() -> None:
     by_id = {resident["id"]: resident for resident in body}
     assert by_id[MRS_K]["status"] == "watch"
     assert by_id[MRS_K]["name"] == "Mrs. K"
+
+
+def test_flagged_and_watch_residents_show_their_top_pattern() -> None:
+    """SPEC §9 screen 1 and demo step 6: each flagged or watch row names the pattern
+    the change is consistent with; normal residents show nothing (no clear pattern)."""
+    by_id = {resident["id"]: resident for resident in demo_residents()}
+
+    sudden = by_id[MRS_K]["top_pattern"]
+    assert sudden is not None
+    assert sudden["pattern_id"] == "sudden_change"
+    assert set(sudden) == {"pattern_id", "name", "urgency"}
+
+    drift_resident = next(r for r in by_id.values() if r["status"] == "watch" and r["id"] != MRS_K)
+    assert drift_resident["top_pattern"]["pattern_id"] == "slow_drift"
+
+    normal_residents = [r for r in by_id.values() if r["status"] == "normal"]
+    assert normal_residents
+    assert all(r["top_pattern"] is None for r in normal_residents)
+
+
+def test_mrs_k_flagged_still_shows_sudden_change(mrs_k_flagged) -> None:
+    """A live session that flags Mrs. K keeps her top pattern, not just her watch
+    status (SPEC section 10 beats 2-5)."""
+    by_id = {resident["id"]: resident for resident in demo_residents()}
+    assert by_id[MRS_K]["status"] == "flagged"
+    assert by_id[MRS_K]["top_pattern"]["pattern_id"] == "sudden_change"
 
 
 def test_get_resident_returns_detail() -> None:

@@ -67,7 +67,12 @@ export function UnitOverview({ onSelect }: { onSelect?: (residentId: string) => 
                 <span className="resident-name">{resident.name}</span>
                 <span className="resident-room">Room {resident.room}</span>
               </span>
-              <StatusChip status={resident.status} />
+              <span className="resident-status">
+                <StatusChip status={resident.status} />
+                {resident.top_pattern && (
+                  <span className="resident-pattern">{resident.top_pattern.name}</span>
+                )}
+              </span>
               <Sparkline scores={resident.scores} />
             </button>
           </li>

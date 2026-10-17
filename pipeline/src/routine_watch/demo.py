@@ -19,6 +19,7 @@ from datetime import UTC, datetime, timedelta
 from . import session_log
 from .change_detection import build_baseline, flag_change
 from .drift import daily_scores, drift
+from .patterns import extract_features, score_patterns
 from .scoring import session_score
 from .synth.care_records import generate_care_records
 from .synth.history import generate_history
@@ -127,6 +128,18 @@ def _watch(history: list[dict], sessions: list[dict], scores: list[float]) -> bo
     )
 
 
+def _top_pattern(sessions: list[dict], baseline, care_records: list[dict]) -> dict | None:
+    """The best-scoring pattern this resident's change is consistent with (SPEC §7.5,
+    §9 screen 1), or `None` when nothing clears the threshold - a real answer, not a
+    missing one."""
+    features = extract_features(sessions, baseline, care_records, now=DEMO_NOW)
+    matches = score_patterns(features)
+    if not matches:
+        return None
+    top = matches[0]
+    return {"pattern_id": top.pattern_id, "name": top.name, "urgency": top.urgency.value}
+
+
 def demo_residents() -> list[dict]:
     """Build the demo residents end to end: deterministic, no network, no DB."""
     residents = []
@@ -158,6 +171,9 @@ def demo_residents() -> list[dict]:
         ]
         watch = _watch(history, sessions, scores)
         status = _status(flagged, watch)
+        top_pattern = (
+            _top_pattern(sessions, baseline, care_records) if status != "normal" else None
+        )
 
         residents.append(
             {
@@ -165,6 +181,7 @@ def demo_residents() -> list[dict]:
                 "name": config["name"],
                 "room": config["room"],
                 "status": status,
+                "top_pattern": top_pattern,
                 "scores": score_points,
                 "sessions": sessions,
                 "care_records": care_records,
