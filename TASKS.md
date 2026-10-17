@@ -495,3 +495,23 @@ Interface: in `scripts/integration.sh`, the "Rendered dashboard" block (around l
 Acceptance:
 - a slow first render no longer fails the run; a dashboard that never renders still fails with the same message
 - `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
+
+### T232 — Bug: alert feedback buttons (Confirmed / False alarm / cause) render unstyled
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/alert/FeedbackButtons.tsx, web/src/alert/alert.css, web/src/alert/FeedbackButtons.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: On the alert view (main 13032a4), the Feedback section's "Confirmed" / "False alarm" and the "What was it?" cause buttons show as tiny browser-default buttons (white border, small text), unlike every other button on the dashboard. "Confirmed" is the demo's closing click (SPEC §10) and is easy to miss. `.feedback-button` only has an `[aria-pressed='true']` rule in `alert.css`; there is no base style.
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, let the live tea session finish, click "Open alert", scroll to Feedback.
+Expected: buttons use the shared `Button` from `web/src/ui/Button.tsx` (or the `.btn` / `.btn--secondary` classes in `index.css`) at normal size, pressed state still visible. Actual: unstyled default buttons.
+Interface: in `FeedbackButtons.tsx` render the buttons with `ui/Button` (or add `btn btn--secondary` classes); keep `aria-pressed` and the existing pressed-state rule.
+Acceptance:
+- Confirmed / False alarm / cause buttons share the dashboard button look; pressed one stays visibly distinct (not colour alone)
+- existing FeedbackButtons tests pass; `scripts/ci.sh` passes
