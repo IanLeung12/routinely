@@ -63,7 +63,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T106 — Evidence replay: stop fetching the alert twice
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: improvement
