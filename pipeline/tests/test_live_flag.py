@@ -6,14 +6,12 @@ K's - her sparkline has spiked and her flag and its alert are there. These tests
 the recorded scenarios through `session_messages` (the camera's stand-in and the
 demo's fallback) and then ask the API what a dashboard would see.
 
-The log is process-global, so every test here resets it; that is also the rule for
-anyone else who plays a live session in a test.
+The shared autouse fixture resets the process-global log around every test.
 """
 
 import asyncio
 from typing import Any
 
-import pytest
 from fastapi.testclient import TestClient
 
 from routine_watch import session_log
@@ -33,14 +31,6 @@ QUIET_RESIDENT = "mrs-ahmed"
 
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
-
-
-@pytest.fixture(autouse=True)
-def _empty_log():
-    """Every test starts and ends with the seeded demo and nothing recorded."""
-    session_log.reset()
-    yield
-    session_log.reset()
 
 
 def play(scenario: str, resident_id: str = DEMO_RESIDENT) -> dict[str, Any]:
@@ -106,14 +96,15 @@ def test_the_live_score_spikes_the_sparkline() -> None:
 
 
 def test_the_alert_counts_the_live_session_and_its_errors() -> None:
-    before = alerts()[DEMO_RESIDENT]
+    assert DEMO_RESIDENT not in alerts()  # beat 2-3: normal weeks, one watch session
 
     play(BAD)
 
     after = alerts()[DEMO_RESIDENT]
-    assert len(after["session_ids"]) == len(before["session_ids"]) + 1
-    assert len(after["errors"]) == len(before["errors"]) + 2
+    assert len(after["session_ids"]) == 2  # the seeded watch session plus this live one
+    assert len(after["errors"]) == 4  # omission + perseveration, in each of the two
     assert after["baseline"]["observed"] == 5.0
+    assert after["patterns"][0]["pattern_id"] == "sudden_change"
 
 
 def test_session_end_points_at_the_residents_alert() -> None:
@@ -141,7 +132,6 @@ def test_the_websocket_records_the_session_too() -> None:
 
 
 def test_a_good_live_session_is_listed_without_qualifying() -> None:
-    before = alerts()[DEMO_RESIDENT]
     sessions_before = len(resident(DEMO_RESIDENT)["sessions"])
 
     end = play(GOOD)
@@ -150,8 +140,8 @@ def test_a_good_live_session_is_listed_without_qualifying() -> None:
     detail = resident(DEMO_RESIDENT)
     assert len(detail["sessions"]) == sessions_before + 1
     assert detail["sessions"][-1]["errors"] == {}
-    # Listed, but not one of the sessions behind the flag.
-    assert alerts()[DEMO_RESIDENT]["session_ids"] == before["session_ids"]
+    # A good session never qualifies, so it never raises a flag on its own.
+    assert DEMO_RESIDENT not in alerts()
 
 
 def test_a_good_live_session_leaves_a_quiet_resident_alone() -> None:

@@ -77,6 +77,27 @@ def test_too_many_sentences_is_rejected():
     assert result == TemplateExplainer().summarise(ERRORS, BASELINE, CONTEXT)
 
 
+def test_spelled_out_wrong_count_is_rejected():
+    baseline = {"observed": 2, "baseline_mean": 0.2, "baseline_days": 14}
+    client = FakeClient(text="Mrs. K made three errors this session, unlike her usual pattern.")
+    result = ClaudeExplainer(client=client).summarise(ERRORS, baseline, CONTEXT)
+    assert result == TemplateExplainer().summarise(ERRORS, baseline, CONTEXT)
+
+
+def test_spelled_out_matching_count_is_kept():
+    baseline = {"observed": 2, "baseline_mean": 0.2, "baseline_days": 14}
+    client = FakeClient(text="Mrs. K made two errors this session, unlike her usual pattern.")
+    result = ClaudeExplainer(client=client).summarise(ERRORS, baseline, CONTEXT)
+    assert result == client.messages._text
+
+
+def test_non_number_words_are_not_flagged():
+    baseline = {"observed": 2, "baseline_mean": 0.2, "baseline_days": 14}
+    client = FakeClient(text="Someone skipped a step once this session, unlike her usual pattern.")
+    result = ClaudeExplainer(client=client).summarise(ERRORS, baseline, CONTEXT)
+    assert result == client.messages._text
+
+
 def test_exception_falls_back_to_template():
     client = FakeClient(error=RuntimeError("timeout"))
     result = ClaudeExplainer(client=client).summarise(ERRORS, BASELINE, CONTEXT)

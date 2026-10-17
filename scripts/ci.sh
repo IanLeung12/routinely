@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 echo "== repo tooling"
-python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py
+python3 -m py_compile scripts/tasks.py scripts/codemap.py scripts/mergeq.py scripts/metrics.py
 bash -n scripts/integration.sh
 python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh

@@ -208,9 +208,11 @@ def test_frames_scenario_sends_skeleton_frames() -> None:
     assert reported(messages) == [("omission", "boil"), ("omission", "fill_kettle")]
 
 
-def test_step_scenario_sends_no_frames() -> None:
-    """A scenario written at step level has no frames to send, so it sends none."""
-    assert of_type(live_session(BAD), "frame") == []
+def test_step_scenario_sends_synthetic_frames() -> None:
+    """A scenario written at step level has no recorded frames, so the skeleton view
+    gets a made-up one per step instead of staying empty the whole session."""
+    events = load_scenario(scenario_path(BAD)).events
+    assert len(of_type(live_session(BAD), "frame")) == len(events)
 
 
 @pytest.mark.parametrize(

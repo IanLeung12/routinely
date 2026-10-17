@@ -14,10 +14,11 @@ next `/residents` and `/alerts` (SPEC section 10, step 4).
 """
 
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from . import session_log
-from .change_detection import Baseline, build_baseline, flag_change
+from .change_detection import build_baseline, flag_change
+from .drift import daily_scores, drift
 from .scoring import session_score
 from .synth.care_records import generate_care_records
 from .synth.history import generate_history
@@ -26,6 +27,12 @@ from .synth.history import generate_history
 DEMO_NOW = datetime(2026, 1, 1, tzinfo=UTC)
 
 DEMO_DAYS = 14
+
+#: How many of the resident's earliest days build their baseline (SPEC section 8,
+#: beat 6: a baseline drawn from the resident's *whole* history rises along with a
+#: slow drift and the resident never crosses their own threshold; anchoring it to
+#: the earliest days instead keeps it still while a drifting resident worsens).
+BASELINE_DAYS = 7
 
 #: Whose session the live demo is: a teammate makes tea on stage as Mrs. K (SPEC
 #: sections 8 and 10), so this is the resident `routine_watch.live` records against
@@ -44,12 +51,24 @@ _RESIDENTS: tuple[dict[str, str | int], ...] = (
 )
 
 
-def _status(latest_score: float, baseline: Baseline, flagged: bool) -> str:
+def _status(flagged: bool, watch: bool) -> str:
     if flagged:
         return "flagged"
-    if latest_score > baseline.threshold:
+    if watch:
         return "watch"
     return "normal"
+
+
+def _trending(points: list[dict]) -> bool:
+    return drift(daily_scores(points)).trending
+
+
+def _worth_watching(latest: float, early_values: list[float], points: list[dict]) -> bool:
+    """True once a resident's latest session breaks their own early-days bar, or
+    their own history trends upward - the two patterns a slow drift and a sudden
+    spike each show on a metric (SPEC §8 beat 6, §7.5)."""
+    early_baseline = build_baseline(early_values)
+    return latest > early_baseline.threshold or _trending(points)
 
 
 def _score(session: dict) -> float:
@@ -95,7 +114,9 @@ def demo_residents() -> list[dict]:
         # history they came in with and a live session is measured against it, the way
         # `replay.change_flag` measures a replayed one. Folding live sessions into it
         # would let two bad sessions raise the bar they are being judged by until the
-        # change they are hides itself.
+        # change they are hides itself. It stays whole-history so a sudden two-session
+        # spike (mrs-k) still flags, and so the alert evidence it backs lines up with
+        # the sessions that tripped `flag_change`.
         baseline = build_baseline([_score(session) for session in history])
         sessions = sorted(history + _live_sessions(config["id"]), key=lambda s: s["ts"])
         scores = [_score(session) for session in sessions]
@@ -104,7 +125,31 @@ def demo_residents() -> list[dict]:
             for session, score in zip(sessions, scores, strict=True)
         ]
         flagged = flag_change(timestamped, baseline, DEMO_NOW)
-        status = _status(scores[-1], baseline, flagged)
+        score_points = [
+            {"ts": session["ts"], "score": score}
+            for session, score in zip(sessions, scores, strict=True)
+        ]
+        # A resident's own earliest sessions - not their whole history, which rises
+        # right along with a slow drift and so never gets crossed - are what "worth
+        # watching" measures against (SPEC §8 beat 6). Duration catches the motor
+        # pattern, which barely touches error counts by design (SPEC §7.5).
+        baseline_cutoff = DEMO_NOW - timedelta(days=DEMO_DAYS - BASELINE_DAYS)
+        early_history = [
+            session
+            for session in history
+            if datetime.fromisoformat(session["ts"]) < baseline_cutoff
+        ]
+        duration_points = [
+            {"ts": session["ts"], "score": session["duration_s"]} for session in sessions
+        ]
+        watch = _worth_watching(
+            scores[-1], [_score(session) for session in early_history], score_points
+        ) or _worth_watching(
+            sessions[-1]["duration_s"],
+            [session["duration_s"] for session in early_history],
+            duration_points,
+        )
+        status = _status(flagged, watch)
 
         residents.append(
             {
@@ -112,10 +157,7 @@ def demo_residents() -> list[dict]:
                 "name": config["name"],
                 "room": config["room"],
                 "status": status,
-                "scores": [
-                    {"ts": session["ts"], "score": score}
-                    for session, score in zip(sessions, scores, strict=True)
-                ],
+                "scores": score_points,
                 "sessions": sessions,
                 "care_records": care_records,
                 "baseline": {

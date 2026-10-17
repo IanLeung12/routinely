@@ -28,12 +28,29 @@ describe('AlertView', () => {
     expect(screen.getByText('0:42')).toBeTruthy()
     expect(screen.getByText('1:15')).toBeTruthy()
     expect(screen.getAllByRole('button', { name: /open evidence/i })).toHaveLength(2)
+    expect(screen.getByText('Consistent with: Sudden change')).toBeTruthy()
+    expect(screen.getByText('Rule out acute infection before assuming cognitive decline')).toBeTruthy()
     expect(screen.getByText('Check for infection / UTI')).toBeTruthy()
     expect(screen.getByText('Check hydration')).toBeTruthy()
     expect(screen.getByText('Review recent medication changes')).toBeTruthy()
     expect(screen.getByText('Run a CAM delirium screen')).toBeTruthy()
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(document.body.textContent?.toLowerCase()).not.toContain('diagnos')
+  })
+
+  it('shows no clear pattern when an alert has no patterns', async () => {
+    const alert: Alert = { ...MRS_K, patterns: [] }
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes(`/alerts/${MRS_K.alert_id}`)) {
+        return Promise.resolve({ ok: true, json: async () => alert })
+      }
+      return Promise.reject(new Error('offline'))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    expect(await screen.findByText('Change detected, no clear pattern.')).toBeTruthy()
   })
 
   it('shows the evidence replay card with the skeleton replay and ghost overlay', async () => {

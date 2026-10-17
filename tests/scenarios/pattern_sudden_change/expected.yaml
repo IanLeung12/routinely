@@ -1,0 +1,43 @@
+# T113: SPEC §7.5's sudden-change pattern. The teabag never goes in (omission) and
+# the water is poured twice with a stir in between (perseveration) - the same shape
+# as tea_skip_teabag_pour_twice - landing on top of a resident whose own history
+# shows a handful of scattered single-type slips but never two kinds at once. The
+# change lands inside a day, several kinds of error at once, which is what the
+# library's `sudden_change` pattern is defined by (SPEC §7.5).
+
+task: tea
+
+steps:
+  - fill_kettle
+  - boil
+  - get_cup
+  # teabag_in_cup never happens
+  - pour
+  - stir
+  - pour # again, with a step in between
+  - remove_teabag
+
+errors:
+  - { type: omission, step: teabag_in_cup }
+  - { type: perseveration, step: pour }
+score: 5.0 # omission 3.0 + perseveration 2.0
+
+# Twelve quiet days, a few isolated single-type slips, then one bad session 30 hours
+# ago with three kinds of error at once - the breadth a sudden change is read from.
+history:
+  - { hours_ago: 312, errors: {} }
+  - { hours_ago: 288, errors: {} }
+  - { hours_ago: 264, errors: { hesitation: 1 } }
+  - { hours_ago: 240, errors: {} }
+  - { hours_ago: 216, errors: {} }
+  - { hours_ago: 192, errors: { hesitation: 1 } }
+  - { hours_ago: 168, errors: {} }
+  - { hours_ago: 144, errors: {} }
+  - { hours_ago: 120, errors: { hesitation: 1 } }
+  - { hours_ago: 96, errors: {} }
+  - { hours_ago: 72, errors: {} }
+  - { hours_ago: 30, errors: { omission: 1, perseveration: 1, sequence: 1 } }
+
+# Two sessions above this resident's own threshold inside 48 hours.
+flag: true
+top_pattern: sudden_change

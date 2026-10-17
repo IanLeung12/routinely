@@ -24,8 +24,12 @@ PROMPT_FILE=prompts/worker.md; [ "$CLASS" = light ] && PROMPT_FILE=prompts/light
 
 SELF_SUM=$(cksum < scripts/worker.sh)
 while true; do
-  if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-    echo "working tree dirty; commit or stash first"; exit 1
+  if [ -n "$(git status --porcelain)" ]; then
+    # A session ended with uncommitted work: save it on a wip branch instead of stopping the worker.
+    WIP="wip/$AGENT-$(date -u +%m%d-%H%M)"
+    git switch -q -c "$WIP" && git add -A && git commit -qm "WIP saved by worker.sh ($AGENT)" \
+      && git push -q -u origin "$WIP" && echo "$(date -u +%H:%M) saved uncommitted work to $WIP"
+    LAST_WIP="$WIP"
   fi
   git fetch -q origin && git switch -q --detach origin/main
   # Pick up a newer worker.sh from main automatically (between tasks only).
@@ -81,7 +85,14 @@ PY
   ST=$(python3 scripts/tasks.py show "$ID" | sed -n 's/^- status: //p')
   PR=$(python3 scripts/tasks.py show "$ID" | sed -n 's/^- pr: //p')
   if [ "$ST" = claimed ] && { [ -z "$PR" ] || [ "$PR" = "—" ] || [ "$PR" = "-" ]; }; then
-    python3 scripts/tasks.py set "$ID" status=todo owner=— claimed=— note="released by $AGENT: run ended without progress" --agent "$AGENT" >/dev/null
+    NOTE="released by $AGENT: run ended without progress"
+    if [ -n "$(git status --porcelain)" ]; then
+      WIP="task/$ID-wip-$(date -u +%H%M)"
+      git switch -q -c "$WIP" && git add -A && git commit -qm "$ID WIP saved by worker.sh ($AGENT)" && git push -q -u origin "$WIP" \
+        && NOTE="$NOTE; partial work on branch $WIP: start from it (git switch $WIP && git merge origin/main)"
+      git switch -q --detach origin/main
+    fi
+    python3 scripts/tasks.py set "$ID" status=todo owner=— claimed=— note="$NOTE" --agent "$AGENT" >/dev/null
     echo "$(date -u +%H:%M) $ID released (no progress; limit hit?); backing off ${BACKOFF}s"
     sleep "$BACKOFF"
   fi

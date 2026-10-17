@@ -6,14 +6,21 @@
 #
 #   scripts/smoke.sh [API_URL]   default http://localhost:${API_PORT:-8000}
 #
-# Checks GET /health, GET /residents, GET /residents/mrs-k, GET /alerts,
-# GET /alerts/<first id> and that the dashboard (DASHBOARD_PORT, default 5173)
-# returns HTML. Prints PASS/FAIL per check and exits non-zero if any failed.
+# Plays mrs-k's tea_skip_teabag_pour_twice live session first (the same way the
+# demo does) so a fresh stack has a flagged resident, then checks GET /health,
+# GET /residents, GET /residents/mrs-k, GET /alerts, GET /alerts/<first id> and
+# that the dashboard (DASHBOARD_PORT, default 5173) returns HTML. Prints
+# PASS/FAIL per check and exits non-zero if any failed.
 # Never sets LIVE_API, never POSTs feedback (that mutates state).
 set -uo pipefail
 
 API_URL="${1:-http://localhost:${API_PORT:-8000}}"
 DASHBOARD_URL="http://localhost:${DASHBOARD_PORT:-5173}"
+
+PIPELINE_PYTHON="pipeline/.venv/bin/python3"
+if [ ! -x "$PIPELINE_PYTHON" ]; then
+  PIPELINE_PYTHON="python3"
+fi
 
 CURL_OPTS=(-fsS --max-time 5 --connect-timeout 3)
 failures=0
@@ -63,6 +70,23 @@ else
   fail "GET /residents/mrs-k: no response"
 fi
 
+ws_url="${API_URL/http/ws}/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000"
+if "$PIPELINE_PYTHON" -c '
+import asyncio, sys
+import websockets
+
+async def main(url):
+    async with websockets.connect(url) as ws:
+        async for _ in ws:
+            pass
+
+asyncio.run(main(sys.argv[1]))
+' "$ws_url" 2>/dev/null; then
+  pass "live session played"
+else
+  fail "live session: could not play $ws_url"
+fi
+
 first_alert_id=""
 if alerts=$(get "$API_URL/alerts"); then
   if first_alert_id=$(python3 -c '
@@ -79,8 +103,9 @@ else
   fail "GET /alerts: no response"
 fi
 
+alert_body=""
 if [ -n "$first_alert_id" ]; then
-  if body=$(get "$API_URL/alerts/$first_alert_id"); then
+  if alert_body=$(get "$API_URL/alerts/$first_alert_id"); then
     pass "GET /alerts/$first_alert_id"
   else
     fail "GET /alerts/$first_alert_id: no response"
@@ -100,7 +125,7 @@ else
 fi
 
 replay_args=""
-if [ -n "$first_alert_id" ] && [ -n "${body:-}" ]; then
+if [ -n "$first_alert_id" ] && [ -n "$alert_body" ]; then
   replay_args=$(python3 -c '
 import json, sys
 data = json.loads(sys.argv[1])
@@ -109,8 +134,8 @@ if not errors:
     print("")
 else:
     e = errors[0]
-    print(f"{data[\"resident_id\"]} {e[\"session_id\"]} {e[\"t_start\"]} {e[\"t_end\"]}")
-' "$body" 2>/dev/null) || replay_args=""
+    print(data["resident_id"], e["session_id"], e["t_start"], e["t_end"])
+' "$alert_body" 2>/dev/null) || replay_args=""
 fi
 
 if [ -n "$replay_args" ]; then

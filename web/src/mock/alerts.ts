@@ -24,5 +24,15 @@ export const mockAlerts: Alert[] = [{
   },
   summary: 'Flagged for review: a teabag step was missed and pouring was repeated across two tea sessions, above the resident’s usual error score.',
   suggested_checks: ['infection_or_uti', 'hydration', 'medication_review', 'cam_screen'],
+  patterns: [
+    {
+      pattern_id: 'sudden_change',
+      name: 'Sudden change',
+      confidence: 0.82,
+      urgency: 'same_shift',
+      evidence: ['error score 5.0 vs usual 0.2 over 14 days', '2 errors across the last 2 sessions'],
+      checks: ['Rule out acute infection before assuming cognitive decline', 'Check fluid intake over the last 24 hours'],
+    },
+  ],
   feedback: null,
 }]
