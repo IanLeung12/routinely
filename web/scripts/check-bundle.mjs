@@ -9,10 +9,12 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // Measured as the gzipped size of the entry chunk + its modulepreload chunks on
-// main right after #237 landed (83848 bytes), rounded up ~10%. Raise this only
-// alongside a PR that explains the growth (new eager dependency, new always-on
-// screen); do not raise it to silence this check.
-const BUDGET_BYTES = 92_200
+// main right after #237 landed (83848 bytes), rounded up ~10%. Raised for T421:
+// the resident detail screen (eager, not lazy) now renders BaselineChart and
+// DriftCard on the shared LineChart chart kit (92656 bytes measured), rounded up
+// again. Raise this only alongside a PR that explains the growth (new eager
+// dependency, new always-on screen); do not raise it to silence this check.
+const BUDGET_BYTES = 93_200
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
 const distDir = join(webDir, 'dist')
