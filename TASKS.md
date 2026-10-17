@@ -594,14 +594,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T123 — Bug: smoke.sh always fails the evidence replay check (alert body is overwritten)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T07:35Z
 - pr: —
 - source: tester
 
