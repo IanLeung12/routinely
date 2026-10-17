@@ -565,15 +565,15 @@ Acceptance:
 - `scripts/ci.sh` passes (including e2e on `tea_normal`).
 
 ### T108 — Review: smoke.sh skips the evidence replay routes and isn't syntax-checked in CI
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: test
 - source: reviewer
 - deps: —
 - area: scripts/smoke.sh, scripts/ci.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:01Z
 - pr: —
 
 What: T037/T080 added `GET /sessions/{session_id}/replay` and `GET /residents/{resident_id}/normal_replay` (`pipeline/src/routine_watch/api.py`), which the alert screen's evidence card depends on, but `scripts/smoke.sh` only checks health/residents/alerts, so a broken replay route passes the demo-day checklist. `scripts/ci.sh` also runs `bash -n` on other scripts but not `smoke.sh`.
