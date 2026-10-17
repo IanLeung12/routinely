@@ -116,6 +116,7 @@ carry the per-step history needed to exercise it.
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 | `meds_abandoned` | steps | The pill comes out but the water steps never happen after a 131-second silence: abandonment plus the remaining omissions, mirroring `tea_abandoned`. |
 | `meds_pill_twice` | steps | A double dose: the pill is taken out of the organiser a second time with `drink_water` in between, a perseveration error. Flags with another recent bad session. |
+| `meds_session_unclear_no_flag` | steps | The meds counterpart of `tea_session_unclear_no_flag`: bad lighting makes over 40% of the session's events unclear, so the whole session is too unclear to score, even against a history that would otherwise flag the same double-dose session. |
 | `pattern_sudden_change` | steps | The demo's bad session on a resident whose own history has only scattered single-type slips: `top_pattern` checks the flag is consistent with `sudden_change` (SPEC §7.5). |
 | `pattern_slow_drift` | steps | Cold water, no stir, after three weeks of hesitation climbing night after night: `top_pattern` checks `slow_drift` (SPEC §7.5). |
 | `pattern_executive` | steps | The teabag goes in three times (perseveration) with the order otherwise intact, building over about a week: `top_pattern` checks `executive_pattern` (SPEC §7.5). |
