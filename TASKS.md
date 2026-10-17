@@ -528,7 +528,7 @@ Acceptance:
 - `cd web && npm test -- replays` and `scripts/ci.sh` pass.
 
 ### T442 — Bug: main CI red — first-load JS 336 bytes over bundle budget
-- status: claimed
+- status: done
 - class: light
 - priority: 0
 - kind: bug
@@ -538,6 +538,7 @@ Acceptance:
 - owner: max_API_light
 - claimed: 2026-10-17T22:24Z
 - pr: —
+- note: Fixed directly on main by Ian/Hermes (budget 92_200 -> 96_000) to unblock 8 PRs before the freeze; stop work on it.
 
 What: `main` CI fails at `npm run check:bundle`: first-load JS is 92536 bytes gzipped vs `BUDGET_BYTES = 92_200` (runs 39073873088, 39074550159). No single merge caused it; the redesign (T403/T407), person view (T409) and replays (T430/T431) each added always-on code. Open PRs (#409, #410) fail on this too.
 Interface: in `web/scripts/check-bundle.mjs` raise `BUDGET_BYTES` to `96_000` and update the comment above it to say why (redesign shell + person view + replays are always-on screens added 2026-10-17; measured 92536 bytes). Add one line to the budget section of `web/README.md` with the new number and reason. Touch no other file.
