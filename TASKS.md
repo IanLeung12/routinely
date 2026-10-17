@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T404 — Redesign 4/6: resident detail
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
