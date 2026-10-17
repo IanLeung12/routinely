@@ -448,7 +448,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T135 — demo.py: pull the "worth watching" status out of demo_residents()
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -456,7 +456,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
 - owner: max_API_light
 - claimed: 2026-10-17T08:10Z
-- pr: —
+- pr: #128
+- rating: 5/5 clear
 
 What: `demo_residents()` grew an inline ~25-line block computing `watch` (early-history cutoff, score points, duration points). Move it into one helper `_watch(history, sessions, scores) -> bool` so the loop body reads as baseline → flag → watch → status. Behaviour must not change. Read only `pipeline/src/routine_watch/demo.py` and `pipeline/tests/test_demo.py`.
 Interface: private helper in `demo.py`; `demo_residents()` output identical.
