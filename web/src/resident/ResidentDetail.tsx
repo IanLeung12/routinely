@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchDrift, fetchResident } from './api.ts'
@@ -13,6 +15,13 @@ import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
 import type { Resident } from './types.ts'
 
+/** Tagged with the id (and attempt) it was fetched for, so switching resident shows
+ * the new one loading rather than the last one's chart, and "Try again" shows loading
+ * rather than the stale error. */
+type Loaded =
+  | { residentId: string; status: 'ok'; resident: Resident | null; drift: ResidentDrift | null }
+  | { residentId: string; status: 'error' }
+
 /** Screen 2 (SPEC section 9): one resident's baseline chart, daily scores, sessions and
  * the care records a nurse reads next to them. Opened from the unit overview; the
  * evidence behind a flagged session stays one tap away on the alert screen. */
@@ -23,31 +32,41 @@ export function ResidentDetail({
   residentId: string
   onBack: () => void
 }) {
-  /** Tagged with the id it was fetched for, so switching resident shows the new one
-   * loading rather than the last one's chart. */
-  const [loaded, setLoaded] = useState<{
-    residentId: string; resident: Resident | null; drift: ResidentDrift | null
-  } | null>(
-    null,
-  )
+  const [loaded, setLoaded] = useState<Loaded | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchResident(residentId), fetchDrift(residentId)]).then(([resident, drift]) => {
-      if (!cancelled) {
-        setLoaded({ residentId, resident, drift })
-      }
-    })
+    Promise.all([fetchResident(residentId), fetchDrift(residentId)])
+      .then(([resident, drift]) => {
+        if (!cancelled) {
+          setLoaded({ residentId, status: 'ok', resident, drift })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoaded({ residentId, status: 'error' })
+        }
+      })
     return () => {
       cancelled = true
     }
-  }, [residentId])
+  }, [residentId, attempt])
 
   let body: ReactNode
   if (loaded === null || loaded.residentId !== residentId) {
     body = <Loading label="Loading resident…" />
+  } else if (loaded.status === 'error') {
+    body = (
+      <>
+        <ErrorState message="Could not reach the server. This resident's data could not be loaded." />
+        <Button variant="primary" onClick={() => { setLoaded(null); setAttempt((n) => n + 1) }}>
+          Try again
+        </Button>
+      </>
+    )
   } else if (loaded.resident === null) {
-    body = <EmptyState message={`No data for resident ${residentId}.`} />
+    body = <EmptyState message="Resident not found." />
   } else {
     const resident = loaded.resident
     const days = dailyScores(resident.scores)
