@@ -1,4 +1,5 @@
 import { Card } from '../ui/Card.tsx'
+import './driftCard.css'
 
 export function DriftCard({ slopePerDay, days, trending, minDays = 7 }: {
   slopePerDay: number
@@ -10,9 +11,9 @@ export function DriftCard({ slopePerDay, days, trending, minDays = 7 }: {
 
   return (
     <Card>
-      <section data-state={state} aria-label="Slow drift" style={{ color: 'var(--text)' }}>
+      <section className="drift-card" data-state={state} aria-label="Slow drift">
         <h3>Slow drift</h3>
-        <p style={{ color: state === 'trending' ? 'var(--error-amber-text)' : 'var(--muted)' }}>
+        <p className="drift-card__summary">
           {state === 'insufficient'
             ? `Not enough history yet (${days} of ${minDays} days)`
             : state === 'trending'
