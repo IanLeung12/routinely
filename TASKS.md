@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: d8e972c
+- last-reviewed: 2a452d7
 
 ## Tasks
 
@@ -156,7 +156,7 @@ Acceptance:
 - claimed: —
 - pr: —
 - source: integration
-- note: tester saw this once on a cold start (TESTREPORT: likely Vite cold-start/dep-optimise timing; re-run passed). If it is timing, make scripts/integration.sh wait for Vite readiness (fixing the check is fine here); otherwise fix the render.
+- note: T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. Earlier: tester saw this once on a cold start (TESTREPORT: likely Vite cold-start/dep-optimise timing; re-run passed). If it is timing, make scripts/integration.sh wait for Vite readiness (fixing the check is fine here); otherwise fix the render.
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ c332a28:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
@@ -667,3 +667,39 @@ Interface: read pipeline/src/routine_watch/api_live.py, capture.py, live_camera.
 Acceptance:
 - notes match the code; no file-list edits
 - `scripts/ci.sh` passes
+
+### T396 — Flag outcomes: unit-wide confirmed vs false-alarm counts per pattern
+- status: todo
+- class: heavy
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: —
+- area: pipeline/src/routine_watch/feedback.py, pipeline/src/routine_watch/api_alerts.py, pipeline/src/routine_watch/contracts.py, contracts/, pipeline/tests/test_feedback_summary.py, web/src/contracts.ts, web/src/outcomes/, web/src/App.tsx, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: judges (Execution, Use of AI) and nurses want to see how often flags turned out to be real. Add a small read-only "Flag outcomes" screen listing, per pattern, how many flagged alerts nurses marked confirmed vs false alarm and the most common "what was it?" answer, from the existing FeedbackStore.
+Interface: `FeedbackStore.summary()`; `GET /feedback/summary` returning `{patterns: [{pattern_id, confirmed, false_alarm, unanswered, top_cause}]}`; Pydantic model + JSON Schema in contracts/ + type in web/src/contracts.ts; `web/src/outcomes/OutcomesScreen.tsx` reached from a link in the app header (follow App.tsx's existing screen switch, no router). Wording: "flags reviewed", never diagnosis accuracy.
+Acceptance:
+- Pipeline test covers empty store, mixed answers, and reset via api_state.reset().
+- Web test renders counts and the empty state ("No flags reviewed yet") with shared ui components.
+- `scripts/ci.sh` passes.
+
+### T397 — Test: live WebSocket path and offline replay flag the same scenario the same way
+- status: todo
+- class: heavy
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_live_replay_parity.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The live screen comes from live.py and the alert view from replay.py; nothing checks they agree. For every single-session scenario under tests/scenarios/, compare the errors and change flag in live `session_messages(...)`'s session_end message with `replay.run(load_scenario(...))`.
+Interface: read pipeline/src/routine_watch/live.py (session_messages, as_json), replay.py (run), scenario.py (load_scenario). Test only: if a scenario disagrees, mark it `xfail(strict=True)` with the reason and list it in the PR body; don't change pipeline code.
+Acceptance:
+- `cd pipeline && pytest tests/test_live_replay_parity.py` passes quickly (fake clock, no real sleeps).
+- `scripts/ci.sh` passes.
