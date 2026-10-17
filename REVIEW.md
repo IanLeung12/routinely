@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: a5bef2c
-- next-area: web
+- last-reviewed: 56f927e
+- next-area: pipeline
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -20,3 +20,4 @@
 - T124 mrs-k flagged before live session (beat 4)
 - T125 drift/evening/motor residents never watch (baseline absorbs drift)
 - T126 session_log leaks across tests; need conftest reset
+- T138 AlertContext unused/unstyled, dup of ContextTimeline

@@ -588,3 +588,22 @@ Interface: `StatusChip` props unchanged.
 Acceptance:
 - Test asserts each status renders its label text and accessible name; no wording says "diagnos".
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T138 — Review: AlertContext is never rendered, unstyled, and copies ContextTimeline
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- source: reviewer
+- deps: —
+- area: web/src/alert/AlertContext.tsx, web/src/alert/AlertView.tsx, web/src/alert/alert.css, web/src/resident/ContextTimeline.tsx, web/src/resident/format.ts, web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T112 added `AlertContext` but nothing imports it, so the alert screen still shows no care-record context (SPEC §5 bonus 5), and its `alert-context*` classes have no CSS. Its `describe()`/`time()` are verbatim copies of `ContextTimeline.tsx`. Fix: move `describe` and `time` into `web/src/resident/format.ts` (e.g. `describeCareRecord`, `recordTime`) and use them in both components; in `AlertView` render a `<Card><SectionHeader title="Recent care records" /><AlertContext records=… alertTs={alert.ts} /></Card>` fed from the resident detail's `care_records` (existing `web/src/resident/api.ts` fetch, mock fallback), hidden while loading; add `.alert-context*` styles in `alert.css` using `web/src/ui/` tokens only (no hard-coded colours).
+Interface: `AlertContext` props unchanged.
+Acceptance:
+- AlertView test asserts a care record from the mock resident appears on the alert screen.
+- No duplicated `describe` between the two components.
+- `cd web && npm run lint && npm test && npm run build` passes.
