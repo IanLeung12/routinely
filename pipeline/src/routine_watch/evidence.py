@@ -11,8 +11,10 @@ until a frames recording exists for the demo's actual bad session
     from routine_watch.evidence import replay_frames
     replay_frames("mrs-k-22", t_start=10.0, t_end=14.0, fps=10)
 
-A session id is a demo resident id and that resident's session index, `mrs-k-22`,
-the same shape `routine_watch.alerts` builds a `TaskError.session_id` from.
+A session id is a demo resident id and that resident's session index, `mrs-k-22`, the
+shape `routine_watch.alerts` builds a `TaskError.session_id` from - or, for a session
+played live this run, the id it was recorded with (`routine_watch.session_log`), which
+it keeps into the alert and so into the replay asked for here.
 """
 
 from __future__ import annotations
@@ -75,12 +77,24 @@ def known_resident(resident_id: str) -> bool:
 
 
 def known_session(session_id: str) -> bool:
-    """Whether `session_id` is a real index into a demo resident's sessions."""
+    """Whether `session_id` is one of a demo resident's sessions.
+
+    Either shape counts: the `resident-index` id the synthetic history is given
+    (`alerts.session_id_for`), or the id a live session was recorded with, which it
+    keeps all the way into its alert's evidence (T155) and which is nobody's index.
+    """
+    residents = demo_residents()
+    if any(
+        session.get("session_id") == session_id
+        for resident in residents
+        for session in resident["sessions"]
+    ):
+        return True
     parsed = _parse_session_id(session_id)
     if parsed is None:
         return False
     resident_id, index = parsed
-    for resident in demo_residents():
+    for resident in residents:
         if resident["id"] == resident_id:
             return 0 <= index < len(resident["sessions"])
     return False

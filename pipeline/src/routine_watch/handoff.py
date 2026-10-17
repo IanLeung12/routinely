@@ -128,7 +128,7 @@ def _window_sessions(resident: dict, now: datetime, hours: int) -> list[tuple[st
     start = now - timedelta(hours=hours)
     sessions_and_scores = zip(resident["sessions"], resident["scores"], strict=True)
     return [
-        (session_id_for(resident["id"], index), session, point["score"])
+        (session_id_for(resident["id"], index, session), session, point["score"])
         for index, (session, point) in enumerate(sessions_and_scores)
         if start <= datetime.fromisoformat(session["ts"]) <= now
     ]

@@ -20,7 +20,7 @@ import os
 import re
 
 from .api_cache import cached_call, live_api_enabled
-from .explain import Explainer, TemplateExplainer
+from .explain import Explainer, TemplateExplainer, scope_phrase
 
 #: Haiku for dev; the env var lets the demo switch to Sonnet without a code change.
 DEFAULT_MODEL = "claude-haiku-4-5"
@@ -127,8 +127,11 @@ def _ask_claude(
 
 
 def _build_prompt(errors: list[dict], baseline: dict, context: list[str]) -> str:
+    # The same scope the template states (`explain.scope_phrase`): an alert's errors
+    # often span two sessions, and Claude must not be told they are all from one.
+    scope = scope_phrase(baseline.get("sessions", 1))
     lines = [
-        f"Observed {baseline['observed']} errors this session vs "
+        f"Observed {baseline['observed']} errors {scope} vs "
         f"{baseline['baseline_mean']} normally over {baseline['baseline_days']} days."
     ]
     if errors:
@@ -138,7 +141,7 @@ def _build_prompt(errors: list[dict], baseline: dict, context: list[str]) -> str
             for error in errors
         )
     else:
-        lines.append("No errors this session.")
+        lines.append(f"No errors {scope}.")
     if context:
         lines.append("Context: " + "; ".join(context))
     return "\n".join(lines)
@@ -160,7 +163,7 @@ def _passes_guard(reply: str, errors: list[dict], baseline: dict, fallback: str)
 
 def _allowed_numbers(errors: list[dict], baseline: dict, fallback: str) -> set[str]:
     allowed = set(_NUMBER_RE.findall(fallback))
-    for key in ("observed", "baseline_mean", "baseline_days"):
+    for key in ("observed", "sessions", "baseline_mean", "baseline_days"):
         if key in baseline:
             allowed.add(str(baseline[key]))
     for error in errors:
