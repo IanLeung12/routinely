@@ -153,7 +153,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_replay.py -q`, `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T027 — Web alerts API client + mock
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
