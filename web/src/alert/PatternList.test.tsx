@@ -88,7 +88,9 @@ describe('PatternList', () => {
   })
 
   it('never uses diagnostic wording', () => {
-    const { container } = render(<PatternList patterns={[pattern(), pattern({ urgency: 'urgent' })]} />)
+    const { container } = render(
+      <PatternList patterns={[pattern(), pattern({ pattern_id: 'infection', urgency: 'urgent' })]} />,
+    )
     expect(container.textContent?.toLowerCase()).not.toContain('diagnos')
   })
 })
