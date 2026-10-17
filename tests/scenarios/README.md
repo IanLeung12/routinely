@@ -76,10 +76,10 @@ timestamps only (SPEC §8).
 
 Errors come from the real `routine_watch.errors.classify_errors`, which finds five of
 SPEC §7's six error types: **omission**, **sequence**, **perseveration**,
-**substitution** and **abandonment** (no events for five minutes with required steps
-still to do). **Hesitation is missing**, because it is a step or gap more than 2.5
-standard deviations above this resident's own average and no scenario carries
-per-step baselines yet. A scenario cannot expect one until the baseline stage lands.
+**substitution** and **abandonment** (no events for more than two minutes with required
+steps still to do). The separate `routine_watch.hesitation` stage flags steps or gaps
+that took much longer than this resident's own average. These scenarios do not yet
+carry the per-step history needed to exercise it.
 
 ## The scenarios here
 
@@ -89,6 +89,10 @@ per-step baselines yet. A scenario cannot expect one until the baseline stage la
 | `tea_abandoned` | steps | A 131-second silence after starting tea, followed by one last step and an unfinished routine. Abandonment and remaining omissions flag with another recent bad session. |
 | `tea_skip_teabag_pour_twice` | steps | The demo's bad session: the teabag is never put in (omission) and the water is poured twice with a stir in between (perseveration). With one bad session already 30 hours ago, it flags. |
 | `tea_no_kettle` | frames | Cold water: the kettle is never filled or boiled, so two omissions. The one scenario that goes through the capture format and the real recogniser. One bad session on its own never flags. |
+| `tea_sequence_error` | steps | Pouring before adding the teabag produces exactly one sequence error. |
+| `tea_single_bad_no_flag` | steps | One bad session after quiet history produces errors without flagging a change. |
+| `tea_substitution` | steps | Stirring with milk instead of a spoon produces exactly one substitution error. |
+| `tea_unclear_not_error` | steps | An unclear, low-confidence teabag observation must not produce an error. |
 | `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 
