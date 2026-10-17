@@ -493,3 +493,21 @@ Acceptance:
 - Default is All; picking a level shows only those patterns; a level with no patterns shows an `EmptyState` ("No patterns at this level."), not an error.
 - Buttons are reachable and togglable by keyboard; test covers filtering and the empty case.
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
+
+### T301 — Review: contract schema + smoke check for GET /residents/{id}/feedback
+- status: todo
+- class: heavy
+- priority: 1
+- kind: improvement
+- source: reviewer
+- deps: T291
+- area: pipeline/src/routine_watch/contracts.py, contracts/resident_feedback.schema.json, contracts/README.md, web/src/contracts.ts, web/src/resident/types.ts, pipeline/tests/test_api_payload_contracts.py, scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T283 added `GET /residents/{id}/feedback` (`api_residents.resident_feedback`) returning `{resident_id, answers[{alert_id, verdict, cause, at}], pattern_weights, pattern_names}`, but there is no model in `contracts.py`/schema in `contracts/`, and `web/src/resident/types.ts` hand-writes `FeedbackAnswer`/`ResidentFeedback` (already missing `resident_id`). Same drift class as T250/T292. Fix: add `ResidentFeedback` (+ `FeedbackAnswer`) pydantic models in `contracts.py`, generate `contracts/resident_feedback.schema.json` and the TS type into `web/src/contracts.ts`, make `types.ts` re-export it, validate the route body in `test_api_payload_contracts.py`, and add a `check_schema` for `GET /residents/mrs-k/feedback` in `scripts/smoke.sh`.
+Acceptance:
+- Route body validates against the new schema in a pipeline test (empty, and with one answer + cause).
+- `web/src/resident/types.ts` has no hand-written copy of these shapes; `test_generated_files_are_up_to_date` covers it.
+- `scripts/ci.sh` passes.
