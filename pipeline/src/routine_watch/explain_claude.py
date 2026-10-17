@@ -35,6 +35,34 @@ _SYSTEM_PROMPT = (
 #: A bare number, an m:ss timestamp, or a decimal - whichever a sentence states.
 _NUMBER_RE = re.compile(r"\d+:\d{2}|\d+\.\d+|\d+")
 
+#: Spelled-out numbers must be caught too (SPEC section 6.4); whole-word only, so
+#: "someone" or "once" are never mistaken for a number.
+_NUMBER_WORDS = {
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+    "eleven": "11",
+    "twelve": "12",
+    "thirteen": "13",
+    "fourteen": "14",
+    "fifteen": "15",
+    "sixteen": "16",
+    "seventeen": "17",
+    "eighteen": "18",
+    "nineteen": "19",
+    "twenty": "20",
+}
+_NUMBER_WORD_RE = re.compile(
+    r"\b(" + "|".join(_NUMBER_WORDS) + r")\b", re.IGNORECASE
+)
+
 #: Claude must never diagnose (SPEC section 6.4). Split across two literals so this
 #: guard's own source line never spells out the banned word contiguously.
 _BANNED_FRAGMENT = "diagno" + "s"
@@ -123,7 +151,11 @@ def _passes_guard(reply: str, errors: list[dict], baseline: dict, fallback: str)
     if not sentences or len(sentences) > 3:
         return False
     allowed = _allowed_numbers(errors, baseline, fallback)
-    return all(token in allowed for token in _NUMBER_RE.findall(reply))
+    tokens = _NUMBER_RE.findall(reply)
+    tokens.extend(
+        _NUMBER_WORDS[word.lower()] for word in _NUMBER_WORD_RE.findall(reply)
+    )
+    return all(token in allowed for token in tokens)
 
 
 def _allowed_numbers(errors: list[dict], baseline: dict, fallback: str) -> set[str]:
