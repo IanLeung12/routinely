@@ -21,8 +21,8 @@ T013 | standard | claude-sonnet | merged first try | ~41k tok
 T017 | light | claude-sonnet | merged first try | ~25k tok
 T018 | light | claude-sonnet | merged first try; review: no API route yet (T021) | ~15k tok
 T019 | light | claude-sonnet | merged first try | ~35k tok
-T020 | standard | claude-opus | merged first try | ~190k tok
-T011 | standard | claude-sonnet | merged first try | ~75k tok
+T020 | standard | claude-sonnet | merged first try | ~75k tok
+T011 | heavy | claude-opus | merged first try | ~190k tok
 T021 | standard | claude-sonnet | merged first try | ~80k tok
 T023 | light | codex | merged first try | ~4k tok
 T024 | light | codex | merged first try | ~5k tok
