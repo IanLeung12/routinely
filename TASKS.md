@@ -464,14 +464,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T289 — Alert view: print-friendly layout
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: improvement
 - deps: —
 - area: web/src/alert/alert.css, web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T14:25Z
 - pr: —
 
 What: nurses bring flagged alerts to care conferences on paper; printing the alert today includes nav, feedback buttons and the dark replay card. Add a `@media print` layout so the page shows resident, errors, "consistent with" patterns, rule-outs and suggested checks in black on white.
