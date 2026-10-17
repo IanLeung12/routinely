@@ -439,7 +439,7 @@ Acceptance:
 - No changes to screen components outside `App.tsx`; `scripts/ci.sh` passes.
 
 ### T298 — Test: pattern library works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -447,7 +447,8 @@ Acceptance:
 - area: web/src/patterns/PatternLibrary.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T14:54Z
-- pr: —
+- pr: #289
+- rating: 5/5 clear
 
 What: Add a test that the pattern library screen is usable with the keyboard alone, like T287 did for alert feedback (see `web/src/alert/FeedbackButtons.test.tsx` for the style).
 Interface: read `web/src/patterns/PatternLibrary.tsx`, `web/src/patterns/PatternLibrary.test.tsx`, `web/src/alert/FeedbackButtons.test.tsx`. Only edit `web/src/patterns/PatternLibrary.test.tsx`.
