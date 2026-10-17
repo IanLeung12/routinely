@@ -473,3 +473,22 @@ Acceptance:
 - At ≤480 px each answer's verdict, cause and time wrap onto their own lines instead of overflowing; long pattern names wrap (`overflow-wrap: anywhere`).
 - The new test asserts the card renders its rows with the classes the media query targets (jsdom can't measure layout).
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
+
+### T306 — Test: live screen works keyboard-only
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/LiveScreen.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The demo path runs through the live screen, but only the other screens have keyboard-only tests (T287, T295, T298). Prove a nurse can pick a routine, start the session and open its alert using only Tab/Enter/Space, with the mock live stream.
+Interface: new `web/src/live/LiveScreen.keyboard.test.tsx` only; render `LiveScreen` with the existing mock stream (`mockLiveStream.ts`, fake timers) as `LiveScreen.test.tsx` does; drive with `@testing-library/user-event` keyboard/tab only (no `click`).
+Acceptance:
+- Tab reaches the routine picker, arrow/Enter selects a routine, Tab+Enter starts the session; the task map and session summary render.
+- When the mock session ends with a flag, the link/button to the alert is reachable by Tab and activates with Enter.
+- Every focused control has an accessible name (`getByRole(..., { name })`).
+- No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
