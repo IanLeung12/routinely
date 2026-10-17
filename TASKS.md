@@ -479,15 +479,15 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_feedback_cause_ids.py` and `scripts/ci.sh` pass.
 
 ### T166 — Review: handoff summary uses old "the task" placeholder errors and a unit-wide baseline
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/alerts.py, pipeline/tests/test_handoff.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T08:48Z
 - pr: —
 
 What: `handoff._explainer_errors` re-implements the placeholder-error synthesis that T121 replaced in `alerts._task_errors` (still `step_id="the task"`, t=0,10,20…), so the handoff sentence reads "… at the task, 0:00". `_summary` also compares the latest flagged session against `_unit_error_rate` (all residents mixed) instead of that resident's own baseline (SPEC §7: own history only), and doesn't say whose session it is.
