@@ -217,10 +217,11 @@ Acceptance:
 - kind: feature
 - source: ian
 - deps: T408
-- area: web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- area: web/src/people/PeopleISupport.tsx, web/src/people/PeopleISupport.test.tsx, web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - owner: —
 - claimed: —
 - pr: —
+- note: T408 already shipped PeopleISupport (list + add by code) in web/src/people/; extend it there; Person.context already holds the context line; new CSS under web/src/supporting/, not people.css.
 
 What: Generalise the nurse overview into "People I support" (SPEC §17). Care-home supervisor sees the unit list as today; a family supervisor with one person goes straight to that person; anyone can **add a person** by entering an invite code (T408's mock API), with a clear "linked" confirmation. Each row/detail shows the person's context ("care home · Room 12" vs "lives alone").
 Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; existing overview behaviour kept for the care-home case; `scripts/ci.sh` passes. Screenshot in PR.
