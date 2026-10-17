@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T089 — Unit overview shows the top pattern for flagged/watch residents
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: T084
 - area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py, web/src/overview/, web/src/mock/residents.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T08:33Z
 - pr: —
 
 What: SPEC §9 screen 1 and demo step 6 ("Mr. D on watch, slow drift"): each flagged or watch resident row shows its top pattern name next to the status chip.
