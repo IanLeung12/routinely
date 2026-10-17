@@ -96,3 +96,8 @@ T110 | standard | claude-sonnet | merged first try | ~55k tok
 T096 | light | claude-sonnet | merged first try | ~15k tok
 T111 | standard | claude-sonnet | merged first try | ~45k tok
 T084 | heavy | claude-opus | merged first try | ~200k tok
+T122 | light | claude-sonnet | merged first try | ~?k tok
+T088 | standard | claude-sonnet | merged first try | ~?k tok
+T123 | light | codex | merged first try | ~3k tok
+T127 | light | claude-sonnet | merged first try | ~?k tok
+T102 | light | claude-sonnet | merged first try | ~?k tok
