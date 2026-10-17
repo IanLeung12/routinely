@@ -212,6 +212,37 @@ else
   fail "POST /demo/reset: no response (needs OFFLINE_MODE=true or DEMO_RESET=1 on the server)"
 fi
 
+# Reset only forgets live sessions and feedback (its docstring), not the seeded
+# demo history, so playing the same session again must still flag mrs-k and show
+# up in /alerts afterwards.
+if "$PIPELINE_PYTHON" -c '
+import asyncio, sys
+import websockets
+
+async def main(url):
+    async with websockets.connect(url) as ws:
+        async for _ in ws:
+            pass
+
+asyncio.run(main(sys.argv[1]))
+' "$ws_url" 2>/dev/null; then
+  if alerts_after_reset=$(get "$API_URL/alerts"); then
+    if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert isinstance(data, list) and len(data) > 0
+' "$alerts_after_reset" 2>/dev/null; then
+      pass "GET /alerts after reset"
+    else
+      fail "GET /alerts after reset: expected seeded demo history to survive reset, got $alerts_after_reset"
+    fi
+  else
+    fail "GET /alerts after reset: no response"
+  fi
+else
+  fail "GET /alerts after reset: could not replay $ws_url"
+fi
+
 if [ "$failures" -eq 0 ]; then
   echo "smoke: all checks passed"
   exit 0
