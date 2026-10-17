@@ -85,7 +85,11 @@ def build_handoff(
         raise ValueError("now must be timezone-aware: pass demo.DEMO_NOW")
 
     residents = demo_residents()
-    pending = _pending_by_resident(build_alerts(residents), now, hours, feedback)
+    # The same store the alert screen builds with, so these are the alerts a nurse
+    # opens from a handoff row (T152) rather than a second ranking of the same change.
+    pending = _pending_by_resident(
+        build_alerts(residents, feedback=feedback), now, hours, feedback
+    )
 
     rows = []
     flagged_sessions: list[_FlaggedSession] = []

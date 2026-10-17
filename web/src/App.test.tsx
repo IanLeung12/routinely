@@ -143,4 +143,15 @@ describe('App', () => {
     expect(await screen.findByLabelText('Open Mrs. K, room 204, flagged')).toBeTruthy()
     expect(await screen.findByRole('button', { name: 'mrs-k: Change flagged for review' })).toBeTruthy()
   })
+
+  it('hides the guided tour without ?tour=1 and shows it with the param', async () => {
+    await act(async () => { render(<App />) })
+    expect(screen.queryByRole('dialog', { name: 'Guided demo tour' })).toBeNull()
+    cleanup()
+
+    window.history.pushState({}, '', '?tour=1')
+    await act(async () => { render(<App />) })
+    expect(screen.getByRole('dialog', { name: 'Guided demo tour' })).toBeTruthy()
+    window.history.pushState({}, '', '/')
+  })
 })
