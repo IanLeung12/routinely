@@ -501,7 +501,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents_order.py` passes
 
 ### T342 — Review: unclear live sessions still go into the resident's history and can flag
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
