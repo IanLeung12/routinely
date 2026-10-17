@@ -42,6 +42,28 @@ describe('UnitOverview', () => {
     }
   })
 
+  it('summarizes mixed statuses in a status line', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+
+    render(<UnitOverview />)
+
+    const status = await screen.findByText('1 flagged for review · 1 on watch · 2 normal')
+    expect(status.getAttribute('role')).toBe('status')
+  })
+
+  it('shows "All residents normal" when nothing is flagged or on watch', async () => {
+    const allNormal = mockResidents.map((resident) => ({ ...resident, status: 'normal' as const }))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => allNormal }))
+
+    render(<UnitOverview />)
+
+    const status = await screen.findByText('All residents normal')
+    expect(status.getAttribute('role')).toBe('status')
+  })
+
   it('colours the status chip per status', async () => {
     vi.stubGlobal(
       'fetch',
