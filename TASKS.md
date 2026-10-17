@@ -442,7 +442,7 @@ What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the H
 Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.
 
 ### T423 — Person view: person-facing wording for status and pattern notes
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: feature
@@ -451,7 +451,8 @@ Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vi
 - area: web/src/person/personNotes.ts, web/src/person/personNotes.test.ts
 - owner: max_API_light
 - claimed: 2026-10-17T20:45Z
-- pr: —
+- pr: #393
+- rating: 5/5 clear
 
 What: Pure functions that turn existing nurse-facing data into calm, personal copy for someone watching themselves (SPEC §17 "Person view"). T409 ("My routine") will consume them.
 Why: inherits T409 — the person view is half of the roles pivot judges will see.
