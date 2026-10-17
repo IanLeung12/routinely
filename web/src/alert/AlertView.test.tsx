@@ -15,6 +15,13 @@ function offline() {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
 }
 
+/** The number under one label in the recap card's stat strip ("Error score" -> "5.0"),
+ * which is where the baseline comparison lives since T405. */
+function stat(label: string): string {
+  const term = screen.getByText(label)
+  return term.nextElementSibling?.querySelector('.alert-stat__number')?.textContent ?? ''
+}
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -28,7 +35,10 @@ describe('AlertView', () => {
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
 
     expect(await screen.findByText(MRS_K.summary)).toBeTruthy()
-    expect(screen.getByText('5.0 vs 0.2 normal over 14 days')).toBeTruthy()
+    expect(stat('Error score')).toBe('5.0')
+    expect(stat('Their usual')).toBe('0.2')
+    expect(screen.getByText('over 14 days')).toBeTruthy()
+    expect(stat('Flag threshold')).toBe('1.2')
     expect(screen.getByText('0:42')).toBeTruthy()
     expect(screen.getByText('1:15')).toBeTruthy()
     expect(screen.getAllByRole('button', { name: /open evidence/i })).toHaveLength(2)
@@ -40,6 +50,47 @@ describe('AlertView', () => {
     expect(screen.getByText('Run a CAM delirium screen')).toBeTruthy()
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(document.body.textContent?.toLowerCase()).not.toContain('diagnos')
+  })
+
+  it('leads with a recap card: the flagged chip, the summary and the numbers under it', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText(MRS_K.summary)
+
+    // The status is a chip beside the heading, and says what it means in words.
+    expect(screen.getByLabelText('Change flagged for review')).toBeTruthy()
+
+    const recap = screen.getByRole('heading', { name: 'What changed' }).closest('.card') as HTMLElement
+    expect(recap.className).toContain('alert-recap')
+    expect(within(recap).getByText(MRS_K.summary)).toBeTruthy()
+    expect(Array.from(recap.querySelectorAll('.alert-stat__label')).map((label) => label.textContent))
+      .toEqual(['Error score', 'Their usual', 'Flag threshold'])
+    expect(within(recap).getByRole('button', { name: 'Copy summary' })).toBeTruthy()
+  })
+
+  it('shows each error as one dense row: type pill, what happened, timestamp', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText('0:42')
+
+    const rows = screen.getAllByRole('button', { name: /open evidence/i })
+    expect(rows[0].className).toContain('row--interactive')
+    const first = within(rows[0])
+    expect(first.getByText('omission').className).toBe('error-chip error-chip--red')
+    expect(first.getByText('skipped teabag in cup')).toBeTruthy()
+    expect(first.getByText('0:42').className).toContain('tabular-nums')
+  })
+
+  it('puts the replay and the ghost overlay in their own labelled media frames', async () => {
+    offline()
+
+    const { container } = render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByRole('button', { name: /play/i })
+
+    const labels = Array.from(container.querySelectorAll('.media-frame .media-frame__label'))
+    expect(labels.map((label) => label.textContent)).toEqual(['This session', 'Today over usual'])
   })
 
   it('copies the alert summary and announces success for two seconds', async () => {
@@ -217,11 +268,12 @@ describe('AlertView', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
-    await screen.findByText('Current threshold: 1.2')
+    await screen.findByText('Flag threshold')
+    expect(stat('Flag threshold')).toBe('1.2')
 
     fireEvent.click(screen.getByRole('button', { name: 'False alarm' }))
 
-    expect(await screen.findByText('Current threshold: 2.5')).toBeTruthy()
+    await waitFor(() => expect(stat('Flag threshold')).toBe('2.5'))
     expect(fetchMock).toHaveBeenCalledWith(
       `${apiUrl}/alerts/${MRS_K.alert_id}/feedback`,
       expect.objectContaining({ method: 'POST' }),
@@ -245,7 +297,7 @@ describe('AlertView', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
-    await screen.findByText('Current threshold: 1.2')
+    await screen.findByText('Flag threshold')
     fireEvent.click(screen.getByRole('button', { name: 'Confirmed' }))
 
     const picker = await screen.findByRole('group', { name: 'What was it? (optional)' })
@@ -272,9 +324,9 @@ describe('AlertView', () => {
     const h2Titles = headings.filter((h) => h.tagName === 'H2').map((h) => h.textContent)
     expect(h2Titles).toEqual([
       'What changed',
+      'Possible patterns',
       'Errors',
       'Evidence',
-      'Possible patterns',
       'Suggested checks',
       'Feedback',
     ])

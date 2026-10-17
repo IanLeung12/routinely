@@ -1,10 +1,11 @@
-/* Possible patterns, ranked (SPEC section 9, screen 4). Urgency is carried by a
-   left border and a labelled chip, never by colour alone: every item spells its
-   urgency out in words. Tokens only (web/src/index.css), no hex. */
+/* Possible patterns, ranked (SPEC section 9, screen 4). One card per pattern: the
+   name, an urgency chip, the confidence as a number with a bar under it, the
+   evidence lines behind it, and the checks that would rule it out. Urgency is
+   carried by a labelled chip and a rail, never by colour alone — every card spells
+   its urgency out in words. Tokens only (web/src/index.css), no hex. */
 
 .pattern-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -12,23 +13,23 @@
 }
 
 .pattern {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-left: var(--space-1) solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  padding: var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
 }
 
-/* Urgent patterns are visually distinct: a thicker red rail and a warm tint. */
+/* Urgent patterns are visually distinct (SPEC section 9): a red rail down the side
+   and a red urgency chip, on top of the word "Urgent" itself. */
 .pattern--urgent {
-  border-left: var(--space-2) solid var(--error-red-text);
-  background: color-mix(in srgb, var(--error-red-bg) 55%, var(--panel));
+  border-color: var(--status-flagged-tint);
+  box-shadow: inset 2px 0 0 var(--status-flagged);
 }
 
 .pattern__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-3);
 }
@@ -37,62 +38,140 @@
   margin: 0;
   font-size: var(--text-base);
   font-weight: 600;
-}
-
-.pattern__confidence {
-  flex-shrink: 0;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--muted);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
 .pattern__urgency {
-  display: inline-block;
-  margin-top: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--error-grey-bg);
-  color: var(--error-grey-text);
+  flex: none;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--status-neutral-tint);
+  color: var(--status-neutral);
   font-size: var(--text-xs);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.pattern__urgency--urgent {
-  background: var(--error-red-bg);
-  color: var(--error-red-text);
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .pattern__urgency--same_shift {
-  background: var(--error-amber-bg);
-  color: var(--error-amber-text);
+  background: var(--status-watch-tint);
+  color: var(--status-watch);
+}
+
+.pattern__urgency--urgent {
+  background: var(--status-flagged-tint);
+  color: var(--status-flagged);
+}
+
+/* How sure: the percentage is the headline, the bar only makes two patterns
+   comparable at a glance. Near-white, not a status colour — confidence is not a
+   verdict about the resident. */
+.pattern__confidence-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+}
+
+.pattern__confidence {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.pattern__confidence-value {
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pattern__meter {
+  flex: 1;
+  min-width: 0;
+  height: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.pattern__meter-fill {
+  display: block;
+  width: calc(var(--confidence) * 100%);
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--chart-line);
 }
 
 .pattern__evidence,
 .pattern__checks {
-  margin: var(--space-2) 0 0;
-  padding-left: var(--space-5);
-  color: var(--muted);
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-secondary);
   font-size: var(--text-sm);
+}
+
+.pattern__evidence li,
+.pattern__checks li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* A muted dot for evidence we already have, an empty box for a check still to do. */
+.pattern__evidence li::before {
+  content: '';
+  flex: none;
+  width: var(--space-1);
+  height: var(--space-1);
+  margin-top: 0.5em;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+}
+
+.pattern__checks li::before {
+  content: '';
+  flex: none;
+  width: var(--space-3);
+  height: var(--space-3);
+  margin-top: 0.15em;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-xs);
 }
 
 .pattern__checks-label {
-  margin: var(--space-3) 0 0;
-  font-size: var(--text-sm);
+  margin: var(--space-4) 0 0;
+  color: var(--text);
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
-/* Phone width (375 px and similar, SPEC section 9): the name and confidence chip
+/* Phone width (375 px and similar, SPEC section 9): the name and urgency chip
    stack instead of wrapping tight against each other, so the pattern card reads
    top to bottom without horizontal scroll. */
 @media (max-width: 480px) {
   .pattern__header {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* Print (SPEC section 9 follow-up): `print.css` paints every background white for
+   the paper copy, so the confidence bar gets an outline and a black fill. The
+   percentage beside it carries the number either way. */
+@media print {
+  .pattern__meter {
+    border: 1px solid #000;
+  }
+
+  .pattern__meter-fill {
+    background: #000 !important;
   }
 }
