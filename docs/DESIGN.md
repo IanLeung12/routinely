@@ -18,6 +18,11 @@ a gradient: `design/landing-before-desktop.png` → `design/landing-after-deskto
 and at phone width `design/landing-before-mobile.png` →
 `design/landing-after-mobile.png`.
 
+The live session — a dark media card beside the task map as a vertical step list with
+a progress line — and the shift handoff as dense rows in one card:
+`design/live-before.png` → `design/live-after.png`,
+`design/handoff-before.png` → `design/handoff-after.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so

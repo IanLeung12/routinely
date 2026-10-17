@@ -1,5 +1,5 @@
-import { useId, useState } from 'react'
-import { Button } from '../ui/Button.tsx'
+import { useState } from 'react'
+import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import { LiveSession } from './LiveSession.tsx'
 import type { LiveSessionEnded } from './useLiveSession.ts'
 import './liveScreen.css'
@@ -41,27 +41,23 @@ export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
     return task === 'meds' ? TASKS[1] : TASKS[0]
   })
   const [cameraIndex] = useState(() => cameraIndexFrom(window.location.search))
-  const labelId = useId()
 
   return (
     <div className="live-screen">
-      <div className="live-screen__tasks" role="group" aria-labelledby={labelId}>
-        <p className="live-screen__label" id={labelId}>
+      <div className="live-screen__tasks">
+        {/* The control's own group label already says this, so the visible copy is
+            decoration for sighted readers rather than a second thing to hear. */}
+        <p className="live-screen__label" aria-hidden="true">
           Routine to watch
         </p>
-        {TASKS.map((task) => {
-          const active = task.scenario === watching.scenario
-          return (
-            <Button
-              key={task.scenario}
-              variant={active ? 'primary' : 'secondary'}
-              aria-pressed={active}
-              onClick={() => setWatching(task)}
-            >
-              {task.label}
-            </Button>
-          )
-        })}
+        <SegmentedControl
+          label="Routine to watch"
+          options={TASKS.map((task) => ({ value: task.scenario, label: task.label }))}
+          value={watching.scenario}
+          onChange={(scenario) => {
+            setWatching(TASKS.find((task) => task.scenario === scenario) ?? TASKS[0])
+          }}
+        />
       </div>
 
       {/* `key` starts the picked routine from scratch: a fresh socket, an empty task map,
