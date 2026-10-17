@@ -128,7 +128,7 @@ What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/Mi
 Acceptance: existing Sparkline tests pass (update selectors only); `cd web && npx vitest run src/overview`.
 
 ### T421 — Restyle: BaselineChart + drift card on LineChart
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
