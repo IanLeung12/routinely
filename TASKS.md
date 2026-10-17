@@ -554,14 +554,14 @@ Acceptance:
 - `scripts/ci.sh` passes and runs the new test (if it doesn't, say so in the PR; don't edit ci.sh).
 
 ### T141 — Pattern scenario: executive pattern (perseveration with steps still in order)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/pattern_executive/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:10Z
 - pr: —
 
 What: T113 added replayable scenarios for sudden_change and slow_drift only. Add one for SPEC §7.5's `executive_pattern` so e2e proves the library ranks it top when the resident repeats steps (perseveration) while the order stays intact.
