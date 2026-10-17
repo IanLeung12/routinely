@@ -583,3 +583,22 @@ Interface (`web/src/routines/`):
 - Result: the drafted routine shown as a task map (reuse `web/src/live/TaskMap`), plus an editable step list (rename, reorder deps, toggle optional, delete, add) that updates the map live; a "needs training" note listing objects the detector doesn't know yet; **Save routine**. Saved routines appear in a "Routines" list (tea, meds, plus saved).
 - Offline: the mock returns a believable draft ("Brush teeth") so the flow demos with no keys.
 Acceptance: Vitest for both tabs (consent required before upload; text submit; edit updates preview; save adds to list); keyboard operable; screenshot in PR; `cd web && npm test && npm run build`.
+
+### T439 — Bug: integration check failing on main
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- owner: —
+- claimed: —
+- pr: —
+- source: integration
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 24033f5:
+  FAIL dev.sh up: 
+    api log: INFO:     Started server process [2099018] INFO:     Waiting for application startup. INFO:     Application startup complete. INFO:     Uvicorn running on http://0.0.0.0:8100 (Press CTRL+C to quit) 
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
