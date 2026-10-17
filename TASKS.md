@@ -111,15 +111,15 @@ Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
 
 ### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: feature
 - source: proposed
 - deps: T343
 - area: pipeline/src/routine_watch/contracts.py, contracts/, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/store.py, pipeline/tests/test_handoff_unclear.py, web/src/contracts.ts, web/src/handoff/HandoffRow.tsx, web/src/handoff/mockHandoff.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T19:50Z
 - pr: —
 
 What: Rationale: since T342 unclear sessions are dropped from history, so repeated bad lighting or a blocked camera goes unnoticed; the incoming nurse should see "2 sessions too unclear to score — check the camera view" for that room. Keep a per-room count of unclear sessions (timestamps only, never frames, never in the resident's scored history) and surface it as `HandoffResident.unclear_sessions: int` for the window.
