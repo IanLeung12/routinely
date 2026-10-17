@@ -88,6 +88,21 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
   })
 
+  it('opens the pattern library from the header and returns to the overview', async () => {
+    await act(async () => { render(<App />) })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Pattern library' }))
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Pattern library' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Unit overview' })).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Back/ }))
+    })
+    expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
+  })
+
   it("opens the resident's alert from the shift handoff", async () => {
     await act(async () => { render(<App />) })
     await act(async () => {
