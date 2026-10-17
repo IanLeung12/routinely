@@ -7,24 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T382 — Refactor: move scenario loading out of replay.py into scenario.py
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/scenario.py, docs/CODEMAP.md
-- owner: ian-claude-standard
-- claimed: 2026-10-17T19:06Z
-- pr: #369
-- rating: 5/5 clear
-
-What: replay.py (500 lines) mixes the scenario file format (pydantic models + JSONL loading) with running/comparing a replay. Split them so each is readable on its own; no behaviour change.
-Interface: new `routine_watch/scenario.py` with `ReplayError`, `_Strict`, `ExpectedError`, `HistorySession`, `Expected`, `Scenario`, `load_scenario`, `_load_jsonl`, `scenario_dirs`, `SCENARIOS_DIR`. replay.py re-exports them (`from .scenario import ...`) so every existing import and test keeps working.
-Acceptance:
-- No test file changes needed; `cd pipeline && uv run pytest -q` and `scripts/e2e.sh` pass unchanged.
-- replay.py under ~330 lines; CODEMAP note for scenario.py. `scripts/ci.sh` passes.
-
 ### T383 — Care-record context timeline: usable at phone width (375 px)
 - status: done
 - class: light
