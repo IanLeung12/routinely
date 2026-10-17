@@ -80,14 +80,14 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T088 — Alert screen shows ranked possible patterns
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: feature
 - deps: T084, T085
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx, web/src/alert/PatternList.tsx, web/src/mock/alerts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:32Z
 - pr: —
 
 What: SPEC §9 screen 4 / demo step 5: the alert view shows "Possible patterns" right under the summary, from `Alert.patterns`.
