@@ -52,7 +52,8 @@ Acceptance:
 - owner: Max_codex_light
 - claimed: 2026-10-17T17:12Z
 - pr: #333
-- note: PR #333 open; local CI hit env-only Vitest/port issue, real CI decides
+- note: Hosted CI passed. Local bash syntax and dry checks passed; shellcheck unavailable. Local full CI passed all tests but Vitest reported shared localhost:8000 WebSocket Event error.
+- rating: 5/5 clear
 
 What: E4's `--disallowedTools Monitor ScheduleWakeup` (MODELS.md, PR #271) never reached any running worker: worker.sh reads FLAGS once at start, and the host launcher passes a `FLAGS=` override for the heavy worker (`--model opus --effort max`) that drops it. Since then 2 light-worker sessions (T187, T307) still ended with "I'll wait for the CI monitor notification" and were released.
 Interface: in `scripts/worker.sh`, (1) inside the loop, before each claude/codex run, recompute flags from MODELS.md unless the caller set FLAGS (keep `FLAGS` env as the override); (2) for `TOOL=claude`, always append `--disallowedTools Monitor ScheduleWakeup` if the effective flags don't already contain `--disallowedTools`. Keep `MODEL=` in the prompt in sync.
