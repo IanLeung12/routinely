@@ -315,7 +315,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T020 — Replay harness uses the real error classifier
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T005, T010, T014
