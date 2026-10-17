@@ -196,3 +196,6 @@ T216 | light | claude-sonnet | merged first try | ~15k tok
 T218 | light | claude-sonnet | merged first try | ~15k tok
 T217 | standard | claude-sonnet | merged first try | ~60k tok
 T206 | light | claude-sonnet | merged first try | ~15k tok
+T223 | light | claude-sonnet | merged first try | ~15k tok
+T219 | standard | claude-opus | merged first try | ~105k tok
+T118 | standard | claude-sonnet | merged (2 commits) | ~95k tok
