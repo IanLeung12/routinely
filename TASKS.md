@@ -60,14 +60,14 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T044 — Alert notifier behind an interface (push alert)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/notify.py, pipeline/tests/test_notify.py, .env.example
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:03Z
 - pr: —
 
 What: SPEC Nice-to-have 3 (push alert to a phone) and §10 step 4. A `Notifier` interface with a fake used by default and a Supabase implementation used only when `LIVE_API=1` and Supabase env vars are set. No route wiring in this task.
