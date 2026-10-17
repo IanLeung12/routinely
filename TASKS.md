@@ -282,14 +282,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T140 — Test: every scenario directory is listed in the scenario README
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: test
 - deps: T139
 - area: tests/test_scenarios_readme.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:24Z
 - pr: —
 
 What: The scenario README keeps falling behind new scenarios (T065, T139). Add a pytest that fails when a scenario directory has no row in the README, so CI catches it.
