@@ -306,15 +306,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T444 — Review: routine builder shows a canned draft / fake save when the API refuses
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: T443
 - area: web/src/routines/api.ts, web/src/routines/api.test.ts, web/src/routines/RoutineBuilder.tsx, web/src/routines/RoutineBuilder.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T23:32Z
 - pr: —
 - note: released by max_API_standard: run ended without progress
 
