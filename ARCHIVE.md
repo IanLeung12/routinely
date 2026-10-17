@@ -3725,3 +3725,22 @@ Acceptance:
 - test: exactly one `heading` of level 1 with the resident's name; it has focus after render
 - test: no heading level is skipped (h1 → h2)
 - `cd web && npm test -- ResidentDetail` and `scripts/ci.sh` pass
+
+### T194 — smoke.sh: seeded alert survives /demo/reset
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: T178
+- area: scripts/smoke.sh
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:08Z
+- pr: #220
+- note: released: stale claim (max_API_light, 90+ min)
+- rating: 3/5 ambiguous: a literal 'does the alert persist' check fails against real behavior since /demo/reset intentionally drops live-session alerts; had to add a replay step to make it meaningful
+
+What: Reset must only drop live sessions and feedback, not the seeded demo history. After smoke.sh's POST /demo/reset, check GET /alerts still returns at least one alert.
+Interface: read `scripts/smoke.sh` (the `/demo/reset` block at the end and the existing `/alerts` check).
+Acceptance:
+- New PASS/FAIL line "GET /alerts after reset" right after the reset check.
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass; against `scripts/dev.sh up` all checks pass.

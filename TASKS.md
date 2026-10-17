@@ -78,25 +78,6 @@ Acceptance:
 - Test: PUT a room to paused, POST /demo/reset, GET /monitoring shows no paused rooms.
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
-### T194 — smoke.sh: seeded alert survives /demo/reset
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: T178
-- area: scripts/smoke.sh
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T11:08Z
-- pr: #220
-- note: released: stale claim (max_API_light, 90+ min)
-- rating: 3/5 ambiguous: a literal 'does the alert persist' check fails against real behavior since /demo/reset intentionally drops live-session alerts; had to add a replay step to make it meaningful
-
-What: Reset must only drop live sessions and feedback, not the seeded demo history. After smoke.sh's POST /demo/reset, check GET /alerts still returns at least one alert.
-Interface: read `scripts/smoke.sh` (the `/demo/reset` block at the end and the existing `/alerts` check).
-Acceptance:
-- New PASS/FAIL line "GET /alerts after reset" right after the reset check.
-- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass; against `scripts/dev.sh up` all checks pass.
-
 ### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
 - status: todo
 - class: light
