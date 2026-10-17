@@ -623,7 +623,7 @@ Acceptance:
 - `scripts/ci.sh` passes; update `docs/CODEMAP.md` data-flow notes.
 
 ### T085 — PatternList component for ranked "possible patterns" (not wired yet)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
