@@ -1,81 +1,217 @@
-/* Alert / evidence view (SPEC section 9, screen 4): a nurse should understand a
-   flagged alert in about 10 seconds, so the plain-language summary and the
-   baseline comparison come first, before the error-by-error detail. */
+/* Alert / evidence view (SPEC section 9, screen 4), on the Fey-inspired system in
+   docs/DESIGN.md. A nurse should get the whole alert in about 10 seconds, so the
+   screen answers three questions in order: what changed (a recap card: one bold
+   sentence, then the numbers), how sure we are and what to rule out (ranked pattern
+   cards), and what the evidence is (dense error rows, then the replay). Tokens only
+   (web/src/index.css), no hex or px. */
 
 .alert-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-}
-
-.alert-view__summary {
-  font-size: var(--text-lg);
-  margin: 0;
-}
-
-.alert-view__baseline,
-.alert-view__threshold {
-  color: var(--muted);
-  margin: 0;
-}
-
-.error-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.error-list__open {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.error-list__open:hover {
-  border-color: var(--accent);
-}
-
-.error-list__phrase {
-  flex: 1;
-}
-
-.error-list__time {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.alert-view__evidence {
-  display: flex;
-  flex-wrap: wrap;
   gap: var(--space-4);
 }
 
-/* Feedback: the verdict buttons, and the "what was it?" picker that follows a
-   confirmed alert (SPEC section 5, MVP 8). The selected answer is bold as well as
-   outlined, so it never reads by colour alone. */
-.feedback-buttons {
+/* The back button sizes to its own text instead of stretching across the column. */
+.alert-view > .back-button {
+  align-self: flex-start;
+}
+
+.alert-view__header {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+/* The app shell's own h1 is the product name, so the screen's heading is a step
+   quieter than the page title it sits under. */
+.alert-view__header h1 {
+  font-size: var(--text-xl);
+}
+
+/* The recap card (Fey's "daily recap"): the summary sentence in full weight, the
+   numbers under it, and the two quiet actions in a footer against the card edge. */
+.alert-recap__summary {
+  max-width: 46ch;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.alert-recap__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.alert-stat__label {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.alert-stat__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+}
+
+.alert-stat__number {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.alert-stat__unit {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.alert-recap__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-5) calc(var(--space-5) * -1) calc(var(--space-5) * -1);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--hairline);
+}
+
+.alert-recap__copy-status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Errors: dense hairline-separated rows that run the full width of the card, with
+   the type pill on the left and the timestamp right-aligned (docs/DESIGN.md). */
+.error-list {
+  margin: 0 calc(var(--space-5) * -1);
+  padding: 0;
+  border-top: 1px solid var(--hairline);
+  list-style: none;
+}
+
+.error-list .row {
+  padding-inline: var(--space-5);
+  border-radius: 0;
+}
+
+.error-list__phrase {
+  font-weight: 500;
+}
+
+.error-list__time {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.error-list__open-hint {
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+/* The time-of-day strip is evidence about those same errors, so it sits under them
+   in the same card, behind one more hairline. */
+.error-list + .time-of-day {
+  margin: 0 calc(var(--space-5) * -1);
+  padding: var(--space-4) var(--space-5) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+/* Evidence: a dark media card per replay, one step darker than the card it sits in,
+   so the skeleton reads as footage rather than as another panel. */
+.alert-view__evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: var(--space-3);
 }
 
-.feedback-button[aria-pressed='true'] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  font-weight: 600;
+.media-frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-page);
+}
+
+.media-frame__label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* The replays draw at a fixed 480x360 viewBox with the figure in the middle, so they
+   fill the frame's width and stop at a height that keeps the card readable in one
+   glance; the drawing letterboxes inside rather than stretching. */
+.media-frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 13rem;
+}
+
+/* Suggested checks: a checklist, one check per row, each with an empty box so it
+   reads as something still to do rather than as a finding. */
+.suggested-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggested-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  font-size: var(--text-md);
+}
+
+.suggested-check + .suggested-check {
+  border-top: 1px solid var(--hairline);
+}
+
+.suggested-check::before {
+  content: '';
+  flex: none;
+  width: var(--space-4);
+  height: var(--space-4);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-xs);
+}
+
+/* Feedback: the verdict is the loud thing on the card (primary / danger), and the
+   "what was it?" picker that follows a confirmed alert (SPEC section 5, MVP 8) is a
+   row of quiet chips. The answer never rests on colour: the chosen button is also
+   aria-pressed and announced in the status line beside it. */
+.feedback-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.feedback-buttons__verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.feedback-buttons__status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
 .feedback-buttons__cause {
@@ -83,42 +219,44 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--hairline);
 }
 
 .feedback-buttons__cause-label {
   flex-basis: 100%;
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 
+/* Care-record context: dense rows, the time on the left in tabular figures. */
 .alert-context {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  list-style: none;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 
 .alert-context__record {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  font-size: var(--text-sm);
+  padding: var(--space-3) 0;
+  font-size: var(--text-md);
+}
+
+.alert-context__record + .alert-context__record {
+  border-top: 1px solid var(--hairline);
 }
 
 .alert-context__record--med_change {
   box-shadow: inset 2px 0 0 var(--accent);
+  padding-left: var(--space-3);
 }
 
 .alert-context__when {
   min-width: 7rem;
-  color: var(--muted);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -127,24 +265,32 @@
 }
 
 .alert-context__note {
-  color: var(--muted);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
 /* Phone width (375 px and similar, SPEC section 9): a nurse opens this screen from
    a push alert, so the error rows, evidence replays and feedback buttons stack
    full-width instead of squeezing onto one line and forcing horizontal scroll. */
 @media (max-width: 480px) {
-  .error-list__open {
+  .error-list .row {
     flex-wrap: wrap;
     min-height: 2.75rem;
   }
 
-  .error-list__phrase {
+  /* The chip and the timestamp share the first line, the phrase gets its own
+     under them, so nothing is squeezed to a few characters wide. */
+  .error-list .row__main {
+    order: 1;
     flex-basis: 100%;
   }
 
+  .error-list .row__value {
+    margin-left: auto;
+  }
+
   .alert-view__evidence {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .feedback-buttons > [role='group'] {
@@ -165,6 +311,18 @@
 
   .alert-context__when {
     min-width: 0;
+  }
+
+  /* A card title and its caption don't fit on one line on a phone, so the caption
+     drops under the title instead of squeezing it to two words. */
+  .alert-view .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .alert-view .section-header__caption {
+    margin-left: 0;
   }
 }
 

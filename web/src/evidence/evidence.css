@@ -1,14 +1,84 @@
+/* Replay evidence (SPEC section 9, screen 4), on the system in docs/DESIGN.md: the
+   skeleton fills its frame and the transport sits under it on one quiet line, so the
+   player reads as a piece of footage rather than as another panel of controls. */
 .replay-player {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.replay-player .skeleton-view,
+.replay-player .skeleton-view--empty {
+  width: 100%;
+  height: auto;
 }
 
 .replay-player__controls {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+}
+
+.replay-player__controls input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--chart-line);
+}
+
+.replay-player__controls output {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ghost replay: today drawn over the usual routine. The legend names both layers in
+   words and repeats their colour as a dot, so the comparison never rests on colour. */
+.ghost-replay {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+}
+
+.ghost-replay figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.ghost-replay__caption--today,
+.ghost-replay__caption--usual {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ghost-replay__caption--today::before,
+.ghost-replay__caption--usual::before {
+  content: '';
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+.ghost-replay__caption--today {
+  color: var(--ghost-today);
+}
+
+.ghost-replay__caption--usual {
+  color: var(--ghost-usual);
+}
+
+.ghost-replay__disclaimer {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
 
 /* Phone width (375 px and similar, SPEC section 9): a nurse opens this from a push

@@ -80,9 +80,9 @@ describe('alert.css phone layout', () => {
     const mobileBlock = alertCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
     expect(mobileBlock).toBeTruthy()
 
-    expect(mobileBlock).toMatch(/\.error-list__open\s*\{[^}]*flex-wrap:\s*wrap/)
-    expect(mobileBlock).toMatch(/\.error-list__phrase\s*\{[^}]*flex-basis:\s*100%/)
-    expect(mobileBlock).toMatch(/\.alert-view__evidence\s*\{[^}]*flex-direction:\s*column/)
+    expect(mobileBlock).toMatch(/\.error-list \.row\s*\{[^}]*flex-wrap:\s*wrap/)
+    expect(mobileBlock).toMatch(/\.error-list \.row__main\s*\{[^}]*flex-basis:\s*100%/)
+    expect(mobileBlock).toMatch(/\.alert-view__evidence\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/)
     expect(mobileBlock).toMatch(/\.alert-context__record\s*\{[^}]*flex-wrap:\s*wrap/)
   })
 

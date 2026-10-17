@@ -18,6 +18,13 @@ function pattern(overrides: Partial<PatternMatch> = {}): PatternMatch {
   }
 }
 
+/** The confidence line of the nth pattern card: a big number plus the word, so the
+ * number is its own element and `getByText` can't read the pair as one node. */
+function confidence(index: number): string {
+  const card = screen.getByRole('list', { name: 'Possible patterns' }).children[index]
+  return card.querySelector('.pattern__confidence')?.textContent ?? ''
+}
+
 describe('PatternList', () => {
   it('renders patterns in order with name, confidence, evidence and checks', () => {
     const patterns = [
@@ -33,14 +40,14 @@ describe('PatternList', () => {
     ])
 
     expect(screen.getByText('Consistent with: Sudden change (delirium)')).toBeTruthy()
-    expect(screen.getByText('82% confidence')).toBeTruthy()
+    expect(confidence(0)).toBe('82% confidence')
     expect(screen.getByText('3 omissions in the last session')).toBeTruthy()
     expect(screen.getByText('new antibiotic 2 days ago')).toBeTruthy()
     expect(screen.getAllByText('Consider ruling out:').length).toBe(2)
     expect(screen.getByText('Check for infection / UTI')).toBeTruthy()
 
     expect(screen.getByText('Consistent with: Slow cognitive drift')).toBeTruthy()
-    expect(screen.getByText('40% confidence')).toBeTruthy()
+    expect(confidence(1)).toBe('40% confidence')
     expect(screen.getByText('slower over 3 weeks')).toBeTruthy()
     expect(screen.getByText('Review recent medication changes')).toBeTruthy()
   })
@@ -64,6 +71,21 @@ describe('PatternList', () => {
     // Never colour alone: the urgency is also spelled out (web guide, a11y).
     expect(screen.getByText('Urgent').className).toContain('pattern__urgency--urgent')
     expect(screen.getByText('Routine').className).toContain('pattern__urgency--routine')
+  })
+
+  it('draws a confidence bar as wide as the confidence, and hides it from screen readers', () => {
+    render(
+      <PatternList
+        patterns={[pattern({ pattern_id: 'delirium', confidence: 0.82 }), pattern({ pattern_id: 'drift', confidence: 0.4 })]}
+      />,
+    )
+
+    const [first, second] = Array.from(screen.getByRole('list', { name: 'Possible patterns' }).children)
+    expect(first.querySelector('.pattern__meter-fill')?.getAttribute('style')).toContain('--confidence: 0.82')
+    expect(second.querySelector('.pattern__meter-fill')?.getAttribute('style')).toContain('--confidence: 0.4')
+    // The percentage is the signal; the bar only makes the two comparable at a glance.
+    expect(first.querySelector('.pattern__meter')?.getAttribute('aria-hidden')).toBe('true')
+    expect(confidence(0)).toBe('82% confidence')
   })
 
   it('gives the list an accessible name', () => {
