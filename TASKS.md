@@ -476,7 +476,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T126 — Review: live-session tests leak into session_log; add a shared reset fixture
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: test
@@ -485,7 +485,8 @@ Acceptance:
 - source: reviewer
 - owner: max_API_light
 - claimed: 2026-10-17T07:49Z
-- pr: —
+- pr: #114
+- rating: 4/5 conftest.py already existed with a flagged-resident fixture; otherwise clear
 
 What: `routine_watch.session_log` is process-global and `demo_residents()` reads it. Only `test_live_flag.py` resets it; `test_live.py` and `test_live_camera.py` play sessions via `session_messages` without resetting, so every later test (demo/alerts/api/patterns) sees an extra Mrs. K session and results depend on test order.
 Interface: add `pipeline/tests/conftest.py` with an `autouse` fixture calling `session_log.reset()` before and after each test; drop the now-duplicate fixture in `test_live_flag.py`.
