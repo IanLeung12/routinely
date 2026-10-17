@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 21fc468
+- last-reviewed: 1c9f3cb
 
 ## Tasks
 
@@ -527,3 +527,19 @@ Interface: keep the pipeline/tests one (runs with the other scenario tests), fol
 Acceptance:
 - one README-coverage test remains; adding a scenario folder without a README row still fails it.
 - `scripts/ci.sh` passes.
+
+### T273 — CI: run the first-load bundle budget check after the web build
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/ci.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T260 (#251) added `npm run check:bundle` in web/ but nothing runs it, so the budget never fails a PR. Wire it into CI right after the build.
+Interface: in `scripts/ci.sh`, the node loop line `(cd "$d" && npm ci ... && npm run build --if-present)`: append `&& npm run check:bundle --if-present` so it only runs for packages that define it. Read only `scripts/ci.sh` and `web/package.json`. Touch nothing else.
+Acceptance:
+- `scripts/ci.sh` passes and its output includes the "First-load JS (gzipped):" and "Budget:" lines from web/scripts/check-bundle.mjs.
