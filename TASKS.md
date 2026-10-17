@@ -245,14 +245,14 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T160 — Unit overview: empty state when the unit has no residents
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: improvement
 - deps: —
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:01Z
 - pr: —
 
 What: `UnitOverview` handles loading but renders an empty list when the API returns no residents. Show `EmptyState` with "No residents on this unit yet." (same wording as `web/src/handoff/Handoff.tsx`).
