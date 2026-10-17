@@ -503,7 +503,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T332 — Replay and ghost replay respect prefers-reduced-motion
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
