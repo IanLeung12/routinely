@@ -1,7 +1,8 @@
 """Alert contracts for flagged demo residents (SPEC section 5, MVP 5).
 
 Turns a flagged resident's qualifying sessions into the evidence a nurse reviews: the
-errors, the baseline comparison, a plain-language summary and suggested checks.
+errors, the baseline comparison, a plain-language summary, the patterns the change is
+consistent with and suggested checks.
 
     from routine_watch.demo import demo_residents
     alerts = build_alerts(demo_residents())
@@ -15,18 +16,21 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from .change_detection import Baseline
 from .checks import suggest_checks
 from .contracts import (
     Alert,
     AlertKind,
     BaselineComparison,
     BaselineMetric,
+    PatternMatch,
     SuggestedCheck,
     TaskError,
 )
 from .demo import DEMO_DAYS, DEMO_NOW
 from .explain import Explainer
 from .explain_claude import get_explainer
+from .patterns import extract_features, score_patterns
 
 #: How far back a session still counts toward the flag (SPEC section 7).
 FLAG_WINDOW_H = 48.0
@@ -105,6 +109,22 @@ def _normal_error_rate(resident: dict) -> float:
     return sum(counts) / len(counts) if counts else 0.0
 
 
+def _patterns(resident: dict) -> list[PatternMatch]:
+    """The patterns this resident's change is consistent with (SPEC section 7.5).
+
+    Deterministic rules over the features the pipeline already has, ranked against the
+    pattern library. An empty list is a real answer: a change with no clear pattern.
+    """
+    features = extract_features(
+        resident["sessions"],
+        Baseline(**resident["baseline"]),
+        resident["care_records"],
+        now=DEMO_NOW,
+        window_h=FLAG_WINDOW_H,
+    )
+    return score_patterns(features)
+
+
 def _build_alert(resident: dict) -> Alert:
     qualifying = _qualifying_sessions(resident)
     session_ids = [session_id for session_id, _, _ in qualifying]
@@ -155,4 +175,5 @@ def _build_alert(resident: dict) -> Alert:
         suggested_checks=[
             SuggestedCheck(check) for check in suggest_checks(resident["care_records"], DEMO_NOW)
         ],
+        patterns=_patterns(resident),
     )
