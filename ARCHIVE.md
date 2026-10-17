@@ -7453,3 +7453,27 @@ Interface: `_tuned()` also returns `baseline: {**resident["baseline"], "threshol
 Acceptance:
 - pytest: after confirm feedback via the API, `GET /residents/mrs-k` `baseline.threshold` equals the alert's threshold; with no feedback it is unchanged
 - `scripts/ci.sh` passes
+
+### T415 — Deploy: Docker images + compose for API and dashboard (Vultr-ready)
+- status: done
+- class: standard
+- priority: 1
+- kind: feature
+- deps: —
+- area: deploy/, docs/DEPLOY.md, .dockerignore
+- owner: max_API_standard
+- claimed: 2026-10-17T20:35Z
+- pr: #391
+- rating: 4/5 Clear deployment interface; worker lacks Docker, so acceptance ran on an isolated GitHub Actions Linux runner.
+
+What: SPEC §5/§16-C says the backend (FastAPI + dashboard) is hosted on Vultr, but the repo has no container or deploy setup, so the judges' demo URL can't be stood up quickly. Add a reproducible container build that a human can run on any Docker host (Vultr VM) with one command. Don't provision cloud resources or buy domains; humans do that.
+Interface:
+- `deploy/api.Dockerfile`: Python image, `uv sync` of `pipeline/` (no `capture` extra), runs `uvicorn routine_watch.api:app --host 0.0.0.0 --port 8000`; non-root user; healthcheck on an existing GET route.
+- `deploy/web.Dockerfile`: multi-stage, `npm ci && npm run build` in `web/` with build arg `VITE_API_URL`, served by nginx (both `/` and `/landing.html`), SPA fallback to `index.html`.
+- `deploy/docker-compose.yml`: `api` + `web` (+ optional `db` timescale service under a `tsdb` profile, used only when `DATABASE_URL` points at it); env from `.env` (`env_file`), defaults `OFFLINE_MODE=true`, `LIVE_API=0`; `CORS_ORIGINS` set to the web origin; replay/data dirs on a named volume.
+- `docs/DEPLOY.md` (≤60 lines): build/run commands, which `.env` vars matter in prod, how to point a domain + TLS (Caddy or similar, described not committed), and the privacy rule (no video stored).
+- `.dockerignore`: excludes node_modules, .venv, .cache, .data, .dev, .env, models/.
+Acceptance:
+- `docker compose -f deploy/docker-compose.yml up -d --build` then `DASHBOARD_URL=http://localhost:<web port> API_URL=http://localhost:8000 scripts/smoke.sh` passes (paste the output in the PR); `docker compose ... down` cleans up.
+- No secrets in images (`.env` not copied); `scripts/ci.sh` passes.
+- If you add a module or script, add a CODEMAP note in this PR.
