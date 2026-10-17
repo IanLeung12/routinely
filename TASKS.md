@@ -280,14 +280,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T269 — Contracts: JSON Schema for GET/PUT /monitoring payloads
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - deps: T263, T262
 - area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T13:37Z
 - pr: —
 
 What: Same pattern as T257/T263: the monitoring state (incl. T262's audit trail) is hand-mirrored in web/src/contracts.ts; generate a schema from pydantic so drift fails CI.
