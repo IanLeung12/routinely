@@ -233,14 +233,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_verifier.py -q` and `scripts/ci.sh` pass.
 
 ### T031 — On-disk API response cache + LIVE_API guard
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/api_cache.py, pipeline/tests/test_api_cache.py
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:05Z
-- pr: —
+- pr: #29
 
 What: Every paid API call (Gemini, Claude) must go through an on-disk cache under `.cache/api/` and only run when `LIVE_API=1`. Read only the files in `area`, `pipeline/src/routine_watch/hesitation.py` (code style) and `pipeline/pyproject.toml`. Standard library only.
 Interface: `class LiveApiDisabled(RuntimeError)`; `live_api_enabled() -> bool` (env `LIVE_API == "1"`); `request_key(namespace: str, request: dict) -> str` = sha256 hex of `namespace + json.dumps(request, sort_keys=True, separators=(",", ":"))` (bytes values must be pre-hashed by the caller); `cached_call(namespace, request, fn: Callable[[], dict], cache_dir: Path | None = None) -> dict`: returns the cached JSON at `<cache_dir>/<namespace>/<key>.json` if present; else if not live raises `LiveApiDisabled`; else calls `fn()`, writes the result atomically (tmp file + rename) and returns it. Default `cache_dir` = env `API_CACHE_DIR` or `<repo root>/.cache/api`.
