@@ -60,14 +60,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T247 — Shift handoff: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T203
 - area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:46Z
 - pr: —
 
 What: Same treatment T234/T235 gave the overview and live screen: at 375 px the handoff page has no horizontal scroll, rows stack, and buttons are at least 44 px tall.
