@@ -10,7 +10,7 @@ export class FakeWebSocket {
   closed = false
   onmessage: ((event: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
-  onclose: (() => void) | null = null
+  onclose: ((event?: { code?: number }) => void) | null = null
 
   constructor(url: string) {
     this.url = url
@@ -28,6 +28,13 @@ export class FakeWebSocket {
   fail() {
     this.onerror?.()
     this.onclose?.()
+  }
+
+  /** A clean, server-initiated close with an application code (e.g.
+   * `live_camera.CAMERA_UNAVAILABLE`, T394) - no `onerror`, since it's a close handshake
+   * rather than a lost connection. */
+  closeWithCode(code: number) {
+    this.onclose?.({ code })
   }
 
   static latest(): FakeWebSocket {

@@ -5,6 +5,7 @@ import type { Resident } from '../resident/types.ts'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { ErrorState } from '../ui/ErrorState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
@@ -56,6 +57,17 @@ function stepLabel(steps: LiveStep[], stepId: string | null | undefined): string
 
 function errorText(steps: LiveStep[], error: TaskError): string {
   return `${describeError(error.type, stepLabel(steps, error.step_id))} · ${formatClock(error.t_start)}`
+}
+
+/** Strips `?source=camera` (and `?camera=`) from the dashboard URL and reloads, landing
+ * back on the recorded scenario this screen otherwise falls back to (T394). A full
+ * reload, not a state change, because the camera is picked once from the URL when the
+ * screen first mounts (`LiveScreen.tsx`). */
+function watchRecordedSession() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('source')
+  url.searchParams.delete('camera')
+  window.location.assign(url.toString())
 }
 
 /** The verdict for a finished session, and nothing else. It is a `role="status"` live
@@ -148,6 +160,7 @@ export function LiveSession({
     paused: wsPaused,
     objectsSeen,
     source,
+    cameraUnavailable,
     retry,
   } = useLiveSession(scenario, speed, camera)
   const announcement = useAnnouncement(steps, states, errors, source)
@@ -219,12 +232,18 @@ export function LiveSession({
         }
       />
 
-      {/* Monitoring is off for this resident's room (SPEC section 12): the API sends one
-          `paused` message and closes without playing anything, so say so instead of
-          showing an empty skeleton view and task map. "Check again" reopens the socket,
-          which is how the screen recovers once a nurse turns monitoring back on, without
-          needing a full reload (T266). */}
-      {paused ? (
+      {/* `/ws/live?source=camera` closes with `live_camera.CAMERA_UNAVAILABLE` when no
+          camera on this machine could be read (T356): no message was sent first, so
+          falling back to mock data here would look like a camera is live when there is
+          none. Say so plainly instead, distinct from a dropped connection or an unknown
+          scenario (T394), with a way back to the recorded scenario this screen plays by
+          default. */}
+      {cameraUnavailable ? (
+        <Card>
+          <ErrorState message="No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session." />
+          <Button onClick={watchRecordedSession}>Watch a recorded session</Button>
+        </Card>
+      ) : paused ? (
         <Card>
           <div role="status">
             <EmptyState message={`Monitoring is paused for room ${paused.room}`} />

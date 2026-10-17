@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchResident } from '../resident/api.ts'
 import type { Resident } from '../resident/types.ts'
@@ -611,5 +611,68 @@ describe('LiveSession', () => {
 
     expect(screen.queryByText(/Waiting for object detector/)).toBeNull()
     expect(screen.queryByText('Live camera')).toBeNull()
+  })
+
+  // ---------------------------------------------- the camera that won't open (T394)
+
+  it('says plainly that no camera could be opened when the socket closes 4503, not the mock stream', () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4503)
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(
+      screen.getByText(
+        'No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText('Mock data')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+  })
+
+  it('sends the nurse back to the recorded scenario from the camera-unavailable message', () => {
+    const originalUrl = window.location.href
+    window.history.pushState(null, '', '/?source=camera&camera=0')
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4503)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Watch a recorded session' }))
+
+    expect(assign).toHaveBeenCalledOnce()
+    const url = new URL(assign.mock.calls[0][0] as string)
+    expect(url.searchParams.has('source')).toBe(false)
+    expect(url.searchParams.has('camera')).toBe(false)
+
+    vi.unstubAllGlobals()
+    window.history.replaceState(null, '', originalUrl)
+  })
+
+  it('leaves the 4404 and offline fallback messages unchanged', () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" camera={CAMERA} />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.closeWithCode(4404)
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.queryByText(/No camera could be opened/)).toBeNull()
+    expect(screen.getByText('Mock data')).toBeTruthy()
   })
 })
