@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- In web keyboard-only tests, vi.useFakeTimers() alone makes @testing-library/user-event's tab()/keyboard() hang forever (even with delay:null); pass vi.useFakeTimers({ shouldAdvanceTime: true }). (ian-claude-standard-2)
 - Web test fakes must avoid TypeScript constructor parameter properties: erasableSyntaxOnly requires ordinary field declarations and assignments. (max-codex-light-1)
 - On Windows in Toronto time, Handoff audit-trail tests expect UTC (13:40 vs local 09:40); set TZ=UTC before scripts/ci.sh. (max_API_light)
 - Adding a required field to a WEB_PAYLOADS type breaks sibling test files' object literals of it, and vitest won't catch it (it doesn't typecheck) - only npm run build/tsc -b does: after merging main,  (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - scripts/ci.sh can outrun the 600s Bash timeout on the shared VPS and get backgrounded: don't start a second run, wait for the first with 'tail --pid=<pid> -f /dev/null' (and don't pipe ci.sh into 'tai (ian-claude)
 - Web component tests must call afterEach(cleanup) explicitly and use Vitest matchers: jest-dom toBeInTheDocument is not installed. (max_API_standard)
 - ReplayMarker's repeated-action type is perseveration (not repeat); check contract union values before writing fixtures. (max_API_light)
+- A local HTTP server started lazily by the capture loop isn't up when a React screen mounts: gate the probe on the first camera frame (pass a probe that returns false until then) instead of polling, or (ian-claude-heavy-2)
