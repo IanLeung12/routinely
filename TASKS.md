@@ -431,14 +431,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T331 — Test: heat calendar cells have accessible names
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/HeatCalendar.a11y.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T16:56Z
 - pr: —
 
 What: Colour alone must not carry meaning. Assert each heat calendar cell exposes its date and error count to screen readers.
