@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: a054d6a
+- last-reviewed: 8453feb
 
 ## Tasks
 
@@ -162,22 +162,22 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T052 — Demo-data banner component
-- status: blocked
+- status: todo
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/README.md (add one line)
 - source: proposed
-- owner: max-codex-light-1
-- claimed: 2026-10-17T05:39Z
+- owner: —
+- claimed: —
 - pr: #52
 
 What: Responsible design / Clarity for judges: a thin banner stating the dashboard runs on synthetic residents. Component only; wiring into `App.tsx` is a later task. Read only the files in `area` and `web/src/ui/Card.tsx` (style).
-Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void })` renders `role="note"` with text "Demo mode: synthetic residents, no real patient data. Flags a change for review; never a diagnosis." and, if `onDismiss` is given, a "Dismiss" button. CSS vars only.
+Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void })` renders `role="note"` with text "Demo mode: synthetic residents, no real patient data. Changes are flagged for review only." (do not use the word "diagnosis" in any form; tests/test_privacy.py rejects it) and, if `onDismiss` is given, a "Dismiss" button. CSS vars only.
 Acceptance:
 - Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
-- note: Required wording never a diagnosis is rejected by test_privacy.py negation regex; needs a scoped guard fix. Banner focused tests/lint/build pass; draft PR #52 ready.
+- note: fix CI on PR #52: orch changed the required text to avoid "diagnosis" (test_privacy.py). Update the component and test on branch task/T052-demo-banner, then set auto-merge.
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T053 — Review: offline feedback fallback hides API rejections from the nurse
@@ -459,3 +459,74 @@ Interface: read only `App.tsx`, `App.test.tsx`, `ui/DemoBanner.tsx`.
 Acceptance:
 - App test: banner visible on overview and after opening a resident.
 - `scripts/ci.sh` passes.
+
+### T069 — Tests for ErrorList and SuggestedChecks
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/ErrorList.test.tsx, web/src/alert/SuggestedChecks.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Both components have no tests. Read only `web/src/alert/ErrorList.tsx`, `web/src/alert/SuggestedChecks.tsx`, `web/src/contracts.ts` (types `TaskError`, `SuggestedCheck`) and `web/src/alert/FeedbackButtons.test.tsx` (test style).
+Interface: new test files only; do not change the components.
+Acceptance:
+- ErrorList: each error type renders its phrase (e.g. omission → "skipped <step>"), the timestamp formats as m:ss, and the chip colour matches red/amber/grey; an empty list renders without crashing.
+- SuggestedChecks: renders one item per check, and nothing (or an empty state) for an empty list.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T070 — Tests for Sparkline and SessionList
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/Sparkline.test.tsx, web/src/resident/SessionList.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Both components have no tests. Read only `web/src/overview/Sparkline.tsx`, `web/src/resident/SessionList.tsx`, `web/src/resident/types.ts`, `web/src/resident/format.ts` and `web/src/resident/DriftCard.test.tsx` (test style).
+Interface: new test files only; do not change the components.
+Acceptance:
+- Sparkline: renders an svg path for ≥2 scores, handles 0 and 1 score without NaN in any attribute.
+- SessionList: one row per session with formatted date/score/errors; empty list shows the empty state; any click/select callback fires with the right session.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T071 — Tests for useLiveSession and mockLiveStream
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/useLiveSession.test.ts, web/src/live/mockLiveStream.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: The live screen's state hook and mock stream are untested. Read only `web/src/live/useLiveSession.ts`, `web/src/live/mockLiveStream.ts`, `web/src/live/LiveSession.test.tsx` (how it fakes the socket) and `.tasks/LESSONS.md` (pending effects after teardown break CI).
+Interface: new test files only; use `vi.useFakeTimers()` and a fake WebSocket; no real network.
+Acceptance:
+- mockLiveStream: emits messages in order, ends with a session-ended message, and the returned stop function stops further messages.
+- useLiveSession (renderHook): step states update from messages, the end message sets the ended state, and the socket closes on unmount.
+- `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
+
+### T072 — Live camera session messages (capture → recogniser → live messages)
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/live_camera.py, pipeline/tests/test_live_camera.py, docs/CODEMAP.md (notes only)
+- owner: —
+- claimed: —
+- pr: —
+
+What: `/ws/live` only replays recorded scenarios; the demo needs the camera path too (SPEC §10, §16 decision B). Build the generator that turns a live capture stream into the same messages `live.session_messages` yields, so wiring it into the route is a one-line follow-up.
+Interface: `async def camera_session_messages(frames: AsyncIterator[CaptureFrame] | Iterable[CaptureFrame], task: str = "tea") -> AsyncIterator[dict]` in `live_camera.py`, reusing `live.py`/`recogniser.py`/`replay.py` helpers (import, don't copy; don't edit `live.py` or `api.py`). Frames come from `capture.record_stream` with `FakeLandmarker`/`FakeDetector` in tests; never store frames.
+Acceptance:
+- Feeding a recorded scenario's `frames.jsonl` through `camera_session_messages` yields the same step/error/end messages as `session_messages` for that scenario (test over ≥3 scenarios).
+- No real camera, network or paid API in tests; `scripts/ci.sh` passes.
