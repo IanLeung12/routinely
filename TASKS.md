@@ -591,14 +591,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T054 — Review: task map and skeleton view ignore the dark design tokens
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/SkeletonView.tsx, web/src/index.css (add tokens/rules only), web/src/live/TaskMap.test.tsx
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:23Z
 - pr: —
 
 What: `TaskMap.tsx` injects an inline `<style>` with light-theme hex colours (#f1f5f9 boxes, #dcfce7 done) that glare on the dark dashboard, and `SkeletonView.tsx` hard-codes stroke/fill hex values. Both must use the CSS variables in `web/src/index.css` (`--panel`, `--border`, `--text`, `--error-red-*`, `--error-amber-*`, `--status-normal-*`), like T048 does for the heat calendar. Read only the files in `area`.
