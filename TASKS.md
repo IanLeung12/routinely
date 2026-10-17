@@ -476,7 +476,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T266 — Live screen: "Check again" after a room is unpaused
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
