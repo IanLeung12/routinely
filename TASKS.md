@@ -389,15 +389,16 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T226 — Ghost replay: say the figure is a stand-in for demo recordings
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T10:49Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-standard: run ended without progress; partial work on branch task/T226-wip-1052: start from it (git switch task/T226-wip-1052 && git merge origin/main)
 
 What: Since T207 (PR #205) the demo's recordings get a made-up body (`pipeline/src/routine_watch/stick_figure.py`) so the ghost replay has something to draw. A judge or nurse should not mistake it for tracked motion, so add a small muted caption under the replay: "Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box."
 Interface: read `web/src/evidence/GhostReplay.tsx` and its test only. Caption is plain text under the existing canvas/caption row, using existing muted text tokens (`var(--muted)`), readable on the dark card (see T208 for the contrast bug to avoid).
