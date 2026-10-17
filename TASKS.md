@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 2ab62dd
+- last-reviewed: 7dce321
 
 ## Tasks
 
@@ -421,4 +421,40 @@ Interface: new test file only; read web/src/patterns/PatternLibrary.tsx and Patt
 Acceptance:
 - Covers: urgency only, level only, both, both with zero matches (empty state text), reset.
 - Filters reachable and operable by keyboard in at least one case.
+- `scripts/ci.sh` passes.
+
+### T311 — Test: handoff payload without `paused` / `monitoring_paused` still validates and renders
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_handoff_defaults.py, web/src/handoff/Handoff.defaults.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T292 (#297) made `Handoff.paused` and `HandoffResident.monitoring_paused` optional with defaults (false / []); lock that in on both sides so an older or trimmed payload never breaks the shift handoff.
+Interface: new test files only; read pipeline/src/routine_watch/contracts.py (Handoff, HandoffResident, PausedRoom), web/src/handoff/Handoff.tsx, web/src/handoff/mockHandoff.ts.
+Acceptance:
+- Pipeline: a Handoff dict without `paused` and residents without `monitoring_paused` validates; defaults are `[]` / `False`; round-trips through `model_dump`.
+- Web: Handoff renders a payload missing both fields with no crash, no paused-rooms section, and no "paused" label on any row.
+- `scripts/ci.sh` passes.
+
+### T312 — Test: resident detail feedback history after reset shows the empty state
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/ResidentDetail.reset.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T304 (#298) proved the API clears feedback on demo reset; add the dashboard side: after a reset the resident detail "What nurses said" card shows "No nurse answers yet" instead of stale answers.
+Interface: new test file only; read web/src/resident/ResidentDetail.tsx and its existing tests for how the feedback API is mocked; pipeline/tests/test_feedback_reset.py for the reset behaviour.
+Acceptance:
+- Mock feedback API returns one answer, then an empty list after a reset; the card updates to the empty-state text on re-fetch/re-mount.
+- No raw video or real API calls; fakes only.
 - `scripts/ci.sh` passes.
