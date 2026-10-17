@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveMessage } from './live/useLiveSession.ts'
 import type { ResidentSummary } from './overview/types.ts'
@@ -36,6 +36,7 @@ class FakeWebSocket {
 }
 
 beforeEach(() => {
+  vi.stubGlobal('WebSocket', FakeWebSocket)
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('API unavailable in tests')))
 })
 
@@ -45,6 +46,14 @@ afterEach(() => {
 })
 
 describe('App', () => {
+  it('shows the live routine picker with making tea selected by default', async () => {
+    await act(async () => { render(<App />) })
+
+    const picker = within(screen.getByRole('group', { name: 'Routine to watch' }))
+    expect(picker.getByRole('button', { name: 'Making tea', pressed: true })).toBeTruthy()
+    expect(picker.getByRole('button', { name: 'Medication with water', pressed: false })).toBeTruthy()
+  })
+
   it('renders the dashboard shell', async () => {
     // Flush the rejected request and fallback state update before jsdom teardown.
     await act(async () => {
