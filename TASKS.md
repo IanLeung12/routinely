@@ -409,7 +409,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T368 — Test infra: every web test gets a fake WebSocket by default
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
