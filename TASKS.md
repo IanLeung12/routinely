@@ -522,14 +522,14 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass
 
 ### T219 — Bug: live session's final error list differs from replay for sequence scenarios
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_matches_replay.py, pipeline/tests/test_live.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T10:20Z
 - pr: —
 
 What: Played live, `tea_sequence_error`, `tea_self_corrected`, `meds_pill_before_water` and `meds_self_corrected` stream a transient `omission` for a dependency that happens later, so the errors the demo ends on are not the ones `expected.yaml` checks (xfailed in `test_live_matches_replay.py`, noted again in T202/#197). Keep streaming errors as now, but make `session_end` carry the healed final list so the screen can settle on the right answer.
