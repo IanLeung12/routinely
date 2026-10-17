@@ -337,7 +337,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T284 — Review: move shared API state out of api.py to end the `from . import api` cycle
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
