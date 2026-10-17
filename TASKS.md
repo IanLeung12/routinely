@@ -467,14 +467,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T323 — Live session summary: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/sessionSummary.css, web/src/live/liveSession.css
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T16:23Z
 - pr: —
 
 What: `liveScreen.css` and `taskMap.css` already have phone-width rules, but the session summary and live session panels don't; at 375 px they must not scroll sideways and buttons are at least 44 px tall.
