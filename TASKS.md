@@ -449,15 +449,16 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T109 — Resident detail: not-found, API-down and no-sessions states
-- status: claimed
+- status: todo
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T07:11Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-standard: run ended without progress
 
 What: The resident screen must stay legible when things go wrong: an unknown resident id, the API being unreachable, or a resident with no sessions yet. A nurse should understand each state in 10 s.
 Interface: `ResidentDetail` only; reuse the existing `web/src/resident/api.ts` fetch (do not change it) and existing CSS classes/design tokens.
