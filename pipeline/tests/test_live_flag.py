@@ -6,14 +6,12 @@ K's - her sparkline has spiked and her flag and its alert are there. These tests
 the recorded scenarios through `session_messages` (the camera's stand-in and the
 demo's fallback) and then ask the API what a dashboard would see.
 
-The log is process-global, so every test here resets it; that is also the rule for
-anyone else who plays a live session in a test.
+The shared autouse fixture resets the process-global log around every test.
 """
 
 import asyncio
 from typing import Any
 
-import pytest
 from fastapi.testclient import TestClient
 
 from routine_watch import session_log
@@ -33,14 +31,6 @@ QUIET_RESIDENT = "mrs-ahmed"
 
 #: Fast enough that a recorded session plays out inside a test.
 FAST = 1000.0
-
-
-@pytest.fixture(autouse=True)
-def _empty_log():
-    """Every test starts and ends with the seeded demo and nothing recorded."""
-    session_log.reset()
-    yield
-    session_log.reset()
 
 
 def play(scenario: str, resident_id: str = DEMO_RESIDENT) -> dict[str, Any]:
