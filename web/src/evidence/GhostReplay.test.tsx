@@ -58,4 +58,9 @@ describe('GhostReplay', () => {
     render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
     expect(screen.getByRole('img', { name: 'Today and usual skeleton replay' })).toBeTruthy()
   })
+
+  it('warns that the body is a stand-in, not tracked motion', () => {
+    render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
+    expect(screen.getByText('Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box.')).toBeTruthy()
+  })
 })

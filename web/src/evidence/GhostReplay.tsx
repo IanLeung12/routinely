@@ -42,6 +42,7 @@ export default function GhostReplay({ today, normal, t, width = 480, height = 36
         })}
       </svg>
       <figcaption><span className="ghost-replay__caption--today">Today</span> / <span className="ghost-replay__caption--usual">Usual</span></figcaption>
+      <p className="ghost-replay__disclaimer">Demo recording: the body is drawn as a stand-in; the hand follows the tracked hand box.</p>
     </figure>
   )
 }
