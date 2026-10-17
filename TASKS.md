@@ -46,7 +46,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
