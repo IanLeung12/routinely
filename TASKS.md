@@ -357,7 +357,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T326 — Test: unit tests for session_log
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
