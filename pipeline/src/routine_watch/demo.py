@@ -17,7 +17,7 @@ from collections import Counter
 from datetime import UTC, datetime, timedelta
 
 from . import session_log
-from .change_detection import build_baseline, flag_change
+from .change_detection import Baseline, build_baseline, flag_change
 from .drift import daily_scores, drift
 from .patterns import extract_features, score_patterns
 from .scoring import session_score
@@ -138,6 +138,30 @@ def _top_pattern(sessions: list[dict], baseline, care_records: list[dict]) -> di
         return None
     top = matches[0]
     return {"pattern_id": top.pattern_id, "name": top.name, "urgency": top.urgency.value}
+
+
+def status_for(resident: dict, threshold: float) -> str:
+    """`resident`'s status if its flag threshold were `threshold` instead of its own
+    baseline's (SPEC MVP 7): the same flag rule `demo_residents` uses, so a
+    feedback-tuned threshold (`routine_watch.feedback`) reads the same status
+    wherever a resident's status is shown, not just in the handoff and the alert
+    payload (`routine_watch.api`).
+
+    `_watch`'s early-days bar is unrelated to nurse feedback - only the flag
+    threshold is tuned - so it is read straight from `resident`, same as always.
+    """
+    sessions = resident["sessions"]
+    scores = [point["score"] for point in resident["scores"]]
+    timestamped = [
+        (datetime.fromisoformat(session["ts"]), score)
+        for session, score in zip(sessions, scores, strict=True)
+    ]
+    tuned_baseline = Baseline(
+        mean=resident["baseline"]["mean"], std=resident["baseline"]["std"], threshold=threshold
+    )
+    flagged = flag_change(timestamped, tuned_baseline, DEMO_NOW)
+    watch = _watch(sessions, sessions, scores)
+    return _status(flagged, watch)
 
 
 def demo_residents() -> list[dict]:
