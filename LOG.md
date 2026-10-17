@@ -270,3 +270,10 @@ T291 | heavy | claude-opus | merged first try | ~95k tok
 T300 | standard | claude-sonnet | merged first try | ~45k tok
 T302 | light | claude-sonnet | merged first try | ~55k tok
 T294 | light | claude-sonnet+claude-opus | merged after CI fix | ~30k tok
+T295 | light | claude-sonnet | merged first try | ~45k tok
+T296 | standard | claude-sonnet | merged first try | ~65k tok
+T297 | standard | claude-sonnet | merged first try | ~45k tok
+T298 | light | claude-sonnet | merged first try | ~20k tok
+T299 | standard | claude-sonnet | merged first try | ~45k tok
+T303 | light | claude-sonnet | merged first try | ~40k tok
+T306 | standard | claude-sonnet | merged first try | ~80k tok
