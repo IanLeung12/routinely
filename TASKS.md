@@ -412,14 +412,14 @@ Acceptance:
   * `scripts/ci.sh` passes
 
 ### T286 — Privacy panel: say pauses are logged and where consent is recorded
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:23Z
 - pr: —
 
 What: The privacy panel's opt-in bullet predates the consent record (T255) and the audit trail (T262). Make it concrete in nurse-readable words.
