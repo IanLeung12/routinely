@@ -464,7 +464,7 @@ Acceptance:
 - existing FeedbackButtons tests pass; `scripts/ci.sh` passes
 
 ### T233 — Test: de-flake DemoBanner reset test under load
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: test
@@ -472,7 +472,8 @@ Acceptance:
 - area: web/src/ui/DemoBanner.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T11:07Z
-- pr: —
+- pr: #219
+- rating: 5/5 clear
 
 What: PR #217 reported `DemoBanner.test.tsx` (reset cases from T218) failing intermittently in full `scripts/ci.sh` runs while passing alone. Make its async assertions wait instead of checking state right after a click/findBy.
 Interface: read `web/src/ui/DemoBanner.tsx` and `web/src/ui/DemoBanner.test.tsx` only. Wrap post-click assertions (disabled state, error text appearing/disappearing) in `await waitFor(...)` or use `findBy*`/`waitForElementToBeRemoved`; resolve fake `onReset` promises inside `act`.
