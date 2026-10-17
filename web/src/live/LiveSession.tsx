@@ -58,6 +58,18 @@ function errorText(steps: LiveStep[], error: TaskError): string {
   return `${describeError(error.type, stepLabel(steps, error.step_id))} · ${formatClock(error.t_start)}`
 }
 
+/** The verdict for a finished session, and nothing else. It is a `role="status"` live
+ * region, so anything nested inside it is read out again with the banner text every
+ * time the region updates - which is why the "Open alert" button sits beside it rather
+ * than in it (T376). */
+function FlagBanner({ flag }: { flag: boolean }) {
+  return (
+    <p role="status" className={`live-session__banner live-session__banner--${flag ? 'flagged' : 'clear'}`}>
+      {flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+    </p>
+  )
+}
+
 /** Drives the screen-reader-only live region: one short sentence per step completion,
  * raised flag, or connection change, so a nurse who isn't looking at the screen still
  * hears what just happened (SPEC section 9 says the screen must read in ~10 seconds,
@@ -207,17 +219,14 @@ export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: 
                 usualDurationS={baseline?.usual_duration_s}
                 usualErrors={baseline?.usual_errors}
               />
-              <p
-                role="status"
-                className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
-              >
-                {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
-                {ended.flag && ended.alert_id && onOpenAlert && (
-                  <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
-                    Open alert
-                  </button>
-                )}
-              </p>
+              {ended.flag && ended.alert_id && onOpenAlert ? (
+                <div className="live-session__banner-row">
+                  <FlagBanner flag />
+                  <Button onClick={() => onOpenAlert(ended.alert_id as string)}>Open alert</Button>
+                </div>
+              ) : (
+                <FlagBanner flag={ended.flag} />
+              )}
             </>
           )}
 
