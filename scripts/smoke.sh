@@ -72,6 +72,30 @@ else
   fail "GET /residents/mrs-k: no response"
 fi
 
+if body=$(get "$API_URL/handoff"); then
+  if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert data.get("window_hours") == 12, "window_hours not 12"
+assert isinstance(data.get("residents"), list) and data["residents"], "empty residents"
+assert isinstance(data.get("summary"), str) and data["summary"], "empty summary"
+' "$body" 2>/dev/null; then
+    pass "GET /handoff"
+  else
+    fail "GET /handoff: unexpected body $body"
+  fi
+else
+  fail "GET /handoff: no response"
+fi
+
+if status=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' "$API_URL/handoff?hours=0" 2>/dev/null); then
+  fail "GET /handoff?hours=0: expected failure (422), got 2xx"
+elif [ "$status" = "422" ]; then
+  pass "GET /handoff?hours=0 -> 422"
+else
+  fail "GET /handoff?hours=0: expected 422, got ${status:-no response}"
+fi
+
 ws_url="${API_URL/http/ws}/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000"
 if "$PIPELINE_PYTHON" -c '
 import asyncio, sys
