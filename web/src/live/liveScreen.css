@@ -1,2 +1,25 @@
 .live-screen__tasks { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-4); }
 .live-screen__label { margin: 0 var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
+
+/* Phone width (375 px and similar, SPEC section 9): the routine picker stacks
+   full-width instead of baseline-wrapping, and the skeleton SVG (fixed at
+   480x360 via its width/height attributes, see SkeletonView.tsx) shrinks to
+   the card's width instead of forcing horizontal scroll. */
+@media (max-width: 480px) {
+  .live-screen__tasks {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .live-screen__label {
+    margin: 0 0 var(--space-1) 0;
+  }
+
+  .skeleton-view,
+  .skeleton-view--empty {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
