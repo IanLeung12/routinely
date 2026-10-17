@@ -522,7 +522,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T368 — Test infra: every web test gets a fake WebSocket by default
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -530,7 +530,8 @@ Acceptance:
 - area: web/vite.config.ts, web/src/testSetup.ts, web/src/App.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T18:24Z
-- pr: —
+- pr: #354
+- rating: 5/5 clear
 
 What: Local `scripts/ci.sh` keeps failing with an undici `ERR_INVALID_ARG_TYPE` WebSocket error (blocked T351, LESSONS lines 28 and 42) because some web tests render screens that open a real socket to localhost:8000. Stub it once for the whole suite.
 Interface: new `web/src/testSetup.ts` that, in a global `beforeEach`, does `vi.stubGlobal('WebSocket', FakeWebSocket)` using the existing helper in `web/src/live/testWebSocket.ts` (read it first), and registers it as `test.setupFiles: ['src/testSetup.ts']` in `web/vite.config.ts`. Tests that already stub WebSocket keep working (their own stub wins). Drop the now-redundant stub in `App.test.tsx` only if it stays green.
