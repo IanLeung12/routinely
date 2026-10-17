@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: eef354f
+- last-reviewed: f563195
 
 ## Tasks
 
@@ -511,3 +511,56 @@ Interface: read `pipeline/src/routine_watch/live.py` (module docstring + `as_jso
 Acceptance:
 - pytest replays one scenario through `/ws/live` (fakes only) and validates every message, plus a `paused` message, against the schema
 - `contracts/README.md` lists it; `scripts/ci.sh` passes
+
+### T251 — Shift handoff payload lists rooms whose monitoring is paused
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: A nurse taking over a shift must know which rooms aren't being watched; a paused room silently produces no flags, so today the handoff can read "all quiet" for a resident nobody was monitoring (SPEC §12).
+Interface: `build_handoff(...)` adds `"paused": [{"room": str, "resident_id": str, "name": str}]` to its result, read from `get_monitoring_store().paused_rooms()` (`monitoring.py`) and the room→resident config the API already uses for `/ws/live`; empty list when nothing is paused. Each resident row whose room is paused gets `"monitoring_paused": true` (else false). Don't change `api.py` (the endpoint returns `build_handoff` as-is) or anything in `web/`.
+Acceptance:
+- Tests in `pipeline/tests/test_handoff.py`: nothing paused → `paused == []`, all rows false; pause one room → that resident listed once, its row true; resume → back to empty. Reset the monitoring store between tests.
+- Summary/flag counts unchanged by pausing.
+- `scripts/ci.sh` passes.
+
+### T252 — Web: lazy-load the secondary screens to shrink the first-load bundle
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/App.tsx, web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The demo opens on the unit overview, but `App.tsx` statically imports every screen (pattern library, shift handoff, tour, live screen, alert view). Load the screens not shown on first paint with `React.lazy` + `Suspense` so the overview appears faster on a phone.
+Interface: In `App.tsx` only, `lazy(() => import(...))` for `PatternLibrary`, `Handoff` and `Tour` (named exports: map to `{ default: m.X }`); wrap each in `<Suspense fallback={...}>` using an existing `web/src/ui/` loading/empty component. Keep the overview, resident detail, live and alert screens static (demo path). No behaviour or copy changes.
+Acceptance:
+- Existing `App.test.tsx` tests pass (use `findBy*` where a lazy screen now resolves async); add one test that opening "Shift handoff" still renders it.
+- PR body gives the main JS chunk size from `cd web && npm run build` before and after.
+- `scripts/ci.sh` passes.
+
+### T253 — Shift handoff screen: show the rooms whose monitoring is paused
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: T251
+- area: web/src/handoff/types.ts, web/src/handoff/mockHandoff.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Show T251's new `paused` list on the handoff screen so the incoming nurse sees which rooms weren't watched.
+Interface: Read `web/src/handoff/types.ts`, `Handoff.tsx`, `mockHandoff.ts` and T251's docstring in `pipeline/src/routine_watch/handoff.py`. Add `paused: { room: string; resident_id: string; name: string }[]` to the `Handoff` type (treat missing as `[]` for older APIs) and `monitoring_paused?: boolean` to `HandoffResident`. When non-empty, render one line above the rows: "Monitoring paused: <name> (room <room>), ..." and a "Monitoring paused" chip on those residents' rows. Include the line in `handoffText`. Mock gets `paused: []`.
+Acceptance:
+- Tests: no line when `paused` is empty or missing; line + chip when one room is paused; `handoffText` includes it.
+- `scripts/ci.sh` passes.
