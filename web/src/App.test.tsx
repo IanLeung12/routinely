@@ -4,10 +4,26 @@ import type { ResidentSummary } from './overview/types.ts'
 import type { Alert } from './contracts.ts'
 import { mockAlerts } from './mock/alerts.ts'
 import { FakeWebSocket } from './live/testWebSocket.ts'
+import {
+  createInvite,
+  currentSupervisor,
+  getRole,
+  peopleISupport,
+  resetPeople,
+  setPeopleApi,
+  setRole,
+  unlink,
+} from './people/api.ts'
 import App from './App.tsx'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('API unavailable in tests')))
+  // Every screen below the roles block is the supervisor's, and the demo's supervisor
+  // is the care-home nurse: the nurse dashboard is the supervisor-with-many case
+  // (SPEC section 17). The chooser has its own tests and starts from no role at all.
+  localStorage.clear()
+  setPeopleApi(null)
+  setRole('supervisor')
 })
 
 afterEach(() => {
@@ -185,5 +201,102 @@ describe('App', () => {
     await act(async () => { render(<App />) })
     expect(await screen.findByRole('dialog', { name: 'Guided demo tour' })).toBeTruthy()
     window.history.pushState({}, '', '/')
+  })
+})
+
+describe('roles', () => {
+  it('asks who the app is for on first open, and not again after', async () => {
+    resetPeople()
+    await act(async () => { render(<App />) })
+
+    expect(screen.getByRole('heading', { name: 'Who is this for?' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Unit overview' })).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /setting this up for myself/i }))
+    })
+    expect(screen.getByRole('heading', { name: 'My routine' })).toBeTruthy()
+
+    // Opened again later: the choice is remembered, so nobody is asked twice.
+    cleanup()
+    await act(async () => { render(<App />) })
+    expect(screen.queryByRole('heading', { name: 'Who is this for?' })).toBeNull()
+    expect(screen.getByRole('heading', { name: 'My routine' })).toBeTruthy()
+  })
+
+  it('changes the home screen when the role is switched in the shell', async () => {
+    await act(async () => { render(<App />) })
+    expect(await screen.findByRole('heading', { level: 2, name: 'Unit overview' })).toBeTruthy()
+
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Myself' })) })
+    expect(screen.getByRole('heading', { name: 'My routine' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Unit overview' })).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Someone I support' }))
+    })
+    expect(await screen.findByRole('heading', { level: 2, name: 'Unit overview' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'My routine' })).toBeNull()
+  })
+
+  it('opens straight into the one person a supervisor supports', async () => {
+    // Everyone but Mrs. K taken off: a daughter watching her father has no unit to
+    // read first (SPEC section 17).
+    peopleISupport()
+      .filter((person) => person.id !== 'mrs-k')
+      .forEach((person) => unlink(person.id, currentSupervisor().id))
+
+    await act(async () => { render(<App />) })
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Unit overview' })).toBeNull()
+
+    // Back goes to the people list, not to a unit overview they are not part of.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /People I support/ }))
+    })
+    expect(screen.getByRole('heading', { level: 2, name: 'People I support' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Stop supporting Mrs. K' })).toBeTruthy()
+  })
+
+  it('round-trips an invite from the person to the supervisor and back', async () => {
+    await act(async () => { render(<App />) })
+
+    // As the person: hand out a code.
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Myself' })) })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Invite someone' }))
+    })
+    const { code } = createInvite('sam')
+    expect(screen.getByText(code)).toBeTruthy()
+
+    // As the supervisor: type it in.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Someone I support' }))
+    })
+    fireEvent.change(screen.getByLabelText('Invite code'), { target: { value: code } })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Add person' })) })
+
+    expect(screen.getByText('Sam shared their routine with you.')).toBeTruthy()
+    expect(peopleISupport().map((person) => person.id)).toContain('sam')
+
+    // And off the list again.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Stop supporting Sam' }))
+    })
+    expect(screen.queryByRole('button', { name: 'Stop supporting Sam' })).toBeNull()
+    expect(peopleISupport().map((person) => person.id)).not.toContain('sam')
+  })
+
+  it('forgets the role when the demo is reset', async () => {
+    await act(async () => { render(<App />) })
+    expect(await screen.findByRole('heading', { level: 2, name: 'Unit overview' })).toBeTruthy()
+
+    // The role is cleared before the pipeline is asked to reset, which offline it
+    // refuses: "Reset demo" must start the demo over whether or not the API answers.
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reset demo' })) })
+
+    expect(screen.getByRole('heading', { name: 'Who is this for?' })).toBeTruthy()
+    expect(getRole()).toBeNull()
   })
 })
