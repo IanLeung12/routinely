@@ -1,4 +1,7 @@
 import { apiUrl } from '../config.ts'
+import type { MonitoringChange } from '../contracts.ts'
+
+export type { MonitoringChange }
 
 /** Rooms currently paused (SPEC §12), from GET /monitoring. */
 export async function fetchPausedRooms(): Promise<string[]> {
@@ -23,14 +26,6 @@ export async function setRoomMonitoring(room: string, on: boolean): Promise<void
     throw new Error(`setRoomMonitoring failed: ${response.status}`)
   }
   window.dispatchEvent(new CustomEvent('monitoring-changed', { detail: { room, paused: !on } }))
-}
-
-/** One logged change to a room's monitoring switch (SPEC §12): `on` false is a pause,
- * true a resume, `by` whoever made it and `at` an ISO 8601 timestamp. */
-export type MonitoringChange = {
-  on: boolean
-  by: string
-  at: string
 }
 
 /** This room's recent monitoring changes, newest first, from

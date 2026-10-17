@@ -781,8 +781,9 @@ class HandoffResident(_Contract):
         "not this window: a drift takes weeks to show (SPEC section 7.5)."
     )
     monitoring_paused: bool = Field(
+        default=False,
         description="Their room's monitoring is paused (SPEC section 12), so a quiet row "
-        "means nobody was looking rather than nothing happened."
+        "means nobody was looking rather than nothing happened.",
     )
 
 
@@ -806,7 +807,9 @@ class Handoff(_Contract):
     residents: list[HandoffResident] = Field(
         description="Every resident, the ones needing review first."
     )
-    paused: list[PausedRoom] = Field(description="Rooms whose monitoring is paused right now.")
+    paused: list[PausedRoom] = Field(
+        default_factory=list, description="Rooms whose monitoring is paused right now."
+    )
     summary: str = Field(
         min_length=1,
         description="Plain language, written from the window's own numbers (`Explainer`).",
@@ -1042,12 +1045,11 @@ CONTRACTS: tuple[type[_Contract], ...] = (
 PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
 #: What the dashboard's HTTP routes answer with: a schema file each, and a
-#: TypeScript type for the ones in `WEB_PAYLOADS` below. The rest the dashboard
-#: still mirrors by hand (`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
-#: `web/src/about/monitoringApi.ts`) or reads through a record's own type
-#: (`AlertDetail` through `Alert`), so for those the schema is what the two sides are
-#: held to. `pipeline/tests/test_api_payload_contracts.py` validates the real routes
-#: against them all.
+#: TypeScript type for the ones in `WEB_PAYLOADS` below. `Resident` the dashboard
+#: still mirrors by hand (`web/src/resident/types.ts`), and `AlertDetail` it reads
+#: through `Alert`'s own generated type, so for those the schema is what the two
+#: sides are held to. `pipeline/tests/test_api_payload_contracts.py` validates the
+#: real routes against them all.
 PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentSummary,
     Resident,
@@ -1063,17 +1065,22 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
 )
 
 #: The payloads the dashboard reads through a generated type instead of a copy of
-#: its own: the drift card's, the pattern library's entry and both replay windows'.
+#: its own: the drift card's, the pattern library's entry, both replay windows', the
+#: overview row, the shift handoff and the monitoring audit trail's logged change.
 #: They are payloads like the rest above - this is only which of them
 #: `web/src/contracts.ts` holds a type for as well, so a field changed here breaks
 #: the dashboard's build (`web/src/resident/api.ts`, `web/src/patterns/types.ts`,
-#: `web/src/evidence/api.ts` import them) instead of a test matching field names in
-#: its source.
+#: `web/src/evidence/api.ts`, `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+#: `web/src/about/monitoringApi.ts` import them) instead of a test matching field
+#: names in its source.
 WEB_PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentDrift,
     PatternLibraryEntry,
     SessionReplay,
     NormalReplay,
+    ResidentSummary,
+    Handoff,
+    MonitoringChange,
 )
 
 #: What the dashboard sends the other way: a schema file each, no TypeScript. A

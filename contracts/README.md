@@ -44,15 +44,17 @@ Everything from `resident_summary.schema.json` down is an HTTP payload rather th
 a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
 `drift.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and `monitoring.py`
 and served by `api.py` and its route modules, plus the one body that travels the
-other way. Four of them are generated for the web side as well (`WEB_PAYLOADS`):
-`resident_drift`, `pattern_library_entry`, `session_replay` and `normal_replay` are
-TypeScript types in `web/src/contracts.ts`, which the dashboard imports
-(`web/src/resident/api.ts`, `web/src/patterns/types.ts`, `web/src/evidence/api.ts`),
-so changing one of those fields breaks its build. The rest the dashboard still
-mirrors by hand (`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
-`web/src/about/monitoringApi.ts`, `web/src/alert/api.ts`) or reads through a record's
-own generated type (`alert_detail` through `Alert`), so for those the schema is what
-both sides are held to. Either way,
+other way. Seven of them are generated for the web side as well (`WEB_PAYLOADS`):
+`resident_drift`, `pattern_library_entry`, `session_replay`, `normal_replay`,
+`resident_summary`, `handoff` and the monitoring audit trail's `monitoring_change`
+are TypeScript types in `web/src/contracts.ts`, which the dashboard imports
+(`web/src/resident/api.ts`, `web/src/patterns/types.ts`, `web/src/evidence/api.ts`,
+`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+`web/src/about/monitoringApi.ts`), so changing one of those fields breaks its build.
+The rest the dashboard still mirrors by hand (`web/src/alert/api.ts`) or reads
+through a record's own generated type (`alert_detail` through `Alert`, `resident`
+through `resident_summary`), so for those the schema is what both sides are held to.
+Either way,
 `pipeline/tests/test_api_payload_contracts.py` calls every one of those routes -
 every demo resident, one with a live session in their history, every resident's
 drift, a handoff with a room paused, an alert before and after a nurse answers it,

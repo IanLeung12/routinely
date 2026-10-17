@@ -150,6 +150,53 @@ export type HandLandmarks = {
 export const HANDEDNESS_VALUES = ['left', 'right'] as const
 export type Handedness = (typeof HANDEDNESS_VALUES)[number]
 
+/**
+ * The shift handoff (`GET /handoff`, SPEC section 9). What the nurse coming on shift missed:
+ * one row per resident for the window, rows worth a look first, quiet ones listed too so the
+ * unit is visibly looked at rather than silently skipped. `paused` is every room nobody was
+ * watching.
+ */
+export type Handoff = {
+  /** How far back the window reaches. */
+  window_hours: number
+  /** Every resident, the ones needing review first. */
+  residents: HandoffResident[]
+  /** Rooms whose monitoring is paused right now. */
+  paused?: PausedRoom[]
+  /** Plain language, written from the window's own numbers (`Explainer`). */
+  summary: string
+}
+
+/**
+ * One resident's line of the shift handoff (SPEC section 9). `flags` counts the sessions inside
+ * the window that scored above this resident's own threshold, which is the evidence a flag
+ * rests on rather than the flag itself: one bad session never alerts (SPEC section 7).
+ * `pending_review` counts the alerts raised for them that nobody has given a verdict on yet.
+ */
+export type HandoffResident = {
+  resident_id: string
+  name: string
+  /**
+   * The resident's room, so a handed-over line says where to go (SPEC section 9) and the
+   * printed or pasted handoff is usable on its own.
+   */
+  room: string
+  /** Sessions in the window above this resident's bar. */
+  flags: number
+  /** Alerts in the window with no verdict yet. */
+  pending_review: number
+  /**
+   * Their error score is on a slow rise. Read over their whole history, not this window: a
+   * drift takes weeks to show (SPEC section 7.5).
+   */
+  trending: boolean
+  /**
+   * Their room's monitoring is paused (SPEC section 12), so a quiet row means nobody was
+   * looking rather than nothing happened.
+   */
+  monitoring_paused?: boolean
+}
+
 /** One MediaPipe landmark, normalised to the frame: x and y in 0..1, z relative. */
 export type Landmark = {
   x: number
@@ -157,6 +204,23 @@ export type Landmark = {
   z: number
   /** Pose landmarks only; hand landmarks do not report it. */
   visibility?: number | null
+}
+
+/**
+ * One logged change to a room's switch (SPEC section 12). A pause or a resume, with who made it
+ * and when: `routine_watch.monitoring` appends one of these every time the switch really moves,
+ * so a camera going quiet is accountable rather than silent. A tap that leaves the room as it
+ * was is not a change and is not logged.
+ */
+export type MonitoringChange = {
+  /** False is a pause, true a resume. */
+  on: boolean
+  /**
+   * Who made the change. The MVP has no nurse logins, so every change is one anonymous nurse's.
+   */
+  by: string
+  /** When the change was made (wall clock). */
+  at: string
 }
 
 /**
@@ -299,6 +363,13 @@ export type PatternTimeProfile = {
 export const PATTERN_URGENCY_VALUES = ['routine', 'next_round', 'same_shift', 'urgent'] as const
 export type PatternUrgency = (typeof PATTERN_URGENCY_VALUES)[number]
 
+/** A room a nurse has paused, and whose it is (SPEC section 12). */
+export type PausedRoom = {
+  room: string
+  resident_id: string
+  name: string
+}
+
 /** One person's body skeleton. */
 export type Pose = {
   /** The 33 MediaPipe pose landmarks, in MediaPipe's own order. */
@@ -328,6 +399,41 @@ export type ResidentDrift = {
    * minimum. False is a real answer, not 'unknown'.
    */
   trending: boolean
+}
+
+/**
+ * The chip on a resident's overview row (SPEC section 9, screen 1): nothing to say, worth a
+ * look, or a change flagged for review.
+ */
+export const RESIDENT_STATUS_VALUES = ['normal', 'watch', 'flagged'] as const
+export type ResidentStatus = (typeof RESIDENT_STATUS_VALUES)[number]
+
+/**
+ * One row of the unit overview (`GET /residents`, SPEC section 9, screen 1). Six fields and no
+ * history: the resident, their status chip, the pattern their change is consistent with and the
+ * sparkline. `routine_watch.api._SUMMARY_FIELDS` is this list, because the row is this much of
+ * the resident below.
+ */
+export type ResidentSummary = {
+  id: string
+  name: string
+  room: string
+  status: ResidentStatus
+  /**
+   * Null for a normal resident, and for a change no pattern fits: an empty answer is a real one
+   * (SPEC section 7.5).
+   */
+  top_pattern: TopPattern | null
+  /** One point per session, oldest first. */
+  scores: ScorePoint[]
+}
+
+/** One point of a resident's sparkline: a session's score, and when it ran. */
+export type ScorePoint = {
+  /** When the session started (wall clock). */
+  ts: string
+  /** Weighted sum of that session's errors. */
+  score: number
 }
 
 /** One attempt at one task by one resident (SPEC section 6.3). */
@@ -408,4 +514,17 @@ export type TaskError = {
   evidence: EvidenceRef[]
   /** The resident fixed it straight away: a weaker signal, not a full error. */
   self_corrected?: boolean
+}
+
+/**
+ * The pattern chip on a resident's row (SPEC section 9, screen 1). The best-scoring
+ * `PatternMatch` for this resident's change, cut down to what a row shows: what it is
+ * consistent with and how soon somebody should look.
+ */
+export type TopPattern = {
+  /** The pattern in the library, e.g. 'sudden_change'. */
+  pattern_id: string
+  /** How the pattern is shown to a nurse. */
+  name: string
+  urgency: PatternUrgency
 }
