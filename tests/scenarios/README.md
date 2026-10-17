@@ -138,6 +138,7 @@ carry the per-step history needed to exercise it.
 | `meds_pill_substitution` | steps | The meds counterpart of `tea_substitution`: drinking straight from the water jug instead of the glass it was poured into is exactly one substitution error on `drink_water`. |
 | `tea_two_errors_one_session` | steps | Two different error types in one session: pouring before the teabag goes in (sequence) and stirring with the milk carton instead of a spoon (substitution). |
 | `tea_long_pause_not_error` | steps | An otherwise-correct session with a 100s gap between `teabag_in_cup` and `pour`, under the 120s abandonment threshold: a long pause alone must never surface as a task error or flag a change. |
+| `tea_late_start_normal` | steps | A resident who sits for 200s before touching the kettle at all, then makes tea correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
 | `meds_long_pause_not_error` | steps | The meds counterpart of `tea_long_pause_not_error`: a 100s gap between `take_pill` and `fill_glass`, under the 120s abandonment threshold, must never surface as a task error or flag a change. |
 
 ## Adding one

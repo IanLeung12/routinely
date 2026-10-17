@@ -1,0 +1,22 @@
+# A resident who sits for 200 seconds - well over the 120s abandonment threshold
+# (routine_watch.errors.ABANDON_AFTER_S) - before touching the kettle at all, then
+# makes tea correctly with normal-sized gaps between every later step. Abandonment
+# only fires on a silence *between* events (classify_errors tracks `previous` as
+# None until the first event), so the long wait before the first step must never be
+# read as abandonment, an omission, or anything else that flags a change.
+task: tea
+
+steps:
+  - fill_kettle # first event at t=200s, after 200s of nothing
+  - get_cup
+  - boil
+  - teabag_in_cup
+  - pour
+  - milk
+  - stir
+  - remove_teabag
+
+errors: []
+score: 0.0
+
+flag: false
