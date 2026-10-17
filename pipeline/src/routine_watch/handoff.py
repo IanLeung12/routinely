@@ -11,7 +11,9 @@ functions the dashboard already uses - offline, deterministic, no DB::
     build_handoff(DEMO_NOW, hours=12)
     # {"window_hours": 12,
     #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "flags": 1,
-    #                 "pending_review": 1, "trending": False}, ...],
+    #                 "pending_review": 1, "trending": False,
+    #                 "monitoring_paused": False}, ...],
+    #  "paused": [],
     #  "summary": "..."}
 
 `flags` counts the resident's sessions in the window that scored above their own
@@ -49,6 +51,7 @@ from .drift import daily_scores, drift
 from .explain import Explainer
 from .explain_claude import get_explainer
 from .feedback import FeedbackStore
+from .monitoring import get_monitoring_store
 
 #: A nursing shift, and so the window the handoff looks back over by default.
 DEFAULT_WINDOW_H = 12
@@ -80,6 +83,12 @@ def build_handoff(
     attention come first. `feedback` is the nurse feedback logged so far: it tunes the
     threshold each session is measured against and takes reviewed alerts out of
     `pending_review`.
+
+    A paused room produces no flags at all (SPEC section 12), which would otherwise
+    read as "all quiet" for a resident nobody was watching. `paused` lists every room
+    the monitoring store (`monitoring.get_monitoring_store`) currently has paused, and
+    each resident row in that room gets `monitoring_paused: True` so a nurse can tell
+    "nothing happened" from "nobody was looking".
     """
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware: pass demo.DEMO_NOW")
@@ -90,9 +99,11 @@ def build_handoff(
     pending = _pending_by_resident(
         build_alerts(residents, feedback=feedback), now, hours, feedback
     )
+    paused_rooms = set(get_monitoring_store().paused_rooms())
 
     rows = []
     flagged_sessions: list[_FlaggedSession] = []
+    paused: list[dict] = []
     for resident in residents:
         threshold = _threshold(resident, feedback)
         flagged = [
@@ -101,6 +112,15 @@ def build_handoff(
             if score > threshold
         ]
         flagged_sessions.extend(flagged)
+        room_paused = resident["room"] in paused_rooms
+        if room_paused:
+            paused.append(
+                {
+                    "room": resident["room"],
+                    "resident_id": resident["id"],
+                    "name": resident["name"],
+                }
+            )
         rows.append(
             {
                 "resident_id": resident["id"],
@@ -108,6 +128,7 @@ def build_handoff(
                 "flags": len(flagged),
                 "pending_review": pending.get(resident["id"], 0),
                 "trending": _trending(resident),
+                "monitoring_paused": room_paused,
             }
         )
     rows.sort(key=_review_first)
@@ -115,7 +136,8 @@ def build_handoff(
     return {
         "window_hours": hours,
         "residents": rows,
-        "summary": _summary(rows, flagged_sessions, hours),
+        "paused": paused,
+        "summary": _summary(rows, flagged_sessions, hours, paused),
     }
 
 
@@ -178,7 +200,12 @@ def _review_first(row: dict) -> tuple[int, int, bool, str]:
     return (-row["flags"], -row["pending_review"], not row["trending"], row["name"])
 
 
-def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: int) -> str:
+def _summary(
+    rows: list[dict],
+    flagged_sessions: list[_FlaggedSession],
+    hours: int,
+    paused: list[dict] | None = None,
+) -> str:
     """The handoff's plain-language line, written by the `Explainer` (fake by default).
 
     It is given only what the pipeline found, about one session: the most recent
@@ -190,7 +217,8 @@ def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: i
     its numbers are zeros rather than somebody else's average.
 
     The context lines say whose session it is, then carry the window's own totals
-    resident by resident.
+    resident by resident, then one line per paused room so a quiet window reads as
+    "nobody was watching" rather than "all quiet" (SPEC section 12).
     """
     latest = _latest(flagged_sessions)
     if latest is None:
@@ -204,7 +232,7 @@ def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: i
             "baseline_days": _history_days(latest.resident),
         }
     return _get_explainer().summarise(
-        distinct_clauses(errors), baseline, _context(rows, hours, latest)
+        distinct_clauses(errors), baseline, _context(rows, hours, latest, paused or [])
     )
 
 
@@ -222,13 +250,15 @@ def _history_days(resident: dict) -> int:
     )
 
 
-def _context(rows: list[dict], hours: int, latest: _FlaggedSession | None) -> list[str]:
+def _context(
+    rows: list[dict], hours: int, latest: _FlaggedSession | None, paused: list[dict]
+) -> list[str]:
     """Whose session it is, the window, then one line per resident worth a look, then
-    the quiet rest.
+    one line per paused room, then the quiet rest.
 
     These lines reach the nurse as written, whichever explainer is in play, so they are
     the handoff's own facts: whose session the sentence is about, the window's length,
-    who to look at and why.
+    who to look at and why, and which rooms nobody was watching.
     """
     review = [row for row in rows if _needs_review(row)]
     lines = []
@@ -236,10 +266,23 @@ def _context(rows: list[dict], hours: int, latest: _FlaggedSession | None) -> li
         lines.append(f"this session is {latest.resident['name']}'s")
     lines.append(f"last {hours} h, {_count(len(rows), 'resident')}")
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
+    lines.extend(_paused_line(room) for room in paused)
     quiet = len(rows) - len(review)
     if quiet:
         lines.append(f"{_count(quiet, 'resident')} with nothing to review")
     return lines
+
+
+def _paused_line(paused_room: dict) -> str:
+    """One context line for a room nobody was watching (SPEC section 12).
+
+    Wording follows SPEC section 7.5: the pipeline never diagnoses, it only says what
+    it did or did not look at.
+    """
+    return (
+        f"Room {paused_room['room']} ({paused_room['name']}) was paused, "
+        "so no flags are expected from it"
+    )
 
 
 def _reasons(row: dict) -> list[str]:

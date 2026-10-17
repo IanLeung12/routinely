@@ -19,6 +19,7 @@ from routine_watch.demo import DEMO_NOW, demo_residents
 from routine_watch.explain import TemplateExplainer
 from routine_watch.feedback import FeedbackStore
 from routine_watch.handoff import DEFAULT_WINDOW_H, build_handoff
+from routine_watch.monitoring import get_monitoring_store
 from routine_watch.tasks import load_task
 
 #: The demo resident with the sudden spike, and one the seeded demo leaves alone.
@@ -46,6 +47,14 @@ def _nothing_reviewed():
     api_module._feedback_store = FeedbackStore()
     yield
     api_module._feedback_store = FeedbackStore()
+
+
+@pytest.fixture(autouse=True)
+def _every_room_on():
+    """Each test starts and ends with every room monitored: the store is global."""
+    get_monitoring_store().reset()
+    yield
+    get_monitoring_store().reset()
 
 
 def _needs_review(entry: dict) -> bool:
@@ -97,11 +106,20 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
     assert result["window_hours"] == 12
     assert isinstance(result["summary"], str) and result["summary"]
     assert len(result["residents"]) == 6
+    assert result["paused"] == []
     for entry in result["residents"]:
-        assert set(entry) == {"resident_id", "name", "flags", "pending_review", "trending"}
+        assert set(entry) == {
+            "resident_id",
+            "name",
+            "flags",
+            "pending_review",
+            "trending",
+            "monitoring_paused",
+        }
         assert isinstance(entry["flags"], int)
         assert isinstance(entry["pending_review"], int)
         assert isinstance(entry["trending"], bool)
+        assert entry["monitoring_paused"] is False
 
 
 def test_default_window_is_a_shift() -> None:
@@ -132,6 +150,76 @@ def test_stable_resident_is_listed_with_no_flags() -> None:
     assert entry["flags"] == 0
     assert entry["pending_review"] == 0
     assert entry["trending"] is False
+
+
+def test_nothing_paused_leaves_an_empty_list_and_every_row_unpaused() -> None:
+    result = build_handoff(DEMO_NOW, 12)
+
+    assert result["paused"] == []
+    assert all(entry["monitoring_paused"] is False for entry in result["residents"])
+
+
+def test_pausing_a_room_lists_its_resident_once_and_marks_her_row() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    get_monitoring_store().set(mrs_k["room"], False)
+
+    result = build_handoff(DEMO_NOW, 12)
+
+    assert result["paused"] == [
+        {"room": mrs_k["room"], "resident_id": mrs_k["id"], "name": mrs_k["name"]}
+    ]
+    for entry in result["residents"]:
+        expected = entry["resident_id"] == FLAGGED_RESIDENT
+        assert entry["monitoring_paused"] is expected
+
+
+def test_resuming_a_room_clears_it_from_paused_again() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    store = get_monitoring_store()
+    store.set(mrs_k["room"], False)
+    store.set(mrs_k["room"], True)
+
+    result = build_handoff(DEMO_NOW, 12)
+
+    assert result["paused"] == []
+    assert all(entry["monitoring_paused"] is False for entry in result["residents"])
+
+
+def test_pausing_a_room_does_not_change_flag_or_pending_counts(mrs_k_flagged) -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    before = row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)
+
+    get_monitoring_store().set(mrs_k["room"], False)
+    after = row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)
+
+    assert after["flags"] == before["flags"]
+    assert after["pending_review"] == before["pending_review"]
+    assert after["monitoring_paused"] is True
+    assert before["monitoring_paused"] is False
+
+
+def test_summary_names_a_paused_room_instead_of_reading_all_quiet() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    get_monitoring_store().set(mrs_k["room"], False)
+
+    summary = build_handoff(DEMO_NOW, 12)["summary"]
+
+    assert f"Room {mrs_k['room']} (Mrs. K) was paused" in summary
+    assert "no flags are expected from it" in summary
+    assert "diagnos" not in summary.lower()
+
+
+def test_summary_is_unchanged_when_nothing_is_paused() -> None:
+    assert "paused" not in build_handoff(DEMO_NOW, 12)["summary"].lower()
+
+
+def test_context_carries_one_line_per_paused_room() -> None:
+    mrs_k = resident(FLAGGED_RESIDENT)
+    get_monitoring_store().set(mrs_k["room"], False)
+
+    (_, _, context) = explainer_call()
+
+    assert f"Room {mrs_k['room']} (Mrs. K) was paused, so no flags are expected from it" in context
 
 
 def test_a_window_only_counts_what_happened_inside_it() -> None:

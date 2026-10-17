@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { fetchAlerts } from './alert/api.ts'
 import { AlertView } from './alert/AlertView.tsx'
-import { Handoff } from './handoff/Handoff.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidents } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
-import { PatternLibrary } from './patterns/PatternLibrary.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
-import { Tour } from './tour/Tour.tsx'
 import { Button } from './ui/Button.tsx'
 import { DemoBanner } from './ui/DemoBanner.tsx'
+import { Loading } from './ui/Loading.tsx'
+
+/** Off the main demo path (SPEC demo beat is overview → live → alert), so these
+ * screens load on demand instead of growing the first-paint bundle. */
+const Handoff = lazy(() => import('./handoff/Handoff.tsx').then(m => ({ default: m.Handoff })))
+const PatternLibrary = lazy(() =>
+  import('./patterns/PatternLibrary.tsx').then(m => ({ default: m.PatternLibrary })),
+)
+const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour })))
 
 /** Where an alert was opened from, so its Back button can return there instead of
  * always landing on the overview. */
@@ -67,7 +73,11 @@ export default function App() {
 
   return (
     <main className="app">
-      {showTour && <Tour />}
+      {showTour && (
+        <Suspense fallback={<Loading label="Loading tour…" />}>
+          <Tour />
+        </Suspense>
+      )}
       <DemoBanner />
       <header>
         <h1>Routine Watch</h1>
@@ -88,12 +98,16 @@ export default function App() {
       {openAlert !== null ? (
         <AlertView alertId={openAlert} onBack={closeAlert} />
       ) : openHandoff ? (
-        <Handoff
-          onBack={() => setOpenHandoff(false)}
-          onOpenAlert={id => openAlertFrom('handoff', id)}
-        />
+        <Suspense fallback={<Loading label="Loading shift handoff…" />}>
+          <Handoff
+            onBack={() => setOpenHandoff(false)}
+            onOpenAlert={id => openAlertFrom('handoff', id)}
+          />
+        </Suspense>
       ) : openPatternLibrary ? (
-        <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
+        <Suspense fallback={<Loading label="Loading pattern library…" />}>
+          <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
+        </Suspense>
       ) : openResident === null ? (
         <>
           <section>

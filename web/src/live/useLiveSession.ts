@@ -10,7 +10,9 @@ export type StepState = 'pending' | 'done' | 'omission' | 'repeat' | 'sequence'
 /** One step of the session's task graph, for the task map (SPEC section 10). */
 export type LiveStep = { id: string; label: string; optional: boolean }
 
-/** The T029 WebSocket protocol, verbatim. */
+/** The T029 WebSocket protocol, mirroring `contracts/live_message.schema.json`:
+ * `pipeline/tests/test_live_contract.py` fails if this union and the schema's `oneOf`
+ * stop listing the same messages. */
 export type LiveMessage =
   | { type: 'session_start'; session_id: string; task_id: string; steps: LiveStep[] }
   | { type: 'frame'; frame: CaptureFrame }
@@ -19,8 +21,7 @@ export type LiveMessage =
   | { type: 'error'; error: TaskError }
   | { type: 'session_end'; score: number; flag: boolean; alert_id: string | null; errors?: TaskError[] }
   /** Monitoring is off for this resident's room (SPEC section 12): the API sends this
-   * instead of a session and closes. Web-side only; the pipeline's `contracts/` cover
-   * session messages, not this one. */
+   * instead of a session and closes. */
   | { type: 'paused'; room: string }
 
 export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }

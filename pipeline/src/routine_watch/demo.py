@@ -44,13 +44,67 @@ DEMO_RESIDENT = "mrs-k"
 
 #: Seeds are pinned so each resident lands on its intended status (SPEC section 8:
 #: most normal, one spike, one drift) rather than drifting with the RNG.
-_RESIDENTS: tuple[dict[str, str | int], ...] = (
-    {"id": "mrs-k", "name": "Mrs. K", "room": "204", "scenario": "spike", "seed": 1},
-    {"id": "mr-chen", "name": "Mr. Chen", "room": "211", "scenario": "drift", "seed": 0},
-    {"id": "mrs-ahmed", "name": "Mrs. Ahmed", "room": "108", "scenario": "normal", "seed": 0},
-    {"id": "mr-silva", "name": "Mr. Silva", "room": "117", "scenario": "normal", "seed": 2},
-    {"id": "mr-nguyen", "name": "Mr. Nguyen", "room": "126", "scenario": "evening", "seed": 0},
-    {"id": "mrs-patel", "name": "Mrs. Patel", "room": "132", "scenario": "motor", "seed": 0},
+#:
+#: `consent` is the opted-in record SPEC §12 requires before a room is monitored:
+#: who gave it (the resident themself, or a substitute decision-maker) and on what
+#: date. Dates are fixed, deterministic, and before `DEMO_NOW - DEMO_DAYS` (2025-12-18)
+#: - the first day any demo resident has a session - so consent always predates the
+#: history it covers.
+_RESIDENTS: tuple[dict[str, str | int | dict[str, str]], ...] = (
+    {
+        "id": "mrs-k",
+        "name": "Mrs. K",
+        "room": "204",
+        "scenario": "spike",
+        "seed": 1,
+        "consent": {"given_by": "Resident", "on": "2025-11-15"},
+    },
+    {
+        "id": "mr-chen",
+        "name": "Mr. Chen",
+        "room": "211",
+        "scenario": "drift",
+        "seed": 0,
+        "consent": {"given_by": "Resident", "on": "2025-11-20"},
+    },
+    {
+        "id": "mrs-ahmed",
+        "name": "Mrs. Ahmed",
+        "room": "108",
+        "scenario": "normal",
+        "seed": 0,
+        "consent": {
+            "given_by": "Substitute decision-maker (daughter)",
+            "on": "2025-11-10",
+        },
+    },
+    {
+        "id": "mr-silva",
+        "name": "Mr. Silva",
+        "room": "117",
+        "scenario": "normal",
+        "seed": 2,
+        "consent": {"given_by": "Resident", "on": "2025-11-18"},
+    },
+    {
+        "id": "mr-nguyen",
+        "name": "Mr. Nguyen",
+        "room": "126",
+        "scenario": "evening",
+        "seed": 0,
+        "consent": {
+            "given_by": "Substitute decision-maker (son)",
+            "on": "2025-11-05",
+        },
+    },
+    {
+        "id": "mrs-patel",
+        "name": "Mrs. Patel",
+        "room": "132",
+        "scenario": "motor",
+        "seed": 0,
+        "consent": {"given_by": "Resident", "on": "2025-11-22"},
+    },
 )
 
 
@@ -253,6 +307,7 @@ def demo_residents() -> list[dict]:
                 "id": config["id"],
                 "name": config["name"],
                 "room": config["room"],
+                "consent": config["consent"],
                 "status": status,
                 "top_pattern": top_pattern,
                 "scores": score_points,
