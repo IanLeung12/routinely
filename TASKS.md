@@ -300,7 +300,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
