@@ -60,6 +60,24 @@ async function tabTo(user: UserEvent, target: Element, max = 20) {
 }
 
 describe('Handoff keyboard access', () => {
+  it.each(['{Enter}', ' '])('tabs from Copy summary to Print handoff and prints once with %j', async (key) => {
+    serve(served)
+    const printSpy = vi.fn()
+    vi.stubGlobal('print', printSpy)
+    const user = userEvent.setup()
+
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+
+    await tabTo(user, screen.getByRole('button', { name: 'Copy summary' }))
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Print handoff' }))
+    expect(printSpy).not.toHaveBeenCalled()
+
+    await user.keyboard(key)
+    expect(printSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('tabs in DOM order to each open-alert button and activates it with Enter', async () => {
     serve(served)
     const onOpenAlert = vi.fn()
