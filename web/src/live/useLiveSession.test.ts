@@ -65,7 +65,9 @@ describe('useLiveSession', () => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
     })
 
-    expect(result.current.ended).toEqual({ score: 6, flag: true, alert_id: 'alert-1' })
+    // `quality` defaults to 'ok' for a session_end that carries none, so the screen
+    // shows the score rather than the "capture unclear" notice (T343).
+    expect(result.current.ended).toEqual({ score: 6, flag: true, alert_id: 'alert-1', quality: 'ok' })
   })
 
   it('replaces streamed errors with session_end errors when present', () => {

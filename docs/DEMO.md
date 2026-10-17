@@ -65,12 +65,10 @@ session, and the alert list all on one page — no screen to navigate to first.
 - **Why / not just delirium:** from the alert view, click back to **Unit overview**
   and open Mr. D's row — he's on "watch" with a different pattern (slow drift) to
   show the same signal leading to a different, less urgent action.
+- **Shift handoff:** click **Shift handoff**. Mrs. K's row shows her pending alert;
+  click **Open alert** on that row to reach the same alert from a different screen.
 - **Close:** nothing to click — say the lines on privacy (no video stored), that it
   only flags a change for review, the feedback loop, and prior art (SPEC §10.7, §11).
-
-- **Shift handoff:** open **Shift handoff** after the live session flags a change for review.
-  Click **Open alert** on Mrs. K's handoff row while her alert is pending review
-  to reach her alert.
 
 ## If something fails
 

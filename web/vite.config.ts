@@ -20,13 +20,11 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/testSetup.ts'],
-    // Load the live-session, overview, alert, resident, evidence, handoff and shared print
-    // stylesheets into jsdom: the task map's wrapping layout is testable with getComputedStyle
-    // (T120), and the overview's, alert's, resident detail's, evidence's, shift handoff's and
-    // shared print.css's media queries are readable via `?raw` (T234, T238, T239, T353, T358,
-    // T203 — jsdom doesn't evaluate @media itself, and Vitest stubs out CSS imports that don't
-    // match here even with `?raw`). Other CSS stays stubbed out, which is both faster and
-    // enough: those screens are tested through the DOM.
-    css: { include: [/src\/live\//, /src\/overview\//, /src\/alert\//, /src\/resident\//, /src\/evidence\//, /src\/handoff\/handoff\.css/, /src\/print\.css/] },
+    // Load every stylesheet under src/ into jsdom. Vitest stubs out CSS imports that
+    // don't match this pattern even with `?raw`, so layout tests (getComputedStyle) and
+    // media-query tests (jsdom doesn't evaluate @media, so they read the CSS text) need
+    // it. One pattern instead of a folder list: no task should have to edit this line.
+    // Unanchored on purpose - `?raw` imports arrive as `src/x.css?raw`.
+    css: { include: [/src\/.*\.css/] },
   },
 })

@@ -9,3 +9,4 @@ Who it's for: a busy charge nurse. Every screen must be understood in ~10 second
 - Every screen handles loading, empty and offline/error states, and works with mock data (`web/src/mock/`) and `OFFLINE_MODE`.
 - Tests: Vitest + Testing Library for behaviour (what the nurse sees/clicks), not snapshots.
 - Before the PR: `npm run lint && npm test && npm run build` in `web/`. If you changed a screen, run it (`scripts/dev.sh up`) and look at it; mention what you checked in the PR.
+- Designing a new screen or page (or a major layout change)? If the `mobbin` MCP tools are available (`search_screens`, `search_flows`, `search_sections`), look at 2–3 real reference screens first and name the ones you drew from in the PR. Borrow structure and hierarchy, not branding. Skip this for small fixes.

@@ -262,6 +262,7 @@ export function LiveSession({
                 errorCount={errors.length}
                 usualDurationS={baseline?.usual_duration_s}
                 usualErrors={baseline?.usual_errors}
+                quality={ended.quality}
               />
               {ended.flag && ended.alert_id && onOpenAlert ? (
                 <div className="live-session__banner-row">

@@ -36,8 +36,9 @@ The messages, in the order a session produces them:
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
 ``session_end``  The session's `errors`, its `score`, whether the resident is
-                 `flag`ged now that this session is one of theirs, and the
-                 `alert_id` of the alert that flag shows up in. `errors` is the
+                 `flag`ged now that this session is one of theirs, the
+                 `alert_id` of the alert that flag shows up in, and the
+                 `quality` of the capture it was all read off. `errors` is the
                  finished session's whole list,
                  each `TaskError` serialised the way the `error` message's is:
                  the list to settle on once the session is over, which the
@@ -72,7 +73,10 @@ Two things follow from classifying an unfinished session, and both are deliberat
   nor is an **unclear** one (`routine_watch.quality`, SPEC section 12): too little of
   the capture can be trusted to make it one of this resident's sessions, so it is
   streamed and scored 0.0 like any session the pipeline cannot read, and then left
-  out of their history rather than counted toward a flag.
+  out of their history rather than counted toward a flag. `session_end` carries which
+  of the two it was in `quality`, because the score alone cannot say: 0.0 is "nothing
+  went wrong" for a clean session and "we could not read it" for an unclear one, and
+  the screen has to tell a nurse which (SPEC section 12, "show uncertainty").
 
 **The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
@@ -299,7 +303,8 @@ async def session_messages(
     # `routine_watch.demo` scores a recorded session from its errors again and only
     # leaves out assisted ones - so its errors would sit in the 24-48 h window the
     # flag is read over and bad lighting alone could flag a change for review.
-    if session_quality(events) == "ok":
+    quality = session_quality(events)
+    if quality == "ok":
         _record(
             resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t
         )
@@ -332,6 +337,11 @@ async def session_messages(
         # one per session: the nurse is being told about a change in a person. Not
         # flagged, no alert - `/alerts` would 404 on one.
         "alert_id": f"alert-{resident_id}" if resident_name else None,
+        # Whether the capture could be read well enough to score this session at all
+        # (SPEC section 12). `unclear` is the walker, the blocked view, the bad light:
+        # the score above is 0.0 because nothing in the capture can be trusted, not
+        # because the session went well, and the live screen says which it was.
+        "quality": quality,
     }
 
 

@@ -140,6 +140,27 @@ describe('LiveSession', () => {
     expect(summary.nextElementSibling?.getAttribute('role')).toBe('status')
   })
 
+  it('says the capture was unclear instead of summarising a session nobody could read', async () => {
+    // SPEC section 12: the pipeline scores an unclear session 0.0 and keeps it out of
+    // this resident's history, so the summary says so rather than showing her a
+    // session that looks like her best one (T343).
+    vi.mocked(fetchResident).mockResolvedValue(MRS_K)
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(stepMessage({ step_id: 'fill_kettle', t_start: 0, t_end: 1 }))
+      socket.emit({ type: 'session_end', score: 0, flag: false, alert_id: null, quality: 'unclear' })
+    })
+
+    const summary = screen.getByText('Session summary').closest('.card') as HTMLElement
+    await waitFor(() => {
+      expect(within(summary).getByText(/Capture unclear/)).toBeTruthy()
+    })
+    expect(within(summary).queryByText(/Finished in/)).toBeNull()
+    expect(within(summary).queryByText(/usually/)).toBeNull()
+  })
+
   it("shows the resident's usual duration and errors from the baseline, not their recent sessions", async () => {
     vi.mocked(fetchResident).mockResolvedValue(MRS_K)
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
@@ -492,7 +513,7 @@ describe('LiveSession', () => {
     })
 
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
-    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1' })
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 6, flag: true, alert_id: 'alert-1', quality: 'ok' })
 
     rerender(<LiveSession scenario="tea_skip_teabag_pour_twice" onSessionEnd={onSessionEnd} />)
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
@@ -508,7 +529,7 @@ describe('LiveSession', () => {
     })
 
     expect(onSessionEnd).toHaveBeenCalledTimes(1)
-    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null })
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 0, flag: false, alert_id: null, quality: 'ok' })
   })
 
   it('does not throw when onSessionEnd is omitted', () => {
