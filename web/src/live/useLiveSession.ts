@@ -94,11 +94,13 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
  * replays `mockLiveStream` instead, so the screen works before T029 lands and when the
  * API is down. A `paused` message is an answer, not a failure: monitoring is off for the
  * room, so the state keeps `paused` and never falls back to mock data, which would show a
- * session nobody is watching. */
-export function useLiveSession(scenario: string, speed = 1): LiveSessionState {
+ * session nobody is watching. `retry` lets the paused screen reconnect once a nurse turns
+ * the room's monitoring back on, instead of needing a full page reload (T266). */
+export function useLiveSession(scenario: string, speed = 1): LiveSessionState & { retry: () => void } {
   const sessionKey = `${scenario}:${speed}`
   const [renderedFor, setRenderedFor] = useState(sessionKey)
   const [state, setState] = useState<LiveSessionState>(() => initialState('live'))
+  const [attempt, setAttempt] = useState(0)
 
   /** `scenario`/`speed` changing means a different session: reset during render rather
    * than in the effect below, so switching sessions doesn't flash the old one's last
@@ -106,6 +108,11 @@ export function useLiveSession(scenario: string, speed = 1): LiveSessionState {
   if (sessionKey !== renderedFor) {
     setRenderedFor(sessionKey)
     setState(initialState('live'))
+  }
+
+  function retry() {
+    setState(initialState('live'))
+    setAttempt((previous) => previous + 1)
   }
 
   useEffect(() => {
@@ -156,9 +163,9 @@ export function useLiveSession(scenario: string, speed = 1): LiveSessionState {
       socket.close()
       stopMock?.()
     }
-  }, [scenario, speed])
+  }, [scenario, speed, attempt])
 
-  return state
+  return { ...state, retry }
 }
 
 export default useLiveSession
