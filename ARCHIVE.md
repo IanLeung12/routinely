@@ -5205,3 +5205,58 @@ Acceptance: `cd web && npx vitest run src/handoff/Handoff.test.tsx` passes; `scr
 What: The first demo step is opening Mrs. K from the unit overview; prove a keyboard user can do it.
 Interface: Read `web/src/overview/UnitOverview.tsx` and its test. With `@testing-library/user-event`: Tab until a resident row's control is focused, press Enter, assert the select/open callback fires with that resident's id; also Tab to a status filter and activate it with Space. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
 Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes; `scripts/ci.sh` passes.
+
+### T296 — Scenarios: meds_unclear_not_error and meds_bad_sessions_far_apart
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_unclear_not_error/, tests/scenarios/meds_bad_sessions_far_apart/
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:39Z
+- pr: #284
+- rating: 5/5 clear
+
+What: The meds routine lacks the two "must not flag" scenarios the tea routine has. Mirror `tests/scenarios/tea_unclear_not_error` and `tests/scenarios/tea_bad_sessions_far_apart` for meds (step names from the meds task graph and the existing `meds_*` scenarios), so a low-confidence meds moment is never counted as an error and two isolated bad meds sessions do not raise a flag.
+Interface: two new scenario dirs, each `expected.yaml` + `steps.jsonl` (format in `tests/scenarios/README.md`). No pipeline code changes; if a scenario exposes a pipeline bug, say so in the PR and leave the expectation matching SPEC §7.
+Acceptance:
+- `scripts/e2e.sh tests/scenarios/meds_unclear_not_error` and `scripts/e2e.sh tests/scenarios/meds_bad_sessions_far_apart` PASS; `scripts/e2e.sh` all PASS.
+- `scripts/ci.sh` passes.
+
+### T297 — Web: page title names the screen and resident
+- status: done
+- class: standard
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/ui/useDocumentTitle.ts, web/src/ui/useDocumentTitle.test.ts, web/src/App.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T14:45Z
+- pr: #286
+- rating: 5/5 clear
+
+What: Every tab reads "Routine Watch", so a nurse with several tabs open (or a screen reader announcing the page) can't tell the overview from Mrs. K's alert. Add a small `useDocumentTitle(title)` hook and set it once per route in `App.tsx`: "Unit overview — Routine Watch", "<resident> — Routine Watch", "Alert · <resident> — Routine Watch", "Shift handoff — Routine Watch", etc. (use names already available at the route level; fall back to the screen name).
+Interface: `export function useDocumentTitle(title: string): void` in `web/src/ui/useDocumentTitle.ts` (sets `document.title`, restores the previous title on unmount).
+Acceptance:
+- Vitest test for the hook: sets the title, updates on change, restores on unmount.
+- No changes to screen components outside `App.tsx`; `scripts/ci.sh` passes.
+
+### T298 — Test: pattern library works keyboard-only
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:54Z
+- pr: #289
+- rating: 5/5 clear
+
+What: Add a test that the pattern library screen is usable with the keyboard alone, like T287 did for alert feedback (see `web/src/alert/FeedbackButtons.test.tsx` for the style).
+Interface: read `web/src/patterns/PatternLibrary.tsx`, `web/src/patterns/PatternLibrary.test.tsx`, `web/src/alert/FeedbackButtons.test.tsx`. Only edit `web/src/patterns/PatternLibrary.test.tsx`.
+Acceptance:
+- Test tabs to the Back button with `@testing-library/user-event` (or `fireEvent.keyDown` if user-event isn't installed), presses Enter, and asserts `onBack` was called once.
+- Test asserts every pattern name is an `h3` under the page's heading (heading order intact for screen readers).
+- `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
