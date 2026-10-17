@@ -68,6 +68,8 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 - `scripts/` — `ci.sh` (CI), `dev.sh` (local stack), `camera.sh` (local stack on a real webcam), `e2e.sh`, `codemap.py`, plus agent tooling `tasks.py`, `worker.sh`.
 - `prompts/` — agent prompts; `prompts/areas/` guides attached per task area.
 
+- `web/src/person/PrivacyCard.tsx` is a standalone person-view card for controlled pause state, storage copy, and supervisor visibility; it is not yet wired into a screen.
+
 ## Adding things
 - New pipeline stage or rule → its own module, pure functions, a unit test, and a scenario if behaviour changes.
 - New screen → new folder under `web/src/`, built from `web/src/ui/`, with mock data and loading/empty/error states.

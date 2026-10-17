@@ -1,0 +1,23 @@
+/* PrivacyCard: pause control and the person's storage and sharing details. */
+.privacy-card__detail {
+  margin-top: var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.privacy-card__label {
+  margin: 0 0 var(--space-1);
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.privacy-card__copy,
+.privacy-card__paused {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.privacy-card__paused {
+  margin-top: var(--space-3);
+}
