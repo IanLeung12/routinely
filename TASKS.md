@@ -26,7 +26,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T144 — API: POST /demo/reset puts the demo back to its seeded history
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -35,7 +35,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:05Z
-- pr: —
+- pr: #168
+- rating: 5/5 clear
 
 What: Demo robustness (SPEC §10, §13): after a rehearsal, Mrs. K stays flagged from the live session, so the next run of demo beat 4 never happens unless the server restarts. One endpoint resets recorded live sessions and feedback so the demo can be rerun on stage in a second.
 Interface: `POST /demo/reset` → `{"ok": true}`; calls `session_log.reset()` and the equivalent reset in `routine_watch.feedback` (add a `reset()` there only if missing, in this PR). Only enabled when `OFFLINE_MODE` or a new `DEMO_RESET=1` env is set, else 404; document `DEMO_RESET` in `.env.example`.
