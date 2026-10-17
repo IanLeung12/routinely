@@ -445,7 +445,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T244 — Live screen: show "Monitoring paused" when /ws/live sends {"type":"paused"}
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -453,7 +453,8 @@ Acceptance:
 - area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
 - owner: ian-claude
 - claimed: 2026-10-17T11:39Z
-- pr: —
+- pr: #233
+- rating: 4/5 clear on the interface and acceptance, but the area named LiveScreen.tsx/LiveScreen.test.tsx while the hook is consumed by LiveSession.tsx, which owns the skeleton/task map the acceptance asks about
 
 What: since T149 (#226), `/ws/live` sends one `{"type": "paused", "room": "<room>"}` and closes if the demo resident's room is paused. `useLiveSession` counts that as data received, ignores the unknown type, and the live screen sits empty with no explanation. Handle it explicitly.
 Interface: add a `paused` message to the hook's `LiveMessage` union (web-side type only; don't touch `contracts/`) and a `paused: { room: string } | null` field to its state; do not fall back to mock data when paused. `LiveScreen` renders the `EmptyState` from `web/src/ui/` with "Monitoring is paused for room <room>" and a hint that it can be turned back on from the resident's page.
