@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 9336db5
+- last-reviewed: 21fc468
 
 ## Tasks
 
@@ -524,4 +524,22 @@ Interface: new pytest file using `fastapi.testclient.TestClient(routine_watch.ap
 Acceptance:
 - hours=1 and hours=168 → 200 with `window_hours` echoed; hours=0 and hours=169 → 422.
 - the summary never contains "diagnos".
+- `scripts/ci.sh` passes.
+
+### T269 — Contracts: JSON Schema for GET/PUT /monitoring payloads
+- status: todo
+- class: heavy
+- priority: 2
+- kind: improvement
+- deps: T263, T262
+- area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same pattern as T257/T263: the monitoring state (incl. T262's audit trail) is hand-mirrored in web/src/contracts.ts; generate a schema from pydantic so drift fails CI.
+Interface: `contracts/monitoring.schema.json` generated from contracts.py; a test validates real GET /monitoring and PUT responses (fakes only) against it and checks web/src/contracts.ts field names match.
+Acceptance:
+- schema generated, contracts/README.md updated.
+- test fails if a field is added on one side only.
 - `scripts/ci.sh` passes.
