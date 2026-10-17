@@ -757,20 +757,21 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T101 — Evidence players: keyboard and screen-reader pass
-- status: claimed
+- status: todo
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T06:33Z
+- owner: —
+- claimed: —
 - pr: —
 
 What: The skeleton replay and ghost replay are the evidence a nurse opens "one tap away" (SPEC §9); make them usable without a mouse and honest to screen readers. Read only the files in `area` and `web/src/ui/Button.tsx`.
 Interface: play/pause is a real `<button>` with `aria-pressed` or a changing label; the scrubber (if any) has `aria-valuetext` like "12.0 s of 40.0 s"; Space toggles play when the player is focused; the drawing has `role="img"` with an `aria-label` saying what is shown (e.g. "Skeleton replay, today vs usual routine"); respect `prefers-reduced-motion` by not auto-playing. No prop changes that break current callers.
 Acceptance:
 - Vitest: keyboard toggle works; accessible names present; no autoplay when `matchMedia('(prefers-reduced-motion: reduce)')` matches (stub it).
+- note: released by ian-claude-standard-2: run ended without progress
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T102 — Docs: README quickstart for teammates and judges
