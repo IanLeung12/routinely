@@ -128,25 +128,6 @@ Acceptance:
 - a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
-### T277 — Bug: copied shift handoff says "Room unavailable" for every resident
-- status: done
-- class: heavy
-- priority: 1
-- kind: bug
-- deps: —
-- area: contracts/handoff.schema.json, contracts/examples/, pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py, web/src/handoff/types.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/handoff/mockHandoff.ts
-- owner: ian-claude
-- claimed: 2026-10-17T13:21Z
-- pr: #263
-- rating: 5/5 clear - the interface section named every file and the exact copy format, nothing to guess
-
-What: `handoffText()` in `web/src/handoff/Handoff.tsx` hard-codes `Room unavailable` in every resident line of the "Copy summary" text (since T151), because `GET /handoff` rows have no `room`. A nurse pasting the handoff gets no room numbers. Found in orchestrator review of #259.
-Interface: add required `room: string` to each `residents[]` row in `contracts/handoff.schema.json` (and examples), emit it from `pipeline/src/routine_watch/handoff.py` (`resident["room"]`), add `room: string` to `HandoffResident` in `web/src/handoff/types.ts` and the mock; copy line becomes `<name>, Room <room>: ...`. Show the room on the on-screen row too if it isn't already.
-Acceptance:
-- No `Room unavailable` string left in `web/src/`.
-- Pipeline test asserts every `/handoff` row has the resident's room and validates against the schema; web test asserts copied text contains `Room <room>:`.
-- `scripts/ci.sh` passes.
-
 ### T278 — Refactor: move resident, drift, replay and pattern routes out of api.py
 - status: done
 - class: standard
