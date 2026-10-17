@@ -358,7 +358,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T069 — Tests for ErrorList and SuggestedChecks
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
