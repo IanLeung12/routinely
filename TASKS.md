@@ -7,6 +7,38 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
+### T350 — Review: wire HandoffDelta into the shift handoff rows
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: reviewer
+- deps: —
+- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- rating: —
+
+What: T324 (#324) added `previous_flags` to `/handoff` and a `HandoffDelta` component, but nothing renders it: `Handoff.tsx` never imports `HandoffDelta`, so the "better or worse than last shift" signal is dead code on the demo screen.
+Interface: in `Handoff.tsx`, render `<HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />` in each resident row (next to the flags reason), and append the same delta text to the copy/read-aloud line built around line 147 ("…, 2 more than last shift"). No new styles; reuse `HandoffDelta.css`.
+Acceptance:
+- `Handoff.test.tsx` asserts a row with flags 2 / previous_flags 0 shows "2 more than last shift" and a row with equal counts shows "same as last shift"
+- `scripts/ci.sh` passes
+
+### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
+- status: todo
+- class: light
+- priority: 2
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py
+- rating: —
+
+What: `pattern_features.EVENING_HOUR = 16` decides the evening-only pattern, but `api_alerts.EVENING_START_HOUR = 17` buckets the strip shown as its evidence. A session at 16:xx counts as "evening" for the pattern and "afternoon" on the strip, so an alert "consistent with evening worsening" can show its errors under afternoon. The code comment admits it only holds because no demo session starts 16:00–17:00.
+Interface: in `api_alerts.py`, set `EVENING_START_HOUR = pattern_features.EVENING_HOUR` (import it, drop the hard-coded 17) and update the comment. The `TimeOfDay` docstring in `contracts.py`/schemas says "until 17:00": contracts are heavy-only, so don't touch them; note the stale docstring in the PR for a follow-up.
+Acceptance:
+- new test in `test_time_of_day.py`: a session at 16:30 buckets as `evening`, matching `pattern_features`' late-day rule
+- `scripts/ci.sh` passes
+
 ### T349 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
 - status: todo
 - class: light

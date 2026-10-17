@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: d7478bb
-- next-area: contracts+api
+- last-reviewed: 2a5c226
+- next-area: scripts+ci
 
 ## Known issues filed
 - T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
@@ -15,7 +15,6 @@
 - T125 drift/evening/motor residents never watch (baseline absorbs drift)
 - T126 session_log leaks across tests; need conftest reset
 - T138 AlertContext unused/unstyled, dup of ContextTimeline
-- T166/T167/T168 handoff baseline, tuned threshold, push name (merged)
 - T182 false alarm un-flags -> alert 404, cause re-post fails
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
 - T292 web resident/handoff/monitoring types hand-mirrored (after T291)
@@ -27,8 +26,9 @@
 - T261 ci.sh/pytest don't force LIVE_API=0
 - T271 handoff quiet count includes paused residents
 - T272 duplicate scenario README test (tests/ + pipeline/tests/)
-- T284 api_* routers do `from . import api` (cycle); move shared state to api_state.py (merged)
 - T301 /residents/{id}/feedback has no contract schema; web type hand-written
 - T336 quality.session_quality unwired: unclear sessions scored/flagged
 - (noted) hesitation.py unwired (replay docstring: no per-step baseline yet)
+- T350 HandoffDelta built but not rendered in Handoff.tsx
+- T351 strip evening cut 17h vs pattern_features 16h
 - (noted) LiveSession room ownership hard-coded to mrs-k; Paused(n) counts rooms not residents
