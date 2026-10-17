@@ -1,52 +1,51 @@
-# METRICS (last 6 h, generated 2026-10-17 17:59 UTC)
+# METRICS (last 6 h, generated 2026-10-17 19:00 UTC)
 
-- **Throughput:** 104/111 claimed tasks merged · 6 active workers · first-try success 85%
-- **Friction:** 2 PR CI failures · 14 releases (11 sessions ended early, 0 stale, 0 conflicts) · 6 blocked
-- **Main:** 0/110 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.8/5 · 58 bug/review tasks filed (all time)
-- **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m
+- **Throughput:** 97/105 claimed tasks merged · 7 active workers · first-try success 83%
+- **Friction:** 2 PR CI failures · 16 releases (11 sessions ended early, 0 stale, 2 conflicts) · 7 blocked
+- **Main:** 0/105 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.8/5 · 60 bug/review tasks filed (all time)
+- **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m, w5 0m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| standard | 50 | 48 | 90 | 1 | 3 | 11 | 55k |
-| light | 49 | 45 | 80 | 1 | 8 | 11 | 22k |
-| heavy | 12 | 11 | 83 | 0 | 3 | 19 | 130k |
+| light | 53 | 48 | 77 | 1 | 9 | 15 | 18k |
+| standard | 43 | 41 | 91 | 1 | 3 | 12 | 55k |
+| heavy | 9 | 8 | 78 | 0 | 4 | 18 | 130k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| test | 55 | 51 | 82 | 2 | 7 | 11 | 45k |
-| improvement | 31 | 30 | 87 | 0 | 3 | 14 | 62k |
-| feature | 17 | 16 | 88 | 0 | 4 | 13 | 45k |
-| bug | 6 | 5 | 83 | 0 | 0 | 13 | 52k |
-| docs | 2 | 2 | 100 | 0 | 0 | 7 | 15k |
+| test | 53 | 51 | 87 | 2 | 6 | 13 | 42k |
+| improvement | 32 | 28 | 78 | 0 | 4 | 17 | 58k |
+| feature | 13 | 12 | 77 | 0 | 6 | 16 | 60k |
+| bug | 4 | 3 | 75 | 0 | 0 | 14 | 105k |
+| docs | 3 | 3 | 100 | 0 | 0 | 7 | 10k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-standard-2 | 28 | 27 | 89 | 1 | 2 | 11 | 55k |
-| ian-claude-standard | 28 | 27 | 93 | 0 | 1 | 10 | 45k |
-| ian-claude-light-2 | 27 | 26 | 85 | 0 | 4 | 9 | 18k |
-| ian-claude | 17 | 16 | 82 | 1 | 4 | 19 | 125k |
-| Max_codex_light | 6 | 4 | 67 | 0 | 1 | 16 | 4k |
-| max_API_light | 5 | 4 | 40 | 0 | 2 | 30 | 6k |
+| ian-claude-light-2 | 25 | 24 | 88 | 0 | 3 | 11 | 25k |
+| ian-claude-standard | 24 | 23 | 92 | 0 | 1 | 10 | 50k |
+| ian-claude-standard-2 | 24 | 23 | 92 | 1 | 2 | 13 | 55k |
+| ian-claude | 15 | 14 | 73 | 1 | 6 | 19 | 110k |
+| Max_codex_light | 9 | 7 | 67 | 0 | 2 | 17 | 4k |
+| max_API_light | 7 | 6 | 57 | 0 | 2 | 30 | 5k |
+| ian-claude-heavy-2 | 1 | 0 | 0 | 0 | 0 | – | 80k |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| pipeline/src/routine_watch | 18 | 16 | 83 | 0 | 3 | 14 | 75k |
-| web/src/overview | 9 | 8 | 78 | 0 | 2 | 9 | 40k |
+| web/src/overview | 11 | 10 | 82 | 0 | 2 | 11 | 40k |
+| pipeline/src/routine_watch | 11 | 9 | 73 | 0 | 4 | 17 | 95k |
+| tests/scenarios | 9 | 9 | 89 | 1 | 1 | 13 | 45k |
 | web/src/resident | 9 | 9 | 89 | 0 | 1 | 10 | 40k |
-| tests/scenarios | 8 | 7 | 75 | 1 | 1 | 13 | 50k |
-| web/src/alert | 6 | 5 | 67 | 0 | 1 | 21 | 55k |
-| web/src/handoff | 5 | 5 | 80 | 1 | 1 | 20 | 60k |
-| web/src/live | 4 | 4 | 100 | 0 | 0 | 14 | 78k |
-| scripts/smoke.sh | 4 | 4 | 100 | 0 | 0 | 9 | 55k |
+| web/src/handoff | 7 | 7 | 71 | 1 | 2 | 20 | 60k |
+| web/src/alert | 7 | 5 | 71 | 0 | 0 | 21 | 55k |
+| web/src/about | 5 | 5 | 80 | 0 | 1 | 16 | 25k |
+| web/src/live | 5 | 4 | 80 | 0 | 0 | 18 | 80k |
 
 ## Problem tasks
-- T229 (light/test, ian-claude-light-2): released×1 — Test: PatternList fixtures use unique pattern ids (no duplicate-key wa
-- T260 (standard/test, ian-claude-standard-2): released×1 — Test: first-load JS bundle size budget for the dashboard
 - T255 (light/feature, ian-claude-light-2): released×2 — Resident detail: show who consented to monitoring
 - T275 (standard/improvement, ian-claude-standard): released×1 — Live screen: notice a pause/resume made while the panel is open
 - T294 (light/test, ian-claude): CI×1 released×1 — Test: shift handoff works keyboard-only
@@ -60,6 +59,8 @@
 - T334 (light/test, max_API_light): released×1 — Test: pattern checks and summaries never use diagnosis wording
 - T349 (light/improvement, Max_codex_light): blocked — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-re
 - T341 (light/test, max_API_light): blocked — Test: pattern library urgency filter works keyboard-only
+- T356 (heavy/feature, ian-claude): released×3 — Live camera on the dashboard: one command, laptop webcam → /ws/live
+- T346 (light/test, ian-claude-light-2): blocked — Test: alert time-of-day strip has accessible names
 
 ## Low task ratings (≤3/5)
-- T266 3/5: 3/5 area was stale (LiveScreen.tsx has no paused UI; it lives in LiveSession.tsx, which the listed area didn't include)
+- T366 3/5: 3/5 task assumed ErrorState is wired into UnitOverview but it isn't; fetchResidents swallows errors and falls back to mo
