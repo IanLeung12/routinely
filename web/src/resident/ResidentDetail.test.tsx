@@ -230,6 +230,10 @@ describe('ResidentDetail', () => {
 
     expect(switchEl.textContent).toBe('Paused')
     expect(screen.getByText('No camera data is processed while paused.')).toBeTruthy()
+
+    // The PUT also fails offline, so the optimistic switch reverts once that settles.
+    await screen.findByText("Couldn't change monitoring. Try again.")
+    await waitFor(() => expect(switchEl.textContent).toBe('On'))
   })
 
   it('calls onBack when the back button is clicked', async () => {
@@ -273,6 +277,86 @@ describe('ResidentDetail', () => {
     const heading = await screen.findByRole('heading', { level: 1 })
 
     expect(screen.getByRole('region', { name: heading.textContent ?? '' })).toBeTruthy()
+  })
+})
+
+describe('ResidentDetail monitoring switch (T243)', () => {
+  function stubMonitoringFetch({
+    pausedRooms = [] as string[],
+    pausedRoomsOk = true,
+    putOk = true,
+  } = {}) {
+    const fetchMock = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        return putOk
+          ? { ok: true, json: async () => ({}) }
+          : { ok: false, status: 500, json: async () => ({}) }
+      }
+      if (url.endsWith('/monitoring')) {
+        return pausedRoomsOk
+          ? { ok: true, json: async () => ({ paused_rooms: pausedRooms }) }
+          : { ok: false, status: 500, json: async () => ({}) }
+      }
+      if (url.endsWith('/drift')) {
+        return { ok: true, json: async () => null }
+      }
+      return { ok: true, json: async () => MRS_K }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('loads the initial state from a paused room', async () => {
+    stubMonitoringFetch({ pausedRooms: ['204'] })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    await waitFor(() => expect(switchEl.textContent).toBe('Paused'))
+  })
+
+  it('sends a PUT when the nurse toggles monitoring', async () => {
+    const fetchMock = stubMonitoringFetch({ pausedRooms: [] })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    await waitFor(() => expect(switchEl.textContent).toBe('On'))
+
+    fireEvent.click(switchEl)
+    expect(switchEl.textContent).toBe('Paused')
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/rooms/204/monitoring'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify({ on: false }) }),
+    ))
+    expect(switchEl.textContent).toBe('Paused')
+    expect(screen.queryByText(/Couldn't change monitoring/)).toBeNull()
+  })
+
+  it('reverts the switch and shows a message when the PUT fails', async () => {
+    stubMonitoringFetch({ pausedRooms: [], putOk: false })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    await waitFor(() => expect(switchEl.textContent).toBe('On'))
+
+    fireEvent.click(switchEl)
+    expect(switchEl.textContent).toBe('Paused')
+
+    await screen.findByText("Couldn't change monitoring. Try again.")
+    await waitFor(() => expect(switchEl.textContent).toBe('On'))
+  })
+
+  it('falls back to "on" when the GET fails (API down / mock mode)', async () => {
+    stubMonitoringFetch({ pausedRoomsOk: false })
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    await waitFor(() => expect(switchEl.textContent).toBe('On'))
+    expect(screen.queryByText(/Couldn't change monitoring/)).toBeNull()
   })
 })
 
