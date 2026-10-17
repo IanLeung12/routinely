@@ -14,7 +14,10 @@ bash -n scripts/e2e.sh
 for proj in $(find . -maxdepth 2 -name pyproject.toml -not -path "./.tasks/*"); do
   d=$(dirname "$proj"); echo "== python: $d"
   command -v uv >/dev/null || python3 -m pip install -q uv
-  (cd "$d" && uv sync -q --all-extras && uv run --with ruff ruff check . \
+  # --no-extra capture: mediapipe/opencv are only needed with a camera or a video
+  # file, and nothing in CI has either. Capture imports them lazily (T039).
+  (cd "$d" && uv sync -q --all-extras --no-extra capture \
+     && uv run --with ruff ruff check . \
      && { [ ! -d tests ] || uv run --with pytest pytest -q; })
 done
 
