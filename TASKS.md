@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: ab0a8fc
+- last-reviewed: 400a27f
 
 ## Tasks
 
@@ -493,3 +493,92 @@ Interface: read `pipeline/src/routine_watch/replay.py` (`HistorySession.duration
 Acceptance:
 - README has the section with a YAML example using the real field names
 - `scripts/ci.sh` passes (incl. `pipeline/tests/test_scenarios_readme.py`)
+
+### T177 — Test: handoff summary and Mrs. K's alert name the same errors
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_handoff_alert_errors.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: T166 (PR #159) made the handoff build its errors with `alerts.task_errors` and `alerts.session_id_for` so a nurse reads the same steps and times in both places. Lock that in with a test.
+Interface: Read only `pipeline/src/routine_watch/handoff.py` (`build_handoff`, `_window_sessions`, `_latest`), `pipeline/src/routine_watch/alerts.py` (`build_alerts`, `task_errors`, `session_id_for`) and `pipeline/tests/test_handoff.py` for fixtures. New test file only; don't change source.
+Acceptance:
+* For the demo data, the latest flagged session in the handoff window has error ids that all appear in that resident's alert `errors` (or, if the resident has no alert, the test asserts that explicitly and says why in a comment).
+* `session_id_for("mrs-k", 3) == "mrs-k-3"` is asserted.
+* `cd pipeline && python -m pytest tests/test_handoff_alert_errors.py -q` passes; `scripts/ci.sh` passes.
+
+### T178 — smoke.sh: check GET /handoff
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: `scripts/smoke.sh` hits the API routes of a running stack but skips `GET /handoff` (shift handoff screen), so a broken handoff route wouldn't show up in smoke runs.
+Interface: Read only `scripts/smoke.sh` and the `/handoff` route in `pipeline/src/routine_watch/api.py` (returns `{window_hours, residents: [...], summary: str}`, `hours` query 1-168, default 12). Add checks in the existing PASS/FAIL style.
+Acceptance:
+* New check: `GET /handoff` returns 200 with `window_hours == 12`, a non-empty `residents` list and a non-empty `summary` string.
+* New check: `GET /handoff?hours=0` returns 422.
+* `bash -n scripts/smoke.sh` passes; `scripts/ci.sh` passes. Say in the PR whether you ran it against `scripts/dev.sh up`.
+
+### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T166 (PR #159) made `alerts.session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` public so `handoff.py` writes its summary from the same evidence as the alert, against that resident's own baseline. CODEMAP notes don't say so.
+Interface: Read only `docs/CODEMAP.md`, `git show e4f8fe1 --stat` and the module docstrings of `pipeline/src/routine_watch/alerts.py` and `handoff.py`. Edit notes only, not the generated file list.
+Acceptance:
+* 2-4 line note next to the existing handoff/alert notes naming the four shared functions and why (same steps, same times, same baseline).
+* No other file changed.
+
+### T180 — Handoff: each row says what's normal for that resident
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/handoff/
+- owner: —
+- claimed: —
+- source: proposed
+- pr: —
+
+What: Rationale: a night nurse reading the handoff can't tell whether "2 flags" is unusual for that resident. Each row gets a short muted line like "Usually 0.4 errors a session" so the change reads against her own normal (SPEC §7, Clarity).
+Interface: Read `web/src/handoff/Handoff.tsx`, `types.ts`, `api.ts`, `mockHandoff.ts` and the row fields in `pipeline/src/routine_watch/handoff.py`. If rows don't carry a baseline, take it from the resident detail fetch in `web/src/resident/api.ts` (one fetch per row is fine for the demo) and say so in the PR; don't change the API or `contracts/`.
+Acceptance:
+* Rows with history show the baseline line; residents with no history show nothing (no "NaN", no "0").
+* Wording never says "diagnos"/"has <condition>"; plain numbers a nurse reads in 10 s.
+* New/updated test in `web/src/handoff/Handoff.test.tsx`; `scripts/ci.sh` passes.
+
+### T181 — Alert screen: empty state when nothing is flagged
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Check how the alert screen behaves when the alert fetch returns nothing (e.g. before the live session flags Mrs. K). It should show the shared `EmptyState` with nurse-readable copy ("No change flagged for review."), not a blank area or an endless spinner.
+Interface: Read only `web/src/alert/AlertView.tsx`, `web/src/alert/api.ts`, `web/src/ui/EmptyState.tsx` and `web/src/alert/AlertView.test.tsx`. If the list is rendered elsewhere, edit only that file and note it in the PR.
+Acceptance:
+* Empty result renders `EmptyState` with the copy above; loading is still shown while fetching.
+* Test covers the empty result; `cd web && npx vitest run src/alert/AlertView.test.tsx` and `scripts/ci.sh` pass.
