@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
 - motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
 - On this Windows worker, use uv run python -m pytest from pipeline: the default python belongs to another project and lacks pytest. (max_API_light)
 - A Vitest file can fail only under the full suite's parallelism (seen: AlertView 'No replay available'); re-run that file alone before assuming your change broke it. (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
 - In Vitest jsdom, new URL(cssPath, import.meta.url) may resolve to an HTTP URL; for fs.readFileSync CSS assertions use a path relative to the web package working directory. (max_API_light)
 - Claude CLI --disallowedTools is variadic: put it before other flags, never right before the prompt, or the prompt is eaten as tool names (ian)
+- Shared worker checkout changed branch and removed T365 during CI; create an isolated worktree before any edits or checks. (Max_codex_light)
