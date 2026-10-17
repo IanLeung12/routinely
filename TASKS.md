@@ -63,7 +63,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T164 — Guided demo tour behind ?tour=1
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -72,7 +72,8 @@ Acceptance:
 - area: web/src/tour/ (new), web/src/App.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:28Z
-- pr: —
+- pr: #186
+- rating: 5/5 clear
 
 What: Rationale: judges skim; a 7-step tour following SPEC §10 (baseline → live → alert → why → not just delirium → privacy) makes Clarity obvious and doubles as a presenter cue card. Off unless the URL has `?tour=1`, so it can't touch the demo path.
 Interface: `web/src/tour/Tour.tsx` renders a small fixed card (title, body, Back/Next/Close, "n of 7") from a `web/src/tour/steps.ts` array of `{ title, body }`; plain-language copy using "flags a change for review" / "consistent with", never "diagnose". App.tsx mounts `<Tour />` only when `new URLSearchParams(location.search).has('tour')`. No navigation automation.
