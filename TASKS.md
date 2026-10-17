@@ -633,7 +633,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T127 — Review: CORS_ORIGINS undocumented and ignores dev.sh's DASHBOARD_PORT
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -641,7 +641,7 @@ Acceptance:
 - area: .env.example, scripts/dev.sh
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:38Z
-- pr: —
+- pr: #105
 
 What: T119 (PR #101) added `CORS_ORIGINS` (default `http://localhost:5173`) to `pipeline/src/routine_watch/api.py`, but `.env.example` doesn't document it and `scripts/dev.sh` doesn't set it, so `DASHBOARD_PORT=5174 scripts/dev.sh up` makes the dashboard silently fall back to mock data again.
 Interface: in `scripts/dev.sh`, next to the `VITE_API_URL` export, add `export CORS_ORIGINS=${CORS_ORIGINS:-$DASHBOARD_URL,http://127.0.0.1:${DASHBOARD_PORT}}`. In `.env.example` add `CORS_ORIGINS=http://localhost:5173` with a one-line comment (comma-separated dashboard origins the API accepts). Read only those two files and the `_CORS_ORIGINS` block in `api.py`.
