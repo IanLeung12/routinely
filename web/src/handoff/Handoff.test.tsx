@@ -51,9 +51,9 @@ function offline() {
 const served: HandoffData = {
   window_hours: 12,
   residents: [
-    { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
-    { resident_id: 'mr-chen', name: 'Mr. Chen', flags: 0, pending_review: 0, trending: true },
-    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false },
+    { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, pending_review: 0, trending: true },
+    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', room: '108', flags: 0, pending_review: 0, trending: false },
   ],
   paused: [],
   summary: 'Flagged for review: 2 errors this session vs 0.58 normally over 14 days.',
@@ -65,11 +65,13 @@ describe('Handoff', () => {
     expect(text.split('\n')[0]).toBe(mockHandoff.summary)
     expect(text.split('\n')).toHaveLength(mockHandoff.residents.length + 1)
     for (const resident of mockHandoff.residents) {
-      expect(text).toContain(resident.name)
+      // Name and room: a pasted handoff has to say who and where, with no gaps.
+      expect(text).toContain(`${resident.name}, Room ${resident.room}:`)
     }
-    expect(text).toContain('Room unavailable: 2 flagged sessions, 1 unreviewed alert, No upward trend')
+    expect(text).toContain('Mrs. K, Room 204: 2 flagged sessions, 1 unreviewed alert, No upward trend')
     expect(text).toContain('Error score trending up')
     expect(text).not.toMatch(/diagnos/i)
+    expect(text).not.toMatch(/unavailable/i)
   })
 
   it('copies the handoff and announces success for two seconds', async () => {
@@ -116,6 +118,17 @@ describe('Handoff', () => {
     expect(screen.getByRole('alert').textContent).toContain('Offline')
   })
 
+  it("shows each resident's room on their row", async () => {
+    serve(served)
+
+    render(<Handoff onBack={() => {}} />)
+
+    const kRow = (await screen.findByText('Mrs. K')).closest('li')
+    expect(kRow?.textContent).toContain('Room 204')
+    expect(screen.getByText('Mr. Chen').closest('li')?.textContent).toContain('Room 211')
+    expect(screen.queryByText(/unavailable/i)).toBeNull()
+  })
+
   it('shows what each resident did in words, not colour alone', async () => {
     serve(served)
 
@@ -156,7 +169,7 @@ describe('Handoff', () => {
   it('says so when nothing was flagged for review', async () => {
     serve({
       window_hours: 12,
-      residents: [{ resident_id: 'mrs-k', name: 'Mrs. K', flags: 0, pending_review: 0, trending: false }],
+      residents: [{ resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 0, pending_review: 0, trending: false }],
       paused: [],
       summary: 'No errors this session vs 0.58 normally over 14 days.',
     })
@@ -245,8 +258,8 @@ describe('Handoff', () => {
     serve({
       ...served,
       residents: [
-        { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
-        { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', flags: 0, pending_review: 1, trending: false },
+        { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false },
+        { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', room: '126', flags: 0, pending_review: 1, trending: false },
       ],
     })
 
@@ -295,10 +308,11 @@ describe('Handoff', () => {
     serve({
       ...served,
       residents: [
-        { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
+        { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false },
         {
           resident_id: 'mr-chen',
           name: 'Mr. Chen',
+          room: '4',
           flags: 0,
           pending_review: 0,
           trending: false,
@@ -321,12 +335,13 @@ describe('Handoff', () => {
   it('includes the paused room in the copied handoff text', () => {
     const data: HandoffData = {
       ...mockHandoff,
-      paused: [{ room: '4', resident_id: 'mr-chen', name: 'Mr. Chen' }],
+      paused: [{ room: '211', resident_id: 'mr-chen', name: 'Mr. Chen' }],
     }
 
     const text = handoffText(data)
 
-    expect(text).toContain('Monitoring paused: Mr. Chen (room 4)')
+    expect(text).toContain('Monitoring paused: Mr. Chen (room 211)')
+    expect(text).toContain('Mr. Chen, Room 211:')
   })
 
   it('keeps review wording and theme tokens, offline and online', async () => {

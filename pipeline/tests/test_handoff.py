@@ -4,17 +4,26 @@ The demo's data lives on `demo.DEMO_NOW`, so that is the clock every window here
 at, the way the `/handoff` route does.
 """
 
+import json
 import re
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import ValidationError as SchemaValidationError
 
 from routine_watch import api as api_module
 from routine_watch import handoff as handoff_module
 from routine_watch.alerts import build_alerts, distinct_clauses, normal_error_rate
 from routine_watch.api import app
-from routine_watch.contracts import AlertFeedback, FeedbackVerdict
+from routine_watch.contracts import (
+    AlertFeedback,
+    FeedbackVerdict,
+    Handoff,
+    repo_root,
+    schema_name,
+)
 from routine_watch.demo import DEMO_NOW, demo_residents
 from routine_watch.explain import TemplateExplainer
 from routine_watch.feedback import FeedbackStore
@@ -111,6 +120,7 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
         assert set(entry) == {
             "resident_id",
             "name",
+            "room",
             "flags",
             "pending_review",
             "trending",
@@ -120,6 +130,42 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
         assert isinstance(entry["pending_review"], int)
         assert isinstance(entry["trending"], bool)
         assert entry["monitoring_paused"] is False
+
+
+def test_every_row_names_the_room_a_nurse_has_to_walk_to() -> None:
+    """A line handed over is only actionable if it says where to go (SPEC section 9),
+    so every row carries that resident's own room - the one `/residents` and the
+    overview show, not a second guess at it (T277)."""
+    rows = build_handoff(DEMO_NOW, 12)["residents"]
+    rooms = {resident["id"]: resident["room"] for resident in demo_residents()}
+
+    assert rooms, "the demo unit has residents to hand over"
+    assert {row["resident_id"]: row["room"] for row in rows} == rooms
+    assert all(row["room"] for row in rows), "a blank room sends a nurse nowhere"
+
+
+def test_route_rows_carry_the_room_and_the_schema_requires_it() -> None:
+    """The dashboard mirrors `/handoff` by hand (`web/src/handoff/types.ts`), so the
+    room has to be in the schema both sides are held to and not only in the payload:
+    a row without one fails validation rather than reaching a nurse with no room on it
+    (T277)."""
+    rooms = {resident["id"]: resident["room"] for resident in demo_residents()}
+    schema_path = repo_root() / "contracts" / f"{schema_name(Handoff)}.schema.json"
+    check = Draft202012Validator(json.loads(schema_path.read_text(encoding="utf-8")))
+
+    with TestClient(app) as client:
+        body = client.get("/handoff", params={"hours": 12}).json()
+
+    check.validate(body)
+    assert body["residents"], "every demo resident is handed over"
+    assert all(row["room"] == rooms[row["resident_id"]] for row in body["residents"])
+
+    roomless = [
+        {key: value for key, value in row.items() if key != "room"}
+        for row in body["residents"]
+    ]
+    with pytest.raises(SchemaValidationError):
+        check.validate({**body, "residents": roomless})
 
 
 def test_default_window_is_a_shift() -> None:

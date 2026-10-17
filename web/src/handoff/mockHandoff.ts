@@ -9,12 +9,12 @@ import type { Handoff } from './types.ts'
 export const mockHandoff: Handoff = {
   window_hours: 12,
   residents: [
-    { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
-    { resident_id: 'mr-chen', name: 'Mr. Chen', flags: 0, pending_review: 0, trending: true },
-    { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', flags: 0, pending_review: 0, trending: true },
-    { resident_id: 'mr-silva', name: 'Mr. Silva', flags: 0, pending_review: 0, trending: false },
-    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', flags: 0, pending_review: 0, trending: false },
-    { resident_id: 'mrs-patel', name: 'Mrs. Patel', flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false },
+    { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, pending_review: 0, trending: true },
+    { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', room: '126', flags: 0, pending_review: 0, trending: true },
+    { resident_id: 'mr-silva', name: 'Mr. Silva', room: '117', flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', room: '108', flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-patel', name: 'Mrs. Patel', room: '132', flags: 0, pending_review: 0, trending: false },
   ],
   paused: [],
   summary:

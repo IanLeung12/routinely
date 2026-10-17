@@ -15,6 +15,12 @@
           "title": "Name",
           "type": "string"
         },
+        "room": {
+          "description": "The resident's room, so a handed-over line says where to go (SPEC section 9) and the printed or pasted handoff is usable on its own.",
+          "minLength": 1,
+          "title": "Room",
+          "type": "string"
+        },
         "flags": {
           "description": "Sessions in the window above this resident's bar.",
           "minimum": 0,
@@ -41,6 +47,7 @@
       "required": [
         "resident_id",
         "name",
+        "room",
         "flags",
         "pending_review",
         "trending",

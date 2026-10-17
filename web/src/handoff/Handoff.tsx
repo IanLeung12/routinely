@@ -110,13 +110,16 @@ function headline(residents: HandoffResident[], hours: number): string {
   return `${review} of ${plural(residents.length, 'resident')} to review in the last ${hours} hours`
 }
 
+/** The handoff as plain text, for pasting into a shift note or a message. One line
+ * per resident, each naming the room: the text leaves the screen behind, so a nurse
+ * reading it elsewhere still knows which door the row is about. */
 export function handoffText(h: HandoffData): string {
   const paused = pausedLine(h.paused)
   return [
     h.summary,
     ...(paused ? [paused] : []),
     ...h.residents.map((resident) =>
-      `${resident.name}, Room unavailable: ${plural(resident.flags, 'flagged session')}, `
+      `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
       + `${plural(resident.pending_review, 'unreviewed alert')}, `
       + (resident.trending ? 'Error score trending up' : 'No upward trend'),
     ),
@@ -245,6 +248,7 @@ export function Handoff({
               >
                 <span className="handoff__identity">
                   <span className="handoff__name">{resident.name}</span>
+                  <span className="handoff__room">Room {resident.room}</span>
                   {baselineLine(baselines[resident.resident_id]) && (
                     <span className="handoff__baseline">
                       {baselineLine(baselines[resident.resident_id])}
