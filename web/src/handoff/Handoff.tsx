@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { fetchAlerts } from '../alert/api.ts'
 import type { Alert } from '../contracts.ts'
+import { fetchResident } from '../resident/api.ts'
+import { formatScore } from '../resident/format.ts'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
@@ -80,6 +82,15 @@ function alertByResident(alerts: Alert[]): Record<string, string> {
   return byResident
 }
 
+/** "Usually 0.4 errors a session" against a resident's own history, or null for a
+ * resident with no sessions yet (so the row says nothing rather than a false "0" or a
+ * "NaN" from averaging an empty list). `mean` is `undefined` before the per-row fetch
+ * resolves, which also shows nothing until there is a real number to report. */
+function baselineLine(mean: number | null | undefined): string | null {
+  if (mean === null || mean === undefined) return null
+  return `Usually ${formatScore(mean)} errors a session`
+}
+
 /** The one line a nurse reads first, before any row. */
 function headline(residents: HandoffResident[], hours: number): string {
   if (residents.length === 0) return `Nothing to hand over for the last ${hours} hours`
@@ -118,6 +129,12 @@ export function Handoff({
    * on the window, only on whether they are still flagged. Empty until it arrives, so
    * a row offers the alert when there is one to offer and never a dead button. */
   const [alertIds, setAlertIds] = useState<Record<string, string>>({})
+  /** resident_id -> their own average errors per session, or null once fetched for a
+   * resident with no history. The handoff's rows don't carry a baseline
+   * (`pipeline/src/routine_watch/handoff.py` counts flags, not means), so this reads
+   * it from the resident detail endpoint instead - one fetch per row, fine for the
+   * demo's unit size. */
+  const [baselines, setBaselines] = useState<Record<string, number | null>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -138,6 +155,28 @@ export function Handoff({
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (loaded === null) return
+    let cancelled = false
+    const ids = loaded.result.handoff.residents.map((resident) => resident.resident_id)
+    Promise.all(ids.map((id) => fetchResident(id).then((resident) => [id, resident] as const)))
+      .then((entries) => {
+        if (cancelled) return
+        setBaselines((previous) => {
+          const next = { ...previous }
+          for (const [id, resident] of entries) {
+            next[id] = resident !== null && resident.sessions.length > 0
+              ? resident.baseline.mean
+              : null
+          }
+          return next
+        })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [loaded])
 
   useEffect(() => {
     if (copyStatus !== 'Copied') return
@@ -188,7 +227,14 @@ export function Handoff({
                 key={resident.resident_id}
                 className={`handoff__row${needsReview(resident) ? ' handoff__row--review' : ''}`}
               >
-                <span className="handoff__name">{resident.name}</span>
+                <span className="handoff__identity">
+                  <span className="handoff__name">{resident.name}</span>
+                  {baselineLine(baselines[resident.resident_id]) && (
+                    <span className="handoff__baseline">
+                      {baselineLine(baselines[resident.resident_id])}
+                    </span>
+                  )}
+                </span>
                 <span className="handoff__chips">
                   {chipsFor(resident).map((chip) => (
                     <span key={chip.key} className={`handoff__chip handoff__chip--${chip.tone}`}>

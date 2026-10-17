@@ -21,13 +21,25 @@ const alerts: Alert[] = [
   { ...mockAlerts[0], alert_id: 'mr-chen-trend-1', resident_id: 'mr-chen' },
 ]
 
-/** The screen reads two routes: `/handoff` for the rows, `/alerts` for the alert each
- * row opens. */
-function serve(handoff: HandoffData, alertList: Alert[] = alerts) {
-  const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve({
-    ok: true,
-    json: async () => (url.includes('/alerts') ? alertList : handoff),
-  }))
+/** The screen reads three routes: `/handoff` for the rows, `/alerts` for the alert
+ * each row opens, and `/residents/{id}` for the baseline line on each row. A resident
+ * not in `residents` gets a 404, same as the real API for an id it doesn't know, so
+ * `resident/api.ts` falls back to its own offline mock rather than this test needing
+ * to fake every row's detail. */
+function serve(handoff: HandoffData, alertList: Alert[] = alerts, residents: Record<string, unknown> = {}) {
+  const fetch = vi.fn().mockImplementation((url: string) => {
+    if (url.includes('/alerts')) {
+      return Promise.resolve({ ok: true, json: async () => alertList })
+    }
+    const residentMatch = /\/residents\/([^/]+)$/.exec(url)
+    if (residentMatch) {
+      const resident = residents[residentMatch[1]]
+      return Promise.resolve(
+        resident === undefined ? { ok: false } : { ok: true, json: async () => resident },
+      )
+    }
+    return Promise.resolve({ ok: true, json: async () => handoff })
+  })
   vi.stubGlobal('fetch', fetch)
   return fetch
 }
@@ -114,6 +126,23 @@ describe('Handoff', () => {
     expect(screen.getByText('No change flagged')).toBeTruthy()
   })
 
+  it("reads each row against that resident's own normal, not a shared one", async () => {
+    serve(served, alerts, {
+      'mrs-k': { sessions: [{}], baseline: { mean: 1.46 } },
+      'mrs-ahmed': { sessions: [], baseline: { mean: 0 } },
+    })
+
+    render(<Handoff onBack={() => {}} />)
+
+    expect(await screen.findByText('Usually 1.5 errors a session')).toBeTruthy()
+    // Mrs. Ahmed has no session history yet: no baseline line at all, never a false
+    // "0" or a "NaN" from averaging nothing.
+    const ahmedRow = screen.getByText('Mrs. Ahmed').closest('li')
+    expect(ahmedRow?.textContent).not.toMatch(/Usually/)
+    expect(screen.queryByText(/Usually 0(\.0)? errors a session/)).toBeNull()
+    expect(screen.queryByText(/NaN/)).toBeNull()
+  })
+
   it('leads with how many residents need a look', async () => {
     serve(served)
 
@@ -161,13 +190,16 @@ describe('Handoff', () => {
       window_hours: 24,
       summary: 'Flagged for review: a longer window.',
     }
-    const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve({
-      ok: true,
-      json: async () => {
-        if (url.includes('/alerts')) return alerts
-        return url.includes('hours=24') ? day : twelve
-      },
-    }))
+    const fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/residents/')) return Promise.resolve({ ok: false })
+      return Promise.resolve({
+        ok: true,
+        json: async () => {
+          if (url.includes('/alerts')) return alerts
+          return url.includes('hours=24') ? day : twelve
+        },
+      })
+    })
     vi.stubGlobal('fetch', fetch)
 
     render(<Handoff onBack={() => {}} />)
