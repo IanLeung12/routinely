@@ -193,7 +193,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T115 — Docs: CODEMAP notes for drift endpoint, evidence sources, smoke.sh, feedback causes
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
