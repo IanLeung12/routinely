@@ -235,7 +235,7 @@ Acceptance:
 - existing tests pass (selectors only); `cd web && npx vitest run src/tour && npm run lint`.
 
 ### T435 — Redesign follow-up: privacy panel + monitoring toggle on the Fey system
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
