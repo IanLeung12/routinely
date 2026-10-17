@@ -369,7 +369,7 @@ Acceptance:
 - every command in the file exists in `scripts/` or `web/package.json`; `scripts/ci.sh` passes.
 
 ### T154 — Bug: evidence replay is empty for the demo alert (no skeleton, no ghost)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -378,7 +378,8 @@ Acceptance:
 - source: tester
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:35Z
-- pr: —
+- pr: #147
+- rating: 5/5 clear
 
 What: The alert's evidence view shows "No replay available / No skeleton data" for every error. `GET /sessions/mrs-k-22/replay?t_start=51.1&t_end=56.1` and `GET /residents/mrs-k/normal_replay?...` both return `"frames": []`. Cause: `evidence.py` windows the stand-in scenarios `tea_no_kettle` (frames t=0–12 s) and `tea_normal` (t=0–28 s), but since T121 the alert's error windows sit at 33–107 s, so the clip is empty. `scripts/smoke.sh` fails the same 2 checks.
 Interface: `replay_frames` / `normal_replay_frames` keep their signatures; they must return frames for any window inside a known session (e.g. map the requested window onto the stand-in recording, such as modulo its length or centred on it, and keep the returned `t` values in the requested window).
