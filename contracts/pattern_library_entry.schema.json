@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "PatternTimeProfile": {
+      "additionalProperties": false,
+      "description": "How long a change of this kind takes to show up (SPEC section 7.5).\n\n`routine_watch.patterns_library.TimeProfile` as `GET /patterns` serves it: a step\nchange over days and a drift over weeks are different patterns, so the window a\nchange has been building for is part of what the library says to look for.",
+      "properties": {
+        "onset_days": {
+          "description": "The onset window in days, earliest first: how long a change of this kind is expected to have been building.",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "minimum": 0.0,
+              "type": "number"
+            }
+          ],
+          "title": "Onset Days",
+          "type": "array"
+        },
+        "tolerance_days": {
+          "description": "How far outside the onset window still counts for anything.",
+          "minimum": 0.0,
+          "title": "Tolerance Days",
+          "type": "number"
+        },
+        "note": {
+          "description": "The phrase a nurse reads, kept next to the numbers it describes, e.g. 'a step change within 1-3 days'.",
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "onset_days",
+        "tolerance_days",
+        "note"
+      ],
+      "title": "PatternTimeProfile",
+      "type": "object"
+    },
+    "PatternUrgency": {
+      "description": "How soon a pattern wants a human to look (SPEC section 7.5).",
+      "enum": [
+        "routine",
+        "next_round",
+        "same_shift",
+        "urgent"
+      ],
+      "title": "PatternUrgency",
+      "type": "string"
+    },
+    "SuggestedCheck": {
+      "description": "Checks an alert may suggest to the care team (SPEC section 6.4).",
+      "enum": [
+        "infection_or_uti",
+        "hydration",
+        "medication_review",
+        "cam_screen"
+      ],
+      "title": "SuggestedCheck",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One entry of the pattern library (`GET /patterns`, SPEC section 7.5).\n\nThe library held as data (`routine_watch.patterns_library.LIBRARY`) as the route\nreads it out: what the rule looks for and how much each signal counts, the time\nprofile it follows, what to rule out, how soon somebody should look, and where\nthe pattern comes from. A cited rules library anybody can audit, and nothing\nabout a resident - the scored answer for one change is `PatternMatch`.\n\nThe scoring machinery stays behind the route: which signals a pattern is defined\nby, the care-record context that raises or lowers it, its confidence ceiling.\n`routine_watch.patterns` owns all of that, so a reader gets the rule rather than\nthe arithmetic.",
+  "properties": {
+    "pattern_id": {
+      "description": "The pattern in the library, e.g. 'sudden_change'.",
+      "minLength": 1,
+      "title": "Pattern Id",
+      "type": "string"
+    },
+    "name": {
+      "description": "How the pattern is shown to a nurse.",
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "signals": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Signal name -> weight: what the rule looks for and how much each signal counts. The names are `routine_watch.patterns.SIGNALS`.",
+      "minProperties": 1,
+      "title": "Signals",
+      "type": "object"
+    },
+    "time_profile": {
+      "$ref": "#/$defs/PatternTimeProfile"
+    },
+    "checks": {
+      "description": "What to rule out: a shared SuggestedCheck where one fits, otherwise the pattern's own wording, exactly as `PatternMatch.checks` carries it.",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/SuggestedCheck"
+          },
+          {
+            "minLength": 1,
+            "type": "string"
+          }
+        ]
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "urgency": {
+      "$ref": "#/$defs/PatternUrgency"
+    },
+    "source": {
+      "description": "Where the pattern comes from: a SPEC section, a clinical screen, a citation. Never empty - an uncited rule is not a pattern (SPEC section 7.5).",
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pattern_id",
+    "name",
+    "signals",
+    "time_profile",
+    "checks",
+    "urgency",
+    "source"
+  ],
+  "title": "PatternLibraryEntry",
+  "type": "object"
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One resident's slow trend (`GET /residents/{id}/drift`, SPEC section 8).\n\nWhat the drift card on the resident screen draws: how fast this resident's daily\nerror score is rising, over how many days of their own history, read with a\nrobust slope so one bad day cannot tilt it (`routine_watch.drift`). A slow drift\nis flagged for review on its own terms, separately from a sudden change\n(SPEC section 7.5); `trending` is the whole judgement, and it is about the\ntrend, never about the resident.",
+  "properties": {
+    "resident_id": {
+      "minLength": 1,
+      "title": "Resident Id",
+      "type": "string"
+    },
+    "slope_per_day": {
+      "description": "Daily error score gained per day. Negative means improving.",
+      "title": "Slope Per Day",
+      "type": "number"
+    },
+    "days": {
+      "description": "Days this resident has sessions on. Counted, not spanned: a gap cannot satisfy the minimum history a trend needs.",
+      "minimum": 0,
+      "title": "Days",
+      "type": "integer"
+    },
+    "trending": {
+      "description": "A rise worth a look: enough days of history and a slope above `routine_watch.drift.drift`'s minimum. False is a real answer, not 'unknown'.",
+      "title": "Trending",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "resident_id",
+    "slope_per_day",
+    "days",
+    "trending"
+  ],
+  "title": "ResidentDrift",
+  "type": "object"
+}
