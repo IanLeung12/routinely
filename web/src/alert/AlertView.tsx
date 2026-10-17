@@ -20,6 +20,7 @@ import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
 import { SuggestedChecks } from './SuggestedChecks.tsx'
+import { TimeOfDayStrip } from './TimeOfDayStrip.tsx'
 import './alert.css'
 
 const HEADING_ID = 'alert-view-heading'
@@ -212,6 +213,7 @@ export function AlertView({
         <Card>
           <AlertSectionHeading title="Errors" />
           <ErrorList errors={alert.errors} onOpen={(error) => onOpenEvidence?.(error)} />
+          <TimeOfDayStrip buckets={alert.errors_by_time_of_day} />
         </Card>
 
         <Card className="no-print">

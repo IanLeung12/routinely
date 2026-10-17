@@ -32,6 +32,14 @@ export type Alert = {
   patterns?: PatternMatch[]
   /** Null until a nurse confirms it or calls it a false alarm. */
   feedback?: AlertFeedback | null
+  /**
+   * Errors and sessions per part of the day over the two weeks before the alert, one entry per
+   * bucket: the visible evidence behind an evening-only pattern (SPEC section 7.5). Read off
+   * the resident's own session history by the route that serves the alert
+   * (`routine_watch.api_alerts`), so it is null on a stored record and on a resident with no
+   * sessions in that window.
+   */
+  errors_by_time_of_day?: TimeOfDayErrors[] | null
 }
 
 /** What the care team said about an alert. Logged, and it moves the threshold. */
@@ -561,6 +569,34 @@ export type TaskError = {
   evidence: EvidenceRef[]
   /** The resident fixed it straight away: a weaker signal, not a full error. */
   self_corrected?: boolean
+}
+
+/**
+ * Which part of a day a session started in (SPEC section 7.5). The three parts a nurse reads
+ * off a shift rather than clock hours, so "errors only late in the day" is something an alert
+ * can show rather than only say: morning before noon, afternoon until 17:00, evening from 17:00
+ * on.
+ */
+export const TIME_OF_DAY_VALUES = ['morning', 'afternoon', 'evening'] as const
+export type TimeOfDay = (typeof TIME_OF_DAY_VALUES)[number]
+
+/**
+ * One part of the day, counted over the two weeks behind an alert (SPEC section 7.5).
+ * `sessions` is how many sessions this resident started in that part of the day and `errors`
+ * how many errors those sessions had between them, so a reader can tell "three bad evenings"
+ * from "one evening, three errors". Both are counts over this resident's own history, not
+ * rates: the strip is evidence a nurse reads, and the rate is already in the pattern's own
+ * evidence lines.
+ */
+export type TimeOfDayErrors = {
+  bucket: TimeOfDay
+  /** Sessions started in this part of the day, assisted ones left out. */
+  sessions: number
+  /**
+   * Errors in those sessions, self-corrected slips left out - the same count the session score
+   * and this resident's normal are built from (SPEC section 7).
+   */
+  errors: number
 }
 
 /**
