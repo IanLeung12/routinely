@@ -201,13 +201,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_replay.py -q`, `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T027 — Web alerts API client + mock
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: web/src/alert/api.ts, web/src/alert/api.test.ts, web/src/mock/alerts.ts
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:05Z
 - pr: —
 
 What: Dashboard client for the alerts API (already live on the backend). Read only the files in `area`, `web/src/overview/api.ts` (copy its fallback pattern), `web/src/config.ts`, `web/src/contracts.ts` (type `Alert`, `FeedbackVerdict`; do not edit it), `web/src/overview/UnitOverview.test.tsx` (test style) and `web/package.json`. Do not edit any other file.
