@@ -574,14 +574,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T053 — Review: offline feedback fallback hides API rejections from the nurse
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: web/src/alert/api.ts, web/src/alert/api.test.ts
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:23Z
 - pr: —
 
 What: `postFeedback` falls back to writing the verdict into the in-memory mock whenever `response.ok` is false, so a 404/422/500 from a reachable API reports success while the feedback is lost on refresh. Only a network failure (fetch throws) should fall back to the mock. Read only the files in `area`.
