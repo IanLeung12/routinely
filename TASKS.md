@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 8077353
+- last-reviewed: d853ab4
 
 ## Tasks
 
@@ -498,3 +498,48 @@ Acceptance:
 - The listed web files re-export (or are replaced by) generated types; no hand-written copy of these shapes left.
 - `test_generated_files_are_up_to_date` covers them; existing web tests pass with import-only changes.
 - `scripts/ci.sh` passes.
+
+### T293 — Test: api_state.reset() clears feedback without replacing the store
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_state.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: T284 moved the feedback store to `api_state.py`; routers import `_feedback_store` at load time, so `reset()` must clear it in place. Pin that with a direct unit test.
+Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/test_api_feedback.py` (for how feedback is recorded). New file `pipeline/tests/test_api_state.py`: keep a reference `store = api_state._feedback_store`, record one feedback answer, call `api_state.reset()`, assert `api_state._feedback_store is store` and the answer is gone; also assert `_flagged_residents()` returns only residents whose raw `status` is "flagged". Test-only.
+Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
+
+### T294 — Test: shift handoff works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/handoff/Handoff.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses at a shared workstation may use only the keyboard; prove the handoff screen's "Copy summary" and back button need no mouse.
+Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-library/user-event`: Tab to "Copy summary", press Enter, check the status text ("Copied" with a mocked `navigator.clipboard.writeText`); Tab to the back button, press Enter, check `onBack` was called. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
+Acceptance: `cd web && npx vitest run src/handoff/Handoff.test.tsx` passes; `scripts/ci.sh` passes.
+
+### T295 — Test: unit overview opens a resident keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The first demo step is opening Mrs. K from the unit overview; prove a keyboard user can do it.
+Interface: Read `web/src/overview/UnitOverview.tsx` and its test. With `@testing-library/user-event`: Tab until a resident row's control is focused, press Enter, assert the select/open callback fires with that resident's id; also Tab to a status filter and activate it with Space. Test-only: if a real keyboard bug shows up, describe it in the PR body instead of fixing it.
+Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes; `scripts/ci.sh` passes.
