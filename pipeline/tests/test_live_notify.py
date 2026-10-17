@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from routine_watch import session_log
-from routine_watch.demo import DEMO_RESIDENT
+from routine_watch.demo import DEMO_RESIDENT, demo_residents
 from routine_watch.live import scenario_path, session_messages
 from routine_watch.notify import FakeNotifier
 
@@ -57,6 +57,9 @@ def test_a_session_that_flips_the_resident_to_flagged_notifies_once() -> None:
     alert = notifier.sent[0]
     assert alert["resident_id"] == DEMO_RESIDENT
     assert alert["alert_id"] == f"alert-{DEMO_RESIDENT}"
+    resident = next(resident for resident in demo_residents() if resident["id"] == DEMO_RESIDENT)
+    assert resident["name"] in alert["summary"]
+    assert DEMO_RESIDENT not in alert["summary"]
     assert "diagnos" not in alert["summary"].lower()
 
 

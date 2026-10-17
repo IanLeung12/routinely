@@ -258,12 +258,12 @@ async def session_messages(
     was_flagged = _resident_flagged(resident_id)
     score, assisted, flag = score_session(scenario, final)
     _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
-    if not was_flagged and _resident_flagged(resident_id):
+    if not was_flagged and (resident_name := _resident_flagged(resident_id)):
         (notifier or get_notifier()).send(
             {
                 "alert_id": f"alert-{resident_id}",
                 "resident_id": resident_id,
-                "summary": f"A session just flagged a change for {resident_id} to review.",
+                "summary": f"A session just flagged a change for {resident_name} to review.",
                 "created_at": DEMO_NOW,
             }
         )
@@ -278,14 +278,14 @@ async def session_messages(
     }
 
 
-def _resident_flagged(resident_id: str) -> bool:
-    """Whether `resident_id` is flagged right now (SPEC section 7: over their own
+def _resident_flagged(resident_id: str) -> str | None:
+    """The resident's display name if flagged right now (SPEC section 7: over their own
     history, the same reading `/residents` and `/alerts` give a nurse), so a push
-    alert goes out exactly when a session's end turns this from `False` to `True`."""
-    return any(
-        resident["id"] == resident_id and resident["status"] == "flagged"
-        for resident in demo_residents()
+    alert goes out exactly when a session's end turns this from absent to present."""
+    resident = next(
+        (resident for resident in demo_residents() if resident["id"] == resident_id), None
     )
+    return resident["name"] if resident and resident["status"] == "flagged" else None
 
 
 def _record(
