@@ -224,15 +224,15 @@ Acceptance:
 - existing handoff tests pass; `scripts/ci.sh` passes.
 
 ### T272 — Review: duplicate scenario-README test in tests/ and pipeline/tests/
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - source: reviewer
 - deps: —
 - area: tests/test_scenarios_readme.py, pipeline/tests/test_scenarios_readme.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:01Z
 - pr: —
 
 What: `tests/test_scenarios_readme.py` and `pipeline/tests/test_scenarios_readme.py` both check that every `tests/scenarios/*` folder has a README row, with slightly different rules (expected.yaml dirs vs all dirs). Two copies drift and both run in CI.
