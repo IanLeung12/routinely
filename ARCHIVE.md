@@ -7132,3 +7132,21 @@ Interface: new `routine_watch/scenario.py` with `ReplayError`, `_Strict`, `Expec
 Acceptance:
 - No test file changes needed; `cd pipeline && uv run pytest -q` and `scripts/e2e.sh` pass unchanged.
 - replay.py under ~330 lines; CODEMAP note for scenario.py. `scripts/ci.sh` passes.
+
+### T383 — Care-record context timeline: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ContextTimeline.tsx, web/src/resident/contextTimeline.css, web/src/resident/ContextTimeline.mobile.test.tsx
+- owner: Max_codex_light
+- claimed: 2026-10-17T19:36Z
+- pr: #379
+- rating: 5/5 clear
+
+What: Same treatment as the other phone-width tasks (e.g. T345 session list): the care-record timeline on resident detail must not overflow at 375 px.
+Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/SessionList.mobile.test.tsx and web/src/resident/sessionList.css (copy their approach). Add a `contextTimeline.css` imported by the component; wrap long labels, stack date above text under 480 px.
+Acceptance:
+- New ContextTimeline.mobile.test.tsx in the style of SessionList.mobile.test.tsx.
+- `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
