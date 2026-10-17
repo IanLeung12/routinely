@@ -280,7 +280,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass
 
 ### T346 — Test: alert time-of-day strip has accessible names
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -288,8 +288,9 @@ Acceptance:
 - area: web/src/alert/TimeOfDayStrip.a11y.test.tsx, web/src/alert/TimeOfDayStrip.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T17:52Z
-- pr: —
+- pr: #347
 - note: earlier attempt lost to a shared-checkout reset; its work is on branch wip/Max_codex_light-1017-1745 (commit b09a18e). Start from origin/main, cherry-pick b09a18e if useful, run scripts/ci.sh, open the PR. Use your own worktree.
+- rating: 5/5 clear
 
 What: Each morning/afternoon/evening cell in the alert's time-of-day strip should be readable by a screen reader ("Evening: 3 errors"). Read `web/src/alert/TimeOfDayStrip.tsx` and `web/src/alert/TimeOfDayStrip.test.tsx`. Add the test; only if a cell has no accessible name, add an `aria-label` in `TimeOfDayStrip.tsx` (no visual change).
 Interface: new test file; at most `aria-label`/`role` attributes in the component.
