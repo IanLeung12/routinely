@@ -6,6 +6,7 @@ import { LiveSession } from './live/LiveSession.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
 import { Button } from './ui/Button.tsx'
+import { DemoBanner } from './ui/DemoBanner.tsx'
 
 export default function App() {
   /** Which resident's detail is open, if any. Two screens don't need a router. */
@@ -25,6 +26,7 @@ export default function App() {
 
   return (
     <main className="app">
+      <DemoBanner />
       <header>
         <h1>Routine Watch</h1>
         <p className="tagline">

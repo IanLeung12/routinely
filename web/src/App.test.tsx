@@ -20,6 +20,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Routine Watch' })).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Unit overview' })).toBeTruthy()
+    expect(screen.getByRole('note')).toBeTruthy()
   })
 
   it('opens the mock alert evidence and returns to the overview', async () => {
@@ -30,6 +31,7 @@ describe('App', () => {
     expect(await screen.findByText(/^Flagged for review:/)).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Suggested checks' })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: 'Unit overview' })).toBeNull()
+    expect(screen.getByRole('note')).toBeTruthy()
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /Back/ }))
