@@ -346,17 +346,17 @@ Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layou
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
 
 ### T433 — Redesign follow-up: pattern library onto the Fey system
-- status: in-review
+- status: todo
 - class: light
 - priority: 1
 - kind: improvement
-- deps: T401
+- deps: T442
 - area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.css, web/src/patterns/urgencyFilter.css, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/PatternLibrary.filters.test.tsx, web/src/patterns/PatternLibrary.keyboard.test.tsx
-- owner: max_API_light
+- owner: —
 - claimed: 2026-10-17T21:58Z
 - pr: #410
 - rating: 5/5 clear
-- note: Only red check is the main-wide bundle budget (T442). Merge queue merges it once T442 lands; no action needed.
+- note: fix CI on PR #410: after T442 (bundle budget) merges, merge origin/main into the PR branch and push; code is done
 
 What: The pattern library still uses the pre-redesign tokens (`--panel`, `--border`, `--muted`, `--accent`) and its own boxes. Rebuild its markup on the ui primitives (`Card`, `SectionHeader`, `Row`, `Pill`, `SegmentedControl` for the urgency filter) and the new tokens only. Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
 Why: judges click into "consistent with" patterns from the alert; it's the one demo screen that still looks like the old app.
