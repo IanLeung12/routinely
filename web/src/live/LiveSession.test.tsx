@@ -63,6 +63,30 @@ describe('LiveSession', () => {
     ])
   })
 
+  it('renders the task map from the session_start message, not a hard-coded task', () => {
+    render(<LiveSession scenario="medication" />)
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'medication',
+        steps: [
+          { id: 'open_box', label: 'Open the pill box', optional: false },
+          { id: 'take_pill', label: 'Take the pill', optional: false },
+        ],
+      })
+    })
+
+    const map = screen.getByRole('list', { name: 'Task steps' })
+    expect(within(map).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Open the pill box',
+      'Take the pill',
+    ])
+    expect(screen.queryByText('Fill the kettle')).toBeNull()
+  })
+
   it('opens a WebSocket at the live session route for the scenario', () => {
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" speed={2} />)
 
@@ -74,6 +98,15 @@ describe('LiveSession', () => {
     const socket = FakeWebSocket.latest()
 
     act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [
+          { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
+          { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
+        ],
+      })
       socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
     })
     expect(screen.getByText('Fill the kettle').closest('[role="listitem"]')?.getAttribute('data-state')).toBe(

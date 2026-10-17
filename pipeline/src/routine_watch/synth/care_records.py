@@ -3,6 +3,8 @@
 import random
 from datetime import UTC, datetime, timedelta
 
+from routine_watch.synth.history import MOTOR_MED_START_DAYS_BEFORE_END
+
 
 def generate_care_records(
     resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal"
@@ -33,6 +35,19 @@ def generate_care_records(
             else:
                 temp = round(rng.uniform(36.4, 37.0), 1)
                 fluid = rng.randint(1200, 1800)
+        elif scenario == "motor":
+            if days_before_end == MOTOR_MED_START_DAYS_BEFORE_END:
+                records.append(
+                    {
+                        "resident_id": resident_id,
+                        "ts": (day_start + timedelta(hours=9)).isoformat(),
+                        "kind": "med_change",
+                        "value": "diphenhydramine",
+                        "note": "new sedating medication started",
+                    }
+                )
+            temp = round(rng.uniform(36.4, 37.0), 1)
+            fluid = rng.randint(1200, 1800)
         else:
             temp = round(rng.uniform(36.4, 37.0), 1)
             fluid = rng.randint(1200, 1800)

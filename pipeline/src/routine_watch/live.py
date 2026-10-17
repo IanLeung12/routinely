@@ -17,6 +17,10 @@ nothing downstream of it changes.
 The messages, in the order a session produces them:
 
 ===============  ===========================================================
+``session_start``  ``{session_id, task_id, steps: [{id, label, optional}]}``, the
+                 task graph itself, straight from `scenario.graph`. Sent first
+                 and once, so the dashboard draws the task map the session
+                 actually ran rather than assuming it is always tea.
 ``step_state``   ``{step_id: "pending"|"done"|"omission"|"repeat"|"sequence"}``
                  for every step of the task, in the task map's reading order.
                  Sent first, all pending, and again whenever it changes: that
@@ -167,6 +171,16 @@ async def session_messages(
     seen: set[str] = set()  # error ids already sent, so each error is sent once
     states: dict[str, StepState] = {}  # the task map as the client last saw it
     events: list[StepEvent] = []  # the steps so far, which is all a live session knows
+
+    yield {
+        "type": "session_start",
+        "session_id": session_id,
+        "task_id": graph.id,
+        "steps": [
+            {"id": step.id, "label": step.label, "optional": step.optional}
+            for step in graph.steps
+        ],
+    }
 
     def reading(errors: Sequence[TaskError]) -> list[dict[str, Any]]:
         """The messages one classification produces: the errors that are new, then the
