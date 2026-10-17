@@ -429,7 +429,7 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T213 — Alert view: heading order, focus on open, landmark
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -437,7 +437,8 @@ Acceptance:
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T10:08Z
-- pr: —
+- pr: #202
+- rating: 5/5 clear
 
 What: The alert is the screen judges and nurses read most. Make it navigable by screen reader and keyboard: one `h1` (resident + "Flagged for review"), section `h2`s in reading order (What changed, Errors, Evidence, Patterns, Suggested checks, Feedback), the view wrapped in a labelled `main`/`section`, and focus moved to the `h1` when an alert opens.
 Interface: markup-only changes in `AlertView.tsx`; keep existing class names and copy.
