@@ -287,7 +287,7 @@ async def session_messages(
         yield message
 
     was_flagged = _resident_flagged(resident_id)
-    score, assisted, _recording_flag = score_session(scenario, final)
+    score, assisted, _recording_flag = score_session(scenario, final, events)
     _record(resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t)
     # One reading of the resident, taken once this session is one of theirs: it is both
     # what a push alert goes out for and what `session_end` reports, so the live screen

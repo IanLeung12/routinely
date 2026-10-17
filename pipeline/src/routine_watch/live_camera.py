@@ -147,7 +147,7 @@ async def camera_session_messages(
     for message in sent.reading(events, final):
         yield message
 
-    score, _, flag = score_session(_as_session(graph, records, events, session_id), final)
+    score, _, flag = score_session(_as_session(graph, records, events, session_id), final, events)
     yield {
         "type": "session_end",
         # The finished session's errors, the same authoritative list `live`'s
