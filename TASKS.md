@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 4d18167
+- last-reviewed: d8e972c
 
 ## Tasks
 
@@ -631,3 +631,74 @@ Interface: Read only scripts/preflight.sh and tests/test_preflight.py. Use `LOG_
 Acceptance:
 - `grep -n '/tmp/preflight' scripts/preflight.sh` finds nothing.
 - tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.
+
+### T392 — Test: scripts/camera.sh argument handling (no camera needed)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_camera_script.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: scripts/camera.sh (T356) has no tests. Cover the parts that run before any install or camera: `--help` prints the header usage, unknown args and a non-numeric `--camera` exit 2 with a message, missing values for `--camera`/`--record` fail.
+Interface: new pytest file running `bash scripts/camera.sh ...` via subprocess with a short timeout; must never reach the pip install / camera / dev.sh steps (only invoke paths that exit during argument parsing).
+Acceptance:
+- tests for --help (exit 0, usage text), unknown arg (exit 2), `--camera abc` (exit 2), `--camera` with no value (non-zero)
+- no network, no camera, no stack started
+- `scripts/ci.sh` passes
+
+### T393 — Landing page: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/landing/landing.css, web/src/landing/Landing.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Judges may open the public landing page (T378) on a phone. Make the flow strip, pattern cards and CTA stack in one column at ≤ 480 px with no horizontal scroll.
+Interface: read only web/src/landing/Landing.tsx, web/src/landing/landing.css, web/src/index.css (tokens). CSS-only change in landing.css (a `@media (max-width: 480px)` block); don't change copy or Landing.tsx.
+Acceptance:
+- grids in landing.css collapse to one column at ≤ 480 px; no fixed widths wider than 375 px
+- Landing.test.tsx gains a test that the stylesheet contains the phone media query for the flow/pattern grids (Vitest can't lay out; assert on the CSS text like other phone-width tests)
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T394 — Live: tell the nurse when the camera could not be opened (close code 4503)
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `/ws/live?source=camera` closes with 4503 (`live_camera.CAMERA_UNAVAILABLE`) when no camera can be read (T356). Make sure the Live screen shows a plain, specific message for that code ("No camera could be opened on this machine — run scripts/camera.sh, or watch a recorded session") with a button back to the recorded scenario, distinct from "API unreachable" and 4404.
+Interface: map close code 4503 to its own state in useLiveSession; render via the shared ui ErrorState/Button. If this already exists, tighten tests only.
+Acceptance:
+- unit test with the fake WebSocket closing 4503 shows the camera message and a working "watch a recorded session" button
+- 4404 and network-error messages unchanged (existing tests pass)
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T395 — Docs: CODEMAP note for live camera source and scripts/camera.sh
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Check docs/CODEMAP.md notes describe T356: `/ws/live?source=camera` (`api_live._session`), `capture.camera_frames`/`frame_stream`/`recorded`, `live_camera.py`, `scripts/camera.sh`, and `CAMERA_RECORD`. Add or fix one short note per item that is missing or wrong.
+Interface: read pipeline/src/routine_watch/api_live.py, capture.py, live_camera.py, scripts/camera.sh headers only. Edit only notes, not the generated file list.
+Acceptance:
+- notes match the code; no file-list edits
+- `scripts/ci.sh` passes
