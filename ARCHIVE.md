@@ -5681,3 +5681,59 @@ Acceptance:
 * Every focusable element has an accessible name.
 * If a real bug is found, don't fix it; note it in the PR body.
 * `cd web && npm test -- Handoff.keyboard` passes; `scripts/ci.sh` passes.
+
+### T322 — Drift card: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/driftCard.css, web/src/resident/DriftCard.mobile.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:23Z
+- pr: #312
+- rating: 5/5 clear
+
+What: The resident drift card has no small-screen rules; at 375 px it must not scroll sideways and its rows should stack.
+Interface: read `web/src/resident/DriftCard.tsx`, `web/src/resident/driftCard.css` and `web/src/resident/resident.css` (copy its `@media (max-width: 480px)` approach). CSS only; no behaviour change. New test `DriftCard.mobile.test.tsx` asserts the card renders with its existing class names (smoke-level, like other `*.mobile.test.tsx` files if any exist).
+Acceptance:
+- a `@media (max-width: 480px)` block in `driftCard.css`; no fixed widths over 375 px
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T323 — Live session summary: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/sessionSummary.css, web/src/live/liveSession.css
+- owner: max_API_light
+- claimed: 2026-10-17T16:23Z
+- pr: #317
+
+What: `liveScreen.css` and `taskMap.css` already have phone-width rules, but the session summary and live session panels don't; at 375 px they must not scroll sideways and buttons are at least 44 px tall.
+Interface: read `web/src/live/SessionSummary.tsx`, `web/src/live/LiveSession.tsx`, the two CSS files, and `web/src/live/liveScreen.css` (copy its `@media (max-width: 480px)` approach). CSS only; no behaviour change.
+Acceptance:
+- a `@media (max-width: 480px)` block in each of the two CSS files; no fixed widths over 375 px
+- existing live tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
+
+### T324 — Shift handoff: "compared with the previous shift" per resident
+- status: done
+- class: heavy
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_previous.py, pipeline/src/routine_watch/contracts.py, contracts/handoff.schema.json, contracts/examples/, web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.test.tsx, web/src/handoff/types.ts, web/src/contracts.ts
+- owner: ian-claude
+- claimed: 2026-10-17T16:46Z
+- pr: #324
+- rating: 5/5 clear
+
+What: Rationale: a nurse coming on shift wants to know if things are getting better or worse, not just counts. Add each resident's `flags` for the previous window of the same length (`previous_flags`) to `/handoff`, and a small "up / down / same vs previous shift" indicator component.
+Interface: `build_handoff(now, hours)` adds `previous_flags: int` per resident (window `[now-2h, now-h)`); update `handoff.schema.json`, contracts.py and generated web types; new `HandoffDelta({flags, previousFlags})` component renders e.g. "2 more than last shift" / "same as last shift" with an accessible text (not colour only). Wiring it into `Handoff.tsx` is a follow-up task (keeps this off the files T203/T247 own). Wording: describes counts only, never a diagnosis.
+Acceptance:
+- pytest covers previous window bounds (session exactly at `now-h` counts in the current window only) and the demo data
+- schema + example validate; smoke/contract tests pass
+- `HandoffDelta.test.tsx` covers more/fewer/same/zero
+- `scripts/ci.sh` passes
