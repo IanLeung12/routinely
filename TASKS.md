@@ -133,12 +133,12 @@ Acceptance:
 - priority: 0
 - kind: bug
 - deps: —
-- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- area: scripts/integration.sh, scripts/dev.sh
 - owner: —
 - claimed: —
 - pr: —
 - source: integration
-- note: T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. Earlier: tester saw this once on a cold start (TESTREPORT: likely Vite cold-start/dep-optimise timing; re-run passed). If it is timing, make scripts/integration.sh wait for Vite readiness (fixing the check is fine here); otherwise fix the render.
+- note: area narrowed (was web/src/, which overlapped claims and kept this P0 from being handed out). T388 (#370) stopped integration.sh sharing/killing a running dev stack, a likely cause; first re-run scripts/integration.sh on main twice and, if both print OK, mark done with a note. If it is Vite cold-start timing, make integration.sh wait for Vite readiness. If the render itself is broken, note the file and set blocked so a web task can be filed.
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ c332a28:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
