@@ -298,7 +298,7 @@ Acceptance:
 - `scripts/e2e.sh tests/scenarios/meds_abandoned` prints PASS; `scripts/ci.sh` passes
 
 ### T202 — Scenario: medication slip corrected inside the window is not flagged
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
