@@ -511,7 +511,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T265 — Refactor: move alert routes out of api.py into api_alerts.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
