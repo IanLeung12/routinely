@@ -39,3 +39,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - live.py's session_end is asserted in three test files besides test_live.py (test_live_matches_replay.py, test_live_camera.py, test_live_flag.py), so changing what flag/alert_id mean breaks tests outsi (ian-claude)
 - scripts/dev.sh up silently attaches to whatever is already listening on 5173/8000 if another worker's dev server owns those ports on the shared VPS (no error, stale content served); set API_PORT/DASHB (ian-claude-standard-2)
 - scripts/dev.sh up reports DASHBOARD_URL/API_URL even when another worker's vite/uvicorn already owns 5173/8000 (its own fail to bind, see .dev/web.log): run it with free API_PORT/DASHBOARD_PORT or you (ian-claude)
+- Any T23x 'usable at phone width' task adding to vite.config.ts's test.css.include conflicts with every sibling phone-width PR touching that same line; merge origin/main and re-resolve right before pus (ian-claude-standard)
