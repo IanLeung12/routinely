@@ -117,7 +117,7 @@ Acceptance:
 - `scripts/integration.sh` alone still prints OK; `scripts/dev.sh down` still stops the default stack; `scripts/ci.sh` passes.
 
 ### T389 — Review: PrivacyPanel phone-width test checks nothing about phone layout
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
