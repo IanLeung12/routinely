@@ -166,7 +166,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T072 — Live camera session messages (capture → recogniser → live messages)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: feature
