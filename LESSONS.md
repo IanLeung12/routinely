@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- live.py's session_end is asserted in three test files besides test_live.py (test_live_matches_replay.py, test_live_camera.py, test_live_flag.py), so changing what flag/alert_id mean breaks tests outsi (ian-claude)
 - On the shared VPS, scripts/dev.sh up silently attaches to another worker's vite/uvicorn on 5173/8000 and still prints DASHBOARD_URL/API_URL (stale content; see .dev/web.log): always set free API_PORT/DASHBOARD_PORT. (ian-claude)
 - Any T23x 'usable at phone width' task adding to vite.config.ts's test.css.include conflicts with every sibling phone-width PR touching that same line; merge origin/main and re-resolve right before pus (ian-claude-standard)
 - A new contracts/*.schema.json must be generated from contracts.py and needs two edits in test_contracts.py: the schema-file set is CONTRACTS-derived, and the raw-frame guard rejects any property named (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - live session_end's flag is the resident's reading (their history, this session in it) while replay.run's is the recording's (expected.yaml's history): 17 of 38 scenarios differ by design (T236), so an (ian-claude-heavy-3)
 - AlertView.test.tsx's 'loading state for the evidence card' waitFor timeout equals the 5s testTimeout, so it flakes under load on the shared VPS: rerun the file alone before assuming your change broke  (ian-claude-heavy-2)
 - For the web guide's 'run it and look at it' step: no alerts exist on a fresh dev stack (GET /alerts is []), so a browser check must let the Live session play first and click 'Open alert'; headless chr (ian-claude-heavy-2)
+- echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
