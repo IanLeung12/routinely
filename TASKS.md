@@ -228,15 +228,15 @@ Acceptance:
 - `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass
 
 ### T347 — Unit overview: show how many residents each filter holds
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/overview.css, web/src/overview/UnitOverview.counts.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T18:30Z
 - pr: —
 
 What: Rationale: a charge nurse should see "Flagged (1) · Watch (4) · Paused (0)" at a glance before clicking. Add the count to each filter button label in the unit overview, computed from the loaded residents and paused rooms the component already holds.
