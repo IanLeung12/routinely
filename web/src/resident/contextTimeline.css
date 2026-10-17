@@ -1,6 +1,50 @@
-.context-timeline,
-.context-record {
+/* Care records: continuous quiet rail with tinted event markers. */
+.resident-detail .context-timeline {
+  gap: 0;
   min-width: 0;
+  max-height: none;
+}
+
+.resident-detail .context-record {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
+  margin-left: var(--space-1);
+  padding: 0 0 var(--space-4) var(--space-4);
+  border-left: 1px solid var(--hairline-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.resident-detail .context-record:last-child {
+  padding-bottom: 0;
+  border-color: transparent;
+}
+
+.resident-detail .context-record::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-1) * -1);
+  top: var(--space-2);
+  width: var(--space-2);
+  height: var(--space-2);
+  border: 1px solid var(--status-neutral);
+  border-radius: var(--radius-full);
+  background: var(--status-neutral-tint);
+}
+
+.resident-detail .context-record--med_change::before {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.resident-detail .context-record--fever::before {
+  border-color: var(--status-watch);
+  background: var(--status-watch-tint);
 }
 
 .context-when,
@@ -11,11 +55,16 @@
   overflow-wrap: anywhere;
 }
 
+.resident-detail .context-when,
+.resident-detail .context-note {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
 @media (max-width: 480px) {
   .context-timeline .context-record {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.25rem;
   }
 }

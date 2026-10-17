@@ -1,7 +1,12 @@
-import { formatDayTime, formatDuration, formatErrors, formatScore } from './format.ts'
+import { formatDayTime, formatDuration, formatScore } from './format.ts'
 import type { ResidentSession, ScorePoint } from './types.ts'
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { Pill } from '../ui/Pill.tsx'
+import { ERROR_TYPE_LABEL, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
+import type { ErrorType } from '../contracts.ts'
 import './sessionList.css'
+
+const PILL_TONE = { red: 'negative', amber: 'watch', grey: 'neutral' } as const
 
 function time(ts: string): number {
   const parsed = Date.parse(ts)
@@ -31,14 +36,27 @@ export function SessionList({
       {newestFirst.map((session) => {
         const score = scoreByTs.get(session.ts)
         const above = score !== undefined && score > threshold
-        const errors = formatErrors(session.errors)
+        const errors = Object.entries(session.errors).filter(([, count]) => (count ?? 0) > 0)
 
         return (
           <li key={session.ts} className={above ? 'session-row session-row--above' : 'session-row'}>
             <span className="session-when">{formatDayTime(session.ts)}</span>
-            <span className="session-score">{score === undefined ? '—' : formatScore(score)}</span>
+            <span
+              className="session-score"
+              aria-label={score === undefined ? 'Not scored' : `Error score ${formatScore(score)}`}
+            >
+              {score === undefined ? '—' : formatScore(score)}
+            </span>
             <span className="session-detail">
-              {session.assisted ? 'assisted, not counted' : errors || 'no errors'}
+              {session.assisted ? <Pill>assisted, not counted</Pill> : errors.length === 0 ? 'no errors' :
+                errors.map(([type, count], index) => (
+                  <span key={type}>
+                    {index > 0 && ' · '}
+                    <Pill tone={PILL_TONE[ERROR_TYPE_TONE[type as ErrorType]]}>
+                      {ERROR_TYPE_LABEL[type as ErrorType]} ×{count}
+                    </Pill>
+                  </span>
+                ))}
               {session.self_corrected > 0 && (
                 <span className="session-note"> · {session.self_corrected} self-corrected</span>
               )}

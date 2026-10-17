@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Card } from '../ui/Card.tsx'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
@@ -176,6 +177,12 @@ export function ResidentDetail({
               Print
             </Button>
           </div>
+          {resident.top_pattern && (
+            <p className="resident-detail__pattern">
+              <span>Top pattern</span> Consistent with {resident.top_pattern.name}
+              <span> · Possible change, review</span>
+            </p>
+          )}
           <div className="resident-detail__monitoring">
             <div className="no-print">
               <MonitoringToggle
@@ -212,21 +219,19 @@ export function ResidentDetail({
         </header>
 
         <div className="resident-panels">
-          <section className="panel panel--wide">
-            <h2>Baseline</h2>
-            <BaselineChart scores={resident.scores} baseline={resident.baseline} />
-          </section>
+          <Card wide className="resident-detail__hero">
+            <div className="section-header">
+              <h2 className="section-header__title">Baseline</h2>
+              <span className="section-header__caption">Error score · their usual range</span>
+            </div>
+            <BaselineChart key={resident.id} scores={resident.scores} baseline={resident.baseline} />
+          </Card>
 
-          {loaded.drift && (
-            <DriftCard
-              slopePerDay={loaded.drift.slope_per_day}
-              days={loaded.drift.days}
-              trending={loaded.drift.trending}
-            />
-          )}
-
-          <section className="panel">
-            <h2>Daily scores</h2>
+          <Card>
+            <div className="section-header">
+              <h2 className="section-header__title">Daily scores</h2>
+              <span className="section-header__caption">Worst score each day</span>
+            </div>
             {days.length === 0 ? (
               <EmptyState message="No scored sessions yet." />
             ) : (
@@ -234,16 +239,19 @@ export function ResidentDetail({
                 <HeatCalendar days={days} />
               </div>
             )}
-          </section>
+          </Card>
 
-          <section className="panel">
-            <h2>Sessions</h2>
+          <Card>
+            <div className="section-header">
+              <h2 className="section-header__title">Sessions</h2>
+              <span className="section-header__caption">{resident.sessions.length} recorded</span>
+            </div>
             <SessionList
               sessions={resident.sessions}
               scores={resident.scores}
               threshold={resident.baseline.threshold}
             />
-          </section>
+          </Card>
 
           <FeedbackHistory
             state={
@@ -253,10 +261,20 @@ export function ResidentDetail({
             }
           />
 
-          <section className="panel">
-            <h2>Care records</h2>
+          <Card>
+            <div className="section-header">
+              <h2 className="section-header__title">Care records</h2>
+              <span className="section-header__caption">Context alongside routine changes</span>
+            </div>
             <ContextTimeline records={resident.care_records} />
-          </section>
+          </Card>
+          {loaded.drift && (
+            <DriftCard
+              slopePerDay={loaded.drift.slope_per_day}
+              days={loaded.drift.days}
+              trending={loaded.drift.trending}
+            />
+          )}
         </div>
       </>
     )
