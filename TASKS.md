@@ -61,7 +61,7 @@ Interface:
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
 
 ### T420 — Restyle: overview Sparkline → MicroBars
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: improvement
