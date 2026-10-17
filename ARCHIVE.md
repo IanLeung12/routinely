@@ -2971,3 +2971,58 @@ Interface: Read only `docs/CODEMAP.md`, `git show 597b34d --stat`, `web/src/live
 Acceptance:
 - note names `demo._top_pattern`, the `top_pattern` field and `web/src/overview/UnitOverview.tsx`.
 - `scripts/ci.sh` passes.
+
+### T174 — Test: demo top_pattern is set only for watch/flagged residents
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo_top_pattern.py (new)
+- owner: max_API_light
+- claimed: 2026-10-17T08:54Z
+- pr: #158
+- rating: 5/5 clear
+
+What: Pin the new `top_pattern` behaviour of `demo_residents()`: `None` for every `normal` resident; for each non-normal resident either `None` or a dict with exactly `pattern_id`, `name`, `urgency`, where `pattern_id` exists in the pattern library and `urgency` is a valid urgency value; and Mrs. K (`mrs-k`) has a non-None top pattern.
+Interface: Read only `pipeline/src/routine_watch/demo.py` (`_top_pattern`, `demo_residents`) and the pattern ids in `pipeline/src/routine_watch/patterns_library.py`. Don't change source files; if Mrs. K's top pattern is `None`, assert what it is and note it in the PR instead of changing code.
+Acceptance:
+- `cd pipeline && pytest tests/test_demo_top_pattern.py` and `scripts/ci.sh` pass.
+
+### T175 — Test: LiveSession calls onSessionEnd once per session_end
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/LiveSession.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:58Z
+- pr: #160
+- rating: 5/5 clear
+
+What: T156 (PR #155) added an `onSessionEnd` prop to `LiveSession` but `LiveSession.test.tsx` never exercises it; lock the "once per session_end" contract in.
+Interface: read `web/src/live/LiveSession.tsx` (prop `onSessionEnd?: (ended: LiveSessionEnded) => void`, effect near line 90) and the existing `web/src/live/LiveSession.test.tsx` for how it drives the mock stream. Edit only the test file.
+Acceptance:
+- a test where a flagged session ends asserts `onSessionEnd` called exactly once with the ended payload; re-render does not call it again
+- a test where a clear (unflagged) session ends also calls it once
+- omitting the prop doesn't throw
+- `cd web && npx vitest run src/live/LiveSession.test.tsx` and `scripts/ci.sh` pass
+
+### T176 — Docs: scenarios README explains session duration_s
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: tests/scenarios/README.md
+- owner: max_API_light
+- claimed: 2026-10-17T08:59Z
+- pr: #161
+- rating: 5/5 clear
+
+What: T157 (PR #154) let scenarios give history sessions and the expected session a `duration_s`, which is how `motor_slowing` becomes reachable; `tests/scenarios/README.md` doesn't mention it, so scenario authors won't find it.
+Interface: read `pipeline/src/routine_watch/replay.py` (`HistorySession.duration_s`, `Expected.duration_s`, docstrings near lines 98 and 142) and `pipeline/tests/test_replay_durations.py` for a worked example. Edit only the README: add a short "Session durations" section with a minimal YAML snippet showing both fields and one sentence on when to use them (duration-based patterns like motor slowing). Don't change the "scenarios here" table rows (a test parses it).
+Acceptance:
+- README has the section with a YAML example using the real field names
+- `scripts/ci.sh` passes (incl. `pipeline/tests/test_scenarios_readme.py`)
