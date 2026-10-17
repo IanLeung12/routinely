@@ -481,7 +481,7 @@ Acceptance:
 - No real camera, network or paid API in tests; `scripts/ci.sh` passes.
 
 ### T073 — Review: live screen hard-codes the tea steps instead of the session's task graph
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -490,7 +490,7 @@ Acceptance:
 - source: reviewer
 - owner: ian-claude-standard
 - claimed: 2026-10-17T05:57Z
-- pr: —
+- pr: #66
 
 What: `LiveSession.tsx` renders `<TaskMap steps={MOCK_STEPS}>` and `stepLabel()` looks labels up in `MOCK_STEPS` even when `source === 'live'`. The `/ws/live` protocol never tells the client which steps exist, so any non-tea task (T041 medication) or a renamed step shows the wrong map and "Session" labels.
 Interface: `live.session_messages` yields first `{"type": "session_start", "session_id", "task_id", "steps": [{"id", "label", "optional"}]}` from `scenario.graph`. Add it to the `LiveMessage` union; `useLiveSession` stores `steps` in state (mock stream sends the same message built from `MOCK_STEPS`); `LiveSession.tsx` uses `state.steps` for the map and labels, never `MOCK_STEPS` directly.
