@@ -575,7 +575,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T122 — Bug: live skeleton view stays "Waiting for camera" for the whole demo replay
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -583,7 +583,7 @@ Acceptance:
 - area: tests/scenarios/tea_skip_teabag_pour_twice/ (add frames.jsonl)
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T07:30Z
-- pr: —
+- pr: #102
 - source: tester
 
 What: The dashboard's live session uses scenario `tea_skip_teabag_pour_twice`, which has only `steps.jsonl` (no `frames.jsonl`), so `/ws/live` sends 0 `frame` messages (probe: session_start 1, step 7, step_state 8, error 2, frame 0) and the skeleton panel next to the task map stays empty. SPEC §10 step 3 shows the skeleton next to the task map.
