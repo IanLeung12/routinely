@@ -97,15 +97,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T152 — Shift handoff rows open the resident's alert
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: T151
 - area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/App.tsx, web/src/App.test.tsx
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T09:10Z
 - pr: —
 
 What: From the handoff, the incoming nurse should reach the evidence in one tap. Rows with an unreviewed alert get an "Open alert" button that goes to the alert screen. Check `pipeline/src/routine_watch/handoff.py` for whether rows carry alert ids; if not, use the first matching alert from `fetchAlerts()` by resident id (don't change the API here; note it in the PR).
