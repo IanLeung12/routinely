@@ -389,7 +389,7 @@ What: Split from T402 so the chart kit is built in parallel. Dependency-free SVG
 Acceptance: accessible name + text alternative (summary line); tests for ticks, end tag = latest value, band drawn only when given, keyboard focus; `cd web && npm test && npm run build`.
 
 ### T418 — Chart kit: BarChart (paired bars + callout)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: improvement
