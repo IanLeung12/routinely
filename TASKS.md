@@ -81,7 +81,7 @@ Acceptance:
 * No other file changed.
 
 ### T180 — Handoff: each row says what's normal for that resident
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
