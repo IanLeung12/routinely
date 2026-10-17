@@ -34,6 +34,7 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 - Never store raw video frames (privacy rule, SPEC §8). Skeletons, boxes, timestamps only.
 - Paid APIs (Gemini, Anthropic, Roboflow, Supabase, Langfuse) are budgeted, not unlimited. Every external client sits behind an interface with a fake used by default; tests, CI, e2e and the tester never make real calls. Real calls only when `LIVE_API=1` is set, through an on-disk response cache (`.cache/api/`, keyed by request hash) and with the cheapest model that works (dev: Gemini Flash-Lite/Flash, Claude Haiku). Send the fewest/smallest images possible.
 - Roboflow credits are scarce (50/month). Never call Roboflow's hosted inference API in code, tests or CI; run the detector locally from downloaded weights. Never start a Roboflow training run; humans do that.
+- Users: a **person** (watches themselves) and their **supervisors** (family, carer or nurse); see SPEC §3, §17. Don't write nurse-only UI.
 - Wording: the product **flags a change for review** and lists patterns it is **"consistent with"** plus what to rule out (SPEC §7.5). Never "diagnoses", never "has <condition>".
 - Keep PRs small. Prefer boring, readable code over clever code.
 - `main` is protected: PRs only, CI must pass. `scripts/mergeq.py` (host cron) sends PRs with merge conflicts back to the board so the next worker can fix them. Never force-push.
