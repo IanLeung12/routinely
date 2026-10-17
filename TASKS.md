@@ -24,7 +24,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T340 — Resident detail: give monitoring controls their own row under the name
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -32,7 +32,8 @@ Acceptance:
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/resident.css, web/src/resident/ResidentDetail.layout.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T16:56Z
-- pr: —
+- pr: #326
+- rating: 5/5 clear
 
 What: Tester (TESTREPORT, main dc9a6ef) noted Mrs. K's header packs the monitoring switch, monitoring history and consent between the name and the status chip, so it reads cramped. Keep name, room and status chip on the first row; move the monitoring block (toggle, history, consent, error message) to a separate row below.
 Interface: wrap name/room/StatusChip in `.resident-detail__title-row`; `.resident-detail__monitoring` becomes a full-width row after it. No behaviour change.
