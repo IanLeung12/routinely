@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T050 — Drift endpoint for a resident
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/api.py (add the route only), pipeline/src/routine_watch/demo.py (expose daily scores only if needed), pipeline/tests/test_api_drift.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:06Z
 - pr: —
 
 What: Back the drift card (T049) with data: `GET /residents/{resident_id}/drift` runs `routine_watch.drift.drift` over that resident's demo sessions, one point per day (mean score per date). The demo "slow drift" resident must come out `trending: true`, Mrs. K and the stable resident `false`.
