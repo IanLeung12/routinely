@@ -356,14 +356,14 @@ Acceptance:
 - `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
 
 ### T196 — App: Alerts list names residents; alert Back returns to where it was opened
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: web/src/App.tsx, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:43Z
 - pr: —
 
 What: The overview's Alerts list shows the raw id ("mrs-k: Change flagged for review"), not a name a nurse reads; and an alert opened from the shift handoff (T152, PR #177) goes Back to the overview instead of the handoff.
