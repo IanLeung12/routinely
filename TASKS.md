@@ -539,7 +539,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T344 — Scenario: tea_session_unclear_no_flag (whole session too unclear to score)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -547,7 +547,8 @@ Acceptance:
 - area: tests/scenarios/tea_session_unclear_no_flag/
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T17:05Z
-- pr: —
+- pr: #330
+- rating: 5/5 clear
 
 What: #322 added an optional `quality:` assertion to `expected.yaml`, but no scenario uses it. Add one where most tea steps come through low-confidence/unclear (bad lighting), with history that would otherwise flag, so replay must report `quality: unclear`, `score: 0.0`, `flag: false`.
 Interface: copy `tests/scenarios/tea_unclear_not_error/` as the template (read its README comment and `tests/scenarios/README.md`); see `Expected` and `score_session` in `pipeline/src/routine_watch/replay.py` and `pipeline/src/routine_watch/quality.py` for the rule (>40% unclear or <3 events).
