@@ -495,7 +495,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T271 — Review: handoff summary counts a paused resident as "nothing to review"
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
