@@ -553,14 +553,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T170 — Test: dashboard error wording matches explain.py
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_error_phrases_match_web.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:54Z
 - pr: —
 
 What: `web/src/ui/errorTypes.ts` `PHRASES` copies `pipeline/src/routine_watch/explain.py` `_PHRASES` by hand ("same wording as..."). Add a pipeline test that reads the TS file as text and checks each error type's phrase matches the Python template (Python `{step}` ↔ TS `${step}`).
