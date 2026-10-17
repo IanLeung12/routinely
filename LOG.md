@@ -393,3 +393,4 @@ T420 | light | codex | merged after orch branch update (bundle budget) | ~12k to
 T406 | standard | claude-opus | merged after conflict fix | ~300k tok
 T443 | light | claude-opus | merged after release | ~105k tok
 T445 | light | claude-sonnet | merged after release | ~?k tok
+T446 | light | claude-opus | merged first try | ~140k tok

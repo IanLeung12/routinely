@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1c0109c
+- last-reviewed: 02eed7c
 
 ## Tasks
 
@@ -347,4 +347,24 @@ Interface: read `scripts/smoke.sh`, `pipeline/src/routine_watch/api_routines.py`
 Acceptance:
 - `scripts/dev.sh up && scripts/smoke.sh; scripts/dev.sh down` passes on main with all new checks listed.
 - Never makes a real Gemini call (LIVE_API unset).
+- `scripts/ci.sh` passes.
+
+### T449 — Stability: lazy-load AlertView and ResidentDetail to restore first-load bundle headroom
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: orchestrator
+- deps: —
+- area: web/src/App.tsx, web/scripts/check-bundle.mjs, web/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: The first-load JS budget has been bumped three times today (92,200 → 96,000 → 96,500) and main sits ~250 B under it, so every remaining pre-freeze UI PR risks a red "first-load JS over budget" CI. Make `AlertView` and `ResidentDetail` lazy in `App.tsx` the same way `Handoff`/`RoutinesScreen` already are, then lower the budget to measured + ~1,500 B.
+Why: stops bundle-budget CI failures from blocking demo-path PRs in the last 90 minutes before the 01:30 UTC freeze.
+Interface: in `web/src/App.tsx` replace the eager `import { AlertView }` / `import { ResidentDetail }` with `lazy(() => import(...).then(m => ({ default: m.X })))` and render them inside the existing `<Suspense fallback={<Loading .../>}>` pattern used for `RoutinesScreen`. Read only `web/src/App.tsx`, `web/scripts/check-bundle.mjs` and the bundle section of `web/README.md`.
+Acceptance:
+- `cd web && npm run build && npm run check:bundle` passes; set `BUDGET_BYTES` to the new measured total + ~1,500 and record the measured number in the comment and in web/README.md.
+- Existing App tests pass (if a test uses sync `getBy` on the alert/resident screen right after navigation, switch only that query to `findBy`).
 - `scripts/ci.sh` passes.
