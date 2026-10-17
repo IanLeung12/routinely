@@ -224,7 +224,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T043 — Live session screen (WebSocket client + mock stream)
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
@@ -274,7 +274,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T046 — Confidence / unclear badge component
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
@@ -325,7 +325,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T049 — Slow-drift trend card component
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
@@ -412,7 +412,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T054 — Review: task map and skeleton view ignore the dark design tokens
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
