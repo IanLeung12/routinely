@@ -468,15 +468,15 @@ What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
 
 ### T408 — Roles: role chooser, role-aware shell, mock people/linking API
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/people/, web/src/App.tsx, web/src/App.test.tsx, web/src/mock/people.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T20:14Z
 - pr: —
 
 What: Ian's pivot (SPEC §3, §17): the app is for anyone, not just nurses. Two roles: **person** (watches themselves) and **supervisor** (family, carer or nurse). Frontend only; no pairing backend.
