@@ -243,7 +243,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T263 — Contracts: JSON Schema for GET /alerts/{id} and the feedback POST body
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
