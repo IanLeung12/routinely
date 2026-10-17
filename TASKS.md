@@ -149,7 +149,7 @@ Acceptance:
 - `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
 
 ### T206 — Test: alerts.top_pattern_for edge cases
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
