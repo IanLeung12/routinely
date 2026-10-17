@@ -24,7 +24,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T340 — Resident detail: give monitoring controls their own row under the name
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
