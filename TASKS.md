@@ -411,7 +411,7 @@ Acceptance:
 - `cd web && npx vitest run src/handoff` and `scripts/ci.sh` pass.
 
 ### T429 — Person view: privacy card (pause, what's stored, who sees it)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: feature
@@ -420,7 +420,8 @@ Acceptance:
 - area: web/src/person/PrivacyCard.tsx, web/src/person/PrivacyCard.test.tsx, web/src/person/privacyCard.css
 - owner: max_API_standard
 - claimed: 2026-10-17T21:28Z
-- pr: —
+- pr: #402
+- rating: 5/5 clear
 
 What: A self-contained card T409 ("My routine") will drop in. Not wired into any screen here.
 Why: inherits T409 — "skeletons only, no video" is the privacy story judges ask about.
