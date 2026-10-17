@@ -258,7 +258,7 @@ Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/te
 Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
 
 ### T294 — Test: shift handoff works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -267,7 +267,7 @@ Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes;
 - owner: ian-claude
 - claimed: 2026-10-17T15:14Z
 - pr: #285
-- rating: 5/5 clear
+- rating: 4/5 clear, but the task didn't say the handoff screen already had a user-event-free copy test to match, and 'fix CI on PR #285' hid that the failure was tsc in npm run build, not vitest
 - note: fix CI on PR #285
 
 What: Nurses at a shared workstation may use only the keyboard; prove the handoff screen's "Copy summary" and back button need no mouse.
