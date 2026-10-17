@@ -185,7 +185,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T026 — Replay harness uses the real recogniser
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T011, T020
