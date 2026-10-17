@@ -17,7 +17,7 @@ import './landing.css'
 
 /** The public one-pager behind the demo URL: what Routine Watch is, why it matters,
  * how it works, and a way into the dashboard. Separate Vite entry (`web/landing.html`),
- * so nothing here can break the nurse's screens. Copy stays plain and under ~350
+ * so nothing here can break the dashboard screens. Copy stays plain and under ~350
  * words; the wording rules of SPEC §7.5 apply to it like everywhere else.
  *
  * On the design system in `docs/DESIGN.md` since T407: the page is the dark instrument
@@ -39,7 +39,7 @@ const FLOW = [
   { label: 'Task graph', body: 'Steps checked against the order the task needs.' },
   { label: 'Personal baseline', body: 'Measured against her own two weeks, not an average.' },
   { label: 'Patterns', body: 'Rules rank what the change is consistent with.' },
-  { label: 'Nurse', body: 'One flag with its evidence, on the shift dashboard.' },
+  { label: 'Your dashboard', body: 'One flag with its evidence, for whoever is watching.' },
 ]
 
 /** Three of the patterns in the library (SPEC §7.5), as examples of the wording.
@@ -91,7 +91,7 @@ const STACK = [
 const WHY = [
   'Delirium is sudden confusion: common in long-term care, dangerous, easy to miss.',
   "Often it is the first visible sign of an infection, dehydration or a drug reaction; a day's warning can prevent an ER trip.",
-  'Nobody can watch every resident do every task, and screens like the CAM happen occasionally, not continuously.',
+  'Nobody can sit and watch every task, and screens like the CAM happen occasionally, not continuously.',
 ]
 
 /** The hero visual: the demo resident's own fortnight, her usual range behind it, and
@@ -139,9 +139,12 @@ export function Landing() {
         <header className="landing__hero">
           <h1 className="landing__title">Routine Watch</h1>
           <p className="landing__lead">
-            A privacy-preserving camera system that watches care-home residents do everyday
-            tasks — making tea, getting dressed — and flags a change for review when how they do
-            them moves away from their own normal.
+            A privacy-preserving camera system that watches everyday tasks — making tea,
+            getting dressed — and flags a change for review when how someone does them moves
+            away from their own normal.
+          </p>
+          <p className="landing__audience">
+            For anyone who wants it: on your own, or with family, a carer or a care home.
           </p>
           <p className="landing__actions">
             <a className="btn btn--primary" href="/">
@@ -185,7 +188,7 @@ export function Landing() {
             </ol>
           </Card>
           <p className="landing-section__note">
-            It runs on synthetic residents plus one live session on stage.{' '}
+            It runs on synthetic data plus one live session on stage.{' '}
             <a href="/?tour=1">Take the guided tour.</a>
           </p>
         </section>
@@ -195,8 +198,8 @@ export function Landing() {
             Consistent with, never a conclusion
           </h2>
           <p className="landing-section__note">
-            A flag says something changed. The pattern scorer says what kind, so a nurse knows
-            what to rule out first. It is not a medical assessment.
+            A flag says something changed. The pattern scorer says what kind, so you know what
+            to rule out first. It is not a medical assessment.
           </p>
           <ul className="landing-patterns">
             {PATTERNS.map((pattern) => (

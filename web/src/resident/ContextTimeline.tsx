@@ -7,7 +7,7 @@ import './contextTimeline.css'
  * pipeline neither detects nor interprets these. */
 export function ContextTimeline({ records }: { records: CareRecord[] }) {
   if (records.length === 0) {
-    return <p className="muted">No care records for this resident.</p>
+    return <p className="muted">No care records for this person.</p>
   }
 
   const newestFirst = [...records].sort((a, b) => recordTime(b.ts) - recordTime(a.ts))

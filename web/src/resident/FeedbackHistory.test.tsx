@@ -59,7 +59,7 @@ describe('FeedbackHistory', () => {
       `Confirmed · consistent with ${SUDDEN} · 2 Jan, 09:15`,
       `Confirmed · consistent with ${EVENING} · 1 Jan, 13:40`,
     ])
-    expect(screen.getByRole('region', { name: 'What nurses said' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Past feedback' })).toBeTruthy()
   })
 
   it('keeps the order the API sent, which is newest first', () => {
@@ -193,7 +193,7 @@ describe('FeedbackHistory', () => {
   it('says so when nobody has answered yet', () => {
     render(<FeedbackHistory state={ok()} />)
 
-    expect(screen.getByText('No nurse answers yet')).toBeTruthy()
+    expect(screen.getByText('No feedback yet')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
   })
 
@@ -207,7 +207,7 @@ describe('FeedbackHistory', () => {
   it('shows a loading line while the answers are on their way', () => {
     render(<FeedbackHistory state={{ status: 'loading' }} />)
 
-    expect(screen.getByRole('status').textContent).toBe('Loading nurse answers…')
+    expect(screen.getByRole('status').textContent).toBe('Loading feedback…')
   })
 
   it('stays review-only wording: consistent with, never a verdict on the resident', () => {
@@ -299,7 +299,7 @@ describe('FeedbackHistory on the resident detail', () => {
 
     const { container } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    const card = await screen.findByRole('region', { name: 'What nurses said' })
+    const card = await screen.findByRole('region', { name: 'Past feedback' })
     await waitFor(() =>
       expect(card.textContent).toContain(`Confirmed · consistent with ${EVENING} · 1 Jan, 13:40`),
     )

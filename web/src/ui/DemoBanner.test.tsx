@@ -7,7 +7,7 @@ afterEach(cleanup)
 describe('DemoBanner', () => {
   it('labels the synthetic data and review-only flags in a note', () => {
     render(<DemoBanner onReset={vi.fn()} />)
-    expect(screen.getByRole('note').textContent).toContain('Demo mode: synthetic residents, no real patient data. Changes are flagged for review only.')
+    expect(screen.getByRole('note').textContent).toContain('Demo mode: synthetic data, no real people. Changes are flagged for review only.')
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull()
   })
 

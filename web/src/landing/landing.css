@@ -34,6 +34,16 @@
   line-height: 1.45;
 }
 
+/* Who it is for, under the lead: anyone, on their own or with family, a carer or
+   a care home (SPEC section 17). Quieter than the lead, so the hero still reads as
+   one sentence first. */
+.landing__audience {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
 .landing__actions {
   display: flex;
   flex-wrap: wrap;
