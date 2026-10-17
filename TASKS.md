@@ -394,7 +394,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T437 — Routine builder backend: draft a routine from words or a setup video (Gemini)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -403,7 +403,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/routine_builder.py, pipeline/src/routine_watch/api_routines.py, pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/tasks/graph.py, pipeline/tests/test_routine_builder.py, pipeline/tests/fixtures/routine_builder/, .env.example
 - owner: ian-claude
 - claimed: 2026-10-17T22:03Z
-- pr: —
+- pr: #417
+- rating: 5/5 clear
 
 What: Ian's routine builder (option 1): a person or supervisor creates a new routine either by describing it in words or by uploading **one setup clip** of themselves doing it. Gemini (video understanding) or Claude (text) drafts the steps; code turns the draft into a valid task graph (same schema as `tasks/tea.yaml`) that the task map, error classifier and scoring already read.
 Why: shows the approach generalises beyond tea and makes strong use of Gemini (prize) in a 20-second demo shot.
