@@ -528,14 +528,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T260 — Test: first-load JS bundle size budget for the dashboard
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: web/scripts/check-bundle.mjs, web/package.json, web/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:26Z
 - pr: —
 
 What: #237 lazy-loaded the handoff, pattern library and tour screens to shrink first paint. Lock that in: a small Node script that, after `vite build`, sums the gzipped size of the JS the entry `index.html` loads (not lazy chunks) and fails above a budget set ~10% over today's size.
