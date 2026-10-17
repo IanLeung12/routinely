@@ -62,63 +62,6 @@ Acceptance:
 - test: after playing the demo live scenario through the pipeline, `/alerts/alert-mrs-k` contains its omission of `add_teabag` and perseveration of `pour` with the live session's session_id.
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
-### T164 — Guided demo tour behind ?tour=1
-- status: done
-- class: standard
-- priority: 3
-- kind: feature
-- source: proposed
-- deps: —
-- area: web/src/tour/ (new), web/src/App.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T09:28Z
-- pr: #186
-- rating: 5/5 clear
-
-What: Rationale: judges skim; a 7-step tour following SPEC §10 (baseline → live → alert → why → not just delirium → privacy) makes Clarity obvious and doubles as a presenter cue card. Off unless the URL has `?tour=1`, so it can't touch the demo path.
-Interface: `web/src/tour/Tour.tsx` renders a small fixed card (title, body, Back/Next/Close, "n of 7") from a `web/src/tour/steps.ts` array of `{ title, body }`; plain-language copy using "flags a change for review" / "consistent with", never "diagnose". App.tsx mounts `<Tour />` only when `new URLSearchParams(location.search).has('tour')`. No navigation automation.
-Acceptance:
-- Tests: hidden without the param; with it, Next/Back move through steps and Close hides it; copy contains no "diagnos".
-- `scripts/ci.sh` passes.
-
-### T177 — Test: handoff summary and Mrs. K's alert name the same errors
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: pipeline/tests/test_handoff_alert_errors.py
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T09:06Z
-- pr: #167
-- rating: 5/5 clear
-
-What: T166 (PR #159) made the handoff build its errors with `alerts.task_errors` and `alerts.session_id_for` so a nurse reads the same steps and times in both places. Lock that in with a test.
-Interface: Read only `pipeline/src/routine_watch/handoff.py` (`build_handoff`, `_window_sessions`, `_latest`), `pipeline/src/routine_watch/alerts.py` (`build_alerts`, `task_errors`, `session_id_for`) and `pipeline/tests/test_handoff.py` for fixtures. New test file only; don't change source.
-Acceptance:
-* For the demo data, the latest flagged session in the handoff window has error ids that all appear in that resident's alert `errors` (or, if the resident has no alert, the test asserts that explicitly and says why in a comment).
-* `session_id_for("mrs-k", 3) == "mrs-k-3"` is asserted.
-* `cd pipeline && python -m pytest tests/test_handoff_alert_errors.py -q` passes; `scripts/ci.sh` passes.
-
-### T178 — smoke.sh: check GET /handoff
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: —
-- area: scripts/smoke.sh
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T09:15Z
-- pr: #174
-- rating: 5/5 clear
-
-What: `scripts/smoke.sh` hits the API routes of a running stack but skips `GET /handoff` (shift handoff screen), so a broken handoff route wouldn't show up in smoke runs.
-Interface: Read only `scripts/smoke.sh` and the `/handoff` route in `pipeline/src/routine_watch/api.py` (returns `{window_hours, residents: [...], summary: str}`, `hours` query 1-168, default 12). Add checks in the existing PASS/FAIL style.
-Acceptance:
-* New check: `GET /handoff` returns 200 with `window_hours == 12`, a non-empty `residents` list and a non-empty `summary` string.
-* New check: `GET /handoff?hours=0` returns 422.
-* `bash -n scripts/smoke.sh` passes; `scripts/ci.sh` passes. Say in the PR whether you ran it against `scripts/dev.sh up`.
-
 ### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
 - status: todo
 - class: light
@@ -156,24 +99,6 @@ Acceptance:
 * Rows with history show the baseline line; residents with no history show nothing (no "NaN", no "0").
 * Wording never says "diagnos"/"has <condition>"; plain numbers a nurse reads in 10 s.
 * New/updated test in `web/src/handoff/Handoff.test.tsx`; `scripts/ci.sh` passes.
-
-### T181 — Alert screen: empty state when nothing is flagged
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
-- owner: max_API_light
-- claimed: 2026-10-17T09:08Z
-- pr: #169
-- rating: 5/5 clear
-
-What: Check how the alert screen behaves when the alert fetch returns nothing (e.g. before the live session flags Mrs. K). It should show the shared `EmptyState` with nurse-readable copy ("No change flagged for review."), not a blank area or an endless spinner.
-Interface: Read only `web/src/alert/AlertView.tsx`, `web/src/alert/api.ts`, `web/src/ui/EmptyState.tsx` and `web/src/alert/AlertView.test.tsx`. If the list is rendered elsewhere, edit only that file and note it in the PR.
-Acceptance:
-* Empty result renders `EmptyState` with the copy above; loading is still shown while fetching.
-* Test covers the empty result; `cd web && npx vitest run src/alert/AlertView.test.tsx` and `scripts/ci.sh` pass.
 
 ### T182 — Review: false alarm makes the alert 404, so the cause answer can't be saved
 - status: done
