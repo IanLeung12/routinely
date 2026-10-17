@@ -1,0 +1,48 @@
+# The demo's bad session: the resident never puts the teabag in, and pours twice.
+#
+# Two errors from SPEC section 7's table. The teabag step never happens at all, so it
+# is an omission and not a sequence error; the second pour comes after a stir, so it
+# is perseveration rather than one pour the recogniser saw twice. Everything else
+# about the session is normal, which is the point: one sentence of difference from
+# tea_normal has to produce exactly two errors and no others.
+#
+# The resident is SPEC section 8's "sudden spike" resident. Their own history is
+# quiet, with one bad session 30 hours ago, so this second bad session inside 48 hours
+# is what flags a change for a nurse to review.
+#
+# Written at step level: the recogniser is not here yet. See README.md.
+
+task: tea
+
+steps:
+  - fill_kettle
+  - boil
+  - get_cup
+  # teabag_in_cup never happens
+  - pour
+  - stir
+  - pour # again, with a step in between
+  - remove_teabag # fishing for a teabag that was never in the cup
+
+errors:
+  - { type: omission, step: teabag_in_cup }
+  - { type: perseveration, step: pour }
+score: 5.0 # omission 3.0 + perseveration 2.0
+
+# Twelve days of quiet tea, then one bad session 30 hours ago.
+history:
+  - { hours_ago: 312, score: 0.0 }
+  - { hours_ago: 288, score: 0.0 }
+  - { hours_ago: 264, score: 1.0 }
+  - { hours_ago: 240, score: 0.0 }
+  - { hours_ago: 216, score: 0.0 }
+  - { hours_ago: 192, score: 0.5 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 1.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, errors: { omission: 1, hesitation: 1 } }
+
+# Two sessions above this resident's own threshold inside 48 hours.
+flag: true

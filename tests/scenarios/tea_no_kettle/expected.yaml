@@ -1,0 +1,37 @@
+# The resident pours cold water: the kettle is never filled and never boiled.
+#
+# Written at frame level, so this is the scenario that exercises the capture format
+# and the stub recogniser end to end: frames.jsonl holds the one per-frame record
+# (SPEC section 16) and the steps below are read off the objects a hand is on.
+#
+# Two required steps never happen, so both are omissions. Neither is a sequence error:
+# a sequence error needs the dependency to be done later, and these never are.
+#
+# `pour` is recognised here only because nothing else in the tea graph is done with a
+# kettle and a cup together. `fill_kettle` and `boil` are both done with the kettle
+# alone, which is exactly what the stub recogniser cannot tell apart, and exactly why
+# this scenario leaves them out. See README.md.
+
+task: tea
+
+steps:
+  - get_cup
+  - teabag_in_cup
+  - pour
+  - stir
+  - remove_teabag
+
+errors:
+  - { type: omission, step: fill_kettle }
+  - { type: omission, step: boil }
+score: 6.0
+assisted: false # one person in frame throughout
+
+# Three quiet sessions, so there is a baseline, and this one session is well above it.
+# It still does not flag: a single bad session never alerts (SPEC section 7).
+history:
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, score: 0.5 }
+  - { hours_ago: 24, score: 0.0 }
+
+flag: false

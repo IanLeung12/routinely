@@ -1,0 +1,7 @@
+{"event_id": "tea-skip-pour-twice-1:s0", "session_id": "tea-skip-pour-twice-1", "step_id": "fill_kettle", "objects": ["kettle"], "t_start": 1.5, "t_end": 8.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s1", "session_id": "tea-skip-pour-twice-1", "step_id": "boil", "objects": ["kettle"], "t_start": 9.5, "t_end": 12.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s2", "session_id": "tea-skip-pour-twice-1", "step_id": "get_cup", "objects": ["cup"], "t_start": 13.5, "t_end": 17.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s3", "session_id": "tea-skip-pour-twice-1", "step_id": "pour", "objects": ["kettle", "cup"], "t_start": 70.0, "t_end": 79.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s4", "session_id": "tea-skip-pour-twice-1", "step_id": "stir", "objects": ["spoon", "cup"], "t_start": 81.5, "t_end": 88.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s5", "session_id": "tea-skip-pour-twice-1", "step_id": "pour", "objects": ["kettle", "cup"], "t_start": 90.0, "t_end": 96.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "tea-skip-pour-twice-1:s6", "session_id": "tea-skip-pour-twice-1", "step_id": "remove_teabag", "objects": ["teabag", "spoon"], "t_start": 99.0, "t_end": 104.0, "confidence": 0.93, "source": "rule"}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "ObjectLabel": {
+      "description": "Classes the local detector was trained on (SPEC section 6.1).",
+      "enum": [
+        "kettle",
+        "cup",
+        "teabag",
+        "spoon",
+        "milk",
+        "sugar",
+        "hand",
+        "pouring"
+      ],
+      "title": "ObjectLabel",
+      "type": "string"
+    },
+    "StepSource": {
+      "description": "What decided a step happened: the state rules, or the Gemini verifier.",
+      "enum": [
+        "rule",
+        "verifier"
+      ],
+      "title": "StepSource",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A step of the task, seen happening between two times (SPEC section 6.2).",
+  "properties": {
+    "event_id": {
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "session_id": {
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    },
+    "step_id": {
+      "description": "The step in the task graph, e.g. 'teabag_in_cup'.",
+      "minLength": 1,
+      "title": "Step Id",
+      "type": "string"
+    },
+    "objects": {
+      "description": "Objects the step was done with.",
+      "items": {
+        "$ref": "#/$defs/ObjectLabel"
+      },
+      "title": "Objects",
+      "type": "array"
+    },
+    "t_start": {
+      "minimum": 0.0,
+      "title": "T Start",
+      "type": "number"
+    },
+    "t_end": {
+      "minimum": 0.0,
+      "title": "T End",
+      "type": "number"
+    },
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "source": {
+      "$ref": "#/$defs/StepSource"
+    },
+    "unclear": {
+      "default": false,
+      "description": "Low confidence and the verifier could not resolve it. Never an error.",
+      "title": "Unclear",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "event_id",
+    "session_id",
+    "step_id",
+    "objects",
+    "t_start",
+    "t_end",
+    "confidence",
+    "source"
+  ],
+  "title": "StepEvent",
+  "type": "object"
+}

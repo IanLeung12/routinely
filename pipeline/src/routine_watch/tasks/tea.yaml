@@ -1,0 +1,74 @@
+# Making tea, as a dependency graph (SPEC section 7).
+#
+# A task is a graph of dependencies, not a fixed sequence. The `deps` lists below are
+# the only ordering rules, so "fill kettle" and "get cup" may happen in either order
+# while "teabag in cup" has to happen before "pour".
+#
+# Per step:
+#   id         the step_id that appears in step events
+#   label      how the dashboard's task map names it
+#   deps       steps that must happen before this one (default: none)
+#   objects    the detector classes the step may be done with; anything else is a
+#              substitution error. `aliases` below adds extra names for a class.
+#   optional   skipping it is not an error (default: false)
+#   once_only  doing it again, after other steps, is perseveration (default: true)
+#
+# No required step depends on an optional one, so skipping milk or sugar can never make
+# a later step impossible. The loader enforces that.
+
+# `id` is the task_id carried by sessions and step events; `tea` (the file name) is what
+# load_task() takes.
+id: make_tea
+title: Make tea
+
+# Extra names that mean the same detector class: "spoon or teaspoon both count".
+aliases:
+  teaspoon: spoon
+
+steps:
+  - id: fill_kettle
+    label: Fill the kettle
+    objects: [kettle]
+
+  - id: boil
+    label: Boil the kettle
+    deps: [fill_kettle]
+    objects: [kettle]
+
+  - id: get_cup
+    label: Get a cup
+    objects: [cup]
+
+  - id: teabag_in_cup
+    label: Put the teabag in the cup
+    deps: [get_cup]
+    objects: [teabag, cup]
+
+  - id: pour
+    label: Pour the water
+    deps: [boil, teabag_in_cup]
+    objects: [kettle, cup]
+
+  - id: milk
+    label: Add milk
+    deps: [pour]
+    objects: [milk, cup]
+    optional: true
+
+  - id: sugar
+    label: Add sugar
+    deps: [pour]
+    objects: [sugar, spoon]
+    optional: true
+
+  - id: stir
+    label: Stir
+    deps: [pour]
+    objects: [spoon, cup]
+    # Stirring again is normal, so a repeat is never perseveration.
+    once_only: false
+
+  - id: remove_teabag
+    label: Take the teabag out
+    deps: [pour]
+    objects: [teabag, spoon]

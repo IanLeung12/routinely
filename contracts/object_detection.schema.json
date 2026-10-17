@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "An axis-aligned box, normalised to the frame: top-left to bottom-right, 0..1.",
+      "properties": {
+        "x1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y1",
+          "type": "number"
+        },
+        "x2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X2",
+          "type": "number"
+        },
+        "y2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y2",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "ObjectLabel": {
+      "description": "Classes the local detector was trained on (SPEC section 6.1).",
+      "enum": [
+        "kettle",
+        "cup",
+        "teabag",
+        "spoon",
+        "milk",
+        "sugar",
+        "hand",
+        "pouring"
+      ],
+      "title": "ObjectLabel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One object box in one frame, from the local detector (SPEC section 6.1).\n\nThe detector always runs locally from downloaded weights, never hosted inference.",
+  "properties": {
+    "label": {
+      "$ref": "#/$defs/ObjectLabel"
+    },
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "box": {
+      "$ref": "#/$defs/BoundingBox"
+    },
+    "track_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Stable across frames while the tracker holds the object.",
+      "title": "Track Id"
+    }
+  },
+  "required": [
+    "label",
+    "confidence",
+    "box"
+  ],
+  "title": "ObjectDetection",
+  "type": "object"
+}

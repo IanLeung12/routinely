@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+html,body{margin:0;background:#020617}
+svg{display:block;font-family:'JetBrains Mono',monospace}
+.n{font-size:14px;font-weight:600;fill:#f1f5f9}
+.s{font-size:11px;fill:#94a3b8}
+.h{font-size:12px;font-weight:700;letter-spacing:1px}
+.a{font-size:10.5px;fill:#cbd5e1}
+</style></head><body>
+<svg width="1620" height="860" viewBox="0 0 1620 860" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+  <marker id="ar" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#64748b"/></marker>
+  <marker id="arR" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#fb7185"/></marker>
+  <marker id="arO" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#fb923c"/></marker>
+</defs>
+<rect width="1620" height="860" fill="url(#grid)"/>
+
+<text x="30" y="36" style="font-size:22px;font-weight:700;fill:#f8fafc">Routine Watch · system architecture</text>
+<text x="30" y="58" class="s" style="font-size:12px">Recommended picks shown for open decisions A / B / C · only skeletons, boxes and events cross the privacy boundary</text>
+
+<!-- boundaries -->
+<rect x="30" y="80" width="975" height="440" rx="12" fill="none" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,4"/>
+<text x="46" y="100" class="h" fill="#fb7185">DEMO LAPTOP · PRIVACY BOUNDARY (C: whole pipeline runs here)</text>
+<rect x="1060" y="80" width="300" height="440" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4"/>
+<text x="1076" y="100" class="h" fill="#fbbf24">VULTR</text>
+
+<!-- stage headers -->
+<text x="50" y="128" class="h" fill="#64748b">1 CAPTURE</text>
+<text x="510" y="128" class="h" fill="#64748b">STREAM</text>
+<text x="750" y="128" class="h" fill="#64748b">2 UNDERSTAND</text>
+<text x="1080" y="128" class="h" fill="#64748b">3 LEARN · 4 ALERT</text>
+<text x="1400" y="128" class="h" fill="#64748b">SERVICES</text>
+
+<!-- ===== arrows (behind boxes) ===== -->
+<g fill="none" stroke="#64748b" stroke-width="1.5">
+  <!-- webcam fan-out -->
+  <path d="M210 258 H235 V168 H258" marker-end="url(#ar)"/>
+  <path d="M235 258 H258" marker-end="url(#ar)"/>
+  <path d="M235 258 V348 H258" marker-end="url(#ar)"/>
+  <!-- detectors to stream -->
+  <path d="M470 168 H490 V240 H508" marker-end="url(#ar)"/>
+  <path d="M470 258 H490 V240"/>
+  <!-- recorded -> stream -->
+  <path d="M610 182 V198" marker-end="url(#ar)"/>
+  <!-- stream -> recogniser -->
+  <path d="M710 240 H748" marker-end="url(#ar)"/>
+  <!-- understand chain -->
+  <path d="M870 268 V298" marker-end="url(#ar)"/>
+  <path d="M870 356 V386" marker-end="url(#ar)"/>
+  <!-- uplink -->
+  <path d="M990 414 H1030 V158 H1078" marker-end="url(#ar)"/>
+  <!-- cloud chain -->
+  <path d="M1210 186 V218" marker-end="url(#ar)"/>
+  <path d="M1210 276 V318" marker-end="url(#ar)"/>
+  <path d="M1210 376 V418" marker-end="url(#ar)"/>
+  <path d="M1150 476 V598" marker-end="url(#ar)"/>
+  <!-- backend <-> tiger -->
+  <path d="M1340 158 H1398" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- synthetic -> tiger -->
+  <path d="M1495 216 V188" marker-end="url(#ar)"/>
+  <!-- alert <-> claude -->
+  <path d="M1340 338 H1398" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- alert -> langfuse -->
+  <path d="M1340 364 H1370 V428 H1398" marker-end="url(#ar)"/>
+</g>
+<!-- verifier path (decision A) -->
+<g fill="none" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="5,4">
+  <path d="M470 348 H610 V588" marker-end="url(#arR)"/>
+  <path d="M710 616 H730 V258 H748" marker-end="url(#arR)"/>
+</g>
+<!-- supabase optional (decision B) -->
+<path d="M1400 628 H1342" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arO)"/>
+
+<!-- arrow labels -->
+<text x="217" y="248" class="a">frames</text>
+<text x="1052" y="300" class="a" transform="rotate(-90 1052 300)" text-anchor="middle">uplink: events · sessions · skeletons</text>
+<text x="602" y="470" class="a" text-anchor="end" style="fill:#fda4af">A: cropped frames,</text>
+<text x="602" y="484" class="a" text-anchor="end" style="fill:#fda4af">low-confidence only</text>
+<text x="738" y="560" class="a" style="fill:#fda4af">step + object</text>
+<text x="1158" y="545" class="a">live map · alerts</text>
+
+<!-- ===== boxes ===== -->
+<!-- helper: opaque under-rect then styled rect -->
+<!-- webcam -->
+<rect x="50" y="228" width="160" height="60" rx="6" fill="#0f172a"/><rect x="50" y="228" width="160" height="60" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="64" y="253" class="n">Webcam</text><text x="64" y="272" class="s">angled at counter</text>
+
+<!-- mediapipe -->
+<rect x="260" y="140" width="210" height="56" rx="6" fill="#0f172a"/><rect x="260" y="140" width="210" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="274" y="163" class="n">MediaPipe</text><text x="274" y="182" class="s">pose + hand landmarks</text>
+<!-- roboflow -->
+<rect x="260" y="230" width="210" height="56" rx="6" fill="#0f172a"/><rect x="260" y="230" width="210" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="274" y="253" class="n">Roboflow detector</text><text x="274" y="272" class="s">local weights · ~10 fps</text>
+<!-- ring buffer -->
+<rect x="260" y="320" width="210" height="56" rx="6" fill="#0f172a"/><rect x="260" y="320" width="210" height="56" rx="6" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.5"/>
+<text x="274" y="343" class="n">Frame ring buffer</text><text x="274" y="362" class="s">RAM · ~5 s · never stored</text>
+
+<!-- recorded -->
+<rect x="510" y="138" width="200" height="44" rx="6" fill="#0f172a"/><rect x="510" y="138" width="200" height="44" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="524" y="157" class="n" style="font-size:13px">Recorded sessions</text><text x="524" y="174" class="s">fallback · tests</text>
+<!-- stream bus -->
+<rect x="510" y="200" width="200" height="80" rx="6" fill="#0f172a"/><rect x="510" y="200" width="200" height="80" rx="6" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+<text x="524" y="226" class="n">Capture records</text><text x="524" y="246" class="s">JSONL · one per frame</text><text x="524" y="263" class="s">skeleton · boxes · t</text>
+
+<!-- recogniser -->
+<rect x="750" y="212" width="240" height="56" rx="6" fill="#0f172a"/><rect x="750" y="212" width="240" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="764" y="235" class="n">Step recogniser</text><text x="764" y="254" class="s">interaction rules → steps</text>
+<!-- tracker -->
+<rect x="750" y="300" width="240" height="56" rx="6" fill="#0f172a"/><rect x="750" y="300" width="240" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="764" y="323" class="n">Task graph + errors</text><text x="764" y="342" class="s">omission · sequence · repeat…</text>
+<!-- session scorer -->
+<rect x="750" y="388" width="240" height="56" rx="6" fill="#0f172a"/><rect x="750" y="388" width="240" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="764" y="411" class="n">Session + score</text><text x="764" y="430" class="s">assisted · unclear · slips</text>
+<text x="764" y="472" class="a">runs offline · verifier optional</text>
+
+<!-- gemini -->
+<rect x="510" y="590" width="200" height="56" rx="6" fill="#0f172a"/><rect x="510" y="590" width="200" height="56" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="524" y="613" class="n">Gemini verifier</text><text x="524" y="632" class="s">3 s timeout → "unclear"</text>
+
+<!-- cloud -->
+<rect x="1080" y="130" width="260" height="56" rx="6" fill="#0f172a"/><rect x="1080" y="130" width="260" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="1094" y="153" class="n">FastAPI backend</text><text x="1094" y="172" class="s">ingest · REST · WebSocket</text>
+<rect x="1080" y="220" width="260" height="56" rx="6" fill="#0f172a"/><rect x="1080" y="220" width="260" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="1094" y="243" class="n">Baseline + change</text><text x="1094" y="262" class="s">≥2 bad sessions / 48 h → flag</text>
+<rect x="1080" y="320" width="260" height="56" rx="6" fill="#0f172a"/><rect x="1080" y="320" width="260" height="56" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+<text x="1094" y="343" class="n">Alert builder</text><text x="1094" y="362" class="s">evidence · checks · feedback</text>
+<rect x="1080" y="420" width="260" height="56" rx="6" fill="#0f172a"/><rect x="1080" y="420" width="260" height="56" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1094" y="443" class="n">Nurse dashboard</text><text x="1094" y="462" class="s">React · map · evidence · replay</text>
+
+<!-- nurse -->
+<rect x="1080" y="600" width="260" height="56" rx="6" fill="#0f172a"/><rect x="1080" y="600" width="260" height="56" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1094" y="623" class="n">5 Nurse</text><text x="1094" y="642" class="s">confirm / false alarm</text>
+
+<!-- services -->
+<rect x="1400" y="130" width="190" height="56" rx="6" fill="#0f172a"/><rect x="1400" y="130" width="190" height="56" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1414" y="153" class="n">Tiger Data</text><text x="1414" y="172" class="s">hypertables · rollups</text>
+<rect x="1400" y="218" width="190" height="56" rx="6" fill="#0f172a"/><rect x="1400" y="218" width="190" height="56" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1414" y="241" class="n">Synthetic data</text><text x="1414" y="260" class="s">14 d history · care rec.</text>
+<rect x="1400" y="310" width="190" height="56" rx="6" fill="#0f172a"/><rect x="1400" y="310" width="190" height="56" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1414" y="333" class="n">Claude</text><text x="1414" y="352" class="s">summary, evidence only</text>
+<rect x="1400" y="400" width="190" height="56" rx="6" fill="#0f172a"/><rect x="1400" y="400" width="190" height="56" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1414" y="423" class="n">Langfuse</text><text x="1414" y="442" class="s">LLM traces · feedback</text>
+<rect x="1400" y="600" width="190" height="56" rx="6" fill="#0f172a"/><rect x="1400" y="600" width="190" height="56" rx="6" fill="rgba(251,146,60,0.15)" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="1414" y="623" class="n">Supabase</text><text x="1414" y="642" class="s">B: phone push (opt.)</text>
+
+<!-- decisions strip -->
+<rect x="30" y="700" width="1560" height="92" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+<text x="46" y="724" class="h" fill="#e2e8f0">OPEN DECISIONS (recommended pick drawn)</text>
+<text x="46" y="748" class="a" style="font-size:12px">A  Verifier privacy: send cropped, low-res counter frames only on low confidence, never stored  ·  alt: send a rendered skeleton/box image</text>
+<text x="46" y="766" class="a" style="font-size:12px">B  Alerts: same FastAPI WebSocket as the live view; Supabase only if we add phone push  ·  alt: Supabase Realtime for all alerts</text>
+<text x="46" y="784" class="a" style="font-size:12px">C  Placement: whole pipeline on the laptop, cloud gets events (survives bad Wi-Fi)  ·  alt: laptop captures only, pipeline on Vultr</text>
+
+<!-- legend -->
+<g transform="translate(30,816)">
+  <rect width="14" height="14" rx="3" fill="rgba(6,78,59,0.4)" stroke="#34d399"/><text x="20" y="11" class="a">our code</text>
+  <rect x="120" width="14" height="14" rx="3" fill="rgba(8,51,68,0.4)" stroke="#22d3ee"/><text x="140" y="11" class="a">UI / users</text>
+  <rect x="250" width="14" height="14" rx="3" fill="rgba(76,29,149,0.4)" stroke="#a78bfa"/><text x="270" y="11" class="a">database</text>
+  <rect x="370" width="14" height="14" rx="3" fill="rgba(30,41,59,0.5)" stroke="#94a3b8"/><text x="390" y="11" class="a">external service / input</text>
+  <rect x="580" width="14" height="14" rx="3" fill="rgba(251,146,60,0.3)" stroke="#fb923c"/><text x="600" y="11" class="a">data stream (single format for live, fallback, tests)</text>
+  <rect x="980" width="14" height="14" rx="3" fill="rgba(136,19,55,0.4)" stroke="#fb7185"/><text x="1000" y="11" class="a">privacy-sensitive · dashed = pixels leave laptop</text>
+</g>
+</svg>
+</body></html>
