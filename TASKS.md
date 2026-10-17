@@ -61,24 +61,6 @@ Acceptance:
 * Also one line that handoff rows open the resident's alert by looking up the id in `GET /alerts` (T152, `web/src/handoff/Handoff.tsx` `alertByResident`).
 * No other file changed.
 
-### T186 — Live screen: ?task=meds opens on the medication routine
-- status: done
-- class: light
-- priority: 2
-- kind: feature
-- deps: —
-- area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T09:15Z
-- pr: #173
-- rating: 5/5 clear
-
-What: The presenter wants to link straight to the second routine. `LiveScreen` (T161) always starts on tea; let `?task=meds` pick "Medication with water" first; `?task=tea`, anything else or no param keeps tea. Clicking a button still switches as now.
-Interface: Read only `web/src/live/LiveScreen.tsx` and its test. Read `window.location.search` once in the `useState` initializer (`URLSearchParams`); no router, don't write to the URL.
-Acceptance:
-* Tests: no param → "Making tea" `aria-pressed=true`; `?task=meds` → "Medication with water" pressed and `LiveSession` gets `meds_skip_water`; `?task=bogus` → tea.
-* `scripts/ci.sh` passes.
-
 ### T187 — Test: App shows the live routine picker with tea selected
 - status: todo
 - class: light
@@ -95,44 +77,6 @@ Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/Li
 Acceptance:
 * Test: the "Routine to watch" group renders with "Making tea" pressed and "Medication with water" not pressed.
 * `scripts/ci.sh` passes.
-
-### T188 — Docs: DEMO.md covers /demo/reset and ?task=meds
-- status: done
-- class: light
-- priority: 2
-- kind: docs
-- deps: —
-- area: docs/DEMO.md
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T09:22Z
-- pr: #179
-- rating: 5/5 clear
-
-What: The demo runbook doesn't say how to put the demo back between rehearsals or how to open the medication routine directly. Add both.
-Interface: read `docs/DEMO.md`, `pipeline/src/routine_watch/api.py` (`demo_reset`, `_demo_reset_enabled`), `web/src/live/LiveScreen.tsx` (the `?task=meds` query), `.env.example` (`DEMO_RESET`).
-Acceptance:
-- DEMO.md has a "Between rehearsals" step: `curl -X POST http://localhost:8000/demo/reset`, only works with `OFFLINE_MODE=true` or `DEMO_RESET=1`, returns `{"ok": true}`.
-- DEMO.md mentions opening the live screen with `?task=meds` for the medication routine (tea stays the default).
-- Only docs/DEMO.md changes; `scripts/ci.sh` passes.
-
-### T189 — Demo banner: "Reset demo" button
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- deps: —
-- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-17T09:23Z
-- pr: #182
-- rating: 5/5 clear
-
-What: Presenters need a one-click way to undo a rehearsal's flag and feedback. Add a "Reset demo" button to the demo banner that POSTs `/demo/reset` and then reloads the page.
-Interface: `DemoBanner({ onDismiss?, onReset? })`; default `onReset` does `fetch(\`${apiBase}/demo/reset\`, {method:'POST'})` using the API base from `web/src/config.ts`, then `window.location.reload()`. On a non-2xx/network error show inline "Couldn't reset the demo" text, no throw.
-Acceptance:
-- Button is a secondary `btn`, labelled "Reset demo"; disabled while the request is in flight.
-- Tests (mock fetch): success calls reload; 404 shows the error text and doesn't reload.
-- `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
 
 ### T190 — Test: LiveScreen ignores unknown ?task values
 - status: done
