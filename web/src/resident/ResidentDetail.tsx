@@ -179,8 +179,7 @@ export function ResidentDetail({
           </div>
           {resident.top_pattern && (
             <p className="resident-detail__pattern">
-              <span>Top pattern</span> Consistent with {resident.top_pattern.name}
-              <span> · Possible change, review</span>
+              Consistent with {resident.top_pattern.name} · Possible change, review
             </p>
           )}
           <div className="resident-detail__monitoring">
@@ -222,15 +221,13 @@ export function ResidentDetail({
           <Card wide className="resident-detail__hero">
             <div className="section-header">
               <h2 className="section-header__title">Baseline</h2>
-              <span className="section-header__caption">Error score · their usual range</span>
             </div>
-            <BaselineChart key={resident.id} scores={resident.scores} baseline={resident.baseline} />
+            <BaselineChart scores={resident.scores} baseline={resident.baseline} />
           </Card>
 
           <Card>
             <div className="section-header">
               <h2 className="section-header__title">Daily scores</h2>
-              <span className="section-header__caption">Worst score each day</span>
             </div>
             {days.length === 0 ? (
               <EmptyState message="No scored sessions yet." />
@@ -264,7 +261,6 @@ export function ResidentDetail({
           <Card>
             <div className="section-header">
               <h2 className="section-header__title">Care records</h2>
-              <span className="section-header__caption">Context alongside routine changes</span>
             </div>
             <ContextTimeline records={resident.care_records} />
           </Card>

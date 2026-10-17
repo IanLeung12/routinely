@@ -35,6 +35,10 @@
 }
 
 .resident-detail .session-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1);
   grid-column: 1 / -1;
   grid-row: 2;
   overflow-wrap: anywhere;
@@ -42,7 +46,8 @@
   font-size: var(--text-xs);
 }
 
-.resident-detail .session-detail .pill {
+.resident-detail .session-detail .pill,
+.resident-detail .session-detail .error-chip {
   white-space: normal;
 }
 @media (max-width: 480px) {

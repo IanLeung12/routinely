@@ -59,11 +59,11 @@ describe('ResidentDetail', () => {
       scores={[]}
       threshold={4.5}
     />)
-    expect(container.querySelectorAll('.pill--negative')).toHaveLength(2)
-    expect(container.querySelectorAll('.pill--watch')).toHaveLength(2)
+    expect(container.querySelectorAll('.error-chip--red')).toHaveLength(2)
+    expect(container.querySelectorAll('.error-chip--amber')).toHaveLength(2)
     expect(screen.getByText('assisted, not counted')).toBeTruthy()
     expect(screen.getByText(/1 self-corrected/)).toBeTruthy()
-    expect(screen.getAllByLabelText('Not scored')).toHaveLength(2)
+    expect(screen.getAllByText('—')).toHaveLength(2)
   })
 
   it('marks medication changes and fever readings without tinting routine temperature readings', () => {
@@ -132,9 +132,8 @@ describe('ResidentDetail', () => {
     const rows = [...container.querySelectorAll('.session-row')]
     expect(rows[0].querySelector('.session-when')?.textContent).toBe('1 Jan, 18:02')
     expect(rows[0].querySelector('.session-score')?.textContent).toBe('5.0')
-    expect(rows[0].querySelector('.session-detail')?.textContent).toContain(
-      'skipped step ×1 · long pause ×2',
-    )
+    expect(within(rows[0] as HTMLElement).getByText('skipped step ×1')).toBeTruthy()
+    expect(within(rows[0] as HTMLElement).getByText('long pause ×2')).toBeTruthy()
     expect(rows[0].querySelector('.session-detail')?.textContent).toContain('above threshold')
     expect(rows[0].querySelector('.session-duration')?.textContent).toBe('4m 01s')
     expect(rows[0].className).toContain('session-row--above')
