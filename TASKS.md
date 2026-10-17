@@ -7,23 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T032 — Claude alert summariser behind the Explainer interface
-- status: done
-- class: standard
-- priority: 2
-- kind: feature
-- deps: T031
-- area: pipeline/src/routine_watch/explain_claude.py, pipeline/tests/test_explain_claude.py, pipeline/pyproject.toml
-- owner: ian-claude-standard
-- claimed: 2026-10-17T05:50Z
-- pr: #62
-
-What: SPEC §6.4: Claude writes the plain-language summary from the detected evidence only. Template stays the default and the fallback.
-Interface: `ClaudeExplainer(client=None, model=env ANTHROPIC_MODEL or "claude-haiku-4-5")` implementing `explain.Explainer.summarise(errors, baseline, context)`; calls go through `api_cache.cached_call("anthropic", ...)`; prompt forbids diagnosis, speculation and facts not in input. Output guard: if the reply contains "diagnos" (any case), any number or m:ss not present in the template output/inputs, or exceeds 3 sentences, return `TemplateExplainer` output instead. Any exception/timeout → template. `get_explainer()` returns Template unless `LIVE_API=1` and `ANTHROPIC_API_KEY` set.
-Acceptance:
-- Tests with an injected fake client only: good reply used; "diagnosed" reply rejected; invented timestamp rejected; exception → template; `get_explainer()` default is Template.
-- `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
-
 ### T037 — Skeleton replay API for evidence
 - status: in-review
 - class: standard
@@ -127,23 +110,6 @@ Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void }
 Acceptance:
 - Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
 - note: fix CI on PR #52: orch changed the required text to avoid "diagnosis" (test_privacy.py). Update the component and test on branch task/T052-demo-banner, then set auto-merge.
-- `cd web && npm run lint && npm test && npm run build` passes.
-
-### T053 — Review: offline feedback fallback hides API rejections from the nurse
-- status: done
-- class: light
-- priority: 1
-- deps: —
-- area: web/src/alert/api.ts, web/src/alert/api.test.ts
-- source: reviewer
-- owner: max-codex-light-2
-- claimed: 2026-10-17T05:23Z
-- pr: #41
-
-What: `postFeedback` falls back to writing the verdict into the in-memory mock whenever `response.ok` is false, so a 404/422/500 from a reachable API reports success while the feedback is lost on refresh. Only a network failure (fetch throws) should fall back to the mock. Read only the files in `area`.
-Interface: keep the signature. If fetch throws → current mock fallback. If the response is not ok → throw `new Error(`Feedback not saved (${response.status})`)`. Leave `fetchAlerts`/`fetchAlert` as they are (read-only).
-Acceptance:
-- Vitest: a 500 response rejects and does not mutate `mockAlerts`; a network error still records locally; an ok response returns the API alert.
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T054 — Review: task map and skeleton view ignore the dark design tokens
