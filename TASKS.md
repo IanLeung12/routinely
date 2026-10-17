@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T404 — Redesign 4/6: resident detail
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: improvement
 - deps: T401, T421, T422
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/SessionList.tsx, web/src/resident/ContextTimeline.tsx, web/src/resident/*.css, web/src/resident/ResidentDetail.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_standard-2
+- claimed: 2026-10-17T22:36Z
 - pr: —
 
 What: Fey "stock detail" layout for a resident: header (name, status pill, top pattern), hero BaselineChart card with range selector, then a two-column grid of cards (heat calendar, sessions as dense rows with error pills, care-record timeline with tinted markers for new meds/fever). Faint warm vignette background per `docs/DESIGN.md`.
