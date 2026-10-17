@@ -1,0 +1,9 @@
+{"event_id":"tea-milk-sugar-1:s0","session_id":"tea-milk-sugar-1","step_id":"fill_kettle","objects":["kettle"],"t_start":2,"t_end":9.5,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s1","session_id":"tea-milk-sugar-1","step_id":"get_cup","objects":["cup"],"t_start":11,"t_end":14.5,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s2","session_id":"tea-milk-sugar-1","step_id":"boil","objects":["kettle"],"t_start":16,"t_end":18.5,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s3","session_id":"tea-milk-sugar-1","step_id":"teabag_in_cup","objects":["teabag","cup"],"t_start":20,"t_end":26,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s4","session_id":"tea-milk-sugar-1","step_id":"pour","objects":["kettle","cup"],"t_start":94,"t_end":103.5,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s5","session_id":"tea-milk-sugar-1","step_id":"milk","objects":["milk","cup"],"t_start":106,"t_end":112,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s6","session_id":"tea-milk-sugar-1","step_id":"sugar","objects":["sugar","spoon"],"t_start":114,"t_end":120,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s7","session_id":"tea-milk-sugar-1","step_id":"stir","objects":["spoon","cup"],"t_start":122,"t_end":128,"confidence":0.93,"source":"rule"}
+{"event_id":"tea-milk-sugar-1:s8","session_id":"tea-milk-sugar-1","step_id":"remove_teabag","objects":["teabag","spoon"],"t_start":130,"t_end":134,"confidence":0.93,"source":"rule"}
