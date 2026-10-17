@@ -22,6 +22,23 @@ function toPixels(landmark: Landmark, width: number, height: number) {
   return { x: landmark.x * width, y: landmark.y * height }
 }
 
+/** Text alternative for the skeleton SVG (SPEC section 8: skeletons/boxes only, never
+ * raw video), so a screen-reader user gets the same "who/what is tracked" summary a
+ * sighted nurse reads off the canvas. */
+function describeFrame(frame: CaptureFrame): string {
+  const parts: string[] = []
+  if (frame.poses.length > 0) {
+    parts.push(`${frame.poses.length} ${frame.poses.length === 1 ? 'person' : 'people'} tracked`)
+  }
+  if (frame.hands.length > 0) {
+    parts.push(`${frame.hands.length} ${frame.hands.length === 1 ? 'hand' : 'hands'} tracked`)
+  }
+  if (frame.objects.length > 0) {
+    parts.push(`objects in view: ${frame.objects.map((object) => object.label).join(', ')}`)
+  }
+  return parts.length > 0 ? `Skeleton view: ${parts.join('; ')}` : 'Skeleton view: nothing tracked yet'
+}
+
 export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewProps) {
   if (!frame) {
     return (
@@ -35,7 +52,7 @@ export function SkeletonView({ frame, width = 480, height = 360 }: SkeletonViewP
     <svg
       className="skeleton-view"
       role="img"
-      aria-label="Skeleton view"
+      aria-label={describeFrame(frame)}
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}

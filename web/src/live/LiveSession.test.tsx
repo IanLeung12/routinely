@@ -177,6 +177,56 @@ describe('LiveSession', () => {
     )
   })
 
+  it('announces step completions and raised flags through a polite live region', () => {
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+    const announcer = document.querySelector('.live-session__announcer') as HTMLElement
+    expect(announcer.getAttribute('aria-live')).toBe('polite')
+
+    act(() => {
+      socket.emit({
+        type: 'session_start',
+        session_id: 'live-session',
+        task_id: 'tea',
+        steps: [
+          { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
+          { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
+        ],
+      })
+      socket.emit({ type: 'step_state', states: { fill_kettle: 'done' } })
+    })
+    expect(announcer.textContent).toBe('Step done: Fill the kettle')
+
+    act(() => {
+      socket.emit({
+        type: 'error',
+        error: {
+          error_id: 'live-error-1',
+          session_id: 'live-session',
+          type: 'omission',
+          step_id: 'teabag_in_cup',
+          t_start: 72,
+          t_end: 72,
+          evidence: [],
+        },
+      })
+    })
+    expect(announcer.textContent).toBe('Flag raised: Omission · Put the teabag in the cup · 1:12')
+  })
+
+  it('announces a connection status change when the socket falls back to mock data', () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+    const announcer = document.querySelector('.live-session__announcer') as HTMLElement
+
+    act(() => {
+      socket.fail()
+    })
+
+    expect(announcer.textContent).toBe('Connection lost. Showing offline demo data.')
+  })
+
   it('does not fall back to mock if the socket closes after already receiving data', () => {
     vi.useFakeTimers()
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)

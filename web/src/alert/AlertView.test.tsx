@@ -32,7 +32,52 @@ describe('AlertView', () => {
     expect(screen.getByText('Check hydration')).toBeTruthy()
     expect(screen.getByText('Review recent medication changes')).toBeTruthy()
     expect(screen.getByText('Run a CAM delirium screen')).toBeTruthy()
+    expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
     expect(document.body.textContent?.toLowerCase()).not.toContain('diagnos')
+  })
+
+  it('shows the evidence replay card with the skeleton replay and ghost overlay', async () => {
+    offline()
+
+    const { container } = render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
+    expect(screen.getByRole('slider', { name: /replay position/i })).toBeTruthy()
+    expect(screen.getByRole('img', { name: /today and usual skeleton replay/i })).toBeTruthy()
+    expect(container.querySelectorAll('video, img')).toHaveLength(0)
+  })
+
+  it('shows a loading state for the evidence card before the replay resolves', async () => {
+    const releases: Array<() => void> = []
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/alerts/')) return Promise.resolve({ ok: true, json: async () => MRS_K })
+      return new Promise((resolve) => {
+        releases.push(() => resolve({ ok: true, json: async () => ({ frames: [] }) }))
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    expect(await screen.findByText('Loading replay…')).toBeTruthy()
+
+    releases.forEach((release) => release())
+    expect(await screen.findByText('No replay available')).toBeTruthy()
+  })
+
+  it('shows an empty state for the evidence card when no replay is available', async () => {
+    const alert: Alert = { ...MRS_K, alert_id: 'no-replay-alert' }
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/alerts/no-replay-alert')) {
+        return Promise.resolve({ ok: true, json: async () => alert })
+      }
+      return Promise.reject(new Error('offline'))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AlertView alertId="no-replay-alert" onBack={() => {}} />)
+
+    expect(await screen.findByText('No skeleton replay available for this alert.')).toBeTruthy()
   })
 
   it('opens an error row through onOpenEvidence', async () => {
