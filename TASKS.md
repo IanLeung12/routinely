@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 2bc3e75
+- last-reviewed: 8077353
 
 ## Tasks
 
@@ -498,3 +498,21 @@ Acceptance:
 - pytest: buckets from mrs-k demo history; summed errors equal the 14-day total; payload validates against the schema.
 - Vitest: three buckets with text labels (not colour only); hidden when absent.
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T291 — Web: drift, pattern-library and replay types generated from contracts.py
+- status: todo
+- class: heavy
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/contracts.py, web/src/contracts.ts, web/src/resident/api.ts, web/src/patterns/types.ts, web/src/evidence/api.ts, pipeline/tests/test_contracts.py, contracts/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Follow-up from T280 (PR #273): the web still mirrors `ResidentDrift`, `PatternLibraryEntry` and the replay payloads by hand, guarded only by field-name tests. Emit them into the generated `web/src/contracts.ts` and make the consumers import them, so a contract change breaks the web build instead of a string-match test.
+Interface: `python -m routine_watch.contracts` also writes TS types for the drift/pattern/replay models in `PAYLOADS` (or promotes them to `CONTRACTS`); `web/src/resident/api.ts` drops its hand-written `ResidentDrift`; `web/src/patterns/types.ts` re-exports or is replaced by the generated type; `web/src/evidence/api.ts` reads `SessionReplay`/`NormalReplay` instead of an inline cast. Replace the now-redundant field-name tests in test_contracts.py (drift type, pattern entry, replay cast) with the generated-file-up-to-date check.
+Acceptance:
+- No hand-written duplicate of these three payload shapes left in web/src; `test_generated_files_are_up_to_date` covers the new TS output.
+- No behaviour change: existing web tests pass with only import changes.
+- `scripts/ci.sh` passes.

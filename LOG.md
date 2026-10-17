@@ -257,3 +257,4 @@ T268 | light | claude-sonnet | merged first try | ~20k tok
 T282 | standard | claude-sonnet | merged first try | ~55k tok
 T280 | heavy | claude-opus | merged first try | ~160k tok
 T281 | standard | claude-sonnet | merged first try | ~60k tok
+T272 | light | claude-sonnet | merged first try | ~15k tok
