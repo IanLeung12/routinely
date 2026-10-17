@@ -88,7 +88,7 @@ Acceptance:
 - `cd web && npx vitest run src/replays` and `scripts/ci.sh` pass.
 
 ### T413 — Replays library for supervisors and the person
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
@@ -96,8 +96,8 @@ Acceptance:
 - deps: T412, T427, T430, T431
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts, web/src/App.tsx
 - note: list + filters (T430) and notes (T431) are carved out as components; compose them here, don't rewrite them.
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T22:33Z
 - pr: —
 
 What: A "Replays" screen where a supervisor can browse a person's sessions that had errors and analyse them, and the person can see (and delete) their own (SPEC §17: they see exactly what supervisors see). Use the mobbin MCP for 2–3 references of video/recording libraries and timeline scrubbers; follow `docs/DESIGN.md` if merged.
