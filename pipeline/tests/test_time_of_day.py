@@ -130,8 +130,8 @@ def test_the_evening_resident_is_visibly_worse_late_in_the_day() -> None:
         (8, TimeOfDay.MORNING),
         (11, TimeOfDay.MORNING),
         (12, TimeOfDay.AFTERNOON),
-        (16, TimeOfDay.AFTERNOON),
-        (17, TimeOfDay.EVENING),
+        (15, TimeOfDay.AFTERNOON),
+        (16, TimeOfDay.EVENING),
         (18, TimeOfDay.EVENING),
         (23, TimeOfDay.EVENING),
     ],
@@ -145,6 +145,21 @@ def test_the_day_splits_at_noon_and_at_five(hour: int, bucket: TimeOfDay) -> Non
     assert strip[bucket].sessions == 1
     assert strip[bucket].errors == 1
     assert sum(counted.sessions for counted in strip.values()) == 1
+
+
+def test_a_1630_session_buckets_as_evening_like_the_pattern_does() -> None:
+    """`pattern_features.EVENING_HOUR` scores anything from 16:00 on as late-day;
+    the strip must agree, or an alert "consistent with evening worsening" can show
+    its errors under afternoon (SPEC §7.5)."""
+    from routine_watch.pattern_features import EVENING_HOUR
+
+    now = datetime(2026, 1, 2, tzinfo=UTC)
+    session = session_at(datetime(2026, 1, 1, 16, 30, tzinfo=UTC).isoformat(), {"omission": 1})
+
+    strip = {counted.bucket: counted for counted in errors_by_time_of_day([session], now)}
+
+    assert EVENING_HOUR == 16
+    assert strip[TimeOfDay.EVENING].sessions == 1
 
 
 def test_a_sessions_own_timestamp_decides_its_bucket() -> None:

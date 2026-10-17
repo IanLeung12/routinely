@@ -22,6 +22,7 @@ from . import api_state
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, Feedback, TimeOfDay, TimeOfDayErrors
 from .demo import demo_residents
+from .pattern_features import EVENING_HOUR
 from .patterns_library import BY_ID as PATTERNS_BY_ID
 
 router = APIRouter()
@@ -47,12 +48,11 @@ TIME_OF_DAY_DAYS = 14
 #: Where a day splits into the three parts a nurse reads off a shift: morning
 #: before `AFTERNOON_START_HOUR`, afternoon until `EVENING_START_HOUR`, evening
 #: from there on, in the hour the session's own timestamp carries (never this
-#: machine's clock, so a replay buckets the same everywhere).
-#: `pattern_features.EVENING_HOUR` cuts the same day in two at 16:00 for the
-#: pattern's own morning-against-late-day comparison; these three are what the
-#: strip shows, and no demo session starts between the two cuts.
+#: machine's clock, so a replay buckets the same everywhere). `EVENING_START_HOUR`
+#: is `pattern_features.EVENING_HOUR` itself, so the strip and the evening-only
+#: pattern it is evidence for always agree on the cut-off.
 AFTERNOON_START_HOUR = 12
-EVENING_START_HOUR = 17
+EVENING_START_HOUR = EVENING_HOUR
 
 
 class AlertFeedbackIn(Feedback):
