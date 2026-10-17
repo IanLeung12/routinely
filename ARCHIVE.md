@@ -6612,3 +6612,40 @@ Interface: read `web/src/alert/TimeOfDayStrip.tsx` and `TimeOfDayStrip.css`; fol
 Acceptance:
 - new `TimeOfDayStrip.mobile.test.tsx` renders at 375 px and finds all three bucket labels
 - `scripts/ci.sh` passes
+
+### T371 — Test: error list and suggested checks have accessible names
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/ErrorList.a11y.test.tsx, web/src/alert/SuggestedChecks.a11y.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:58Z
+- pr: #363
+- rating: 4/5 clear; SuggestedChecks' li items have no ARIA name-from-content for listitem role, so the 'each item's name' acceptance only fully holds for ErrorList
+
+What: Screen-reader check for the two alert evidence lists: each is a labelled list/region and every item's name includes its time and step (errors) or check text (suggested checks).
+Interface: read `web/src/alert/ErrorList.tsx`, `SuggestedChecks.tsx` and the style of `web/src/alert/TimeOfDayStrip.a11y.test.tsx`. Tests only; if a name is missing, note it in the PR instead of changing the component.
+Acceptance:
+- two new test files using `getByRole(..., { name })` queries
+- `scripts/ci.sh` passes
+
+### T372 — Test: every error type and pattern is covered by a recorded scenario
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_scenario_coverage.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T18:46Z
+- pr: #361
+- note: released by ian-claude-standard: run ended without progress; partial work on branch task/T372-wip-1833: start from it (git switch task/T372-wip-1833 && git merge origin/main)
+- rating: 5/5 clear
+
+What: Guard against scenario rot: a pipeline test that loads every `tests/scenarios/*/expected.yaml` and asserts each `ErrorType` (contracts.py) appears in at least one scenario's `errors`, each task (tea, meds) has a `*_normal` and an `*_abandoned` scenario, and each pattern in the pattern library has a `pattern_*` scenario (or is listed in an explicit, commented allow-list).
+Interface: read-only use of `routine_watch.contracts.ErrorType`, the pattern library module, and the scenario folder; no new scenarios.
+Acceptance:
+- `pytest pipeline/tests/test_scenario_coverage.py` passes; removing a scenario's error makes it fail with a message naming the missing type
+- `scripts/ci.sh` passes
