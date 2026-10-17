@@ -170,15 +170,15 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T301 — Review: contract schema + smoke check for GET /residents/{id}/feedback
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - kind: improvement
 - source: reviewer
 - deps: T291
 - area: pipeline/src/routine_watch/contracts.py, contracts/resident_feedback.schema.json, contracts/README.md, web/src/contracts.ts, web/src/resident/types.ts, pipeline/tests/test_api_payload_contracts.py, scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T16:03Z
 - pr: —
 - note: released by ian-claude: run ended without progress; partial work on branch task/T301-wip-1548: start from it (git switch task/T301-wip-1548 && git merge origin/main)
 
