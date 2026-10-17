@@ -465,7 +465,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T188 — Docs: DEMO.md covers /demo/reset and ?task=meds
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -473,7 +473,8 @@ Acceptance:
 - area: docs/DEMO.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:22Z
-- pr: —
+- pr: #179
+- rating: 5/5 clear
 
 What: The demo runbook doesn't say how to put the demo back between rehearsals or how to open the medication routine directly. Add both.
 Interface: read `docs/DEMO.md`, `pipeline/src/routine_watch/api.py` (`demo_reset`, `_demo_reset_enabled`), `web/src/live/LiveScreen.tsx` (the `?task=meds` query), `.env.example` (`DEMO_RESET`).
