@@ -13,12 +13,13 @@ the copies other languages read cannot drift:
 Four kinds live here. `CONTRACTS` are the records that flow between the stages and
 into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
 `oneOf`, an envelope around those records. `PAYLOADS` are what an HTTP route answers
-with: a resident, the overview's row for one, their slow trend, a shift handoff, an
-alert in full, an entry of the pattern library, a window of skeleton replay, the
-rooms whose monitoring is paused. `REQUESTS` are what the dashboard sends back: a
-nurse's feedback on an alert. Every one of them gets a schema; `CONTRACTS` and the
-payloads in `WEB_PAYLOADS` also get a TypeScript type, and the rest do not, because
-the dashboard reads the socket and those routes through its own types.
+with: a resident, the overview's row for one, their slow trend, what their nurses
+said about their alerts, a shift handoff, an alert in full, an entry of the pattern
+library, a window of skeleton replay, the rooms whose monitoring is paused.
+`REQUESTS` are what the dashboard sends back: a nurse's feedback on an alert. Every
+one of them gets a schema; `CONTRACTS` and the payloads in `WEB_PAYLOADS` also get a
+TypeScript type, and the rest do not, because the dashboard reads the socket and
+those routes through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
@@ -62,6 +63,12 @@ Id = Annotated[str, Field(min_length=1)]
 
 #: A number of days, never negative.
 Days = Annotated[float, Field(ge=0.0)]
+
+#: How a pattern is shown to a nurse: a few words, never a paragraph. Bounded so that
+#: a map whose values are these (`ResidentFeedback.pattern_names`, keyed by pattern
+#: id) still has nowhere an image could hide (SPEC section 8), which is what
+#: `pipeline/tests/test_contracts.py` holds every map in a contract to.
+PatternName = Annotated[str, Field(min_length=1, max_length=80)]
 
 
 class _Contract(BaseModel):
@@ -758,6 +765,53 @@ class ResidentDrift(_Contract):
     )
 
 
+class FeedbackAnswer(_Contract):
+    """One answer a nurse gave on one of this resident's alerts (SPEC MVP 8).
+
+    `routine_watch.feedback.FeedbackStore.history`'s row: one per alert, because
+    answering an alert again replaces its answer rather than piling a second one on
+    top. Not `AlertFeedback`, which is the verdict as the alert itself carries it:
+    this is the same answer read from the resident's side, with the alert it was
+    about named and the `by` nobody logs in to set left off.
+    """
+
+    alert_id: Id = Field(description="The alert this answer was given on.")
+    verdict: FeedbackVerdict
+    cause: Id | None = Field(
+        description='The answer to "what was it?" (SPEC section 5, MVP 8): a pattern_id '
+        "from the pattern library, 'other' for a cause the library has no pattern for, or "
+        "null when nobody said. Always sent, often null."
+    )
+    at: datetime = Field(description="When the nurse answered (wall clock).")
+
+
+class ResidentFeedback(_Contract):
+    """What this resident's nurses have said (`GET /residents/{id}/feedback`).
+
+    The record behind the feedback loop (SPEC Nice to have 8), which until this route
+    only showed up in how her next alert was ranked: every answer on her alerts
+    newest first, the pattern weights those answers add up to, and the name the
+    library shows each pattern id named here under, so the card reading this never
+    keeps its own copy of the library. All three are always sent and all three can be
+    empty - nobody having answered yet is a real answer, not a gap.
+    """
+
+    resident_id: Id
+    answers: list[FeedbackAnswer] = Field(
+        description="One row per answered alert, newest first. Empty until a nurse answers."
+    )
+    pattern_weights: dict[Id, float] = Field(
+        description="Pattern id -> confidence multiplier, one entry per pattern her nurses "
+        "have answered about (`routine_watch.feedback.FeedbackStore.pattern_weights`). A "
+        "pattern missing here is unweighted, which is read as 1.0."
+    )
+    pattern_names: dict[Id, PatternName] = Field(
+        description="Pattern id -> how the pattern library shows it, for every id named "
+        "above that the library knows. 'other' is a real answer with no pattern to name, "
+        "so it has no entry here."
+    )
+
+
 class HandoffResident(_Contract):
     """One resident's line of the shift handoff (SPEC section 9).
 
@@ -1054,6 +1108,7 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentSummary,
     Resident,
     ResidentDrift,
+    ResidentFeedback,
     Handoff,
     AlertDetail,
     PatternLibraryEntry,
@@ -1065,16 +1120,18 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
 )
 
 #: The payloads the dashboard reads through a generated type instead of a copy of
-#: its own: the drift card's, the pattern library's entry, both replay windows', the
-#: overview row, the shift handoff and the monitoring audit trail's logged change.
-#: They are payloads like the rest above - this is only which of them
-#: `web/src/contracts.ts` holds a type for as well, so a field changed here breaks
-#: the dashboard's build (`web/src/resident/api.ts`, `web/src/patterns/types.ts`,
+#: its own: the drift card's, what her nurses said, the pattern library's entry, both
+#: replay windows', the overview row, the shift handoff and the monitoring audit
+#: trail's logged change. They are payloads like the rest above - this is only which
+#: of them `web/src/contracts.ts` holds a type for as well, so a field changed here
+#: breaks the dashboard's build (`web/src/resident/api.ts`,
+#: `web/src/resident/types.ts`, `web/src/patterns/types.ts`,
 #: `web/src/evidence/api.ts`, `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
 #: `web/src/about/monitoringApi.ts` import them) instead of a test matching field
 #: names in its source.
 WEB_PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentDrift,
+    ResidentFeedback,
     PatternLibraryEntry,
     SessionReplay,
     NormalReplay,

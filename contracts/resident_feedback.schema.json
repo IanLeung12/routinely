@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "FeedbackAnswer": {
+      "additionalProperties": false,
+      "description": "One answer a nurse gave on one of this resident's alerts (SPEC MVP 8).\n\n`routine_watch.feedback.FeedbackStore.history`'s row: one per alert, because\nanswering an alert again replaces its answer rather than piling a second one on\ntop. Not `AlertFeedback`, which is the verdict as the alert itself carries it:\nthis is the same answer read from the resident's side, with the alert it was\nabout named and the `by` nobody logs in to set left off.",
+      "properties": {
+        "alert_id": {
+          "description": "The alert this answer was given on.",
+          "minLength": 1,
+          "title": "Alert Id",
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/FeedbackVerdict"
+        },
+        "cause": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The answer to \"what was it?\" (SPEC section 5, MVP 8): a pattern_id from the pattern library, 'other' for a cause the library has no pattern for, or null when nobody said. Always sent, often null.",
+          "title": "Cause"
+        },
+        "at": {
+          "description": "When the nurse answered (wall clock).",
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alert_id",
+        "verdict",
+        "cause",
+        "at"
+      ],
+      "title": "FeedbackAnswer",
+      "type": "object"
+    },
+    "FeedbackVerdict": {
+      "description": "The nurse's answer to an alert, which tunes this resident's threshold.",
+      "enum": [
+        "confirmed",
+        "false_alarm"
+      ],
+      "title": "FeedbackVerdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "What this resident's nurses have said (`GET /residents/{id}/feedback`).\n\nThe record behind the feedback loop (SPEC Nice to have 8), which until this route\nonly showed up in how her next alert was ranked: every answer on her alerts\nnewest first, the pattern weights those answers add up to, and the name the\nlibrary shows each pattern id named here under, so the card reading this never\nkeeps its own copy of the library. All three are always sent and all three can be\nempty - nobody having answered yet is a real answer, not a gap.",
+  "properties": {
+    "resident_id": {
+      "minLength": 1,
+      "title": "Resident Id",
+      "type": "string"
+    },
+    "answers": {
+      "description": "One row per answered alert, newest first. Empty until a nurse answers.",
+      "items": {
+        "$ref": "#/$defs/FeedbackAnswer"
+      },
+      "title": "Answers",
+      "type": "array"
+    },
+    "pattern_weights": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Pattern id -> confidence multiplier, one entry per pattern her nurses have answered about (`routine_watch.feedback.FeedbackStore.pattern_weights`). A pattern missing here is unweighted, which is read as 1.0.",
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Pattern Weights",
+      "type": "object"
+    },
+    "pattern_names": {
+      "additionalProperties": {
+        "maxLength": 80,
+        "minLength": 1,
+        "type": "string"
+      },
+      "description": "Pattern id -> how the pattern library shows it, for every id named above that the library knows. 'other' is a real answer with no pattern to name, so it has no entry here.",
+      "propertyNames": {
+        "minLength": 1
+      },
+      "title": "Pattern Names",
+      "type": "object"
+    }
+  },
+  "required": [
+    "resident_id",
+    "answers",
+    "pattern_weights",
+    "pattern_names"
+  ],
+  "title": "ResidentFeedback",
+  "type": "object"
+}

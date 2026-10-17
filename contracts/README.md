@@ -17,6 +17,7 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `resident_summary.schema.json` | one row of the unit overview (`GET /residents`): status chip, the pattern the change is consistent with, sparkline (SPEC section 9, screen 1) |
 | `resident.schema.json` | one resident in full (`GET /residents/{id}`): that row plus consent, sessions, care records and baseline (SPEC section 9, screen 2) |
 | `resident_drift.schema.json` | one resident's slow trend (`GET /residents/{id}/drift`): the robust slope behind the drift card, the days of their own history it is read over, and whether it is worth a look (SPEC section 8) |
+| `resident_feedback.schema.json` | what this resident's nurses said (`GET /residents/{id}/feedback`): every answer on her alerts newest first, the pattern weights they add up to, and the name the library shows each of those pattern ids under (SPEC Nice to have 8) |
 | `handoff.schema.json` | the shift handoff (`GET /handoff`): a row per resident, the rooms whose monitoring is paused, and the window's summary (SPEC section 9) |
 | `alert_detail.schema.json` | an alert as a route answers it (`GET /alerts/{id}`, and each row of `GET /alerts`): the `alert` record with `patterns` and `feedback` always sent and the resident's feedback-tuned threshold applied |
 | `pattern_library_entry.schema.json` | one entry of the pattern library (`GET /patterns`): signals and weights, time profile, what to rule out, urgency and where the pattern comes from - the rule, not a verdict on a resident (SPEC section 7.5) |
@@ -42,13 +43,14 @@ the other does not.
 
 Everything from `resident_summary.schema.json` down is an HTTP payload rather than
 a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
-`drift.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and `monitoring.py`
-and served by `api.py` and its route modules, plus the one body that travels the
-other way. Seven of them are generated for the web side as well (`WEB_PAYLOADS`):
-`resident_drift`, `pattern_library_entry`, `session_replay`, `normal_replay`,
-`resident_summary`, `handoff` and the monitoring audit trail's `monitoring_change`
-are TypeScript types in `web/src/contracts.ts`, which the dashboard imports
-(`web/src/resident/api.ts`, `web/src/patterns/types.ts`, `web/src/evidence/api.ts`,
+`drift.py`, `feedback.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and
+`monitoring.py` and served by `api.py` and its route modules, plus the one body that
+travels the other way. Eight of them are generated for the web side as well
+(`WEB_PAYLOADS`): `resident_drift`, `resident_feedback`, `pattern_library_entry`,
+`session_replay`, `normal_replay`, `resident_summary`, `handoff` and the monitoring
+audit trail's `monitoring_change` are TypeScript types in `web/src/contracts.ts`,
+which the dashboard imports (`web/src/resident/api.ts`, `web/src/resident/types.ts`,
+`web/src/patterns/types.ts`, `web/src/evidence/api.ts`,
 `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
 `web/src/about/monitoringApi.ts`), so changing one of those fields breaks its build.
 The rest the dashboard still mirrors by hand (`web/src/alert/api.ts`) or reads
@@ -57,9 +59,10 @@ through `resident_summary`), so for those the schema is what both sides are held
 Either way,
 `pipeline/tests/test_api_payload_contracts.py` calls every one of those routes -
 every demo resident, one with a live session in their history, every resident's
-drift, a handoff with a room paused, an alert before and after a nurse answers it,
-every pattern in the library, the replay window behind a real alert's first error in
-both layers, and a room paused and resumed - and validates what comes back.
+drift, every resident's feedback record before and after a nurse answers, a handoff
+with a room paused, an alert before and after a nurse answers it, every pattern in
+the library, the replay window behind a real alert's first error in both layers, and
+a room paused and resumed - and validates what comes back.
 
 ## Changing them
 
