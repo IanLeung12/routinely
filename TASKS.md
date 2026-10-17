@@ -79,7 +79,7 @@ Acceptance:
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
 ### T194 — smoke.sh: seeded alert survives /demo/reset
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
