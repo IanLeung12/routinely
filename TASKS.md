@@ -306,7 +306,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T445 — Bug: flaky unit test MyRoutine "says nobody else can see this…" (lazy section not loaded within findBy's 1 s)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
