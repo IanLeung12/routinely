@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: a13d35a
+- last-reviewed: bf77ff1
 
 ## Tasks
 
@@ -398,7 +398,7 @@ Acceptance:
 - claimed: 2026-10-17T08:26Z
 - pr: —
 
-What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes.
+What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes. Also add notes for T062's shift handoff (`handoff.py` `build_handoff`, `GET /handoff`, `web/src/handoff/`) and T103's `web/src/about/MonitoringToggle.tsx` (component only, not wired yet).
 Interface: read `pipeline/src/routine_watch/live.py` (session_messages docstring, `_resident_flagged`), `notify.py` (`get_notifier`), `alerts.py` (`_task_errors`, `_distinct_clauses`) and add 2-4 lines of notes each under the existing pipeline section. Notes only; the file list is generated.
 Acceptance:
 - `python3 scripts/codemap.py --check` (if it exists) and `scripts/ci.sh` pass.
@@ -418,3 +418,109 @@ What: Guard SPEC §8 ("at least one replayable scenario per pattern") so a new p
 Interface: read `pipeline/src/routine_watch/patterns_library.py` (the list of patterns) and `tests/scenarios/*/expected.yaml`. Test collects every `top_pattern:` value from scenarios and asserts it covers every library `pattern_id` except `one_sided_change` (SPEC keeps it out of the demo).
 Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
+
+### T148 — monitoring.py: in-memory per-room monitoring on/paused store
+- status: todo
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/monitoring.py (new), pipeline/tests/test_monitoring.py (new)
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Backend half of the per-room pause switch (SPEC §12 "monitoring can be turned off per room"; UI component landed in T103). Pure module, no API wiring yet. Read only `pipeline/src/routine_watch/feedback.py` (style of an in-memory store).
+Interface: `class MonitoringStore` with `is_on(room: str) -> bool` (default True for unknown rooms), `set(room: str, on: bool) -> None`, `paused_rooms() -> list[str]` (sorted), `reset() -> None`. Module-level `get_monitoring_store() -> MonitoringStore` returning one shared instance.
+Acceptance:
+- tests cover default-on, pause then resume, sorted `paused_rooms()`, `reset()`.
+- `cd pipeline && python -m pytest tests/test_monitoring.py` passes; `scripts/ci.sh` passes.
+
+### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- deps: T148
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py (new)
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Expose the T148 store so the dashboard's pause switch is real. While a room is paused, `/ws/live` for a scenario whose resident is in that room sends one `{"type": "paused", "room": ...}` message and closes instead of streaming frames (no camera data processed).
+Interface: `GET /monitoring` → `{"paused_rooms": [...]}`; `PUT /rooms/{room}/monitoring` body `{"on": bool}` → `{"room": str, "on": bool}`; uses `monitoring.get_monitoring_store()`. Room→resident comes from `demo.demo_residents()`; unknown room → 404.
+Acceptance:
+- tests: default empty, pause/resume round trip, 404 for unknown room, paused live session gets the `paused` message and no frames (TestClient websocket); store reset between tests.
+- `scripts/ci.sh` passes.
+
+### T150 — Resident detail: show the room monitoring switch
+- status: todo
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Put T103's `MonitoringToggle` next to "Room {resident.room}" in the resident detail header so judges see the privacy control in the demo. Local `useState(true)` only for now (API wiring after T149). Read only `web/src/resident/ResidentDetail.tsx`, its test and `web/src/about/MonitoringToggle.tsx`.
+Interface: `<MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />`.
+Acceptance:
+- test: the switch "Monitoring in room <room>" renders On; clicking shows "Paused" and the "No camera data is processed while paused." note.
+- `cd web && npx vitest run src/resident` passes; `scripts/ci.sh` passes.
+
+### T151 — Shift handoff: "Copy summary" button for the shift report
+- status: todo
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses paste handoff notes into their shift report; one tap copies the handoff as plain text. Read only `web/src/handoff/Handoff.tsx`, `types.ts`, `mockHandoff.ts`, its test and `web/src/ui/Button.tsx`.
+Interface: `export function handoffText(h: Handoff): string` (summary line, then one line per resident: name, room, flagged sessions, unreviewed alerts, trend) in `Handoff.tsx`; a secondary `Button` "Copy summary" calling `navigator.clipboard.writeText(handoffText(...))`, then showing "Copied" (role=status) for 2 s; if clipboard is unavailable show "Copy not available" instead of throwing.
+Acceptance:
+- tests: `handoffText(mockHandoff)` contains every resident name and the summary and no "diagnos"; clicking calls a mocked `navigator.clipboard.writeText` and shows "Copied"; missing clipboard shows the fallback.
+- `cd web && npx vitest run src/handoff` passes; `scripts/ci.sh` passes.
+
+### T152 — Shift handoff rows open the resident's alert
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- deps: T151
+- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx, web/src/App.tsx, web/src/App.test.tsx
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: From the handoff, the incoming nurse should reach the evidence in one tap. Rows with an unreviewed alert get an "Open alert" button that goes to the alert screen. Check `pipeline/src/routine_watch/handoff.py` for whether rows carry alert ids; if not, use the first matching alert from `fetchAlerts()` by resident id (don't change the API here; note it in the PR).
+Interface: `Handoff({ onBack, onOpenAlert }: { onBack: () => void; onOpenAlert?: (alertId: string) => void })`; App passes `id => { setOpenHandoff(false); setOpenAlert(id) }`.
+Acceptance:
+- tests: button only on rows with unreviewed alerts; clicking calls `onOpenAlert` with the right id; App test: handoff → Open alert shows the alert view.
+- `cd web && npx vitest run` passes; `scripts/ci.sh` passes.
+
+### T153 — Docs: demo runbook (docs/DEMO.md)
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/DEMO.md (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: A one-page runbook for whoever drives the 3-minute demo: setup, the click path for each beat, and the fallback. Read only SPEC.md §10, `scripts/dev.sh`, `scripts/smoke.sh`, `tests/scenarios/README.md` and `web/src/App.tsx`.
+Interface: sections "Before you start" (exact commands, env such as OFFLINE_MODE), "Click path" (one bullet per SPEC §10 beat: which screen, which button, what the audience should see), "If something fails" (offline replay of `tea_skip_teabag_pour_twice`, no Wi-Fi, how to restart), "Reset between runs". Describe only what exists on main; say "flags a change for review", never "diagnoses".
+Acceptance:
+- every command in the file exists in `scripts/` or `web/package.json`; `scripts/ci.sh` passes.

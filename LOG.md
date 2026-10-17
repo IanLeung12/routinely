@@ -122,3 +122,9 @@ T131 | standard | claude-sonnet | merged first try | ~45k tok
 T134 | light | claude-sonnet | merged first try | ~5k tok
 T137 | light | claude-sonnet | merged first try | ~10k tok
 T135 | light | codex | merged first try | ~4k tok
+T062 | heavy | claude-opus | merged first try | ~150k tok
+T138 | standard | claude-sonnet | merged first try | ~60k tok
+T139 | light | claude-sonnet | merged first try | ~5k tok
+T145 | light | claude-sonnet | merged first try | ~30k tok
+T141 | standard | claude-sonnet | merged first try | ~55k tok
+T103 | light | codex | merged first try | ~5k tok
