@@ -84,7 +84,15 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from . import session_log
-from .contracts import CaptureFrame, ErrorType, Session, StepEvent, TaskError
+from .contracts import (
+    BoundingBox,
+    CaptureFrame,
+    ErrorType,
+    ObjectDetection,
+    Session,
+    StepEvent,
+    TaskError,
+)
 from .demo import DEMO_NOW, DEMO_RESIDENT
 from .errors import classify_errors
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
@@ -182,7 +190,8 @@ async def session_messages(
         raise ValueError(f"speed must be positive, not {speed}")
     scenario = load_scenario(scenario_dir)
     graph = scenario.graph
-    frames, recorded = scenario.frames, scenario.events
+    recorded = scenario.events
+    frames = scenario.frames or _synthetic_frames(recorded, session_id_of(scenario))
     session_id = session_id_of(scenario)
 
     seen: set[str] = set()  # error ids already sent, so each error is sent once
@@ -318,6 +327,44 @@ def _beats(
     beats += [(event.t_end, 1, event) for event in events]
     beats.sort(key=lambda beat: beat[:2])  # stable: never compares two records
     return beats
+
+
+#: Fixed, made-up positions for the skeleton view when a scenario is written at step
+#: level and has no real capture frames to show (SPEC section 8: boxes only, never
+#: video, so these are as good as real ones for the dashboard's purposes).
+_PLACEHOLDER_BOXES: dict[str, BoundingBox] = {
+    "cup": BoundingBox(x1=0.05, y1=0.75, x2=0.15, y2=0.87),
+    "kettle": BoundingBox(x1=0.66, y1=0.26, x2=0.84, y2=0.54),
+    "teabag": BoundingBox(x1=0.16, y1=0.3, x2=0.23, y2=0.37),
+    "spoon": BoundingBox(x1=0.22, y1=0.6, x2=0.38, y2=0.66),
+    "milk": BoundingBox(x1=0.86, y1=0.6, x2=0.96, y2=0.72),
+    "sugar": BoundingBox(x1=0.86, y1=0.3, x2=0.96, y2=0.42),
+}
+
+
+def _synthetic_frames(events: Sequence[StepEvent], session_id: str) -> list[CaptureFrame]:
+    """One made-up frame per step event, for a scenario written at step level (no
+    `frames.jsonl`) so the skeleton view still has something to show (SPEC section 10,
+    step 3) rather than staying on "waiting for camera" the whole session."""
+    frames: list[CaptureFrame] = []
+    for seq, event in enumerate(events):
+        objects = [
+            ObjectDetection(label=label, confidence=1.0, box=box)
+            for label in event.objects
+            if (box := _PLACEHOLDER_BOXES.get(str(label))) is not None
+        ]
+        frames.append(
+            CaptureFrame(
+                session_id=session_id,
+                seq=seq,
+                t=(event.t_start + event.t_end) / 2.0,
+                source="synthetic",
+                poses=[],
+                hands=[],
+                objects=objects,
+            )
+        )
+    return frames
 
 
 def _downsampled(
