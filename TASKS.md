@@ -575,14 +575,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T365 — Test: live session summary has accessible names
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/live/SessionSummary.a11y.test.tsx, web/src/live/SessionSummary.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T18:05Z
 - pr: —
 
 What: The end-of-session summary on the live screen must be readable by a screen reader: a heading, and each figure (duration, errors, quality) with a text label, not only an icon or colour.
