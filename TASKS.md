@@ -461,7 +461,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T372 — Test: every error type and pattern is covered by a recorded scenario
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -469,8 +469,9 @@ Acceptance:
 - area: pipeline/tests/test_scenario_coverage.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T18:46Z
-- pr: —
+- pr: #361
 - note: released by ian-claude-standard: run ended without progress; partial work on branch task/T372-wip-1833: start from it (git switch task/T372-wip-1833 && git merge origin/main)
+- rating: 5/5 clear
 
 What: Guard against scenario rot: a pipeline test that loads every `tests/scenarios/*/expected.yaml` and asserts each `ErrorType` (contracts.py) appears in at least one scenario's `errors`, each task (tea, meds) has a `*_normal` and an `*_abandoned` scenario, and each pattern in the pattern library has a `pattern_*` scenario (or is listed in an explicit, commented allow-list).
 Interface: read-only use of `routine_watch.contracts.ErrorType`, the pattern library module, and the scenario folder; no new scenarios.
