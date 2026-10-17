@@ -11,7 +11,9 @@
 # GET /residents, GET /residents/mrs-k, GET /alerts, GET /alerts/<first id> and
 # that the dashboard (DASHBOARD_PORT, default 5173) returns HTML. Prints
 # PASS/FAIL per check and exits non-zero if any failed.
-# Never sets LIVE_API, never POSTs feedback (that mutates state).
+# Never sets LIVE_API, never POSTs feedback. POSTs /demo/reset once, last, since
+# that one is meant to mutate state (it only answers when OFFLINE_MODE or
+# DEMO_RESET is set, which `scripts/dev.sh` and the tester's stack always are).
 set -uo pipefail
 
 API_URL="${1:-http://localhost:${API_PORT:-8000}}"
@@ -170,6 +172,20 @@ assert data.get("frames"), "empty frames"
   fi
 else
   fail "GET /sessions/<id>/replay and /residents/<id>/normal_replay: no alert error to derive session/resident/time window from"
+fi
+
+if body4=$(curl "${CURL_OPTS[@]}" -X POST "$API_URL/demo/reset" 2>/dev/null); then
+  if python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+assert data == {"ok": True}
+' "$body4" 2>/dev/null; then
+    pass "POST /demo/reset -> $body4"
+  else
+    fail "POST /demo/reset: unexpected body $body4"
+  fi
+else
+  fail "POST /demo/reset: no response (needs OFFLINE_MODE=true or DEMO_RESET=1 on the server)"
 fi
 
 if [ "$failures" -eq 0 ]; then
