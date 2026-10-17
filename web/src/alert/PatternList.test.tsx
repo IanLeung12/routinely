@@ -43,12 +43,30 @@ describe('PatternList', () => {
     expect(screen.getByText('Review recent medication changes')).toBeTruthy()
   })
 
-  it('marks an urgent pattern with the urgent class and a visible label', () => {
-    render(<PatternList patterns={[pattern({ urgency: 'urgent' })]} />)
+  it('marks only the urgent pattern with the urgent class, and labels it in words', () => {
+    render(
+      <PatternList
+        patterns={[
+          pattern({ pattern_id: 'delirium', urgency: 'urgent' }),
+          pattern({ pattern_id: 'drift', urgency: 'routine' }),
+        ]}
+      />,
+    )
 
-    const item = screen.getAllByRole('listitem')[0]
-    expect(item.className).toContain('pattern--urgent')
-    expect(screen.getByText('Urgent')).toBeTruthy()
+    const [urgentItem, routineItem] = Array.from(
+      screen.getByRole('list', { name: 'Possible patterns' }).children,
+    )
+    expect(urgentItem.className).toContain('pattern--urgent')
+    expect(routineItem.className).not.toContain('pattern--urgent')
+
+    // Never colour alone: the urgency is also spelled out (web guide, a11y).
+    expect(screen.getByText('Urgent').className).toContain('pattern__urgency--urgent')
+    expect(screen.getByText('Routine').className).toContain('pattern__urgency--routine')
+  })
+
+  it('gives the list an accessible name', () => {
+    render(<PatternList patterns={[pattern()]} />)
+    expect(screen.getByRole('list', { name: 'Possible patterns' })).toBeTruthy()
   })
 
   it.each([

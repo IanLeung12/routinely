@@ -1,3 +1,5 @@
+import './PatternList.css'
+
 export interface PatternView {
   pattern_id: string
   name: string
@@ -22,7 +24,7 @@ export function PatternList({ patterns }: { patterns: PatternView[] }) {
   }
 
   return (
-    <ul className="pattern-list">
+    <ul className="pattern-list" aria-label="Possible patterns">
       {patterns.map((pattern) => {
         const urgent = pattern.urgency === 'urgent'
         const confidencePct = Math.round(pattern.confidence * 100)
