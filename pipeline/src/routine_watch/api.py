@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from . import __version__, session_log
 from .alerts import build_alerts, top_pattern_for
-from .contracts import Alert, AlertFeedback, FeedbackVerdict
+from .contracts import Alert, AlertFeedback, FeedbackVerdict, SuggestedCheck
 from .demo import DEMO_NOW, demo_residents, status_for
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
@@ -25,6 +25,8 @@ from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
 from .patterns_library import BY_ID as PATTERNS_BY_ID
+from .patterns_library import LIBRARY as PATTERN_LIBRARY
+from .patterns_library import Pattern, TimeProfile
 from .replay import ReplayError
 
 app = FastAPI(title="Routine Watch API", version=__version__)
@@ -266,6 +268,41 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
         top_pattern=alert.patterns[0].pattern_id if alert.patterns else None,
     )
     return _alert_payload(alert)
+
+
+def _time_profile_payload(time_profile: TimeProfile) -> dict:
+    return {
+        "onset_days": list(time_profile.onset_days),
+        "tolerance_days": time_profile.tolerance_days,
+        "note": time_profile.note,
+    }
+
+
+def _pattern_payload(pattern: Pattern) -> dict:
+    """One library entry as JSON: signals, time profile, checks and source, so a
+    reader can see exactly what the rule looks for, never a verdict on a resident.
+    """
+    return {
+        "pattern_id": pattern.pattern_id,
+        "name": pattern.name,
+        "signals": dict(pattern.signals),
+        "time_profile": _time_profile_payload(pattern.time_profile),
+        "checks": [
+            check.value if isinstance(check, SuggestedCheck) else check
+            for check in pattern.checks
+        ],
+        "urgency": pattern.urgency.value,
+        "source": pattern.source,
+    }
+
+
+@app.get("/patterns")
+def list_patterns() -> list[dict]:
+    """The pattern library (SPEC §7.5): every pattern's signals, time profile, checks
+    and source, read-only and separate from the demo path - a cited rules library,
+    not a model guess.
+    """
+    return [_pattern_payload(pattern) for pattern in PATTERN_LIBRARY]
 
 
 @app.get("/handoff")
