@@ -488,3 +488,19 @@ Interface: `export function ConfidenceBadge({ confidence, unclear }: { confidenc
 Acceptance:
 - Vitest: 0.87 → "High confidence" + "87%"; 0.6 → Medium; 0.2 → Low; unclear wins over any confidence; 1.4 clamps to "100%".
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T047 — Bug: flaky web CI ("window is not defined" after App.test.tsx)
+- status: todo
+- class: light
+- priority: 0
+- deps: —
+- area: web/src/App.test.tsx, web/src/test-setup.ts, web/vite.config.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: main CI run 39005334024 failed although all 52 web tests passed: Vitest reported an unhandled `ReferenceError: window is not defined` from react-dom, originating in `src/App.test.tsx`. The test renders `<App />` and returns synchronously, while the overview's API fetch (which falls back to mock data when the API is unreachable) resolves after jsdom is torn down and triggers a React update. Timing-dependent, so it fails only sometimes.
+Interface: make the test wait for the async work, e.g. stub `fetch` to reject immediately (`vi.stubGlobal('fetch', ...)`) and `await screen.findBy...` for the fallback content, plus `afterEach(cleanup)` / `vi.unstubAllGlobals()`. If other tests render components that fetch, apply the same pattern via a shared `web/src/test-setup.ts` (`setupFiles` in the vite config).
+Acceptance:
+- Run the web test suite 5 times in a row (`cd web` then the test script, looped); all pass with zero "Unhandled Errors".
+- No behaviour assertions change; only async handling.
