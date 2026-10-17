@@ -317,7 +317,7 @@ Acceptance:
 * `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T222 — Review: Copy summary says "Change flagged" for slow-trend alerts
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -325,8 +325,9 @@ Acceptance:
 - area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts
 - owner: ian-claude
 - claimed: 2026-10-17T10:48Z
-- pr: —
+- pr: #217
 - source: reviewer
+- rating: 5/5 clear - the task named the exact file, the exact conditional and the two test assertions
 
 What: `alertText` (T199/T211, #189/#198) always writes the line `Change flagged for review`, but `Alert.kind` can be `'trend'`, which the overview labels `Slow trend for review` (`web/src/App.tsx` ~line 112). A nurse pasting a trend alert into the chart records the wrong kind of finding.
 Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`, and `AlertKind` in `web/src/contracts.ts`. Replace the fixed string with `alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'`.
