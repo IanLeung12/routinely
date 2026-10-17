@@ -93,7 +93,7 @@ Five stages (see the diagram):
    - An LLM (Claude) writes the plain-language summary **using only the detected evidence and the scorer's output**, never adding a pattern or cause of its own.
    - Suggested checks come from the matched patterns (e.g. infection/UTI, hydration, new medication, CAM screen, medication review, cognitive reassessment).
    - Alerts go to the dashboard over the API WebSocket (§16 B), optionally with a phone push.
-5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is logged in Langfuse and used to tune thresholds.
+5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is stored with the alert and used to tune that person's threshold (`feedback.py`). Decision: no Langfuse.
 
 **Decision: custom detector plus a vision LLM, not either alone.**
 - The detector gives fast, consistent, offline-capable results. That makes the demo safe, and it counts as a model we trained.
@@ -213,6 +213,7 @@ Rules for the scorer:
 - Skeleton-only processing, no stored video, no face identification.
 - Optional local camera preview while framing a camera (`scripts/camera.sh --preview`): the capture machine may show itself its own picture under the skeleton, served on loopback only, one frame at a time in memory — never stored, never sent to the API, never visible to a supervisor.
 - Flags for review, **never a diagnosis**, with that wording kept consistent everywhere.
+- Building a routine from a **setup clip** is a one-time, opt-in step: the request must carry explicit consent, the clip is held in memory (or a temp file deleted in a `finally`), sent to Gemini once and never written to `REPLAY_DIR`, `CAMERA_RECORD`, the saved routines or the repo, and never logged. Daily monitoring stays skeleton-only.
 - The LLM summary may only restate detected evidence and the scorer's patterns. No speculation, no new causes, and no medical advice beyond the library's check prompts.
 - Patterns are "consistent with", ranked with confidence, and always allow "no clear pattern". Every pattern in the library cites where its signals come from; patterns without a defensible source don't ship.
 - Show uncertainty: "unclear" events, and confidence on each alert.

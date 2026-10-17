@@ -284,66 +284,10 @@ h1 {
   color: var(--text);
 }
 
-.baseline-chart svg {
-  width: 100%;
-  height: auto;
-}
-
-.chart-axis {
-  stroke: var(--chart-grid);
-}
-
-.chart-mean {
-  stroke: var(--chart-baseline-line);
-  stroke-dasharray: var(--chart-forecast-dash);
-}
-
-.chart-threshold {
-  stroke: var(--status-watch);
-  stroke-dasharray: 6 4;
-  stroke-width: 1.5;
-}
-
-.chart-tick {
-  fill: var(--text-muted);
-  font-size: 11px;
-}
-
-.chart-tick--threshold {
-  fill: var(--status-watch);
-}
-
-.chart-line {
-  fill: none;
-  stroke: var(--chart-line);
-  stroke-width: 1.5;
-}
-
-.chart-point {
-  fill: var(--chart-line);
-}
-
-.chart-point--above {
-  fill: var(--status-flagged);
-}
-
-.chart-point--latest {
-  stroke: var(--surface-card);
-  stroke-width: 2;
-}
-
-.chart-legend {
+.baseline-chart {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin: var(--space-2) 0 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-
-.chart-legend__latest {
-  color: var(--text);
-  font-weight: 600;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .session-list,

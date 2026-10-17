@@ -10,6 +10,14 @@
   color: var(--error-amber-text);
 }
 
+/* A fitted line, not a measurement, so it is always dotted (docs/DESIGN.md: "expected,
+   projected or incomplete is dotted... never a solid line"), whatever LineChart's
+   default single-series styling is. */
+.drift-card__trend .line-chart__line {
+  stroke: var(--chart-forecast);
+  stroke-dasharray: var(--chart-forecast-dash);
+}
+
 @media (max-width: 480px) {
   .drift-card {
     display: flex;

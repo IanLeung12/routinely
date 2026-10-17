@@ -9,8 +9,9 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // The redesign shell, person view and replays are always-on screens added
-// 2026-10-17; measured first-load JS is 92536 bytes gzipped. Allow modest
-// headroom for those screens. Raise only alongside a PR explaining the growth.
+// 2026-10-17; measured first-load JS is 92536 bytes gzipped. T421's eager
+// resident detail charts bring that to 94908 bytes. Allow modest headroom
+// for those screens. Raise only alongside a PR explaining the growth.
 const BUDGET_BYTES = 96_000
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))

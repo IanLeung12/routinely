@@ -1,0 +1,65 @@
+{
+  "_comment": [
+    "A canned routine draft for the offline demo (routine_builder.FixtureDrafter).",
+    "`answer` is exactly the shape a real model is asked for, so the offline fake and",
+    "Gemini/Claude go through the same parser. `keywords` are matched whole-word,",
+    "case-insensitively, against the description; `default` picks the file to fall back",
+    "to when a description matches nothing."
+  ],
+  "keywords": ["brush", "brushing", "teeth", "tooth", "toothbrush", "toothpaste", "dental"],
+  "default": false,
+  "answer": {
+    "title": "Brush your teeth",
+    "steps": [
+      {
+        "label": "Get the toothbrush",
+        "objects": ["toothbrush"],
+        "depends_on": [],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Put toothpaste on the brush",
+        "objects": ["toothpaste", "toothbrush"],
+        "depends_on": ["Get the toothbrush"],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Fill a cup with water",
+        "objects": ["cup", "tap"],
+        "depends_on": [],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Brush your teeth",
+        "objects": ["toothbrush"],
+        "depends_on": ["Put toothpaste on the brush"],
+        "optional": false,
+        "once_only": false
+      },
+      {
+        "label": "Rinse your mouth",
+        "objects": ["cup"],
+        "depends_on": ["Brush your teeth", "Fill a cup with water"],
+        "optional": false,
+        "once_only": false
+      },
+      {
+        "label": "Rinse the brush",
+        "objects": ["toothbrush", "tap"],
+        "depends_on": ["Brush your teeth"],
+        "optional": true,
+        "once_only": true
+      },
+      {
+        "label": "Put the toothbrush back",
+        "objects": ["toothbrush"],
+        "depends_on": ["Brush your teeth"],
+        "optional": false,
+        "once_only": true
+      }
+    ]
+  }
+}

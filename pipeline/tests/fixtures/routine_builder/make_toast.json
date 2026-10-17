@@ -1,0 +1,55 @@
+{
+  "_comment": [
+    "The fallback canned draft (`default`), and the one that shows what the detector",
+    "would still have to be trained on: nothing in this routine is a class it knows."
+  ],
+  "keywords": ["toast", "toaster", "bread", "slice", "butter", "breakfast"],
+  "default": true,
+  "answer": {
+    "title": "Make toast",
+    "steps": [
+      {
+        "label": "Get the bread out",
+        "objects": ["bread"],
+        "depends_on": [],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Put a slice in the toaster",
+        "objects": ["bread", "toaster"],
+        "depends_on": ["Get the bread out"],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Push the toaster lever down",
+        "objects": ["toaster"],
+        "depends_on": ["Put a slice in the toaster"],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Get a plate",
+        "objects": ["plate"],
+        "depends_on": [],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Take the toast out",
+        "objects": ["toaster", "plate"],
+        "depends_on": ["Push the toaster lever down", "Get a plate"],
+        "optional": false,
+        "once_only": true
+      },
+      {
+        "label": "Spread the butter",
+        "objects": ["butter", "knife"],
+        "depends_on": ["Take the toast out"],
+        "optional": true,
+        "once_only": true
+      }
+    ]
+  }
+}
