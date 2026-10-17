@@ -374,7 +374,7 @@ Acceptance:
 - existing tests pass (selectors only, keep the phone-width wrapping assertion meaningful); `cd web && npx vitest run src/about && npm run lint`.
 
 ### T436 — Review: camera preview MJPEG readable by any website open on the capture machine
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -385,7 +385,7 @@ Acceptance:
 - claimed: 2026-10-17T22:40Z
 - pr: #411
 - rating: 5/5 clear
-- note: fix CI on PR #411: after T442 (bundle budget) merges, merge origin/main into the PR branch and push; code is done
+- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
 
 What: `preview.py` sends `Access-Control-Allow-Origin: *` on every reply, including `/preview.mjpg`. The loopback/Host checks don't stop a cross-site `fetch('http://127.0.0.1:8765/preview.mjpg')`: the browser runs on this machine (client is loopback) and sends `Host: 127.0.0.1:8765` (passes). So any web page open in that browser can read live camera frames and upload them — raw video leaving the machine, against SPEC §8/§12.
 Fix: in `response_for`, take the request's `Origin` header (pass it from `_Handler.do_GET`); if present and its host is not loopback (`is_loopback(urlparse(origin).hostname)`), return 403. Echo the allowed loopback origin in `Access-Control-Allow-Origin` (plus `Vary: Origin`) instead of `*`; send no CORS header when there's no Origin. `<img src>` in `CameraPreview` still works (no CORS needed).
