@@ -289,10 +289,20 @@ export function Handoff({
         <Card>
           <SectionHeader title={`Last ${handoff.window_hours} hours`} />
           <p className="handoff__summary">{handoff.summary}</p>
-          <Button variant="secondary" onClick={() => { void copySummary(handoff) }}>
-            Copy summary
-          </Button>
-          {copyStatus && <p role="status">{copyStatus}</p>}
+          {/* Both actions and the copy's own status in one group: a nurse taps these
+              on screen, and none of them say anything on paper, so the whole group is
+              `no-print` (print.css hides it, T353). */}
+          <div className="handoff__actions no-print">
+            <Button variant="secondary" onClick={() => { void copySummary(handoff) }}>
+              Copy summary
+            </Button>
+            {/* Nurses hand off on paper (T203). The browser's own print dialog, so the
+                nurse keeps their printer, page size and "save as PDF". */}
+            <Button variant="secondary" onClick={() => window.print()}>
+              Print handoff
+            </Button>
+            {copyStatus && <p role="status">{copyStatus}</p>}
+          </div>
         </Card>
         {pausedLine(handoff.paused, pauseDetails) && (
           <p className="handoff__paused">{pausedLine(handoff.paused, pauseDetails)}</p>
@@ -333,6 +343,7 @@ export function Handoff({
                 {onOpenAlert && resident.pending_review > 0 && alertIds[resident.resident_id] && (
                   <Button
                     aria-label={`Open ${resident.name}'s alert`}
+                    className="no-print"
                     onClick={() => onOpenAlert(alertIds[resident.resident_id])}
                   >
                     Open alert
@@ -348,14 +359,14 @@ export function Handoff({
 
   return (
     <section className="handoff" aria-label="Shift handoff">
-      <button type="button" className="back-button" onClick={onBack}>
+      <button type="button" className="back-button no-print" onClick={onBack}>
         ← Back
       </button>
       <h2 className="handoff__title">Shift handoff</h2>
       <p className="handoff__lead">
         Who changed while you were away. Everything here is flagged for a nurse to review.
       </p>
-      <div className="handoff__controls">
+      <div className="handoff__controls no-print">
         <label className="handoff__label" htmlFor="handoff-window">
           Window
         </label>

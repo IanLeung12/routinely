@@ -4,6 +4,8 @@ import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
+import printCss from '../print.css?raw'
+import handoffCss from './handoff.css?raw'
 import { Handoff, handoffText } from './Handoff.tsx'
 import { mockHandoff } from './mockHandoff.ts'
 import type { Handoff as HandoffData } from './types.ts'
@@ -165,6 +167,47 @@ describe('Handoff', () => {
       expect((await screen.findByText('Copy not available')).getAttribute('role')).toBe('status')
     },
   )
+
+  it('prints the handoff when the Print button is clicked, and prints no button itself', async () => {
+    serve(served)
+    const printSpy = vi.fn()
+    vi.stubGlobal('print', printSpy)
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+
+    const print = screen.getByRole('button', { name: 'Print handoff' })
+    expect(print.closest('.no-print')).toBeTruthy()
+
+    fireEvent.click(print)
+
+    expect(printSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the screen-only chrome off the printout and every row on it', async () => {
+    serve(served)
+
+    render(<Handoff onBack={() => {}} onOpenAlert={vi.fn()} />)
+    await screen.findByText(served.summary)
+    const open = await screen.findByRole('button', { name: "Open Mrs. K's alert" })
+
+    // Nothing a nurse can only tap belongs on paper.
+    expect(screen.getByRole('button', { name: /Back/ }).className).toContain('no-print')
+    expect(screen.getByLabelText('Window').closest('.no-print')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Copy summary' }).closest('.no-print')).toBeTruthy()
+    expect(open.closest('.no-print')).toBeTruthy()
+
+    // What a nurse reads off the sheet stays: the headline, the window, the summary and
+    // every resident row, each with its own counts.
+    expect(screen.getByText(/2 of 3 residents to review/).closest('.no-print')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Last 12 hours' }).closest('.no-print')).toBeNull()
+    expect(screen.getByText(served.summary).closest('.no-print')).toBeNull()
+    const rows = screen.getAllByRole('listitem')
+    expect(rows).toHaveLength(served.residents.length)
+    for (const row of rows) {
+      expect(row.closest('.no-print')).toBeNull()
+    }
+    expect(screen.getByText('2 sessions above baseline').closest('.no-print')).toBeNull()
+  })
 
   it('renders the list and the summary from the mock data when the API is unreachable', async () => {
     offline()
@@ -524,5 +567,38 @@ describe('Handoff', () => {
     for (const element of container.querySelectorAll('[style]')) {
       expect(element.getAttribute('style')).not.toMatch(/#[\da-f]{3,8}\b|hsl\(/i)
     }
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly, following alert.css (T289) and residentPrint.css (T333).
+ * Hiding `.no-print` itself is the shared print.css's job since T353, along with
+ * black-on-white: the handoff marks its chrome rather than restating the rule, so both
+ * halves of that chain are asserted here. */
+describe('handoff.css print layout', () => {
+  const printBlock = handoffCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
+
+  it('has print rules at all', () => {
+    expect(printBlock).toBeTruthy()
+  })
+
+  it('hides every element the screen marked no-print', () => {
+    expect(printCss).toMatch(/@media print \{[\s\S]*\.no-print\s*\{[^}]*display:\s*none/)
+  })
+
+  it('hides the app shell header and demo banner while the handoff is open', () => {
+    expect(printBlock).toMatch(/\.app:has\(\.handoff\) > header\s*,/)
+    expect(printBlock).toMatch(/\.app:has\(\.handoff\) > \.demo-banner\s*\{[^}]*display:\s*none/)
+  })
+
+  it('never breaks a resident row across two pages', () => {
+    expect(printBlock).toMatch(/\.handoff__row \{[^}]*break-inside:\s*avoid/)
+    // Same rule for print engines that only know the old property name.
+    expect(printBlock).toMatch(/\.handoff__row \{[^}]*page-break-inside:\s*avoid/)
+  })
+
+  it('keeps the review rail and the chips readable once the colour is gone', () => {
+    expect(printBlock).toMatch(/\.handoff__row--review \{[^}]*border-left-width/)
+    expect(printBlock).toMatch(/\.handoff__chip \{[^}]*border:/)
   })
 })
