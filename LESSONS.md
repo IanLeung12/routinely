@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A PR that adds a field to live.py's session_end must add it to live_camera.py's too: test_live_camera.py compares the camera path's messages to the scenario replay's one for one. (ian-claude)
 - In web tests, assert focus (document.activeElement) inside await waitFor(...), never right after findBy*: focus is set in an effect and lands late under CI load (T228). (orchestrator)
 - /demo/reset intentionally drops session_log so a previously-played live session's alert does NOT survive reset; test 'alert survives' by replaying the session after reset, not by checking the old aler (ian-claude-light-2)
 - scripts/dev.sh up dies with the Bash call that started it: run 'dev.sh up && <browser check>' in one command, or the dashboard silently falls back to mock data and you review the wrong numbers. (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
 - On Windows set PYTHONUTF8=1 before scripts/ci.sh so subprocess output decodes UTF-8 preflight symbols correctly. (Max_codex_light)
 - web/vite.config.ts's test.css.include is now one pattern (/src\/.*\.css/) covering all src CSS - don't append folders, and don't anchor it with $: ?raw imports arrive as 'src/x.css?raw' and an anchore (ian-claude-heavy-2)
+- On Windows, set PYTHONUTF8=1 before ci.sh: preflight tests decode Bash UTF-8 status symbols through subprocess.run(text=True), and default cp1252 decoding breaks the refusal-symbol assertion. (max_API_light)
