@@ -7,7 +7,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T128 — tasks.py: stop reading fields at the task body
+### T133 — tasks.py: stop reading fields at the task body
 - status: todo
 - class: light
 - priority: 1
