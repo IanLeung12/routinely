@@ -203,13 +203,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents.py -q` and `scripts/ci.sh` pass.
 
 ### T013 — Dashboard unit overview screen
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: T001
 - area: web/src/ (new files under web/src/overview/ and web/src/mock/, plus App.tsx wiring)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:28Z
 - pr: —
 
 What: SPEC §9 screen 1: resident list with a status chip (normal / watch / flagged) and a sparkline of each resident's error score. Visual first; a nurse should read it in 10 s.
