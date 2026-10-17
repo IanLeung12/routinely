@@ -806,3 +806,56 @@ Interface: in `replay.py` add `session_id_of(scenario: Scenario) -> str` (raises
 Acceptance:
 - New tests: empty scenario raises `ReplayError` from `run` and from `session_messages`.
 - `scripts/ci.sh` passes with no change to existing expected outputs.
+
+### T056 — Scenario: tea abandoned mid-task
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_abandoned/, tests/scenarios/README.md
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:30Z
+- pr: #47
+
+What: No e2e scenario covers abandonment (resident starts tea, then nothing for >120 s with required steps left). Add one, written at step level, so the tester replays it end to end.
+Interface: `tests/scenarios/tea_abandoned/{steps.jsonl,expected.yaml}`. Read only: `tests/scenarios/README.md` (format), `tests/scenarios/tea_no_kettle/` (example with history), `pipeline/src/routine_watch/errors.py` lines 50-150 (abandonment rule, `ABANDON_AFTER_S = 120`), `pipeline/tests/test_errors.py` abandonment section. Steps: fill_kettle, get_cup, boil, then a gap >120 s, then one more step (or stop); expected errors include `abandonment` plus whatever omissions the classifier reports (run it and record the real output, don't guess). Give it a `history:` so it flags (two bad sessions within 48 h, ≥3 prior). Add a row to the README table.
+Acceptance:
+- `scripts/e2e.sh` passes with 8/8 scenarios; `scripts/ci.sh` passes.
+- expected.yaml has a header comment explaining the scenario, like the existing ones.
+
+### T057 — Task map legend component
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:32Z
+- pr: #48
+
+What: Judges and nurses see red/amber squares on the live task map with no key. Add a small legend explaining each state in plain words (never "diagnose"). Not wired into a screen yet (T043 owns the live screen).
+Interface: `export function TaskMapLegend(): JSX.Element` listing the five states of `StepState` in `web/src/live/TaskMap.tsx` (pending "not yet", done "done", omission "missed step", repeat "repeated step", sequence "out of order"), each with a swatch using the same classes/colours as TaskMap.tsx. Read only `web/src/live/TaskMap.tsx`, `web/src/index.css` (design tokens) and `web/src/ui/README.md`. Swatches are decorative (`aria-hidden`); text carries the meaning; rendered as a `<dl>` or `<ul>` with an accessible name "Task map legend".
+Acceptance:
+- Vitest: renders all five labels; list is reachable by role with name "Task map legend"; no text contains "diagnos".
+- `scripts/ci.sh` passes.
+
+### T058 — Review: merge duplicate pipeline modules found by the code map
+- status: done
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/baseline.py, pipeline/src/routine_watch/change_detection.py, pipeline/src/routine_watch/task_graph.py, pipeline/src/routine_watch/tasks/, pipeline/tests/, docs/CODEMAP.md
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:34Z
+- pr: #51
+- source: reviewer
+
+What: `baseline.py` and `change_detection.py` both describe per-resident baseline/change detection, and `task_graph.py` looks like the T001 placeholder next to the real `tasks/graph.py`. Two homes for one concept confuse every later worker.
+Interface: keep one module per concept. Check which one is imported (`grep -rn "baseline\|change_detection\|task_graph" pipeline/ web/ scripts/`); move any real logic into the live module, delete the placeholder, update imports and tests. No behaviour change.
+Acceptance:
+- `scripts/ci.sh` passes (incl. `scripts/e2e.sh`).
+- `python3 scripts/codemap.py pipeline` shows a single baseline/change module and a single task-graph module.
+- Remove the "Known overlaps" lines you fixed from `docs/CODEMAP.md`.
