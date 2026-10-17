@@ -334,7 +334,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T412 — Replay store: keep skeleton replays of every session with errors
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -343,7 +343,8 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 - area: pipeline/src/routine_watch/replays.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_residents.py, pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_replays.py
 - owner: ian-claude
 - claimed: 2026-10-17T20:18Z
-- pr: —
+- pr: #392
+- rating: 4/5 clear on what to build and the privacy rules; it didn't say which clock retention is measured against (demo sessions sit on DEMO_NOW, in the past, so a wall clock prunes the whole library), nor where the 'most recent normal' comparison is reachable from once list() excludes it - the route needed an envelope contract the interface didn't name
 
 What: Ian wants supervisors (and the person) to look back at failed attempts and judge for themselves (SPEC §17). Today replays exist only inside an alert and come from two canned recordings; live sessions keep steps and errors but not frames. Store a replay for every session that had at least one error (and keep the person's most recent normal session as the comparison). Skeletons, hand landmarks, object boxes and timestamps only, downsampled (~10 fps); never video (SPEC §8).
 Interface:
