@@ -334,7 +334,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T280 — Contracts: JSON Schema for drift, replay and pattern-library payloads
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
