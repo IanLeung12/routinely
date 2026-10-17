@@ -429,7 +429,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T053 — Review: offline feedback fallback hides API rejections from the nurse
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
