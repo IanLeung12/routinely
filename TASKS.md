@@ -229,14 +229,14 @@ Acceptance:
 - Note in the PR that `tests/scenarios/README.md` needs a row (outside area; the orchestrator will batch README rows).
 
 ### T117 — Web mock residents include the evening and motor residents
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: T111
 - area: web/src/mock/residents.ts, web/src/mock/residentDetail.ts
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:05Z
 - pr: —
 
 What: The offline web fallback should show the same residents as the API after T111. Add the two new residents (same ids, names, rooms, status) to the web mocks.
