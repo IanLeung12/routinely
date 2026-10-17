@@ -552,14 +552,14 @@ Acceptance:
 - `demo_residents()` body is shorter by ≥15 lines; `scripts/ci.sh` passes.
 
 ### T136 — Test: demo_residents() is stable across repeated calls
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: test
 - deps: —
 - area: pipeline/tests/test_demo_stability.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:02Z
 - pr: —
 
 What: The tester saw the demo alert grow on every page load (T121). Guard the demo data source against that class of bug: calling `demo_residents()` and `build_alerts(demo_residents())` repeatedly with no live sessions recorded must return identical results. Read only `pipeline/src/routine_watch/demo.py`, `pipeline/src/routine_watch/alerts.py`, `pipeline/tests/conftest.py`.
