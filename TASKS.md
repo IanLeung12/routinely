@@ -518,7 +518,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T186 — Live screen: ?task=meds opens on the medication routine
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -526,7 +526,8 @@ Acceptance:
 - area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T09:15Z
-- pr: —
+- pr: #173
+- rating: 5/5 clear
 
 What: The presenter wants to link straight to the second routine. `LiveScreen` (T161) always starts on tea; let `?task=meds` pick "Medication with water" first; `?task=tea`, anything else or no param keeps tea. Clicking a button still switches as now.
 Interface: Read only `web/src/live/LiveScreen.tsx` and its test. Read `window.location.search` once in the `useState` initializer (`URLSearchParams`); no router, don't write to the URL.
