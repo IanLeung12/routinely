@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 82b5bb6
+- last-reviewed: f587360
 
 ## Tasks
 
@@ -541,3 +541,38 @@ What: Pausing a room now touches four places (monitoring store, `/handoff`, `/ws
 Interface: FastAPI `TestClient` only, fakes only. Steps: `PUT /rooms/204/monitoring {"on": false}` → `GET /monitoring` lists 204 → `GET /handoff` lists Mrs. K's room as paused (T251 field) → `/ws/live` first message is `{"type":"paused","room":"204"}` → `POST /demo/reset` → `/monitoring` empty and `/ws/live` sends `session_start`. Read `pipeline/tests/test_api_monitoring.py` and `conftest.py` for fixtures.
 Acceptance:
 - New test file passes; no source changes; `scripts/ci.sh` passes.
+
+### T259 — Shift handoff summary sentence mentions paused rooms
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since #238 the handoff payload lists paused rooms, but the plain-language `summary` still reads "all quiet" for a window where a room wasn't watched. Pass the paused rooms to the explainer as context so the summary says e.g. "Room 204 (Mrs. K) was paused, so no flags are expected from it."
+Interface: `_summary(rows, flagged_sessions, hours)` gains the `paused` list (or derives it from `rows[*].monitoring_paused`) and adds one context line per paused room to the `Explainer.summarise` call; the fake explainer's output must include the paused room. No contract or API change.
+Acceptance:
+- Test: with room 204 paused, `build_handoff(DEMO_NOW)["summary"]` mentions room 204; with nothing paused the summary is unchanged from today (existing tests still pass).
+- Wording follows SPEC §7.5 (no "diagnose"); fakes only, no real API calls.
+- `scripts/ci.sh` passes.
+
+### T260 — Test: first-load JS bundle size budget for the dashboard
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: web/scripts/check-bundle.mjs, web/package.json, web/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: #237 lazy-loaded the handoff, pattern library and tour screens to shrink first paint. Lock that in: a small Node script that, after `vite build`, sums the gzipped size of the JS the entry `index.html` loads (not lazy chunks) and fails above a budget set ~10% over today's size.
+Interface: `web/scripts/check-bundle.mjs` (Node built-ins only: `fs`, `zlib`, `path`), `npm run check:bundle` in `web/package.json` that runs it against `web/dist/`. Print the measured size and the budget. Document the budget and how to raise it in `web/README.md`. Don't edit `scripts/ci.sh` (note in the PR if it should be wired in).
+Acceptance:
+- `cd web && npm run build && npm run check:bundle` passes on main and prints sizes; temporarily importing `Handoff` eagerly in `App.tsx` makes it fail (describe this check in the PR, don't commit it).
+- `scripts/ci.sh` passes.
