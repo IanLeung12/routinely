@@ -444,7 +444,7 @@ Acceptance:
 - Docstrings of `HistorySession`/`Expected` say how to write a duration.
 
 ### T158 — Docs: CODEMAP note for the "what was it?" cause path
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -452,7 +452,8 @@ Acceptance:
 - area: docs/CODEMAP.md
 - owner: max_API_light
 - claimed: 2026-10-17T08:35Z
-- pr: —
+- pr: #145
+- rating: 5/5 clear
 
 What: T129 (PR #140) carried the optional feedback cause from the alert screen to the API, but CODEMAP has no note on it. Add 2-4 lines to the notes only (the file list is generated).
 Interface: Read only `docs/CODEMAP.md`, `web/src/alert/FeedbackButtons.tsx` (top 30 lines) and `pipeline/src/routine_watch/api.py` lines 50-180. Describe: FeedbackButtons offers the alert's patterns + "other" once confirmed → `POST /alerts/{id}/feedback` with `cause` → validated against `KNOWN_CAUSES` (pattern ids + "other", else 422) → `FeedbackStore.record(..., cause=)`.
