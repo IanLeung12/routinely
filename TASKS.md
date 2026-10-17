@@ -121,14 +121,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_scoring.py -q` and `scripts/ci.sh` pass.
 
 ### T008 — Per-resident baseline and change flag
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/change_detection.py, pipeline/tests/test_change_detection.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:36Z
-- pr: —
+- pr: #6
 
 What: Pure functions that build a resident's baseline from past session scores and decide whether recent sessions flag a change for review. Read only the files in `area`, `pipeline/src/routine_watch/baseline.py` (import `FLAG_MIN_SESSIONS`; do not edit it) and `pipeline/pyproject.toml`.
 Interface: `@dataclass(frozen=True) class Baseline: mean: float; std: float; threshold: float`; `build_baseline(scores: list[float], k: float = 2.0, min_std: float = 0.5) -> Baseline` (threshold = mean + k * max(std, min_std); raises `ValueError` on fewer than 3 scores); `flag_change(sessions: list[tuple[datetime, float]], baseline: Baseline, now: datetime, window_h: float = 48.0, min_sessions: int = FLAG_MIN_SESSIONS) -> bool` (True when at least `min_sessions` sessions within `window_h` hours before `now` score above the threshold).
