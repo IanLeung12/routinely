@@ -7,8 +7,12 @@ import { mockLiveStream } from './mockLiveStream.ts'
  * they're done, flash red for an omission or amber for a repeat/sequence error. */
 export type StepState = 'pending' | 'done' | 'omission' | 'repeat' | 'sequence'
 
+/** One step of the session's task graph, for the task map (SPEC section 10). */
+export type LiveStep = { id: string; label: string; optional: boolean }
+
 /** The T029 WebSocket protocol, verbatim. */
 export type LiveMessage =
+  | { type: 'session_start'; session_id: string; task_id: string; steps: LiveStep[] }
   | { type: 'frame'; frame: CaptureFrame }
   | { type: 'step'; event: StepEvent }
   | { type: 'step_state'; states: Record<string, StepState> }
@@ -18,6 +22,7 @@ export type LiveMessage =
 export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }
 
 export type LiveSessionState = {
+  steps: LiveStep[]
   frame: CaptureFrame | null
   states: Record<string, StepState>
   errors: TaskError[]
@@ -26,7 +31,7 @@ export type LiveSessionState = {
 }
 
 function initialState(source: 'live' | 'mock'): LiveSessionState {
-  return { frame: null, states: {}, errors: [], ended: null, source }
+  return { steps: [], frame: null, states: {}, errors: [], ended: null, source }
 }
 
 function liveSessionUrl(scenario: string, speed: number): string {
@@ -39,6 +44,8 @@ function liveSessionUrl(scenario: string, speed: number): string {
 
 function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'live' | 'mock'): LiveSessionState {
   switch (message.type) {
+    case 'session_start':
+      return { ...state, steps: message.steps, source }
     case 'frame':
       return { ...state, frame: message.frame, source }
     case 'step':
