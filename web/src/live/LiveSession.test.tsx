@@ -128,7 +128,7 @@ describe('LiveSession', () => {
         },
       })
     })
-    expect(screen.getByText('Omission · Put the teabag in the cup · 1:12')).toBeTruthy()
+    expect(screen.getByText('skipped Put the teabag in the cup · 1:12')).toBeTruthy()
 
     act(() => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
@@ -165,8 +165,8 @@ describe('LiveSession', () => {
     const errorItems = within(screen.getByText('Errors').closest('.card')!).getAllByRole('listitem')
     expect(errorItems).toHaveLength(2)
     expect(errorItems.map((item) => item.textContent)).toEqual([
-      'Perseveration · Pour the water · 0:30',
-      'Omission · Put the teabag in the cup · 0:40',
+      'repeated Pour the water · 0:30',
+      'skipped Put the teabag in the cup · 0:40',
     ])
 
     expect(
@@ -211,7 +211,7 @@ describe('LiveSession', () => {
         },
       })
     })
-    expect(announcer.textContent).toBe('Flag raised: Omission · Put the teabag in the cup · 1:12')
+    expect(announcer.textContent).toBe('Flag raised: skipped Put the teabag in the cup · 1:12')
   })
 
   it('announces a connection status change when the socket falls back to mock data', () => {

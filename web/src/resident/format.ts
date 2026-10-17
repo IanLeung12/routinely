@@ -1,18 +1,8 @@
 import type { ErrorType } from '../contracts.ts'
+import { ERROR_TYPE_LABEL } from '../ui/errorTypes.ts'
 import type { SessionErrors } from './types.ts'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-/** Plain-language names for the error types in SPEC section 7, matching the words the
- * pipeline's explainer uses. The session list has no step to name, only counts. */
-const ERROR_LABELS: Record<ErrorType, string> = {
-  omission: 'skipped step',
-  sequence: 'out of order',
-  perseveration: 'repeated step',
-  substitution: 'wrong object',
-  hesitation: 'long pause',
-  abandonment: 'stopped partway',
-}
 
 /** The pipeline writes UTC timestamps, so the dashboard reads them back in UTC: the
  * same screen everywhere, and tests that don't depend on the machine's timezone. */
@@ -61,6 +51,6 @@ export function formatScore(score: number): string {
 export function formatErrors(errors: SessionErrors): string {
   const parts = Object.entries(errors)
     .filter(([, count]) => (count ?? 0) > 0)
-    .map(([type, count]) => `${ERROR_LABELS[type as ErrorType] ?? type} ×${count}`)
+    .map(([type, count]) => `${ERROR_TYPE_LABEL[type as ErrorType] ?? type} ×${count}`)
   return parts.join(' · ')
 }
