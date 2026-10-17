@@ -22,14 +22,14 @@ What: Fey "stock detail" layout for a resident: header (name, status pill, top p
 Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T406 — Redesign 6/6: live session + handoff
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/live/, web/src/handoff/Handoff.tsx, web/src/handoff/handoff.css, web/src/handoff/Handoff.test.tsx, web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.defaults.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-4
+- claimed: 2026-10-17T22:36Z
 - pr: #416
 - note: merge conflict with main on PR #416: check out its branch, merge origin/main, fix, push
 - rating: 4/5 clear on what to build and the note about T428 saved a collision; the area list didn't cover the before/after screenshots the acceptance asks for (docs/design/, docs/DESIGN.md), so that had to be taken outside the area
