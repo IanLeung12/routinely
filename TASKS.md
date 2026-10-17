@@ -455,7 +455,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T254 — Demo residents carry a consent record (who opted in, when)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -464,7 +464,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo_consent.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T12:10Z
-- pr: —
+- pr: #239
+- rating: 5/5 clear
 
 What: SPEC §12 says the resident or their substitute decision-maker opts in per room, but nothing shows that consent exists. Add a seeded consent record per demo resident so judges see consent is part of the design (Responsible design / Usefulness).
 Interface: In `demo.py`, add to each `_RESIDENTS` entry and to every `demo_residents()` dict a `consent: {"given_by": str, "on": "YYYY-MM-DD"}` field, e.g. `{"given_by": "Resident", ...}` or `{"given_by": "Substitute decision-maker (daughter)", ...}`; dates before the 14-day history starts, deterministic. `GET /residents` and `/residents/{id}` already return these dicts, so no `api.py` change.
