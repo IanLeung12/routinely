@@ -112,15 +112,15 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T290 — Alert: errors by time of day (morning / afternoon / evening)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: T284
 - area: web/src/alert/TimeOfDayStrip.tsx, web/src/alert/TimeOfDayStrip.test.tsx, web/src/alert/AlertView.tsx, pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py, contracts/alert_detail.schema.json, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T16:19Z
 - pr: —
 
 What: Rationale: evening-only worsening (SPEC §7.5, already in pipeline/src/routine_watch/patterns.py) appears on the alert as text only; a nurse can't see why. Show a small strip of errors per session bucketed morning/afternoon/evening over the last 14 days, as visible evidence for that pattern.
