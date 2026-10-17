@@ -480,13 +480,13 @@ Acceptance:
 - `scripts/ci.sh` passes with no change to existing expected outputs.
 
 ### T056 — Scenario: tea abandoned mid-task
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: tests/scenarios/tea_abandoned/, tests/scenarios/README.md
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:30Z
 - pr: —
 
 What: No e2e scenario covers abandonment (resident starts tea, then nothing for >120 s with required steps left). Add one, written at step level, so the tester replays it end to end.
