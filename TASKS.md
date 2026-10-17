@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 0896fe5
+- last-reviewed: 477d383
 
 ## Tasks
 
@@ -574,3 +574,73 @@ Acceptance:
 - for every step, `title` and `body` do not match `/diagnos|\bhas (delirium|dementia|a stroke)\b|treatment/i`
 - at least one step body contains "flags a change for review"; every step has a non-empty title and body
 - `cd web && npx vitest run src/tour/steps.test.ts` passes; `scripts/ci.sh` passes
+
+### T360 — Guided tour: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/tour/
+- owner: —
+- claimed: —
+- pr: —
+
+What: The `?tour=1` guided tour card must fit a 375 px phone without horizontal scroll or clipped buttons, like the other phone-width tasks (T234, T238).
+Interface: read `web/src/tour/Tour.tsx` and `web/src/tour/Tour.test.tsx`; add `web/src/tour/tour.css` (if styles are inline, move only the layout ones) with an `@media (max-width: 480px)` block: card max-width `calc(100vw - 2rem)`, buttons wrap. Add `tour` to `css.include` only if you need `?raw` (that file is web/vite.config.ts — note it in the PR instead of editing it; read the CSS with `fs.readFileSync` in the test).
+Acceptance:
+- New test asserts the phone media query exists and sets the card's max-width and button wrapping.
+- No behaviour change; existing tour tests still pass.
+- `scripts/ci.sh` passes.
+
+### T361 — Test: overview sparklines have a text alternative
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/Sparkline.a11y.test.tsx, web/src/overview/Sparkline.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Screen-reader users must get the trend a sparkline shows. Test that each sparkline exposes an accessible name describing the trend (e.g. "Error rate over last 14 sessions, rising"); if it doesn't, add `role="img"` + `aria-label` in `Sparkline.tsx`.
+Interface: read `web/src/overview/Sparkline.tsx` and `web/src/overview/Sparkline.test.tsx` first; new test file uses `getByRole('img', { name: /.../ })`.
+Acceptance:
+- Test covers rising, flat and empty-data sparklines.
+- Wording never says "diagnose" or names a condition.
+- `scripts/ci.sh` passes.
+
+### T362 — Scenario: tea_late_start_normal (long idle before the first step is not an error)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_late_start_normal/
+- owner: —
+- claimed: —
+- pr: —
+
+What: A resident who sits for a long time before touching the kettle and then makes tea correctly must not get an error or a flag. Guards against the abandonment timer starting before the first step.
+Interface: copy the layout of `tests/scenarios/tea_long_pause_not_error/` (`frames.jsonl`, `expected.yaml`); generate frames with the same generator/script that scenario's README or `tests/scenarios/README.md` names. Pipeline code is out of scope: if the scenario fails, file it in the PR and set the task blocked with the failing output.
+Acceptance:
+- `scripts/e2e.sh` runs the new scenario and it passes: zero errors, no flag.
+- `scripts/ci.sh` passes.
+
+### T363 — Test: task map legend has accessible names for every step state
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: —
+- area: web/src/live/TaskMapLegend.a11y.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Each legend entry (done, current, missed, error…) must be readable without colour, by text or accessible name.
+Interface: read `web/src/live/TaskMapLegend.tsx` and `web/src/live/TaskMapLegend.test.tsx`; new test file only. If an entry relies on colour alone, set the task blocked with a note naming the entry (don't change the component).
+Acceptance:
+- One assertion per legend state, by role/name or visible text.
+- `scripts/ci.sh` passes.
