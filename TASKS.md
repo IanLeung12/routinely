@@ -318,7 +318,7 @@ Acceptance:
 - PR body notes the viewport widths checked.
 
 ### T236 — Review: live session_end flag/alert_id can disagree with the resident's real status (alert 404)
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
