@@ -296,7 +296,7 @@ Acceptance:
 - Look at it (dev server `/landing.html`, desktop + 390 px wide); describe what you checked in the PR.
 
 ### T379 — Test: shift handoff Print button works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -304,7 +304,7 @@ Acceptance:
 - area: web/src/handoff/Handoff.keyboard.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T19:36Z
-- pr: —
+- pr: #377
 
 What: T203 added a "Print handoff" button; the keyboard-only test (T294/T321) predates it. Cover it so a nurse without a mouse can print.
 Interface: read only web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.tsx and the 'Print handoff' test near line 171 of web/src/handoff/Handoff.test.tsx (stub `window.print` the same way). No production code changes.
