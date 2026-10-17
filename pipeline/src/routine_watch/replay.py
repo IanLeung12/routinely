@@ -15,18 +15,19 @@ checks a change end to end before anybody trusts a demo to it::
     python -m routine_watch.replay --check                      # PASS/FAIL every one
     scripts/e2e.sh                                              # the same, from CI
 
-Scenario authoring, and what the stubs below cannot express yet:
+Scenario authoring, and what the stub below cannot express yet:
 `tests/scenarios/README.md`.
 
-**Stubs.** Two stages of the pipeline are placeholders today, so this module stands in
-for them. Each is marked `STUB` where it is defined, and each goes away when its task
-lands; the scenarios and their expectations do not change when it does.
+**Stub.** One stage of the pipeline is a placeholder today, so this module stands in
+for it. It is marked `STUB` where it is defined, and it goes away when its task lands;
+the scenarios and their expectations do not change when it does.
 
 * :func:`steps_from_frames` stands in for `routine_watch.recogniser`: it reads a step
   off the objects a hand is on, instead of state rules plus the Gemini verifier.
-* :func:`find_errors` stands in for `routine_watch.task_graph` plus
-  `routine_watch.errors`: it finds five of the six error types in SPEC section 7
-  (everything but hesitation) by walking the step events against the task graph.
+
+Errors are the real `routine_watch.errors.classify_errors`, against SPEC section 7's
+task graph rules. Hesitation is not folded in yet: it needs a per-step duration
+baseline, and no scenario carries one.
 """
 
 from __future__ import annotations
@@ -50,14 +51,12 @@ from .contracts import (
     BoundingBox,
     CaptureFrame,
     ErrorType,
-    EvidenceKind,
-    EvidenceRef,
     ObjectLabel,
     StepEvent,
     StepSource,
-    TaskError,
     repo_root,
 )
+from .errors import classify_errors
 from .scoring import session_score
 from .tasks import TaskGraph, TaskGraphError, load_task
 
@@ -74,10 +73,6 @@ REPLAY_EPOCH = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
 #: `recogniser.MIN_STEP_CONFIDENCE`: a scenario that wants a low-confidence or
 #: `unclear` moment writes the step event itself, in `steps.jsonl`.
 STUB_CONFIDENCE = 0.9
-
-#: No events for this long, with required steps still to do, is abandonment
-#: (SPEC section 7, "no events for N minutes"). Hand-set for the MVP.
-ABANDON_GAP_S = 300.0
 
 
 #: Any contract read out of a scenario file.
@@ -315,112 +310,6 @@ def steps_from_frames(frames: Sequence[CaptureFrame], graph: TaskGraph) -> list[
     return events
 
 
-# ------------------------------------------------- STUB: task graph and error types
-
-
-def find_errors(
-    graph: TaskGraph,
-    events: Sequence[StepEvent],
-    *,
-    session_id: str,
-    session_end: float,
-    abandon_gap_s: float = ABANDON_GAP_S,
-) -> list[TaskError]:
-    """STUB. Step events against the task graph, standing in for
-    `routine_watch.task_graph` plus `routine_watch.errors` (SPEC section 7).
-
-    Five of the six error types, by the rules in the spec's table:
-
-    * **omission** - a required step never happens at all.
-    * **sequence** - a step happens before a dependency that is then done later.
-    * **perseveration** - a once-only step happens again, with other steps in between.
-    * **substitution** - a step is done with an object not on its allowed list.
-    * **abandonment** - no events for `abandon_gap_s`, with required steps still to do.
-
-    Not here: **hesitation**, which is a step or gap more than 2.5 standard deviations
-    above this resident's own average, so it needs per-step baselines that no scenario
-    carries yet. A scenario cannot expect one until the baseline stage lands.
-
-    Also from the spec: events marked `unclear` are never errors, and an unclear step
-    still counts as having happened, so it cannot be reported as an omission either.
-    """
-    errors: list[TaskError] = []
-
-    def add(
-        error_type: ErrorType,
-        step_id: str | None,
-        t_start: float,
-        t_end: float,
-        evidence: list[EvidenceRef],
-    ) -> None:
-        errors.append(
-            TaskError(
-                error_id=f"{session_id}:x{len(errors)}",
-                session_id=session_id,
-                type=error_type,
-                step_id=step_id,
-                t_start=t_start,
-                t_end=t_end,
-                evidence=evidence,
-            )
-        )
-
-    counted = [event for event in events if not event.unclear]
-    done: list[str] = []
-    for index, event in enumerate(counted):
-        try:
-            step = graph.step(event.step_id)
-        except KeyError as exc:
-            raise ReplayError(f"{event.event_id}: {exc}") from exc
-        here = [
-            EvidenceRef(
-                kind=EvidenceKind.STEP_EVENT,
-                t_start=event.t_start,
-                t_end=event.t_end,
-                event_id=event.event_id,
-            )
-        ]
-
-        previous = counted[index - 1] if index else None
-        if (
-            previous is not None
-            and event.t_start - previous.t_end > abandon_gap_s
-            and not set(done).issuperset(graph.required_steps)
-        ):
-            add(
-                ErrorType.ABANDONMENT,
-                None,
-                previous.t_end,
-                event.t_start,
-                [_replay_ref(previous.t_end, event.t_start)],
-            )
-
-        if any(str(label) not in step.allowed_objects for label in event.objects):
-            add(ErrorType.SUBSTITUTION, step.id, event.t_start, event.t_end, here)
-
-        undone = step.deps - set(done)
-        if undone & {later.step_id for later in counted[index + 1 :]}:
-            add(ErrorType.SEQUENCE, step.id, event.t_start, event.t_end, here)
-
-        if step.once_only and step.id in done and done[-1] != step.id:
-            add(ErrorType.PERSEVERATION, step.id, event.t_start, event.t_end, here)
-
-        done.append(step.id)
-
-    happened = {event.step_id for event in events}
-    for step_id in graph.required_steps:
-        if step_id not in happened:
-            add(ErrorType.OMISSION, step_id, 0.0, session_end, [_replay_ref(0.0, session_end)])
-
-    return errors
-
-
-def _replay_ref(t_start: float, t_end: float) -> EvidenceRef:
-    """The skeleton replay over a span: what a nurse sees when there is no event to
-    point at (SPEC section 8: never a video clip)."""
-    return EvidenceRef(kind=EvidenceKind.SKELETON_REPLAY, t_start=t_start, t_end=t_end)
-
-
 # ----------------------------------------------------------------------- the replay
 
 
@@ -445,20 +334,13 @@ def change_flag(
 def run(scenario: Scenario) -> dict[str, Any]:
     """Run one loaded scenario through the pipeline and return the result as JSON data."""
     events = scenario.events
-    if scenario.frames:
-        session_id = scenario.frames[0].session_id
-        session_end = max(frame.t for frame in scenario.frames)
-    else:
-        session_id = events[0].session_id
-        session_end = max(event.t_end for event in events)
+    session_id = scenario.frames[0].session_id if scenario.frames else events[0].session_id
 
     # Two people in frame means somebody is helping: the session is excluded from the
     # baseline and scores zero (SPEC section 7).
     assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)
 
-    errors = find_errors(
-        scenario.graph, events, session_id=session_id, session_end=session_end
-    )
+    errors = classify_errors(events, scenario.graph, session_id=session_id, ended=True)
     counts = Counter(str(error.type) for error in errors if not error.self_corrected)
     self_corrected = sum(1 for error in errors if error.self_corrected)
     score = session_score(counts, self_corrected, assisted)

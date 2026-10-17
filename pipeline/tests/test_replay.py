@@ -3,12 +3,13 @@
 Two halves. The first replays every scenario in the repo and checks it against its
 own `expected.yaml`, which is the same thing `scripts/e2e.sh` does, so a broken
 pipeline fails here as well as in e2e. The second pins the rules the scenarios rely
-on but do not all exercise: what the stub recogniser makes of a frame, which of
-SPEC section 7's errors the stand-in classifier finds, and when a session flags.
+on but do not all exercise: what the stub recogniser makes of a frame, and when a
+session flags. SPEC section 7's error types themselves are `routine_watch.errors`'s
+to pin (`tests/test_errors.py`); this module just wires the real classifier in.
 
-The two stubs are stubs on purpose (`tests/scenarios/README.md`). These tests describe
-what they do today so that replacing them with the real recogniser and the real error
-classifier is a visible change rather than a quiet one.
+The recogniser is a stub on purpose (`tests/scenarios/README.md`). These tests
+describe what it does today so that replacing it with the real one is a visible
+change rather than a quiet one.
 """
 
 from __future__ import annotations
@@ -35,7 +36,6 @@ from routine_watch.contracts import (
     StepSource,
 )
 from routine_watch.replay import (
-    ABANDON_GAP_S,
     SCENARIOS_DIR,
     Expected,
     HistorySession,
@@ -43,7 +43,6 @@ from routine_watch.replay import (
     change_flag,
     check,
     compare,
-    find_errors,
     load_scenario,
     main,
     replay,
@@ -138,13 +137,6 @@ def write_scenario(path: Path, expected: str, *, steps: str = "", frames: str = 
     if frames:
         (path / "frames.jsonl").write_text(frames, encoding="utf-8")
     return path
-
-
-def errors_of(graph: TaskGraph, events: list[StepEvent]) -> list[tuple[str, str | None]]:
-    """`find_errors` as (type, step) pairs, which is how a scenario writes them down."""
-    end = max((event.t_end for event in events), default=0.0)
-    found = find_errors(graph, events, session_id=SESSION, session_end=end)
-    return [(str(error.type), error.step_id) for error in found]
 
 
 # ------------------------------------------------------------------- the scenarios
@@ -280,113 +272,6 @@ def test_frames_are_read_in_sequence_order(tea: TaskGraph) -> None:
     ]
     shuffled = [frame(1, 0.5, on_spoon_in_cup), frame(0, 0.0, on_cup)]
     assert [event.step_id for event in steps_from_frames(shuffled, tea)] == ["get_cup", "stir"]
-
-
-# ------------------------------------------------- STUB: the task graph and errors
-
-
-def good_run() -> list[StepEvent]:
-    """One correct, complete session, as step events."""
-    return [
-        step("fill_kettle", ["kettle"], 0.0, 5.0),
-        step("boil", ["kettle"], 6.0, 8.0),
-        step("get_cup", ["cup"], 9.0, 11.0),
-        step("teabag_in_cup", ["teabag", "cup"], 12.0, 15.0),
-        step("pour", ["kettle", "cup"], 16.0, 20.0),
-        step("stir", ["spoon", "cup"], 21.0, 24.0),
-        step("remove_teabag", ["teabag", "spoon"], 25.0, 27.0),
-    ]
-
-
-def test_a_clean_run_has_no_errors(tea: TaskGraph) -> None:
-    assert errors_of(tea, good_run()) == []
-
-
-def test_a_required_step_that_never_happens_is_an_omission(tea: TaskGraph) -> None:
-    events = [event for event in good_run() if event.step_id != "stir"]
-    assert errors_of(tea, events) == [("omission", "stir")]
-
-
-def test_skipping_an_optional_step_is_not_an_omission(tea: TaskGraph) -> None:
-    assert ("omission", "milk") not in errors_of(tea, good_run())
-    assert ("omission", "sugar") not in errors_of(tea, good_run())
-
-
-def test_a_step_before_a_dependency_done_later_is_a_sequence_error(tea: TaskGraph) -> None:
-    events = good_run()
-    pour, teabag = events[4], events[3]
-    events[3], events[4] = pour, teabag  # pour first, then the teabag goes in
-    assert ("sequence", "pour") in errors_of(tea, events)
-
-
-def test_a_step_before_a_dependency_never_done_is_only_an_omission(tea: TaskGraph) -> None:
-    """A sequence error needs the dependency to turn up later. This one never does."""
-    events = [event for event in good_run() if event.step_id != "teabag_in_cup"]
-    assert errors_of(tea, events) == [("omission", "teabag_in_cup")]
-
-
-def test_a_once_only_step_done_again_later_is_perseveration(tea: TaskGraph) -> None:
-    events = [*good_run(), step("pour", ["kettle", "cup"], 28.0, 31.0)]
-    assert errors_of(tea, events) == [("perseveration", "pour")]
-
-
-def test_a_step_carried_straight_on_with_is_not_perseveration(tea: TaskGraph) -> None:
-    """Two events for one long pour is the recogniser blinking, not an error."""
-    events = good_run()
-    events.insert(5, step("pour", ["kettle", "cup"], 20.5, 22.0))
-    assert errors_of(tea, events) == []
-
-
-def test_stirring_twice_is_never_perseveration(tea: TaskGraph) -> None:
-    """`stir` is once_only: false in the task file, because stirring again is normal."""
-    events = [*good_run(), step("stir", ["spoon", "cup"], 28.0, 30.0)]
-    assert errors_of(tea, events) == []
-
-
-def test_the_wrong_object_is_a_substitution(tea: TaskGraph) -> None:
-    events = good_run()
-    events[5] = step("stir", ["milk", "cup"], 21.0, 24.0)  # stirring with the milk
-    assert errors_of(tea, events) == [("substitution", "stir")]
-
-
-def test_a_long_gap_mid_task_is_abandonment(tea: TaskGraph) -> None:
-    """They walked off with the kettle boiled and the cup still empty."""
-    away = ABANDON_GAP_S + 60.0
-    events = [
-        *good_run()[:3],
-        step("teabag_in_cup", ["teabag", "cup"], 12.0 + away, 15.0 + away),
-        step("pour", ["kettle", "cup"], 16.0 + away, 20.0 + away),
-        step("stir", ["spoon", "cup"], 21.0 + away, 24.0 + away),
-        step("remove_teabag", ["teabag", "spoon"], 25.0 + away, 27.0 + away),
-    ]
-    assert errors_of(tea, events) == [("abandonment", None)]
-
-
-def test_a_long_gap_after_the_task_is_done_is_not_abandonment(tea: TaskGraph) -> None:
-    """They finished their tea and came back to stir it again. Nothing to report."""
-    events = [*good_run(), step("stir", ["spoon", "cup"], 1000.0, 1004.0)]
-    assert errors_of(tea, events) == []
-
-
-def test_an_unclear_event_is_never_an_error(tea: TaskGraph) -> None:
-    """Below ~0.6 and the verifier could not resolve it: never counted (SPEC section 7)."""
-    events = [*good_run(), step("pour", ["milk"], 28.0, 31.0, unclear=True)]
-    assert errors_of(tea, events) == []
-
-
-def test_an_unclear_step_still_counts_as_having_happened(tea: TaskGraph) -> None:
-    """Otherwise "we could not tell" would be reported as the resident skipping it."""
-    events = [
-        step("stir", ["spoon", "cup"], 21.0, 24.0, unclear=True) if event.step_id == "stir"
-        else event
-        for event in good_run()
-    ]
-    assert errors_of(tea, events) == []
-
-
-def test_a_step_the_task_graph_does_not_have_is_an_error(tea: TaskGraph) -> None:
-    with pytest.raises(ReplayError, match="no step 'wash_up'"):
-        errors_of(tea, [step("wash_up", ["cup"], 0.0, 1.0)])
 
 
 # --------------------------------------------------------------- score and flag
