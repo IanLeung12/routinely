@@ -726,14 +726,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T091 — Tests: demo residents land on their intended status
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_demo.py
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T06:22Z
 - pr: —
 
 What: `pipeline/src/routine_watch/demo.py` pins seeds so each resident gets its intended status, but no test guards it; upcoming pattern work (T084, T089) will change this file.
