@@ -1,0 +1,28 @@
+# The meds counterpart of tea_teabag_three_times: the resident takes a pill out of
+# the organiser, drinks water, takes a pill out again, drinks water again, takes a
+# pill out a third time, then closes the organiser.
+#
+# take_pill has no once_only:false in meds.yaml, so it defaults to once-only like
+# teabag_in_cup in tea.yaml, and the 2nd and 3rd occurrences are each perseveration
+# (intact order, step repeated after other steps happened). Drinking water twice is
+# not an error: drink_water is once_only:false by design, the same as stir in tea.
+
+task: meds
+
+steps:
+  - get_glass
+  - open_organiser
+  - take_pill
+  - fill_glass
+  - drink_water
+  - take_pill # again, perseveration
+  - drink_water # again, not an error (drink_water is once_only:false)
+  - take_pill # again, perseveration
+  - close_organiser # optional, taken
+
+errors:
+  - { type: perseveration, step: take_pill }
+  - { type: perseveration, step: take_pill }
+score: 4.0 # perseveration 2.0 x2
+
+flag: false
