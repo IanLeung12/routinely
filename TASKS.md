@@ -565,7 +565,7 @@ Acceptance:
 - `scripts/ci.sh` passes (including e2e on `tea_normal`).
 
 ### T108 — Review: smoke.sh skips the evidence replay routes and isn't syntax-checked in CI
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
