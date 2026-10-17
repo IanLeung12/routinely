@@ -346,7 +346,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T331 — Test: heat calendar cells have accessible names
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
