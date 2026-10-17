@@ -31,16 +31,42 @@ class FeedbackStore:
     """Logged nurse feedback, and the per-resident threshold it implies."""
 
     def __init__(self) -> None:
-        self._by_alert: dict[str, tuple[str, AlertFeedback]] = {}
+        self._by_alert: dict[str, tuple[str, AlertFeedback, str | None]] = {}
 
-    def record(self, alert_id: str, resident_id: str, feedback: AlertFeedback) -> None:
+    def record(
+        self,
+        alert_id: str,
+        resident_id: str,
+        feedback: AlertFeedback,
+        cause: str | None = None,
+    ) -> None:
         """Log feedback for an alert. Re-recording the same alert_id replaces it."""
-        self._by_alert[alert_id] = (resident_id, feedback)
+        self._by_alert[alert_id] = (resident_id, feedback, cause)
 
     def get(self, alert_id: str) -> AlertFeedback | None:
         """The stored feedback for an alert, or None if it has none."""
         entry = self._by_alert.get(alert_id)
         return entry[1] if entry else None
+
+    def cause_of(self, alert_id: str) -> str | None:
+        """The stored cause for an alert, or None if it has none."""
+        entry = self._by_alert.get(alert_id)
+        return entry[2] if entry else None
+
+    def cause_counts(self, resident_id: str) -> dict[str, int]:
+        """How many confirmed alerts this resident has per cause id.
+
+        Only ``confirmed`` alerts count; false alarms never contribute, since a
+        cause on a dismissed alert isn't evidence the pattern matched.
+        """
+        counts: dict[str, int] = {}
+        for owner, feedback, cause in self._by_alert.values():
+            if owner != resident_id or cause is None:
+                continue
+            if feedback.verdict != FeedbackVerdict.CONFIRMED:
+                continue
+            counts[cause] = counts.get(cause, 0) + 1
+        return counts
 
     def threshold(self, resident_id: str, base: float) -> float:
         """This resident's threshold, tuned by their logged feedback.
@@ -50,7 +76,7 @@ class FeedbackStore:
         """
         n_false_alarms = 0
         n_confirmed = 0
-        for owner, feedback in self._by_alert.values():
+        for owner, feedback, _cause in self._by_alert.values():
             if owner != resident_id:
                 continue
             if feedback.verdict == FeedbackVerdict.FALSE_ALARM:
