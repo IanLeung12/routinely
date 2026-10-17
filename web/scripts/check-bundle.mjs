@@ -16,7 +16,12 @@ import { fileURLToPath } from 'node:url'
 // under 800 bytes of headroom, so a new always-on screen still has to be
 // lazy(). Raise this only alongside a PR that explains the growth (a new eager
 // dependency, a new always-on screen); do not raise it to silence this check.
-const BUDGET_BYTES = 96_000
+// Raised for T446: main measures 95899 on e8841d9 (95204 above was measured
+// before the last of that day's screens merged), leaving ~100 bytes, and the
+// replay player's error markers, speed control and frame stepping add 345 to
+// it — the alert screen, and the player with it, loads eagerly (App.tsx).
+// Measured 96244. The alert screen is the next thing worth making lazy().
+const BUDGET_BYTES = 96_500
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
 const distDir = join(webDir, 'dist')
