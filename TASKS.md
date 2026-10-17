@@ -313,7 +313,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T167 — Review: nurse feedback tunes the threshold in /handoff and alert payload but not /residents status or /alerts
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -322,7 +322,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:51Z
-- pr: —
+- pr: #163
+- rating: 4/5 clear
 
 What: `handoff.build_handoff` and `api._alert_payload` apply `_feedback_store.threshold(...)`, but `list_residents`/`get_resident` status and `list_alerts` use the raw `baseline.threshold` from `demo_residents()`. After a nurse taps "not concerning", handoff says 0 flags while the overview still shows Flagged, which contradicts itself on stage.
 Interface: one helper in `api.py` (e.g. `_tuned(resident) -> dict`) that recomputes status against the feedback-tuned threshold, reusing `demo`'s flag rule rather than duplicating it (expose a small `demo.status_for(resident, threshold)` if needed); use it in the residents and alerts routes. Read only `api.py`, `demo.py` lines 50-80, `feedback.py`.
