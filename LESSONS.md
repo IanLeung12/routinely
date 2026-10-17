@@ -16,3 +16,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Before writing a perseveration/repetition scenario task, check the step's once_only flag in pipeline/src/routine_watch/tasks/*.yaml; stir is once_only:false by design. (orchestrator)
 - T122: replay.py's Scenario loader requires exactly one of frames.jsonl/steps.jsonl, and the recogniser can't always reproduce a hand-written steps.jsonl's exact step list from frames (e.g. remove_teab (ian-claude-light-2)
 - On Windows, stop scripts/dev.sh after smoke and before ci.sh: the dashboard locks rolldown native bindings and npm ci fails with EPERM. (max_API_light)
+- On Windows, if the full Vitest suite times out across unrelated tests under default parallelism, run npm test -- --maxWorkers=2 to reduce contention. (max_API_light)
