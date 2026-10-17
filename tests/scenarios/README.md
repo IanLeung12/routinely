@@ -101,6 +101,7 @@ carry the per-step history needed to exercise it.
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 | `pattern_sudden_change` | steps | The demo's bad session on a resident whose own history has only scattered single-type slips: `top_pattern` checks the flag is consistent with `sudden_change` (SPEC §7.5). |
 | `pattern_slow_drift` | steps | Cold water, no stir, after three weeks of hesitation climbing night after night: `top_pattern` checks `slow_drift` (SPEC §7.5). |
+| `pattern_executive` | steps | The teabag goes in three times (perseveration) with the order otherwise intact, building over about a week: `top_pattern` checks `executive_pattern` (SPEC §7.5). |
 | `pattern_none` | steps | A substitution error against a resident with one earlier substitution: flags a change, but `top_pattern` checks it matches no pattern in the library. |
 | `meds_pill_before_water` | steps | Taking the pill before filling the glass is fine, but drinking before filling is a sequence error; does not flag. |
 | `tea_bad_sessions_far_apart` | steps | Two bad sessions more than 48 hours apart must not flag; guards the 48h window. |
