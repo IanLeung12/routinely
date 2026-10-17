@@ -182,14 +182,14 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
 ### T253 — Shift handoff screen: show the rooms whose monitoring is paused
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: T251
 - area: web/src/handoff/types.ts, web/src/handoff/mockHandoff.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T13:06Z
 - pr: —
 
 What: Show T251's new `paused` list on the handoff screen so the incoming nurse sees which rooms weren't watched.
