@@ -1,22 +1,22 @@
 # Test report
-- main: 333d4de (T244: live screen says monitoring is paused instead of sitting empty)
-- run: 2026-10-17 12:10 UTC (OFFLINE_MODE=true, LIVE_API unset)
+- main: 1d6ee98 (T271: exclude paused residents from the handoff quiet count)
+- run: 2026-10-17 13:10 UTC (OFFLINE_MODE=true, LIVE_API unset)
 
 ## Levels
 - 1 Unit (scripts/ci.sh): PASS
 - 2 Simulation (scripts/e2e.sh): PASS, 25/25 scenarios
-- Smoke (scripts/smoke.sh, stack up): PASS, all checks (incl. seeded alert survives /demo/reset)
+- Smoke (scripts/smoke.sh, stack up): PASS, all checks
+- Integration (scripts/integration.sh): PASS ("OK integration (api + dashboard + live ws)"); T270 looks resolved on this sha
 - 3 UI walkthrough: PASS (demo path end to end)
-  - unit overview: status chips, top pattern, sparklines, filters, demo banner
-  - Mrs. K detail: baseline chart + threshold, slow drift, heat calendar, sessions, care records; new monitoring switch renders (UI-only until T243 lands; no PUT sent yet)
-  - room paused via API (PUT /rooms/204/monitoring on=false): live screen shows "Monitoring is paused for room 204" (T244 works); /demo/reset resumes it (T192 works)
-  - live session: steps go green, teabag missed, pour repeated, errors with times, summary vs usual, "Flagged for review / Open alert"
-  - alert: 4 errors across 2 sessions, evidence replay with skeleton + boxes, "Consistent with ..." patterns + rule-outs, suggested checks
-  - "Confirmed": "Marked as confirmed", threshold 2.4 → 2.3; feedback buttons now styled (T232 fixed)
-  - no console errors
-- 4 Robustness: PASS
-  - corrupted frames (truncated / garbage lines / empty) via e2e.sh: clean line-numbered error, no traceback
-  - API killed: dashboard falls back to mock data ("Mock data" label), no crash
+  - unit overview: status chips, patterns, sparklines, filters, demo banner
+  - Mrs. K detail: baseline chart + threshold, heat calendar, sessions, care records
+  - monitoring switch (T243) now writes real state: Paused → "No camera data is processed while paused", "Recent changes: Paused by nurse · time" (T262); resume adds "Resumed by nurse"
+  - live panel while paused (after reload/remount): "Monitoring is paused for room 204" + "Check again" button (T266). Note: toggling the switch doesn't update an already-open live panel until remount or Check again (by design)
+  - shift handoff: names paused room 204, "3 residents with nothing to review" (T259/T271)
+  - live session: steps go green, teabag missed 1:10, pour repeated 1:30, summary vs usual, "Flagged for review / Open alert"
+  - alert: 4 errors across 2 sessions, skeleton replay, "Consistent with ..." + rule-outs, suggested checks
+  - "Confirmed": "Marked as confirmed", threshold 2.4 → 2.3
+- 4 Robustness: PASS (not re-run this time; e2e corrupted-frames cases still pass)
 
 ## Open bug tasks
-- none (T232 done)
+- T270 (integration failing @21fc468) — passes @1d6ee98, noted on task for orchestrator to close
