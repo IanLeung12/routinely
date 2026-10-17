@@ -111,25 +111,6 @@ Acceptance:
 - a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
-### T289 — Alert view: print-friendly layout
-- status: done
-- class: standard
-- priority: 3
-- kind: improvement
-- deps: —
-- area: web/src/alert/alert.css, web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T14:25Z
-- pr: #283
-- rating: 5/5 clear
-
-What: nurses bring flagged alerts to care conferences on paper; printing the alert today includes nav, feedback buttons and the dark replay card. Add a `@media print` layout so the page shows resident, errors, "consistent with" patterns, rule-outs and suggested checks in black on white.
-Interface: `@media print` rules in alert.css; hide feedback buttons and the replay player via a `no-print` class; wording unchanged. Optional "Print" button calling `window.print()`.
-Acceptance:
-- AlertView.test.tsx: elements that must not print carry `no-print`; the Print button (if added) calls `window.print`.
-- PR notes a Chrome print-preview check of the Mrs. K alert: 1–2 pages, no dark backgrounds.
-- `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
-
 ### T290 — Alert: errors by time of day (morning / afternoon / evening)
 - status: todo
 - class: heavy
