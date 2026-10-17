@@ -73,14 +73,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_care_records.py -q` passes.
 
 ### T005 — Scenario replay harness (e2e)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - deps: T002, T003
 - area: scripts/e2e.sh, tests/scenarios/, pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
 - owner: ian-claude
 - claimed: 2026-10-17T03:45Z
-- pr: —
+- pr: #12
 
 What: The simulation layer the tester runs. A scenario is a recorded/synthetic capture stream plus the expected outcome; replaying it runs the full pipeline offline.
 Interface: `tests/scenarios/<name>/frames.jsonl` (capture records per T002 contracts), `expected.yaml` (`steps: [...]`, `errors: [{type, step}]`, `flag: true|false`, optional `history:` synthetic prior sessions). `python -m routine_watch.replay <dir>` prints a JSON result; `scripts/e2e.sh` runs all scenarios with `OFFLINE_MODE=true`, prints PASS/FAIL per scenario with a diff, exits non-zero on any failure.
