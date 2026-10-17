@@ -23,3 +23,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
 - motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
+- On Windows, run ci.sh with two-CPU process affinity to avoid Vitest default-worker timeouts: in PowerShell, (Get-Process -Id $PID).ProcessorAffinity = 3; bash scripts/ci.sh. (max_API_light)
