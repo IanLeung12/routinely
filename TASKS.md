@@ -448,14 +448,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T282 — Integration: pausing a room makes /ws/live send "paused", resuming lets it run
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/integration.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T13:56Z
 - pr: —
 
 What: The pause flow (T244/T249/T266/T275) is covered by unit tests and an in-process API test, but not against the running stack. Extend scripts/integration.sh's existing websockets block to check it end to end.
