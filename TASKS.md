@@ -176,7 +176,7 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
 
 ### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: improvement
