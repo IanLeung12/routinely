@@ -26,7 +26,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
