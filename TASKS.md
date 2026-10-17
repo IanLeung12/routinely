@@ -438,14 +438,14 @@ Acceptance:
 - `cd web && npx vitest run src/ui/DemoBanner` passes; `scripts/ci.sh` passes.
 
 ### T387 — Test: guided tour works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/tour/Tour.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T20:01Z
 - pr: —
 
 What: The `?tour=1` presenter card (T360 just made it phone-width) has no keyboard test.
