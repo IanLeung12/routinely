@@ -1,55 +1,54 @@
-# METRICS (last 6 h, generated 2026-10-17 20:01 UTC)
+# METRICS (last 6 h, generated 2026-10-17 21:02 UTC)
 
-- **Throughput:** 102/108 claimed tasks merged · 9 active workers · first-try success 83%
-- **Friction:** 2 PR CI failures · 15 releases (9 sessions ended early, 0 stale, 2 conflicts) · 7 blocked
-- **Main:** 0/109 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.8/5 · 62 bug/review tasks filed (all time)
-- **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m, w5 0m, w6 0m
+- **Throughput:** 95/103 claimed tasks merged · 10 active workers · first-try success 82%
+- **Friction:** 1 PR CI failures · 14 releases (8 sessions ended early, 0 stale, 3 conflicts) · 7 blocked
+- **Main:** 0/111 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.7/5 · 65 bug/review tasks filed (all time)
+- **Host worker idle (recent log):** w1 0m, w2 78m, w3 3m, w4 3m, w5 0m, w6 0m, w7 33m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| light | 56 | 53 | 82 | 1 | 7 | 16 | 15k |
-| standard | 42 | 40 | 88 | 1 | 4 | 13 | 55k |
-| heavy | 10 | 9 | 70 | 0 | 4 | 21 | 130k |
+| light | 51 | 49 | 86 | 0 | 5 | 17 | 15k |
+| standard | 41 | 37 | 80 | 1 | 4 | 14 | 55k |
+| heavy | 11 | 9 | 64 | 0 | 5 | 27 | 190k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| test | 54 | 52 | 83 | 2 | 7 | 14 | 35k |
-| improvement | 33 | 31 | 85 | 0 | 4 | 17 | 55k |
-| feature | 12 | 11 | 75 | 0 | 4 | 20 | 125k |
-| bug | 5 | 4 | 80 | 0 | 0 | 18 | 45k |
-| docs | 4 | 4 | 100 | 0 | 0 | 9 | 15k |
+| test | 45 | 45 | 89 | 1 | 5 | 15 | 30k |
+| improvement | 32 | 29 | 78 | 0 | 4 | 19 | 45k |
+| feature | 16 | 12 | 62 | 0 | 5 | 18 | 125k |
+| bug | 8 | 7 | 88 | 0 | 0 | 14 | 50k |
+| docs | 2 | 2 | 100 | 0 | 0 | 15 | 10k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-light-2 | 25 | 25 | 96 | 0 | 1 | 11 | 25k |
-| ian-claude-standard-2 | 23 | 23 | 91 | 1 | 2 | 14 | 55k |
-| ian-claude-standard | 20 | 19 | 95 | 0 | 1 | 11 | 45k |
-| ian-claude | 14 | 13 | 64 | 1 | 6 | 24 | 105k |
-| Max_codex_light | 9 | 8 | 67 | 0 | 2 | 18 | 4k |
-| max_API_light | 9 | 8 | 67 | 0 | 2 | 24 | 5k |
-| ian-claude-heavy-2 | 5 | 4 | 80 | 0 | 0 | 19 | 85k |
-| ian-claude-heavy-3 | 2 | 1 | 50 | 0 | 0 | 21 | 105k |
-| max_API_standard | 1 | 1 | 0 | 0 | 1 | 30 | 9k |
+| ian-claude-light-2 | 20 | 20 | 95 | 0 | 1 | 11 | 25k |
+| ian-claude-standard | 19 | 18 | 89 | 0 | 1 | 13 | 45k |
+| ian-claude-standard-2 | 19 | 19 | 89 | 1 | 2 | 14 | 55k |
+| ian-claude | 11 | 10 | 64 | 0 | 5 | 27 | 120k |
+| max_API_light | 10 | 9 | 70 | 0 | 2 | 24 | 5k |
+| Max_codex_light | 9 | 8 | 78 | 0 | 1 | 18 | 4k |
+| ian-claude-heavy-2 | 6 | 5 | 83 | 0 | 1 | 19 | 85k |
+| ian-claude-heavy-3 | 4 | 3 | 75 | 0 | 0 | 22 | 95k |
+| max_API_standard | 3 | 2 | 33 | 0 | 1 | 26 | 9k |
+| ian-claude-standard-3 | 2 | 1 | 50 | 0 | 0 | 14 | 45k |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| pipeline/src/routine_watch | 13 | 12 | 77 | 0 | 4 | 21 | 95k |
-| web/src/resident | 10 | 9 | 80 | 0 | 1 | 10 | 40k |
-| tests/scenarios | 9 | 9 | 89 | 1 | 1 | 13 | 45k |
-| web/src/overview | 9 | 9 | 100 | 0 | 0 | 12 | 40k |
-| web/src/alert | 7 | 7 | 100 | 0 | 0 | 21 | 45k |
-| web/src/handoff | 6 | 6 | 67 | 1 | 2 | 22 | 38k |
-| web/src/live | 6 | 5 | 83 | 0 | 1 | 18 | 58k |
-| web/src/about | 4 | 4 | 100 | 0 | 0 | 14 | 20k |
+| pipeline/src/routine_watch | 13 | 12 | 77 | 0 | 4 | 23 | 88k |
+| web/src/resident | 10 | 10 | 90 | 0 | 1 | 10 | 35k |
+| web/src/overview | 9 | 8 | 89 | 0 | 0 | 14 | 35k |
+| web/src/live | 7 | 7 | 86 | 0 | 1 | 18 | 45k |
+| tests/scenarios | 7 | 7 | 86 | 1 | 1 | 17 | 45k |
+| web/src/alert | 6 | 5 | 83 | 0 | 0 | 23 | 30k |
+| web/src/handoff | 5 | 5 | 80 | 0 | 1 | 20 | 30k |
+| web/src/evidence | 4 | 4 | 75 | 0 | 1 | 31 | 52k |
 
 ## Problem tasks
-- T294 (light/test, ian-claude): CI×1 released×1 — Test: shift handoff works keyboard-only
-- T187 (light/test, Max_codex_light): released×1 — Test: App shows the live routine picker with tea selected
 - T307 (light/test, max_API_light): released×1 — Test: replay player works keyboard-only
 - T301 (heavy/improvement, ian-claude): released×1 — Review: contract schema + smoke check for GET /residents/{id}/feedback
 - T310 (light/test, ian-claude-light-2): blocked — Test: pattern library urgency filter (every option, reset, empty state
@@ -63,6 +62,8 @@
 - T346 (light/test, ian-claude-light-2): blocked — Test: alert time-of-day strip has accessible names
 - T351 (light/bug, ian-claude-light-2): blocked — Review: time-of-day strip and evening pattern use different "evening" 
 - T203 (light/feature, ian-claude): released×1 — Shift handoff: print-friendly layout
+- T368 (light/improvement, Max_codex_light): released×1 — Test infra: every web test gets a fake WebSocket by default
+- T372 (standard/test, ian-claude-standard-2): released×1 — Test: every error type and pattern is covered by a recorded scenario
 
 ## Low task ratings (≤3/5)
 - T366 3/5: 3/5 task assumed ErrorState is wired into UnitOverview but it isn't; fetchResidents swallows errors and falls back to mo
