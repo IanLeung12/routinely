@@ -380,14 +380,14 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T024 — Task map component
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx
 - owner: max-codex-light-2
 - claimed: 2026-10-17T04:46Z
-- pr: —
+- pr: #23
 
 What: Presentational task-graph map for the live session screen: steps turn green when done, flash red for omission, amber for repeat or sequence. Read only the files in `area`, `web/src/App.test.tsx` (test style) and `web/package.json`. Do not edit any other file.
 Interface: `TaskMap({steps, states}: {steps: {id: string; label: string}[]; states: Record<string, 'pending' | 'done' | 'omission' | 'repeat' | 'sequence'>})`. Renders steps in the given order as a horizontal row of boxes with arrows between them; each box has class `step step--<state>` and `data-state`; missing state = pending. Add a `<style>` or CSS module-free class names (green done, red omission with a CSS pulse animation, amber repeat/sequence). No new dependencies.
