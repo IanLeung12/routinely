@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T030 — Gemini step verifier behind an interface
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
