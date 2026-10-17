@@ -100,3 +100,43 @@ def test_motor_sequencing_no_more_common_than_normal():
     assert seq_omission_rate(motor) <= seq_omission_rate(normal)
     with_hesitation = [s for s in motor if "hesitation" in s["errors"]]
     assert with_hesitation
+
+
+def test_evening_deterministic_for_seed():
+    a = generate_history("r1", seed=7, scenario="evening")
+    b = generate_history("r1", seed=7, scenario="evening")
+    assert a == b
+
+
+def test_evening_worsens_only_in_recent_evenings():
+    from datetime import UTC, datetime, timedelta
+
+    sessions = generate_history("r1", days=14, seed=7, scenario="evening")
+    end = datetime(2026, 1, 1, tzinfo=UTC)
+    recent = [s for s in sessions if end - datetime.fromisoformat(s["ts"]) <= timedelta(days=7)]
+
+    recent_mornings = [
+        s for s in recent if datetime.fromisoformat(s["ts"]).hour < 16
+    ]
+    recent_evenings = [
+        s for s in recent if datetime.fromisoformat(s["ts"]).hour >= 16
+    ]
+    assert recent_mornings and recent_evenings
+
+    morning_avg = sum(sum(s["errors"].values()) for s in recent_mornings) / len(recent_mornings)
+    evening_avg = sum(sum(s["errors"].values()) for s in recent_evenings) / len(recent_evenings)
+    assert evening_avg >= 3 * max(morning_avg, 0.01)
+
+    for s in recent_evenings:
+        assert 1 <= sum(s["errors"].values()) <= 3
+
+    for day in range(14 - 7, 14):
+        day_start = end - timedelta(days=14) + timedelta(days=day)
+        day_sessions = [
+            s
+            for s in sessions
+            if day_start <= datetime.fromisoformat(s["ts"]) < day_start + timedelta(days=1)
+        ]
+        hours = [datetime.fromisoformat(s["ts"]).hour for s in day_sessions]
+        assert any(h < 16 for h in hours)
+        assert any(h >= 16 for h in hours)
