@@ -42,6 +42,12 @@ scenario replay can flag because the scenario carries its own history in
 `expected.yaml`. Attaching the resident, and with them their history and their alert,
 is a follow-up.
 
+What it does have is a skeleton worth keeping. A camera session that had an error keeps
+its records as a replay (`routine_watch.replays`, SPEC section 17), under `person_id`,
+so whoever was in front of the camera can watch the attempt back; being able to look at
+it is not the same as having a history to be judged against, so the flag above is
+unaffected.
+
 Nothing here holds a frame. The records are landmarks, boxes and timestamps (SPEC
 section 8), which is all the recogniser reads, and they are kept for the session because
 every reading is of the whole session so far. That is also what `REREAD_EVERY_S` is
@@ -55,12 +61,14 @@ import asyncio
 import threading
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-from .contracts import CaptureFrame, StepEvent, TaskError
+from .contracts import CaptureFrame, Session, StepEvent, TaskError
+from .demo import DEMO_NOW, DEMO_RESIDENT
 from .errors import classify_errors
-from .live import MAX_FRAME_FPS, StepState, step_states
+from .live import MAX_FRAME_FPS, StepState, save_replay, step_states
 from .quality import session_quality
 from .recogniser import FLICKER_GAP_S, _Scene, _scenes, _spans, recognise
 from .replay import Expected, ReplayError, Scenario, score_session
@@ -87,7 +95,9 @@ MAX_PENDING_FRAMES = 30
 
 
 async def camera_session_messages(
-    frames: AsyncIterator[CaptureFrame] | Iterable[CaptureFrame], task: str = "tea"
+    frames: AsyncIterator[CaptureFrame] | Iterable[CaptureFrame],
+    task: str = "tea",
+    person_id: str = DEMO_RESIDENT,
 ) -> AsyncIterator[dict[str, Any]]:
     """Play a live capture stream through the pipeline as a live session.
 
@@ -95,6 +105,12 @@ async def camera_session_messages(
     numbers and times them; `task` names the task graph they are read against
     (`routine_watch.tasks.load_task`). The session ends when the stream does, which for a
     camera is the human stopping the recording.
+
+    `person_id` is whose replay library the session's skeleton is kept in if it had an
+    error (SPEC section 17): the demo resident by default, who is also whose room
+    `/ws/live` checks the pause switch of for a camera session. It buys the session no
+    history - the flag below is still false - because a library is a place to look
+    back at attempts, not a baseline to judge them against.
 
     Raises :class:`routine_watch.tasks.TaskGraphError` on the first step if there is no
     such task, and :class:`routine_watch.replay.ReplayError` if the stream ends without
@@ -161,7 +177,23 @@ async def camera_session_messages(
     for message in sent.reading(events, final):
         yield message
 
-    score, _, flag = score_session(_as_session(graph, records, events, session_id), final, events)
+    score, assisted, flag = score_session(
+        _as_session(graph, records, events, session_id), final, events
+    )
+    quality = session_quality(events)
+    if quality == "ok":
+        # The same skeleton the dashboard has just watched, kept so it can be watched
+        # again (SPEC section 17). These are real capture records, so this replay is
+        # of what actually happened rather than a stand-in for it - and still
+        # landmarks, boxes and timestamps, because that is all a record has ever been
+        # (SPEC section 8). An unclear session keeps none, the rule `live` applies.
+        save_replay(
+            _recorded_session(
+                session_id, graph, records, person_id=person_id, assisted=assisted, score=score
+            ),
+            records,
+            final,
+        )
     yield {
         "type": "session_end",
         # The finished session's errors, the same authoritative list `live`'s
@@ -175,7 +207,7 @@ async def camera_session_messages(
         # thing a live session can say about its own capture and the reason the score
         # beside it is 0.0. `live.session_messages` sends the same field off the same
         # rule, so neither path can say more about a recording than the other.
-        "quality": session_quality(events),
+        "quality": quality,
     }
 
 
@@ -275,6 +307,35 @@ def _mutable_from(scenes: Sequence[_Scene]) -> float:
             if end == last or now - scenes[end].t <= FLICKER_GAP_S
         ),
         default=float("inf"),
+    )
+
+
+def _recorded_session(
+    session_id: str,
+    graph: TaskGraph,
+    records: Sequence[CaptureFrame],
+    *,
+    person_id: str,
+    assisted: bool,
+    score: float,
+) -> Session:
+    """This camera session as the finished session its replay is kept under.
+
+    A camera stream carries session time and nothing else - seconds since the first
+    record - so the session is placed on the same clock a replayed one is
+    (`live._record`): ending at the demo's today, having taken as long as the records
+    say it took. Both paths reading one clock is what keeps a library's "when" in
+    order whichever way a session was played.
+    """
+    seconds = records[-1].t if records else 0.0
+    return Session(
+        session_id=session_id,
+        resident_id=person_id,
+        task_id=graph.id,
+        started_at=DEMO_NOW - timedelta(seconds=seconds),
+        ended_at=DEMO_NOW,
+        assisted=assisted,
+        score=score,
     )
 
 

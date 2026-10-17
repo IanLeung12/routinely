@@ -20,6 +20,7 @@ from .api_live import router as _live_router
 from .api_residents import router as _residents_router
 from .api_state import _feedback_store
 from .demo import DEMO_NOW
+from .evidence import reset_demo_replays
 from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .monitoring import get_monitoring_store
 
@@ -61,8 +62,9 @@ def _demo_reset_enabled() -> bool:
 def demo_reset() -> dict[str, bool]:
     """Put the demo back to its seeded history (SPEC §10, §13).
 
-    Forgets every live session recorded against a demo resident and every logged
-    nurse feedback, so a rehearsal's flag doesn't linger into the next run. Only
+    Forgets every live session recorded against a demo resident, every logged nurse
+    feedback and every kept replay, so a rehearsal's flag - or the skeleton of the
+    attempt behind it (SPEC section 17) - doesn't linger into the next run. Only
     reachable with `OFFLINE_MODE=true` or `DEMO_RESET=1`, so it can't wipe a real
     deployment's state; 404 otherwise, as if the route didn't exist.
     """
@@ -71,6 +73,7 @@ def demo_reset() -> dict[str, bool]:
     session_log.reset()
     _feedback_store.reset()
     get_monitoring_store().reset()
+    reset_demo_replays()
     return {"ok": True}
 
 
