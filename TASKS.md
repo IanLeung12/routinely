@@ -223,14 +223,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T096 — Scenario: teabag added three times is perseveration, stirring twice is not
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_teabag_three_times/
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:21Z
 - pr: —
 - note: rewritten by orchestrator: stir is once_only:false in tea.yaml by design (repeat stirring is normal), so use teabag_in_cup (once_only default true) instead.
 
