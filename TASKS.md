@@ -407,7 +407,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T372 — Test: every error type and pattern is covered by a recorded scenario
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
@@ -458,7 +458,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T375 — Unit overview: say when it is showing demo data because the API is unreachable
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
