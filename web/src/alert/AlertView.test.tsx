@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiUrl } from '../config.ts'
 import type { Alert } from '../contracts.ts'
@@ -114,7 +114,9 @@ describe('AlertView', () => {
 
     expect(await screen.findByText('Loading replay…')).toBeTruthy()
 
-    releases.forEach((release) => release())
+    await act(async () => {
+      releases.forEach((release) => release())
+    })
     expect(await screen.findByText('No replay available')).toBeTruthy()
   })
 
@@ -241,7 +243,7 @@ describe('AlertView', () => {
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
 
     const heading = await screen.findByRole('heading', { level: 1 })
-    expect(document.activeElement).toBe(heading)
+    await waitFor(() => expect(document.activeElement).toBe(heading))
   })
 
   it('wraps the view in a landmark labelled by the h1', async () => {
