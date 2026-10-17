@@ -1,4 +1,4 @@
-import { Button } from '../ui/Button.tsx'
+import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import type { ResidentStatus, ResidentSummary } from './types.ts'
 
 export type SortMode = 'default' | 'recent'
@@ -40,18 +40,11 @@ export function ResidentSort({
   onChange: (mode: SortMode) => void
 }) {
   return (
-    <div className="unit-sort" role="group" aria-label="Sort residents">
-      {SORT_MODES.map(({ id, label }) => (
-        <Button
-          key={id}
-          variant="secondary"
-          className="unit-sort__button"
-          aria-pressed={mode === id}
-          onClick={() => onChange(id)}
-        >
-          {label}
-        </Button>
-      ))}
-    </div>
+    <SegmentedControl
+      label="Sort residents"
+      options={SORT_MODES.map(({ id, label }) => ({ value: id, label }))}
+      value={mode}
+      onChange={onChange}
+    />
   )
 }
