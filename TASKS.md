@@ -484,7 +484,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T320 — Test: unit overview works keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -492,7 +492,8 @@ Acceptance:
 - area: web/src/overview/UnitOverview.keyboard.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T16:05Z
-- pr: —
+- pr: #307
+- rating: 5/5 clear
 
 What: Add a keyboard-only test for the unit overview, mirroring `web/src/about/PrivacyPanel.keyboard.test.tsx` and `web/src/alert/AlertView.keyboard.test.tsx`.
 Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/UnitOverview.test.tsx` (mocks/fixtures) and one existing `*.keyboard.test.tsx`. Create only `web/src/overview/UnitOverview.keyboard.test.tsx`.
