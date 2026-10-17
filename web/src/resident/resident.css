@@ -11,6 +11,12 @@
   font-size: var(--text-sm);
 }
 
+.resident-detail__consent {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* The room's monitoring switch with the trail of who last changed it underneath
    (SPEC §12), as one item in the header's flex row. */
 .resident-detail__monitoring {
