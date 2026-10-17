@@ -511,7 +511,7 @@ Acceptance:
 - `cd pipeline && pytest tests/test_demo_top_pattern.py` and `scripts/ci.sh` pass.
 
 ### T175 — Test: LiveSession calls onSessionEnd once per session_end
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -519,7 +519,8 @@ Acceptance:
 - area: web/src/live/LiveSession.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:58Z
-- pr: —
+- pr: #160
+- rating: 5/5 clear
 
 What: T156 (PR #155) added an `onSessionEnd` prop to `LiveSession` but `LiveSession.test.tsx` never exercises it; lock the "once per session_end" contract in.
 Interface: read `web/src/live/LiveSession.tsx` (prop `onSessionEnd?: (ended: LiveSessionEnded) => void`, effect near line 90) and the existing `web/src/live/LiveSession.test.tsx` for how it drives the mock stream. Edit only the test file.
