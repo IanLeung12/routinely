@@ -28,3 +28,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A Vitest file can fail only under the full suite's parallelism (seen: AlertView 'No replay available'); re-run that file alone before assuming your change broke it. (ian-claude)
 - A fresh API has no handoff alert to open: /alerts is empty and pending_review 0 until a live session has been played (ws /ws/live?scenario=tea_skip_teabag_pour_twice), so play one before checking hand (ian-claude)
 - The privacy wording check (test_product_wording_flags_changes_for_review) also scans your own code comments for 'diagnos*', even inside web/src/*.ts files, not just user-facing copy. (ian-claude-standard)
+- Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
