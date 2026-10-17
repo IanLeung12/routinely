@@ -35,8 +35,12 @@ The messages, in the order a session produces them:
                  (`classify_errors(..., ended=False)`), so a session flashes
                  red while it is still running; each error is sent once,
                  keyed by its `error_id`.
-``session_end``  The session's `score`, whether it raised a `flag`, and the
-                 `alert_id` of the resident's alert that flag shows up in.
+``session_end``  The session's `errors`, its `score`, whether it raised a
+                 `flag`, and the `alert_id` of the resident's alert that flag
+                 shows up in. `errors` is the finished session's whole list,
+                 each `TaskError` serialised the way the `error` message's is:
+                 the list to settle on once the session is over, which the
+                 `error` messages above are every reading on the way to.
 ===============  ===========================================================
 
 Two things follow from classifying an unfinished session, and both are deliberate:
@@ -48,9 +52,13 @@ Two things follow from classifying an unfinished session, and both are deliberat
   keep both, because an error already shown to a nurse is not unsaid; `step_state` is
   always the current reading, so the step that turned out not to be missing goes back
   to `done`.
-* **The score is the finished session's.** `session_end` re-classifies with
-  `ended=True` and scores that, which is the number the resident's baseline is fed
-  (`routine_watch.scoring`), not a tally of everything that flickered on the way.
+* **The end is the finished session's.** `session_end` re-classifies with
+  `ended=True`, and that list is both its `errors` and what it scores: the number the
+  resident's baseline is fed (`routine_watch.scoring`), not a tally of everything that
+  flickered on the way. So a streamed `error` is **provisional** - what the session
+  looked like at that moment - and `session_end.errors` is authoritative: the same
+  errors `routine_watch.replay` (and so `scripts/e2e.sh`) ends on, which is what lets
+  a screen that has been showing the stream settle on the right answer.
 
 * **The finished session becomes one of the resident's.** The point of making tea on
   stage is that it counts (SPEC section 10, step 4), so the last thing a session does
@@ -173,11 +181,22 @@ def step_states(
 
 
 def as_json(message: dict[str, Any]) -> dict[str, Any]:
-    """One message as JSON data, ready for `WebSocket.send_json`."""
-    return {
-        key: value.model_dump(mode="json") if isinstance(value, BaseModel) else value
-        for key, value in message.items()
-    }
+    """One message as JSON data, ready for `WebSocket.send_json`.
+
+    A message's values are contracts (`error`), lists of them (`session_end`'s
+    `errors`) or JSON already (`score`, `states`), so only the contracts are dumped.
+    """
+    return {key: _as_json(value) for key, value in message.items()}
+
+
+def _as_json(value: Any) -> Any:
+    """One message value as JSON data: a contract dumped, a list of them dumped
+    item by item, anything else left as it is."""
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    if isinstance(value, list):
+        return [_as_json(item) for item in value]
+    return value
 
 
 async def session_messages(
@@ -273,6 +292,10 @@ async def session_messages(
         )
     yield {
         "type": "session_end",
+        # The finished session's errors, which is the list to show once it is over:
+        # the `error` messages are every reading this session went through, this is
+        # the reading it ended on (see "the end is the finished session's" above).
+        "errors": final,
         "score": score,
         "flag": flag,
         # The alert this session shows up in, which is the resident's own

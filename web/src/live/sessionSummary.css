@@ -1,0 +1,8 @@
+.session-summary__line {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.session-summary__usual {
+  color: var(--muted);
+}
