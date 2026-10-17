@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
@@ -401,7 +401,7 @@ Acceptance:
 - No changes to screen components outside `App.tsx`; `scripts/ci.sh` passes.
 
 ### T298 — Test: pattern library works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
