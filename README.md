@@ -17,6 +17,17 @@ docs/       architecture and process-flow diagrams
 
 Whole-repo checks: `scripts/ci.sh` (ruff + pytest for `pipeline/`, lint + test + build for `web/`).
 
+## Run the stack
+One command, no API keys needed (`OFFLINE_MODE=true`, mock data):
+
+```bash
+scripts/dev.sh up      # starts API (:8000) + dashboard (:5173) in the background, prints URLs
+scripts/dev.sh status  # check what's running
+scripts/dev.sh down    # stop both, free the ports
+```
+
+Logs: `.dev/api.log`, `.dev/web.log`. Override ports with `API_PORT` / `DASHBOARD_PORT`. `up` is idempotent — running it twice is fine.
+
 ## Run a worker (teammates)
 Needs `git`, `gh` (logged in), `python3`, and `claude` or `codex`.
 
