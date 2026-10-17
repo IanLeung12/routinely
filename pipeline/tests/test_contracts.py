@@ -20,6 +20,7 @@ from routine_watch.contracts import (
     CONTRACTS,
     HAND_LANDMARK_COUNT,
     POSE_LANDMARK_COUNT,
+    SCHEMAS,
     Alert,
     AlertKind,
     BaselineComparison,
@@ -171,7 +172,7 @@ def test_contracts_dir_is_documented() -> None:
 
 
 def test_every_contract_has_a_schema_file() -> None:
-    wanted = {f"{schema_name(model)}.schema.json" for model in CONTRACTS}
+    wanted = {f"{schema_name(model)}.schema.json" for model in SCHEMAS}
     assert {path.name for path in CONTRACTS_DIR.glob("*.schema.json")} == wanted
 
 
@@ -202,8 +203,19 @@ def test_schema_rejects_a_smuggled_frame(model: type, sample: object) -> None:
 def test_no_schema_can_carry_a_raw_frame() -> None:
     for path in sorted(CONTRACTS_DIR.glob("*.schema.json")):
         for node in walk_objects(json.loads(path.read_text())):
-            assert node["additionalProperties"] is False, path.name
-            for field in node.get("properties", {}):
+            # Every object forbids unknown fields. A map is the exception - the live
+            # protocol's `step_state` is keyed by step id, so its fields cannot be
+            # listed - and then its values have to be a closed enum, which still
+            # leaves nowhere for an image to go.
+            extra = node["additionalProperties"]
+            assert extra is False or "enum" in extra, path.name
+            for field, sub in node.get("properties", {}).items():
+                # A property that is only a reference carries another contract, and
+                # this loop checks that contract where it is defined: that is how the
+                # live protocol's envelope holds a `frame` (one CaptureFrame, which is
+                # skeletons, boxes and timestamps) without a field of its own.
+                if set(sub) == {"$ref"}:
+                    continue
                 banned = [word for word in BANNED_FIELD_WORDS if word in field]
                 assert not banned, f"{path.name}: {field} looks like raw video"
 
