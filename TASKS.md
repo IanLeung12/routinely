@@ -299,13 +299,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_feedback.py -q` and `scripts/ci.sh` pass.
 
 ### T019 — Suggested checks + feedback buttons components
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/alert/SuggestedChecks.tsx, web/src/alert/FeedbackButtons.tsx, web/src/alert/alert.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:37Z
 - pr: —
 
 What: Two small presentational pieces of the alert/evidence view. Read only the files in `area`, `web/src/contracts.ts` (types `SuggestedCheck`, `FeedbackVerdict`; do not edit it), `web/src/App.test.tsx` (test style) and `web/package.json`. Do not edit App.tsx or anything else.
