@@ -174,7 +174,7 @@ Acceptance:
 - `cd web && npm test -- Sparkline` and `scripts/ci.sh` pass.
 
 ### T172 — Heat calendar: colour legend and formatted scores
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: improvement
