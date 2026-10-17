@@ -1,13 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import './App.css'
 import { fetchAlerts } from './alert/api.ts'
 import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
-import { fetchResidents } from './overview/api.ts'
+import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
-import { Button } from './ui/Button.tsx'
 import { DemoBanner } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
+import { Pill } from './ui/Pill.tsx'
 import { useDocumentTitle } from './ui/useDocumentTitle.ts'
 
 /** Off the main demo path (SPEC demo beat is overview → live → alert), so these
@@ -22,6 +23,17 @@ const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour }
  * always landing on the overview. */
 type AlertOrigin = 'overview' | 'handoff' | 'live'
 
+/** The app shell's three top-level destinations, for the floating nav dock. A
+ * resident's detail or an open alert are drill-ins reached from the overview, so
+ * they still count as 'overview' for which dock item is current. */
+type MainScreen = 'overview' | 'handoff' | 'patterns'
+
+const MAIN_SCREENS: { id: MainScreen; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'handoff', label: 'Shift handoff' },
+  { id: 'patterns', label: 'Pattern library' },
+]
+
 export default function App() {
   /** `?tour=1` opts into the presenter cue card; off by default so it never touches
    * the real demo path. */
@@ -35,7 +47,10 @@ export default function App() {
   /** The pattern library is a read-only reference screen, off the main demo path. */
   const [openPatternLibrary, setOpenPatternLibrary] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
-  const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidents>>>([])
+  const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidentsWithSource>>['residents']>([])
+  /** Whether the last residents fetch reached the real API or fell back to demo
+   * data, for the top bar's compact offline indicator. */
+  const [residentsSource, setResidentsSource] = useState<ResidentsSource>('api')
   /** Bumped when a live session ends, so the overview and alerts list refetch
    * without a page reload (SPEC demo beat "alert appears after the second bad session"). */
   const [refreshKey, setRefreshKey] = useState(0)
@@ -50,8 +65,11 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    fetchResidents().then(result => {
-      if (!cancelled) setResidents(result)
+    fetchResidentsWithSource().then(result => {
+      if (!cancelled) {
+        setResidents(result.residents)
+        setResidentsSource(result.source)
+      }
     })
     return () => { cancelled = true }
   }, [refreshKey])
@@ -70,6 +88,19 @@ export default function App() {
   function closeAlert() {
     setOpenAlert(null)
     setOpenHandoff(alertOrigin === 'handoff')
+  }
+
+  /** The dock's current screen: a resident's detail or an open alert are
+   * drill-ins reached from the overview, so they don't get their own dock item. */
+  const currentScreen: MainScreen = openHandoff ? 'handoff' : openPatternLibrary ? 'patterns' : 'overview'
+
+  /** Jumps straight to one of the three main screens, closing whatever drill-in
+   * (a resident's detail, an open alert) was on top of it. */
+  function goToScreen(screen: MainScreen) {
+    setOpenResident(null)
+    setOpenAlert(null)
+    setOpenHandoff(screen === 'handoff')
+    setOpenPatternLibrary(screen === 'patterns')
   }
 
   useDocumentTitle(documentTitle())
@@ -91,27 +122,23 @@ export default function App() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
-      <main id="main" className="app">
+      <main id="main" className="app app--with-dock">
         {showTour && (
           <Suspense fallback={<Loading label="Loading tour…" />}>
             <Tour />
           </Suspense>
         )}
         <DemoBanner />
-        <header>
-          <h1>Routine Watch</h1>
-          <p className="tagline">
-            Watches a resident make a cup of tea and flags a change in their routine for a
-            nurse to review.
-          </p>
-          {!openHandoff && !openPatternLibrary && (
-            <>
-              <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
-              <Button variant="secondary" onClick={() => setOpenPatternLibrary(true)}>
-                Pattern library
-              </Button>
-            </>
-          )}
+        <header className="app-topbar">
+          <div className="app-topbar__brand">
+            <h1 className="app-topbar__name">Routine Watch</h1>
+            <span className="app-topbar__unit">
+              {residents.length} resident{residents.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <Pill tone={residentsSource === 'demo' ? 'watch' : 'positive'} className="app-topbar__status">
+            {residentsSource === 'demo' ? 'Offline — demo data' : 'Live'}
+          </Pill>
         </header>
 
         {openAlert !== null ? (
@@ -162,6 +189,20 @@ export default function App() {
         ) : (
           <ResidentDetail residentId={openResident} onBack={() => setOpenResident(null)} />
         )}
+
+        <nav className="app-dock" aria-label="Main screens">
+          {MAIN_SCREENS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className="app-dock__item"
+              aria-current={currentScreen === id ? 'page' : undefined}
+              onClick={() => goToScreen(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
       </main>
     </>
   )
