@@ -432,7 +432,7 @@ Interface:
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
 
 ### T414 — Bug: resident detail still shows the old threshold after "Confirmed" changes it
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
