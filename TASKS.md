@@ -632,14 +632,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T127 — Review: CORS_ORIGINS undocumented and ignores dev.sh's DASHBOARD_PORT
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: .env.example, scripts/dev.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:38Z
 - pr: —
 
 What: T119 (PR #101) added `CORS_ORIGINS` (default `http://localhost:5173`) to `pipeline/src/routine_watch/api.py`, but `.env.example` doesn't document it and `scripts/dev.sh` doesn't set it, so `DASHBOARD_PORT=5174 scripts/dev.sh up` makes the dashboard silently fall back to mock data again.
