@@ -49,7 +49,7 @@ export default function App() {
 
           <section>
             <h2>Live session</h2>
-            <LiveSession scenario="tea_skip_teabag_pour_twice" />
+            <LiveSession scenario="tea_skip_teabag_pour_twice" onOpenAlert={setOpenAlert} />
           </section>
 
           <section>

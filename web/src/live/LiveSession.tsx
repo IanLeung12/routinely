@@ -71,13 +71,14 @@ function useAnnouncement(
 export type LiveSessionProps = {
   scenario: string
   speed?: number
+  onOpenAlert?: (alertId: string) => void
 }
 
 /** Screen 3 (SPEC section 9): skeleton view next to the task-graph map. Steps turn green
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
-export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
+export function LiveSession({ scenario, speed = 1, onOpenAlert }: LiveSessionProps) {
   const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
   const announcement = useAnnouncement(steps, states, errors, source)
 
@@ -108,6 +109,11 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
           className={`live-session__banner live-session__banner--${ended.flag ? 'flagged' : 'clear'}`}
         >
           {ended.flag ? 'Flagged for review' : 'Session complete, nothing flagged'}
+          {ended.flag && ended.alert_id && onOpenAlert && (
+            <button type="button" onClick={() => onOpenAlert(ended.alert_id as string)}>
+              Open alert
+            </button>
+          )}
         </p>
       )}
 
