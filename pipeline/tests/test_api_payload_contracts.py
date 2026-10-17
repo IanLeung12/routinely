@@ -1,13 +1,15 @@
 """The dashboard's HTTP payloads, against their schemas in `contracts/`.
 
-`GET /residents`, `GET /residents/{id}`, `GET /handoff` and the alert routes cross
-the pipeline/web boundary like any other shared shape, and the dashboard mirrors
-them by hand (`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
-`web/src/alert/api.ts`), which is how fields drift. So `contracts/` carries a schema
-for each, generated from `routine_watch.contracts` like the rest, and these tests
-hold the routes to them: every demo resident, a resident with a live session in
-their history, a handoff with a room paused, and an alert before and after a nurse
-answers it - including the body she posts, the one payload travelling the other way.
+`GET /residents`, `GET /residents/{id}`, `GET /handoff` and the alert and monitoring
+routes cross the pipeline/web boundary like any other shared shape, and the
+dashboard mirrors them by hand (`web/src/overview/types.ts`,
+`web/src/handoff/types.ts`, `web/src/alert/api.ts`,
+`web/src/about/monitoringApi.ts`), which is how fields drift. So `contracts/`
+carries a schema for each, generated from `routine_watch.contracts` like the rest,
+and these tests hold the routes to them: every demo resident, a resident with a live
+session in their history, a handoff with a room paused, an alert before and after a
+nurse answers it - including the body she posts, the one payload travelling the
+other way - and a room paused, resumed and read back off its audit trail.
 
 Fakes only - the template explainer writes the handoff's summary and the session is
 a recording replayed through the pipeline, so nothing here makes a paid call.
@@ -33,14 +35,17 @@ from routine_watch.contracts import (
     ErrorType,
     Feedback,
     Handoff,
+    Monitoring,
     Resident,
     ResidentSummary,
+    RoomMonitoring,
+    RoomMonitoringHistory,
     repo_root,
     schema_name,
 )
 from routine_watch.demo import DEMO_RESIDENT, demo_residents
 from routine_watch.feedback import FeedbackStore
-from routine_watch.monitoring import get_monitoring_store
+from routine_watch.monitoring import DEFAULT_BY, get_monitoring_store
 
 CONTRACTS_DIR = repo_root() / "contracts"
 
@@ -135,6 +140,52 @@ def test_the_handoff_validates_with_a_room_paused(client: TestClient) -> None:
     assert paused == {DEMO_RESIDENT}
 
 
+def test_the_monitoring_state_validates(client: TestClient) -> None:
+    """`GET /monitoring` is the state behind every pause switch (SPEC §12): the room
+    names and nothing else, empty until a nurse pauses something."""
+    check(Monitoring, client.get("/monitoring").json())
+    assert client.get("/monitoring").json()["paused_rooms"] == []
+
+    client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": False})
+
+    state = client.get("/monitoring").json()
+    check(Monitoring, state)
+    assert state["paused_rooms"] == [MRS_K_ROOM]
+
+
+@pytest.mark.parametrize("on", [False, True])
+def test_the_switch_answers_with_the_rooms_state(client: TestClient, on: bool) -> None:
+    """The PUT echoes the room back, so the dashboard draws what the server believes
+    rather than what it just sent."""
+    answered = client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": on})
+
+    assert answered.status_code == 200
+    check(RoomMonitoring, answered.json())
+    assert answered.json() == {"room": MRS_K_ROOM, "on": on}
+
+
+def test_the_rooms_audit_trail_validates(client: TestClient) -> None:
+    """T262's trail under the switch (SPEC §12): a pause and a resume, newest first,
+    each saying who made it and when."""
+    client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": False})
+    client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": True, "by": "Ward B"})
+
+    trail = client.get(f"/rooms/{MRS_K_ROOM}/monitoring/history").json()
+
+    check(RoomMonitoringHistory, trail)
+    assert trail["room"] == MRS_K_ROOM
+    assert [change["on"] for change in trail["history"]] == [True, False]
+    assert [change["by"] for change in trail["history"]] == ["Ward B", DEFAULT_BY]
+
+
+def test_an_untouched_rooms_trail_validates_empty(client: TestClient) -> None:
+    """Nothing logged is a real answer, not a missing key."""
+    trail = client.get(f"/rooms/{MRS_K_ROOM}/monitoring/history").json()
+
+    check(RoomMonitoringHistory, trail)
+    assert trail == {"room": MRS_K_ROOM, "history": []}
+
+
 def test_every_alert_in_the_list_validates(client: TestClient, mrs_k_flagged: None) -> None:
     alerts = client.get("/alerts").json()
 
@@ -217,10 +268,14 @@ def test_the_route_validates_the_feedback_contract_itself() -> None:
 
 def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) -> None:
     """No route may grow a field for a raw frame (SPEC section 8)."""
+    switched = client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": False})
     payloads = {
         ResidentSummary: client.get("/residents").json()[0],
         Resident: client.get(f"/residents/{DEMO_RESIDENT}").json(),
         Handoff: client.get("/handoff").json(),
+        Monitoring: client.get("/monitoring").json(),
+        RoomMonitoring: switched.json(),
+        RoomMonitoringHistory: client.get(f"/rooms/{MRS_K_ROOM}/monitoring/history").json(),
     }
 
     for model, payload in payloads.items():
@@ -263,6 +318,16 @@ def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) ->
                 "summary": "Nothing to review.",
             },
             id="a-row-without-monitoring-paused",
+        ),
+        pytest.param(
+            Monitoring,
+            {"paused_rooms": [""]},
+            id="a-paused-room-with-no-name",
+        ),
+        pytest.param(
+            RoomMonitoringHistory,
+            {"room": "204", "history": [{"on": False, "at": "2026-10-17T09:00:00Z"}]},
+            id="a-logged-change-with-nobody-to-answer-for-it",
         ),
     ],
 )

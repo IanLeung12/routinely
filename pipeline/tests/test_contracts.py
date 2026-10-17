@@ -5,7 +5,7 @@ sample `capture.jsonl` and `web/src/contracts.ts` are generated from them, so th
 tests check four things: every type round-trips through JSON into its own schema, the
 sample frames validate, nothing on disk has drifted away from the models, and what the
 dashboard writes by hand against a schema - its `Alert` type, the feedback body its
-client posts - still names the same fields.
+client posts, the monitoring bodies its client casts - still names the same fields.
 """
 
 import json
@@ -38,9 +38,12 @@ from routine_watch.contracts import (
     Feedback,
     Handedness,
     HandLandmarks,
+    Monitoring,
+    MonitoringChange,
     ObjectDetection,
     ObjectLabel,
     Pose,
+    RoomMonitoringHistory,
     Session,
     StepEvent,
     StepSource,
@@ -59,6 +62,14 @@ WEB_CONTRACTS = REPO / "web" / "src" / "contracts.ts"
 
 #: The dashboard's feedback client, which writes the POST body out by hand.
 WEB_ALERT_API = REPO / "web" / "src" / "alert" / "api.ts"
+
+#: The dashboard's monitoring client, which casts the bodies of the pause switch's
+#: routes by hand (SPEC section 12).
+WEB_MONITORING_API = REPO / "web" / "src" / "about" / "monitoringApi.ts"
+
+#: The one field of the audit trail its client has no use for: it asked about the
+#: room, so the answer naming it again tells the screen nothing new.
+TRAIL_ROOM = {"room"}
 
 #: What the server stamps on a stored verdict, so a nurse's POST never sends it.
 SERVER_STAMPED = {"by", "at"}
@@ -289,12 +300,26 @@ def test_an_alert_needs_at_least_one_session() -> None:
         Alert.model_validate(_alert().model_dump() | {"session_ids": []})
 
 
-def ts_fields(type_name: str) -> set[str]:
-    """The field names of one generated type in `web/src/contracts.ts`."""
-    source = WEB_CONTRACTS.read_text(encoding="utf-8")
+def ts_fields(type_name: str, path: Path = WEB_CONTRACTS) -> set[str]:
+    """The field names of one TypeScript object type, generated or hand-written."""
+    source = path.read_text(encoding="utf-8")
     block = re.search(rf"^export type {type_name} = \{{$(.*?)^\}}$", source, re.S | re.M)
-    assert block, f"web/src/contracts.ts has no type {type_name}"
+    assert block, f"{path.name} has no type {type_name}"
     return set(re.findall(r"^  (\w+)\??:", block.group(1), re.M))
+
+
+def ts_read_fields(function: str, path: Path = WEB_MONITORING_API) -> set[str]:
+    """The fields one client function reads a response body through.
+
+    These clients cast the body inline (`as { paused_rooms: string[] }`) instead of
+    naming a type, which is still a hand-written copy of a payload and still drifts.
+    """
+    source = path.read_text(encoding="utf-8")
+    body = re.search(rf"^export async function {function}\b.*?^\}}$", source, re.S | re.M)
+    assert body, f"{path.name} has no function {function}"
+    cast = re.search(r"\bas \{([^}]*)\}", body.group(0))
+    assert cast, f"{function} no longer casts the body it reads"
+    return set(re.findall(r"(\w+)\??:", cast.group(1)))
 
 
 def test_the_alert_detail_is_the_record_with_nothing_left_out() -> None:
@@ -342,3 +367,39 @@ def test_the_dashboard_posts_exactly_the_feedback_body() -> None:
 
     posted = set(re.findall(r"(?:^|,)\s*(\w+)", body.group(1)))
     assert posted == set(Feedback.model_fields)
+
+
+def test_the_dashboard_reads_exactly_the_monitoring_state() -> None:
+    """`fetchPausedRooms` casts `GET /monitoring`'s body by hand (SPEC section 12),
+    so a field added to the state on either side alone fails here."""
+    assert ts_read_fields("fetchPausedRooms") == set(Monitoring.model_fields)
+
+
+def test_the_dashboard_reads_the_whole_audit_trail() -> None:
+    """`fetchMonitoringHistory` leaves out only the `room` it asked about: anything
+    else the route grows has to reach the screen, and anything the screen reads has
+    to be something the route sends."""
+    assert ts_read_fields("fetchMonitoringHistory") | TRAIL_ROOM == set(
+        RoomMonitoringHistory.model_fields
+    )
+
+
+def test_the_dashboards_monitoring_change_names_every_logged_field() -> None:
+    """The trail's rows are a hand-written type in the same client."""
+    assert ts_fields("MonitoringChange", WEB_MONITORING_API) == set(MonitoringChange.model_fields)
+
+
+def test_a_logged_change_is_what_the_monitoring_store_writes() -> None:
+    """The route serves the store's own trail (`routine_watch.monitoring`), so what
+    the store appends has to validate as the contract - including the `by` and `at`
+    that make a paused camera accountable rather than silent (SPEC section 12)."""
+    from routine_watch.monitoring import MonitoringStore
+
+    store = MonitoringStore()
+    store.set("204", False)
+    store.set("204", True, by="Ward B")
+
+    trail = store.history("204")
+
+    validator(RoomMonitoringHistory).validate({"room": "204", "history": trail})
+    assert [set(change) for change in trail] == [set(MonitoringChange.model_fields)] * 2
