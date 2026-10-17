@@ -118,7 +118,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T129 — Feedback "what was it?" cause reaches the API (contract + API + web)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: feature
@@ -126,7 +126,8 @@ Acceptance:
 - area: contracts/alert.schema.json, contracts/examples/, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py, web/src/contracts.ts, web/src/alert/api.ts, web/src/alert/api.test.ts, web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
 - owner: ian-claude
 - claimed: 2026-10-17T08:17Z
-- pr: —
+- pr: #140
+- rating: 4/5 area list left out AlertView.tsx/AlertView.test.tsx/alert.css (the picker's only consumer, so the cause can't reach the API without them), and 'the example alert' doesn't exist: contracts/examples/ has only capture.jsonl
 
 What: SPEC §5 MVP 8. The "what was it?" picker (T090) and the per-resident cause store (T100) exist, but the contract and `POST /alerts/{id}/feedback` have no `cause`, so the nurse's answer is dropped. Wire it end to end.
 Interface: optional `cause` (a pattern_id from `patterns_library`, or `"other"`, or null) on `AlertFeedback` in `contracts/alert.schema.json` + `contracts.py` + `web/src/contracts.ts`; `AlertFeedbackIn.cause` validated against known pattern ids (422 otherwise); API calls the FeedbackStore cause-recording method from T100; web `postFeedback` sends the picked cause. Update every consumer and the example alert.
