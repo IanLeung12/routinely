@@ -450,14 +450,14 @@ Acceptance:
 - No app code changes. `scripts/ci.sh` passes.
 
 ### T316 — Test: every scenario uses real task-graph step ids
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_scenario_step_ids.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T16:07Z
 - pr: —
 
 What: A typo in a scenario's step id silently makes it test nothing. Add a pipeline test that loads every `tests/scenarios/*/` scenario and checks each step id it references (steps.jsonl and expected.yaml errors) exists in that scenario's task graph.
