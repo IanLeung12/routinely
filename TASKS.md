@@ -581,7 +581,7 @@ Acceptance:
 - `cd web && npx vitest run src/live/CameraPreview.test.tsx` and `scripts/ci.sh` pass.
 
 ### T425 — Review: handoff summary counts unclear-camera rooms as "nothing to review"
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -590,7 +590,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff_unclear.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T20:47Z
-- pr: —
+- pr: #390
+- rating: 5/5 clear
 
 What: T355 added `unclear_sessions` to each handoff row and a chip on screen, but `_context()` in `handoff.py` still counts a resident whose room had unclear sessions (and no flags) in "N residents with nothing to review", so the summary a nurse reads says the room was quiet while the row says check the camera — the exact silence T355 meant to fix.
 Fix: in `_context()`, add one line per resident with `unclear_sessions > 0` (e.g. "<name>: N sessions too unclear to score, check the camera view", camera wording, nothing about the resident) and exclude them from the `quiet` count. Keep `_needs_review` unchanged (unclear is not a flag).
