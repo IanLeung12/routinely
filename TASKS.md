@@ -621,14 +621,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T093 — Heat calendar: weekday headers and a legend
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:37Z
 - pr: —
 
 What: The heat calendar grid has no weekday labels and no key, so a nurse can't tell which column is Monday or what a darker cell means. Read only the two files in `area` and `web/src/index.css` (tokens).
