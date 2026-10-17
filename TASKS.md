@@ -388,7 +388,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T138 — Review: AlertContext is never rendered, unstyled, and copies ContextTimeline
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: improvement
