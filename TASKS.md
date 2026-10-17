@@ -275,17 +275,18 @@ What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
 
 ### T408 — Roles: role chooser, role-aware shell, mock people/linking API
-- status: in-review
+- status: todo
 - class: heavy
 - priority: 1
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/people/, web/src/App.tsx, web/src/App.test.tsx, web/src/mock/people.ts
-- owner: ian-claude-heavy-2
-- claimed: 2026-10-17T20:14Z
+- owner: —
+- claimed: —
 - pr: #388
 - rating: 4/5 clear on the API and routing; didn't say who the supervisor 'I' am (Nurse Ana with the whole unit, or Lena with one) - that choice decides whether the existing nurse flow stays the default, and Mr. D/Sam have no pipeline data so their detail screen is empty
+- note: merge conflict with main on PR #388: check out its branch, merge origin/main, fix, push
 
 What: Ian's pivot (SPEC §3, §17): the app is for anyone, not just nurses. Two roles: **person** (watches themselves) and **supervisor** (family, carer or nurse). Frontend only; no pairing backend.
 Interface:
