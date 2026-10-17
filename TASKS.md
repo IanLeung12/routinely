@@ -602,7 +602,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T092 — PatternList styles: urgent patterns visually distinct
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
