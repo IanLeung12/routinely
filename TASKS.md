@@ -360,7 +360,7 @@ Acceptance:
 - `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
 
 ### T430 — Replays: list with error-type filter and empty state (component)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: feature
@@ -368,7 +368,8 @@ Acceptance:
 - area: web/src/replays/ReplayList.tsx, web/src/replays/ReplayList.test.tsx, web/src/replays/replayList.css
 - owner: Max_codex_light
 - claimed: 2026-10-17T21:43Z
-- pr: —
+- pr: #408
+- rating: 5/5 clear
 
 What: Carved from T413 (Ian's replays library). A presentational list of a person's replays that T413's screen will drop in. No fetching, no routing.
 Interface: `export function ReplayList(props: { replays: ReplaySummary[]; normal?: ReplaySummary | null; onOpen: (sessionId: string) => void })`. Rows newest first: date/time (from `started_at`), `task_id`, one `Pill` per `error_types` entry (labels from `web/src/ui/errorTypes.ts`), duration as "m:ss". Above the list a filter (`SegmentedControl` from `web/src/ui/`): "All" plus each error type that appears; filtering is local state. If `normal` is given, show it last, labelled "Most recent normal session (for comparison)". Empty state via `web/src/ui/EmptyState.tsx`: "No sessions with errors in the last 30 days". Each row is a button calling `onOpen(session_id)`.
