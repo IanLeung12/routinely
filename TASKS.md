@@ -445,15 +445,15 @@ What: Split from T402. `BaselineChart` → `LineChart` with the personal baselin
 Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
 
 ### T422 — Restyle: HeatCalendar in the Fey palette
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
 - area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx, web/src/resident/heatCalendar.css
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-4
+- claimed: 2026-10-17T21:07Z
 - pr: —
 
 What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the HeatCalendar files. Muted Fey palette: tinted cells from the status tokens, hairline gaps, small rounded cells, muted weekday labels, legend as small pills. No hex in the component; behaviour unchanged.
