@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 62928d3
+- last-reviewed: 6ed079f
 
 ## Tasks
 
@@ -461,3 +461,20 @@ Interface: in `FeedbackButtons.tsx` render the buttons with `ui/Button` (or add 
 Acceptance:
 - Confirmed / False alarm / cause buttons share the dashboard button look; pressed one stays visibly distinct (not colour alone)
 - existing FeedbackButtons tests pass; `scripts/ci.sh` passes
+
+### T233 — Test: de-flake DemoBanner reset test under load
+- status: todo
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: web/src/ui/DemoBanner.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: PR #217 reported `DemoBanner.test.tsx` (reset cases from T218) failing intermittently in full `scripts/ci.sh` runs while passing alone. Make its async assertions wait instead of checking state right after a click/findBy.
+Interface: read `web/src/ui/DemoBanner.tsx` and `web/src/ui/DemoBanner.test.tsx` only. Wrap post-click assertions (disabled state, error text appearing/disappearing) in `await waitFor(...)` or use `findBy*`/`waitForElementToBeRemoved`; resolve fake `onReset` promises inside `act`.
+Acceptance:
+- No behaviour change in DemoBanner.tsx.
+- `cd web && for i in 1 2 3 4 5; do npm test -- --run DemoBanner || exit 1; done` passes, and `scripts/ci.sh` passes.
