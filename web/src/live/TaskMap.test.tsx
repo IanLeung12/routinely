@@ -5,12 +5,23 @@ import TaskMap from './TaskMap.tsx'
 
 afterEach(cleanup)
 
+/** What each row says, without the node's number or icon. */
+function labels(): (string | null)[] {
+  return Array.from(document.querySelectorAll('.step__label')).map((el) => el.textContent)
+}
+
+function nodes(): (string | null)[] {
+  return Array.from(document.querySelectorAll('.task-map .step__node')).map((el) => el.textContent)
+}
+
 describe('TaskMap', () => {
-  it('renders labels in the supplied order with arrows between steps', () => {
+  it('renders labels in the supplied order, numbered down one rail', () => {
     render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }, { id: 'dry', label: 'Dry hands' }]} states={{}} />)
 
-    expect(screen.getAllByRole('listitem').map((step) => step.textContent)).toEqual(['Wash hands', 'Dry hands'])
-    expect(screen.getAllByText('→')).toHaveLength(1)
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    expect(labels()).toEqual(['Wash hands', 'Dry hands'])
+    // Nothing has happened yet, so each node carries its step's number.
+    expect(nodes()).toEqual(['1', '2'])
   })
 
   it.each(['pending', 'done', 'omission', 'repeat', 'sequence'] as const)('maps %s to its class and data attribute', (state) => {
@@ -35,11 +46,12 @@ describe('TaskMap', () => {
     expect(screen.getByRole('listitem').className).toBe('step step--omission')
   })
 
-  it('renders an empty list without arrows for no steps', () => {
+  it('renders an empty list, and no progress line, for no steps', () => {
     render(<TaskMap steps={[]} states={{}} />)
 
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
-    expect(screen.queryByText('→')).toBeNull()
+    // Nothing has been sent yet, so there is no "0 of 0" to report.
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 
   it.each([
@@ -54,36 +66,82 @@ describe('TaskMap', () => {
     expect(screen.getByRole('listitem', { name })).toBeTruthy()
   })
 
-  it('shows a visible icon for every non-pending state, and none for pending', () => {
+  it('swaps the step number for the state icon once something has happened to it', () => {
     render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: 'pending' }} />)
-    expect(screen.getByRole('listitem').querySelector('[aria-hidden="true"]')).toBeNull()
+    expect(nodes()).toEqual(['1'])
+    expect(document.querySelector('.step__node')?.getAttribute('aria-hidden')).toBe('true')
 
     cleanup()
     render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: 'omission' }} />)
-    expect(screen.getByRole('listitem').querySelector('[aria-hidden="true"]')?.textContent).toContain('✕')
+    expect(nodes()).toEqual(['✕'])
+  })
+
+  it.each([
+    ['done', 'Done', 'pill--positive'],
+    ['omission', 'Missed', 'pill--negative'],
+    ['repeat', 'Repeated', 'pill--watch'],
+    ['sequence', 'Out of order', 'pill--watch'],
+  ] as const)('says %s in words, in a %s pill', (state, word, tone) => {
+    render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: state }} />)
+
+    const pill = screen.getByText(word)
+    expect(pill.className).toContain(tone)
+    // The pill is the second signal; the row's accessible name already says it.
+    expect(screen.getByRole('listitem').textContent).toContain(word)
+  })
+
+  it('leaves a step nothing has happened to without a pill', () => {
+    render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{}} />)
+
+    expect(document.querySelector('.step__pill')).toBeNull()
   })
 })
 
-/** The card the task map sits in is about 400 px wide, so a single row of steps used to
- * scroll sideways and hid the steps that turn red and amber (T120). `taskMap.css` is
+/** How far through the routine, above the list: a count and a slim track, so the
+ * progress is read before any of the rows are. */
+describe('TaskMap progress', () => {
+  it('counts only the done steps, and reports the same number to a screen reader', () => {
+    render(
+      <TaskMap
+        steps={MOCK_STEPS}
+        states={{ fill_kettle: 'done', boil: 'done', teabag_in_cup: 'omission', pour: 'repeat' }}
+      />,
+    )
+
+    expect(screen.getByText(`2 of ${MOCK_STEPS.length}`)).toBeTruthy()
+    const track = screen.getByRole('progressbar', { name: 'Steps done' })
+    expect(track.getAttribute('aria-valuenow')).toBe('2')
+    expect(track.getAttribute('aria-valuemax')).toBe(String(MOCK_STEPS.length))
+    expect(track.getAttribute('aria-valuetext')).toBe(`2 of ${MOCK_STEPS.length} steps done`)
+  })
+
+  it('fills the track in step with the count', () => {
+    render(<TaskMap steps={[{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }]} states={{ a: 'done' }} />)
+
+    expect((document.querySelector('.task-map__track-fill') as HTMLElement).style.width).toBe('50%')
+  })
+})
+
+/** The card the task map sits in is about 400 px wide, so the wrapping grid of boxes
+ * this replaced hid the steps that turn red and amber (T120, T406). `taskMap.css` is
  * loaded into jsdom for these tests; see the `css` option in vite.config.ts. */
 describe('TaskMap layout', () => {
-  it('flows the steps into wrapping rows instead of one scrolling line', () => {
+  it('stacks the steps in one column instead of a wrapping grid', () => {
     render(<TaskMap steps={MOCK_STEPS} states={{}} />)
 
     const map = getComputedStyle(screen.getByRole('list'))
     expect(map.display).toBe('flex')
-    expect(map.flexWrap).toBe('wrap')
+    expect(map.flexDirection).toBe('column')
     expect(map.overflowX).toBe('visible')
   })
 
-  it('lets a long step give way inside the card while the arrows keep their size', () => {
-    render(<TaskMap steps={MOCK_STEPS} states={{}} />)
+  it('lets a long label give way inside the row while the node keeps its size', () => {
+    render(<TaskMap steps={MOCK_STEPS} states={{ fill_kettle: 'done' }} />)
 
-    const step = getComputedStyle(screen.getAllByRole('listitem')[0])
-    expect(step.flexShrink).toBe('1')
-    expect(step.minWidth).toBe('0px')
-    expect(getComputedStyle(screen.getAllByText('→')[0]).flexShrink).toBe('0')
+    const label = getComputedStyle(document.querySelector('.step__label') as HTMLElement)
+    expect(label.flexGrow).toBe('1')
+    expect(label.minWidth).toBe('0px')
+    expect(getComputedStyle(document.querySelector('.step__node') as HTMLElement).flexShrink).toBe('0')
   })
 
   it('keeps every step of the tea task in the map, flagged ones included', () => {

@@ -1,25 +1,35 @@
-.live-screen__tasks { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-4); }
-.live-screen__label { margin: 0 var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
+/* Which routine to watch (SPEC section 5, "a second task, to show it generalises"):
+   a "pick one view" segmented control, the pattern docs/DESIGN.md gives every
+   time-range and either/or picker. Tokens only, no hex or px. */
 
-/* Phone width (375 px and similar, SPEC section 9): the routine picker stacks
-   full-width instead of baseline-wrapping, and the skeleton SVG (fixed at
-   480x360 via its width/height attributes, see SkeletonView.tsx) shrinks to
-   the card's width instead of forcing horizontal scroll. */
+.live-screen__tasks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.live-screen__label {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Phone width (375 px and similar, SPEC section 9): the picker takes the whole row
+   with its two options sharing it, instead of wrapping onto a second line. */
 @media (max-width: 480px) {
   .live-screen__tasks {
-    flex-direction: column;
     align-items: stretch;
-    width: 100%;
   }
 
-  .live-screen__label {
-    margin: 0 0 var(--space-1) 0;
+  .live-screen__tasks .segmented {
+    flex: 1;
   }
 
-  .skeleton-view,
-  .skeleton-view--empty {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
+  .live-screen__tasks .segmented__option {
+    flex: 1;
   }
 }

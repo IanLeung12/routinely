@@ -11,24 +11,29 @@ import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
+import { Pill, type PillTone } from '../ui/Pill.tsx'
+import { Row } from '../ui/Row.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
+import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import { fetchHandoff } from './api.ts'
 import type { HandoffResult } from './api.ts'
 import { HandoffDelta, handoffDeltaLabel } from './HandoffDelta.tsx'
 import type { Handoff as HandoffData, HandoffResident, PausedRoom } from './types.ts'
 import './handoff.css'
 
-/** Windows a nurse picks between: an eight or twelve hour shift, a day, a weekend. */
-const WINDOWS = [8, 12, 24, 48]
+/** Windows a nurse picks between: an eight or twelve hour shift, a day, a weekend.
+ * Labelled the way a segment can be read at a glance; the group says "Window". */
+const WINDOWS = [8, 12, 24, 48].map((hours) => ({ value: String(hours), label: `${hours}h` }))
 
 /** A shift, and what `GET /handoff` defaults to. */
 const DEFAULT_WINDOW_H = 12
 
 type Chip = {
   key: string
+  /** `handoff__chip--` modifier: picks the `Pill` tone, carries the colour, never
+   * the meaning. */
+  tone: PillTone
   label: string
-  /** `handoff__chip--` modifier: carries the colour, never the meaning. */
-  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused' | 'unclear'
   /** Decorative, so the row is scannable without reading; the label says it in words. */
   glyph: string
 }
@@ -64,7 +69,7 @@ function chipsFor(resident: HandoffResident): Chip[] {
     chips.push({
       key: 'flags',
       label: `${plural(resident.flags, 'session')} above baseline`,
-      tone: 'flagged',
+      tone: 'negative',
       glyph: '!',
     })
   }
@@ -72,25 +77,25 @@ function chipsFor(resident: HandoffResident): Chip[] {
     chips.push({
       key: 'pending',
       label: `${plural(resident.pending_review, 'alert')} not reviewed yet`,
-      tone: 'pending',
+      tone: 'watch',
       glyph: '⧗',
     })
   }
   if (resident.trending) {
-    chips.push({ key: 'trending', label: 'Error score trending up', tone: 'trending', glyph: '↗' })
+    chips.push({ key: 'trending', label: 'Error score trending up', tone: 'watch', glyph: '↗' })
   }
   if (resident.monitoring_paused) {
-    chips.push({ key: 'paused', label: 'Monitoring paused', tone: 'paused', glyph: '⏸' })
+    chips.push({ key: 'paused', label: 'Monitoring paused', tone: 'neutral', glyph: '⏸' })
   }
   // Grey, the way "unclear" reads everywhere else in the dashboard (SPEC section 7:
   // never counted as an error), and before the quiet chip: a room whose camera could
   // not be read is not a room with nothing to say.
   const unclear = unclearLabel(resident.unclear_sessions)
   if (unclear) {
-    chips.push({ key: 'unclear', label: unclear, tone: 'unclear', glyph: '◌' })
+    chips.push({ key: 'unclear', label: unclear, tone: 'neutral', glyph: '◌' })
   }
   if (chips.length === 0) {
-    chips.push({ key: 'quiet', label: 'No change flagged', tone: 'quiet', glyph: '✓' })
+    chips.push({ key: 'quiet', label: 'No change flagged', tone: 'positive', glyph: '✓' })
   }
   return chips
 }
@@ -313,8 +318,14 @@ export function Handoff({
         <p className="handoff__headline" role="status">
           {headline(handoff.residents, handoff.window_hours)}
         </p>
-        <Card>
-          <SectionHeader title={`Last ${handoff.window_hours} hours`} />
+        {/* The recap card: what the window says in one sentence, with the two quiet
+            actions in a footer against the card's edge (the shape the alert view's
+            recap uses, T405). */}
+        <Card className="handoff__recap">
+          <SectionHeader
+            title={`Last ${handoff.window_hours} hours`}
+            caption={`${plural(handoff.residents.length, 'resident')} on this unit`}
+          />
           <p className="handoff__summary">{handoff.summary}</p>
           {/* Both actions and the copy's own status in one group: a nurse taps these
               on screen, and none of them say anything on paper, so the whole group is
@@ -335,50 +346,68 @@ export function Handoff({
           <p className="handoff__paused">{pausedLine(handoff.paused, pauseDetails)}</p>
         )}
         {handoff.residents.length === 0 ? (
-          <EmptyState message="No residents on this unit yet." />
+          <Card>
+            <EmptyState message="No residents on this unit yet." />
+          </Card>
         ) : (
-          <ul className="handoff__list">
-            {handoff.residents.map((resident) => (
-              <li
-                key={resident.resident_id}
-                className={`handoff__row${needsReview(resident) ? ' handoff__row--review' : ''}`}
-              >
-                <span className="handoff__identity">
-                  <span className="handoff__name">{resident.name}</span>
-                  <span className="handoff__room">Room {resident.room}</span>
-                  {baselineLine(baselines[resident.resident_id]) && (
-                    <span className="handoff__baseline">
-                      {baselineLine(baselines[resident.resident_id])}
-                    </span>
-                  )}
-                </span>
-                <span className="handoff__chips">
-                  {chipsFor(resident).map((chip) => (
-                    <span key={chip.key} className={`handoff__chip handoff__chip--${chip.tone}`}>
-                      <span aria-hidden="true" className="handoff__glyph">
-                        {chip.glyph}
-                      </span>
-                      {chip.label}
-                    </span>
-                  ))}
-                  {/* Beside the counts, not under them: two flagged sessions is good
-                      news after four and bad news after none, so the comparison is
-                      read with the chip that names them (T324). Same chip shape and
-                      the same wrap at phone width, so no new styles. */}
-                  <HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />
-                </span>
-                {onOpenAlert && resident.pending_review > 0 && alertIds[resident.resident_id] && (
-                  <Button
-                    aria-label={`Open ${resident.name}'s alert`}
-                    className="no-print"
-                    onClick={() => onOpenAlert(alertIds[resident.resident_id])}
+          /* One card, not one box per resident: dense hairline-separated rows with
+             who and where on the left and what happened on the right, so a unit is
+             read down a column (docs/DESIGN.md). */
+          <Card className="handoff__rows">
+            <ul className="handoff__list">
+              {handoff.residents.map((resident) => {
+                const baseline = baselineLine(baselines[resident.resident_id])
+                return (
+                  <li
+                    key={resident.resident_id}
+                    className={`handoff__row${needsReview(resident) ? ' handoff__row--review' : ''}`}
                   >
-                    Open alert
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
+                    <Row
+                      title={<span className="handoff__name">{resident.name}</span>}
+                      subtitle={
+                        <>
+                          <span className="handoff__room">Room {resident.room}</span>
+                          {baseline && <span className="handoff__baseline">{baseline}</span>}
+                        </>
+                      }
+                      trailing={
+                        <>
+                          <span className="handoff__chips">
+                            {chipsFor(resident).map((chip) => (
+                              <Pill key={chip.key} className="handoff__chip" tone={chip.tone}>
+                                <span aria-hidden="true" className="handoff__glyph">
+                                  {chip.glyph}
+                                </span>
+                                {chip.label}
+                              </Pill>
+                            ))}
+                            {/* Beside the counts, not under them: two flagged sessions
+                                is good news after four and bad news after none, so the
+                                comparison is read with the chip that names them (T324). */}
+                            <HandoffDelta
+                              flags={resident.flags}
+                              previousFlags={resident.previous_flags}
+                            />
+                          </span>
+                          {onOpenAlert
+                            && resident.pending_review > 0
+                            && alertIds[resident.resident_id] && (
+                            <Button
+                              aria-label={`Open ${resident.name}'s alert`}
+                              className="no-print"
+                              onClick={() => onOpenAlert(alertIds[resident.resident_id])}
+                            >
+                              Open alert
+                            </Button>
+                          )}
+                        </>
+                      }
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          </Card>
         )}
       </>
     )
@@ -389,26 +418,27 @@ export function Handoff({
       <button type="button" className="back-button no-print" onClick={onBack}>
         ← Back
       </button>
-      <h2 className="handoff__title">Shift handoff</h2>
-      <p className="handoff__lead">
-        Who changed while you were away. Everything here is flagged for a nurse to review.
-      </p>
-      <div className="handoff__controls no-print">
-        <label className="handoff__label" htmlFor="handoff-window">
-          Window
-        </label>
-        <select
-          id="handoff-window"
-          className="handoff__select"
-          value={hours}
-          onChange={(event) => setHours(Number(event.target.value))}
-        >
-          {WINDOWS.map((choice) => (
-            <option key={choice} value={choice}>
-              Last {choice} hours
-            </option>
-          ))}
-        </select>
+      <div className="handoff__head">
+        <div className="handoff__headings">
+          <h2 className="handoff__title">Shift handoff</h2>
+          <p className="handoff__lead">
+            Who changed while you were away. Everything here is flagged for a nurse to review.
+          </p>
+        </div>
+        {/* "Pick one view" is a segmented control everywhere in the system
+            (docs/DESIGN.md); the group is named Window, so a segment reads as
+            "Window, 12h" rather than as a bare number. */}
+        <div className="handoff__controls no-print">
+          <p className="handoff__label" aria-hidden="true">
+            Window
+          </p>
+          <SegmentedControl
+            label="Window"
+            options={WINDOWS}
+            value={String(hours)}
+            onChange={(choice) => setHours(Number(choice))}
+          />
+        </div>
       </div>
       {body}
     </section>

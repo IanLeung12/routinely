@@ -87,7 +87,7 @@ describe('LiveSession', () => {
     })
 
     const map = screen.getByRole('list', { name: 'Task steps' })
-    expect(within(map).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+    expect(within(map).getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual([
       'Open the pill box',
       'Take the pill',
     ])
@@ -121,7 +121,10 @@ describe('LiveSession', () => {
     act(() => {
       socket.emit(errorMessage({ step_id: 'teabag_in_cup', t_start: 72, t_end: 72 }))
     })
-    expect(screen.getByText('skipped Put the teabag in the cup · 1:12')).toBeTruthy()
+    // The phrase and its timestamp are separate cells of one row, so the times line
+    // up in a column; the row still reads as one sentence.
+    const errorRow = screen.getByText('skipped Put the teabag in the cup').closest('.row') as HTMLElement
+    expect(within(errorRow).getByText('1:12')).toBeTruthy()
 
     act(() => {
       socket.emit({ type: 'session_end', score: 6, flag: true, alert_id: 'alert-1' })
@@ -265,9 +268,13 @@ describe('LiveSession', () => {
     expect(screen.getByRole('status').textContent).toBe('Flagged for review')
     const errorItems = within(screen.getByText('Errors').closest('.card')!).getAllByRole('listitem')
     expect(errorItems).toHaveLength(2)
-    expect(errorItems.map((item) => item.textContent)).toEqual([
-      'repeated Pour the water · 0:30',
-      'skipped Put the teabag in the cup · 0:40',
+    expect(errorItems.map((item) => item.querySelector('.row__title')?.textContent)).toEqual([
+      'repeated Pour the water',
+      'skipped Put the teabag in the cup',
+    ])
+    expect(errorItems.map((item) => item.querySelector('.live-session__error-time')?.textContent)).toEqual([
+      '0:30',
+      '0:40',
     ])
 
     expect(

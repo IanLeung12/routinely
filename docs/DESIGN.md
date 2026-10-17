@@ -13,6 +13,11 @@ The unit overview on the tokens alone, before any screen was redesigned:
 The alert / evidence view, the first screen rebuilt on the system (same alert, same
 data, half the scroll): `design/alert-before.png` → `design/alert-after.png`.
 
+The live session — a dark media card beside the task map as a vertical step list with
+a progress line — and the shift handoff as dense rows in one card:
+`design/live-before.png` → `design/live-after.png`,
+`design/handoff-before.png` → `design/handoff-after.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so
