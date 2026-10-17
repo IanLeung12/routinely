@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f59e5ba
+- last-reviewed: bf6dfbb
 
 ## Tasks
 
@@ -261,13 +261,31 @@ Acceptance:
 - Tests: a session with errors is saved and listed, a clean session is not; markers line up with the error timestamps; retention prunes; delete works; no image/video fields can be stored (privacy test).
 - `scripts/ci.sh` + `scripts/e2e.sh` pass.
 
+### T427 — Replays data layer: API client + mock fixture for the replays library
+- status: todo
+- class: light
+- priority: 0
+- kind: feature
+- deps: T412
+- area: web/src/replays/api.ts, web/src/replays/api.test.ts, web/src/mock/replays.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: The fetch layer T413's Replays screen will consume, carved out of T413 so the screen task only builds UI. Backend routes landed in T412.
+Interface: in `web/src/replays/api.ts` export `fetchPersonReplays(personId): Promise<PersonReplays>`, `fetchReplay(replayId): Promise<Replay>`, `deleteReplay(replayId): Promise<void>`, calling `GET /people/{id}/replays`, `GET /replays/{id}`, `DELETE /replays/{id}`. Follow the base-URL/offline-fallback pattern in `web/src/evidence/api.ts` exactly (fall back to the mock when the API is unreachable or in offline mode). Types `PersonReplays`, `ReplaySummary`, `Replay`, `ReplayMarker` already exist in `web/src/contracts.ts` (~lines 431–510); do not change contracts. `web/src/mock/replays.ts`: 3 replays for Mrs. K (omission, sequence, repeat markers), 1 for Mr. D, 0 for Sam, plus one `normal` summary; skeleton frames only, no images.
+Files to read: `web/src/evidence/api.ts`, `web/src/evidence/api.test.ts`, `web/src/contracts.ts` (replay types), `web/src/mock/replay.ts`, `web/src/mock/people.ts` (person ids), `pipeline/src/routine_watch/api_residents.py` lines 179–260 (route shapes).
+Acceptance:
+- Vitest in `web/src/replays/api.test.ts`: success path (mocked fetch), fallback to mock on network error, delete sends DELETE, Sam returns an empty list.
+- `cd web && npx vitest run src/replays` and `scripts/ci.sh` pass.
+
 ### T413 — Replays library for supervisors and the person
 - status: todo
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
-- deps: T412
+- deps: T412, T427
 - area: web/src/replays/, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts
 - owner: —
 - claimed: —

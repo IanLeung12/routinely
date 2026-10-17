@@ -358,3 +358,8 @@ T367 | standard | claude-opus | merged first try | ~?k tok
 T389 | light | codex | merged first try | ~?k tok
 T414 | light | claude-sonnet | merged first try | ~?k tok
 T401 | heavy | claude-opus | merged first try | ~150k tok
+T425 | light | claude-sonnet | merged first try | ~?k tok
+T424 | light | claude-sonnet | merged first try | ~?k tok
+T415 | standard | codex | merged first try | ~?k tok
+T408 | heavy | claude-opus | merged first try | ~?k tok
+T412 | heavy | claude-opus | merged first try | ~?k tok
