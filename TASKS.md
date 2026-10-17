@@ -63,15 +63,15 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T164 — Guided demo tour behind ?tour=1
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/tour/ (new), web/src/App.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:28Z
 - pr: —
 
 What: Rationale: judges skim; a 7-step tour following SPEC §10 (baseline → live → alert → why → not just delirium → privacy) makes Clarity obvious and doubles as a presenter cue card. Off unless the URL has `?tour=1`, so it can't touch the demo path.
