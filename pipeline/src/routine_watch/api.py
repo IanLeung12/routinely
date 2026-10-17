@@ -17,6 +17,7 @@ from . import __version__
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import demo_residents
+from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
 from .replay import ReplayError
@@ -106,6 +107,41 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     )
     _feedback_store.record(alert_id, alert.resident_id, feedback)
     return _alert_payload(alert)
+
+
+@app.get("/sessions/{session_id}/replay")
+def session_replay(
+    session_id: str,
+    t_start: Annotated[float, Query(ge=0.0)],
+    t_end: Annotated[float, Query(ge=0.0)],
+    fps: Annotated[float, Query(gt=0)] = 10.0,
+) -> dict:
+    """Skeleton-frame evidence for one window of one session (SPEC section 8)."""
+    try:
+        frames = replay_frames(session_id, t_start, t_end, fps=fps)
+    except EvidenceError:
+        raise HTTPException(status_code=404, detail="session not found") from None
+    return {
+        "session_id": session_id,
+        "frames": [frame.model_dump(mode="json") for frame in frames],
+    }
+
+
+@app.get("/residents/{resident_id}/normal_replay")
+def resident_normal_replay(
+    resident_id: str,
+    t_start: Annotated[float, Query(ge=0.0)],
+    t_end: Annotated[float, Query(ge=0.0)],
+) -> dict:
+    """A normal session's skeleton frames, for the evidence view's ghost layer."""
+    try:
+        frames = normal_replay_frames(resident_id, t_start, t_end)
+    except EvidenceError:
+        raise HTTPException(status_code=404, detail="resident not found") from None
+    return {
+        "resident_id": resident_id,
+        "frames": [frame.model_dump(mode="json") for frame in frames],
+    }
 
 
 @app.websocket("/ws/live")
