@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T118 — Pattern library page: what each pattern looks for and its source
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -16,8 +16,9 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_api_patterns.py (new), web/src/patterns/ (new), web/src/App.tsx (one nav entry)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T10:23Z
-- pr: —
+- pr: #212
 - source: proposed
+- rating: 5/5 clear
 
 What: Rationale: judges (Clarity, responsible design §12) can see every pattern's signals, rule-out checks and source citation, showing it is a cited rules library, not an LLM guess. Read-only screen, separate from the demo path.
 Interface: `GET /patterns` → the library as JSON (id, name, signals, time profile, checks, urgency, source); `web/src/patterns/PatternLibrary.tsx` lists them with "consistent with" wording.
