@@ -5,6 +5,16 @@ offline, with no API keys and no camera.
 
 ## Before you start
 
+Run this first; it brings the stack up (if it isn't already), smoke-tests every
+route, replays every recorded scenario, and resets the demo so the dashboard shows
+the demo resident on watch — one ✓/✗ checklist, offline, no API keys:
+
+```sh
+scripts/preflight.sh
+```
+
+It stops at the first ✗ with a one-line fix hint. Then:
+
 ```sh
 scripts/dev.sh up
 ```
