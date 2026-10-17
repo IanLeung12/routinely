@@ -341,7 +341,7 @@ Acceptance:
 - Only the test file changes; `cd web && npm test -- LiveScreen` and `scripts/ci.sh` pass.
 
 ### T191 — Test: FeedbackStore.reset() puts threshold and weights back to base
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
