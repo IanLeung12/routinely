@@ -467,14 +467,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T326 — Test: unit tests for session_log
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_session_log.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:30Z
 - pr: —
 
 What: `pipeline/src/routine_watch/session_log.py` (the in-process log that makes a live session count for the demo) has no direct unit test.
