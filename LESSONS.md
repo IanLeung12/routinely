@@ -41,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web/src/wording.test.ts already existed with a partial check (only /diagnos/); T335 just needed the full banned list added, not a new file. (ian-claude-light-2)
 - When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
+- Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
