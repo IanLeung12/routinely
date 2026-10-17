@@ -412,7 +412,7 @@ Acceptance:
 - `scripts/ci.sh` passes; PR body notes the viewport widths checked.
 
 ### T237 — Test: de-flake AlertView "loading state for the evidence card" test under load
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: test
@@ -420,7 +420,8 @@ Acceptance:
 - area: web/src/alert/AlertView.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T11:27Z
-- pr: —
+- pr: #227
+- rating: 5/5 clear
 
 What: `AlertView > shows a loading state for the evidence card before the replay resolves` fails intermittently under full-suite parallelism (PR #221 CI run 39028279950, and earlier per LESSONS): `findByText('No replay available')` times out at the default 1000 ms after the deferred replay fetch is released. Make it deterministic without changing app code.
 Interface: read only `web/src/alert/AlertView.test.tsx` and `web/src/evidence/ReplayPlayer.tsx` (renders `No replay available` when frames are empty). Fix the test only, e.g. release inside `act` then `await waitFor(() => expect(screen.getByText('No replay available')).toBeTruthy(), { timeout: 3000 })`, and make sure any other `/sessions/` fetches the view makes also resolve (inspect `fetchMock.mock.calls`).
