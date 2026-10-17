@@ -441,13 +441,13 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T042 — Design system: tokens + shared UI primitives
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - deps: —
 - area: web/src/index.css, web/src/ui/, web/src/ui/*.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:06Z
 - pr: —
 
 What: One visual language for every screen so parallel web tasks don't drift. Keep the current calm dark theme; extend it, don't restyle.
