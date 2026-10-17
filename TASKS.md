@@ -315,7 +315,7 @@ Acceptance:
 - owner: —
 - claimed: —
 - pr: —
-- note: released by ian-claude-standard: run ended without progress
+- note: WIP from a session that ended early is on branch task/T109-wip (ResidentDetail.tsx + test): start from it: git switch task/T109-wip && git merge origin/main
 
 What: The resident screen must stay legible when things go wrong: an unknown resident id, the API being unreachable, or a resident with no sessions yet. A nurse should understand each state in 10 s.
 Interface: `ResidentDetail` only; reuse the existing `web/src/resident/api.ts` fetch (do not change it) and existing CSS classes/design tokens.
