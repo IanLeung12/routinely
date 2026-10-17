@@ -389,7 +389,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T371 — Test: error list and suggested checks have accessible names
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
