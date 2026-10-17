@@ -7,12 +7,14 @@ dashboard, and carries the live view and alerts over one WebSocket.
 so far; later tasks add the event and session routes backed by a real database.
 """
 
+import os
 from collections import defaultdict
 from datetime import UTC, date, datetime
 from statistics import mean
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from . import __version__
@@ -26,6 +28,21 @@ from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
 from .replay import ReplayError
 
 app = FastAPI(title="Routine Watch API", version=__version__)
+
+#: The dashboard's origin(s), so the browser's CORS check lets fetch() through
+#: (SPEC section 16): comma-separated, defaults to the dev dashboard's origin.
+_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #: What the unit-overview list shows, vs. the fuller resident-detail payload.
 _SUMMARY_FIELDS = ("id", "name", "room", "status", "scores")
