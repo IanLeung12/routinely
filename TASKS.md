@@ -499,3 +499,78 @@ Acceptance: live updates still animate; tests updated for structure only; before
 
 What: The landing page (T378) predates the redesign. Restyle it per `docs/DESIGN.md`: dark premium hero, one real chart from the chart kit (a resident's score vs personal baseline band, with the end-of-line tag) as the hero visual, sections as hairline cards. Check Fey refs via the mobbin MCP. Copy unchanged unless it breaks the layout.
 Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests still pass; `scripts/ci.sh` passes.
+
+### T408 — Roles: role chooser, role-aware shell, mock people/linking API
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- source: ian
+- deps: —
+- area: web/src/people/, web/src/App.tsx, web/src/App.test.tsx, web/src/mock/people.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian's pivot (SPEC §3, §17): the app is for anyone, not just nurses. Two roles: **person** (watches themselves) and **supervisor** (family, carer or nurse). Frontend only; no pairing backend.
+Interface:
+- `web/src/people/api.ts`: `getRole()/setRole('person'|'supervisor')`, `currentPerson()`, `supervisorsOf(personId)`, `peopleISupport()`, `createInvite(personId) -> {code, link}`, `acceptInvite(code)`, `unlink(personId, supervisorId)`. Backed by localStorage + `web/src/mock/people.ts` (Mrs. K ← Nurse Ana; Mr. D ← his daughter Lena; Sam self-monitoring, no supervisor). Keep it an interface so a real API can replace it.
+- First-open **role chooser** ("I'm setting this up for myself" / "I'm supporting someone"), remembered; a role switcher in the shell; "Reset demo" clears it.
+- Routing in `App.tsx`: person → `MyRoutine` placeholder (T409 fills it); supervisor → existing overview, but with exactly one supported person it opens straight into their detail.
+Acceptance:
+- Vitest: chooser shows on first open and not after; switching roles changes the home screen; invite create/accept/unlink round-trips through the mock.
+- Existing nurse/care-home flow still works as the supervisor-with-many case; `scripts/ci.sh` passes.
+
+### T409 — Person view: "My routine"
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- source: ian
+- deps: T408
+- area: web/src/person/
+- owner: —
+- claimed: —
+- pr: —
+
+What: What someone watching themselves sees (SPEC §17). Calm and personal; never alarming or diagnostic. Use the mobbin MCP for 2–3 references of calm personal health/habit dashboards (and follow `docs/DESIGN.md` if it has landed).
+Interface (`web/src/person/MyRoutine.tsx` + pieces):
+- Status in plain words ("Your routine looks like your usual this week" / "A few things looked different today").
+- One chart: my usual vs today/this week (reuse existing chart components or the chart kit if merged).
+- Recent sessions (task, time, what went smoothly / what was different).
+- **Notes** when a change is flagged: the same patterns, rephrased for the person ("Some steps took longer than usual for you, mostly in the evening. Worth mentioning to Lena or your doctor."), with a "tell my supervisor" button (mock).
+- **Who can see this**: supervisors list with remove; "Invite someone" (shows the invite code + copy link from T408's API); self-monitoring state when there's nobody.
+- Privacy: pause monitoring, "what's stored" (skeletons only, no video), and "your supervisors see exactly this".
+Acceptance:
+- Vitest for each section incl. no-supervisor and flagged states; wording test: no "diagnos", no "patient", no alarm words ("danger", "warning", "emergency") in person-facing copy.
+- Keyboard + screen-reader friendly; mobile width works; `scripts/ci.sh` passes. Screenshot in PR.
+
+### T410 — Supervisor side: "People I support" + add a person
+- status: todo
+- class: standard
+- priority: 1
+- kind: feature
+- source: ian
+- deps: T408
+- area: web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Generalise the nurse overview into "People I support" (SPEC §17). Care-home supervisor sees the unit list as today; a family supervisor with one person goes straight to that person; anyone can **add a person** by entering an invite code (T408's mock API), with a clear "linked" confirmation. Each row/detail shows the person's context ("care home · Room 12" vs "lives alone").
+Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; existing overview behaviour kept for the care-home case; `scripts/ci.sh` passes. Screenshot in PR.
+
+### T411 — Wording pass: people, not just residents and nurses
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- source: ian
+- deps: T408, T409, T410
+- area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (or the person's name), "nurse" only where it's specifically the care-home supervisor, never "patient". Landing page: say it's for anyone, alone or with family, a carer or a care home.
+Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
