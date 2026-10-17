@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
 - On Windows set PYTHONUTF8=1 before scripts/ci.sh so subprocess output decodes UTF-8 preflight symbols correctly. (Max_codex_light)
 - web/vite.config.ts's test.css.include is now one pattern (/src\/.*\.css/) covering all src CSS - don't append folders, and don't anchor it with $: ?raw imports arrive as 'src/x.css?raw' and an anchore (ian-claude-heavy-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A PR left with 'merge --auto --squash' set can merge itself the moment its blocking dep (bundle-budget task) lands, mid-session: before manually merging origin/main into its branch, gh pr view --json  (ian-claude-standard)
 - web api helpers fall back to mocks only when fetch throws; a non-ok response from a reachable API must surface its error, never silently show mock data (reviewer)
 - check:bundle's budget is 96,000 B since T442 merged (main measures ~95,200, under 800 B headroom): the older lesson calling it 92,200-and-already-over is stale, so a first-load-over-budget failure is  (ian-claude)
+- A redesign task's 'before/after screenshot' needs a browser: chrome-headless-shell is at ~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell and can be driven over CDP from plain  (ian-claude-heavy-2)
