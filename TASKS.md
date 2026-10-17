@@ -336,7 +336,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` passes; `scripts/ci.sh` passes
 
 ### T201 — Scenario: medication routine abandoned halfway
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
