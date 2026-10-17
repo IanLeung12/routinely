@@ -444,7 +444,7 @@ Acceptance:
 - `scripts/ci.sh` passes and runs the new test (if it doesn't, say so in the PR; don't edit ci.sh).
 
 ### T141 — Pattern scenario: executive pattern (perseveration with steps still in order)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
