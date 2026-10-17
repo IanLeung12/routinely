@@ -342,15 +342,28 @@ def _context(
     who to look at and why, and which rooms nobody was watching.
     """
     review = [row for row in rows if _needs_review(row)]
+    paused_ids = {room["resident_id"] for room in paused}
+    unclear = [
+        row
+        for row in rows
+        if row["unclear_sessions"] and row["resident_id"] not in paused_ids
+    ]
     lines = []
     if latest is not None:
         lines.append(f"this session is {latest.resident['name']}'s")
     lines.append(f"last {hours} h, {_count(len(rows), 'resident')}")
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
+    lines.extend(_unclear_line(row) for row in unclear)
     lines.extend(_paused_line(room) for room in paused)
-    paused_ids = {room["resident_id"] for room in paused}
+    unclear_ids = {row["resident_id"] for row in unclear}
     quiet = len(
-        [row for row in rows if row not in review and row["resident_id"] not in paused_ids]
+        [
+            row
+            for row in rows
+            if row not in review
+            and row["resident_id"] not in paused_ids
+            and row["resident_id"] not in unclear_ids
+        ]
     )
     if quiet:
         lines.append(f"{_count(quiet, 'resident')} with nothing to review")
@@ -366,6 +379,18 @@ def _paused_line(paused_room: dict) -> str:
     return (
         f"Room {paused_room['room']} ({paused_room['name']}) was paused, "
         "so no flags are expected from it"
+    )
+
+
+def _unclear_line(row: dict) -> str:
+    """One context line for a resident whose room had sessions too unclear to score.
+
+    Unclear is not a flag (SPEC section 12), so this names the camera view, never the
+    resident, and never joins `_reasons`.
+    """
+    return (
+        f"{row['name']}: {_count(row['unclear_sessions'], 'session')} too unclear to "
+        "score, check the camera view"
     )
 
 

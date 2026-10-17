@@ -1,0 +1,46 @@
+.camera-preview__toggle {
+  margin-bottom: var(--space-2);
+}
+
+.camera-preview__box {
+  position: relative;
+  display: block;
+}
+
+/* The picture and the skeleton over it have to be the same rectangle, or a landmark at
+   x=0.5 is not where the hand is. The skeleton's coordinates are normalised to the
+   whole camera frame and drawn into a 4:3 viewBox (`SkeletonView`), so the frame goes
+   in the same 4:3 box, stretched to fill it: `fill`, not `cover`, which would crop the
+   edges of the frame away and slide everything out of line. */
+.camera-preview__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: fill;
+}
+
+.camera-preview__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Whatever was handed in - the skeleton canvas - over the whole picture. */
+.camera-preview__overlay > * {
+  width: 100%;
+  height: 100%;
+}
+
+.camera-preview__badge {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font-size: var(--text-xs);
+  z-index: 1;
+}

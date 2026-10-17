@@ -20,21 +20,38 @@ A session id is a demo resident id and that resident's session index, `mrs-k-22`
 shape `routine_watch.alerts` builds a `TaskError.session_id` from - or, for a session
 played live this run, the id it was recorded with (`routine_watch.session_log`), which
 it keeps into the alert and so into the replay asked for here.
+
+The same stand-in recording fills the demo's **replay library** (SPEC section 17,
+`routine_watch.replays`): a demo person's history is a fortnight of sessions nobody
+filmed, so `ensure_demo_replays` generates a replay for the most recent of their
+sessions that had errors - the frames tiled out of that recording to the length the
+session says it ran for, the markers from the same placeholder errors the alert shows
+(`alerts.task_errors`) - plus their most recent clean session as the comparison. A
+session this process really watched is never generated over: it brought its own
+frames, and those are the ones its replay keeps.
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from datetime import datetime, timedelta
 from functools import lru_cache
 
-from .contracts import CaptureFrame, ObjectLabel
+from .alerts import session_id_for, task_errors
+from .contracts import CaptureFrame, ObjectLabel, Session, TaskError
 from .demo import demo_residents
 from .replay import SCENARIOS_DIR, load_scenario
+from .replays import ReplayStore, get_replay_store
 from .stick_figure import REST, reaching_for, reaching_into
 
 #: No recorded frames are faster than this, live camera included (`routine_watch.live`).
 MAX_REPLAY_FPS = 10.0
+
+#: How many of a demo person's sessions with errors get a generated replay, newest
+#: first: enough that their library is worth opening in the demo, few enough that
+#: building it is a handful of milliseconds (SPEC section 17).
+DEMO_REPLAYS_PER_PERSON = 4
 
 #: A requested window is widened by this much on each side before it is clipped to
 #: the session, so the evidence shows a moment settling in and out, not a jump cut.
@@ -200,3 +217,126 @@ def _downsample(frames: Sequence[CaptureFrame], fps: float) -> list[CaptureFrame
             kept.append(frame)
             last = frame.t
     return kept
+
+
+# ------------------------------------------------- the demo's replay library
+
+
+#: Which demo people have had their generated replays built this run, so a library
+#: is built once rather than on every request - and so a replay somebody deleted
+#: stays deleted (SPEC section 17: the person can delete any of theirs).
+_seeded: set[str] = set()
+
+
+def person_of(session_id: str) -> str | None:
+    """The demo person a session id belongs to, or None if it is nobody's.
+
+    Either shape `known_session` takes: the `person-index` id the synthetic history
+    is given, or the id a session played live was recorded with, which is whichever
+    recording it was played out of and so names no person at all.
+    """
+    parsed = _parse_session_id(session_id)
+    if parsed is None:
+        return None
+    person_id, _index = parsed
+    return person_id if known_resident(person_id) else None
+
+
+def ensure_demo_replays(person_id: str, store: ReplayStore | None = None) -> None:
+    """Build this demo person's replay library, once, if they are a demo person.
+
+    Their history is synthetic (`routine_watch.demo`), so nothing has ever captured
+    a frame of it and their library would be empty on a stand with nobody making tea
+    (SPEC section 17). This fills it with the generated replays below. A real session
+    - one this process watched, which saved its own replay with its own frames - is
+    left exactly as it is.
+    """
+    kept = store or get_replay_store()
+    if person_id in _seeded or not known_resident(person_id):
+        return
+    _seeded.add(person_id)
+    for session, frames, errors in demo_replays(person_id):
+        if kept.get(session.session_id) is None:
+            kept.save(session, frames, errors)
+
+
+def reset_demo_replays(store: ReplayStore | None = None) -> None:
+    """Empty the replay library and forget which demo people have had one built, so
+    the next ask builds it again: what `/demo/reset` calls between rehearsals."""
+    (store or get_replay_store()).reset()
+    _seeded.clear()
+
+
+def demo_replays(person_id: str) -> list[tuple[Session, list[CaptureFrame], list[TaskError]]]:
+    """What to keep for one demo person: their recent bad sessions, then a clean one.
+
+    The bad ones are the `DEMO_REPLAYS_PER_PERSON` most recent sessions of theirs
+    that had an error, newest last; the clean one is their most recent session with
+    none, which the store keeps as the comparison. Each comes with the frames
+    `generated_frames` makes for it and the errors `alerts.task_errors` reads off it,
+    which are the same placeholder step-and-time ones their alert lists, so a marker
+    here and an error there name the same moment.
+    """
+    resident = next((one for one in demo_residents() if one["id"] == person_id), None)
+    if resident is None:
+        return []
+    bad: list[tuple[Session, list[CaptureFrame], list[TaskError]]] = []
+    clean: tuple[Session, list[CaptureFrame], list[TaskError]] | None = None
+    for index, session in enumerate(resident["sessions"]):
+        built = _demo_session(person_id, index, session)
+        if sum(session["errors"].values()):
+            bad.append(built)
+        else:
+            clean = built
+    return [*bad[-DEMO_REPLAYS_PER_PERSON:], *([clean] if clean else [])]
+
+
+def _demo_session(
+    person_id: str, index: int, session: dict
+) -> tuple[Session, list[CaptureFrame], list[TaskError]]:
+    """One session of a demo person's history as a replay's three parts."""
+    session_id = session_id_for(person_id, index, session)
+    started_at = datetime.fromisoformat(session["ts"])
+    duration_s = float(session["duration_s"])
+    record = Session(
+        session_id=session_id,
+        resident_id=person_id,
+        task_id=session["task"],
+        started_at=started_at,
+        ended_at=started_at + timedelta(seconds=duration_s),
+        assisted=session["assisted"],
+    )
+    return record, generated_frames(session_id, duration_s), task_errors(session_id, session)
+
+
+def generated_frames(session_id: str, duration_s: float) -> list[CaptureFrame]:
+    """Made-up frames for a whole session nobody filmed, from t=0 to `duration_s`.
+
+    The stand-in recording (`_ALERT_SCENARIO`, with the stand-in body every frame
+    served from here gets) laid end to end until the session is covered, so a
+    four-minute attempt plays for four minutes instead of stopping when the
+    twelve-second recording runs out. Its own rate is what the frames keep - two a
+    second, the rate the frame-level recordings were written at and the one
+    `live._synthetic_frames` makes its frames up at - which is inside the ten a
+    second a replay is thinned to (`replays.REPLAY_FPS`).
+    """
+    source = _scenario_frames(_ALERT_SCENARIO)
+    if duration_s <= 0 or len(source) < 2:
+        return []
+    start = source[0].t
+    period = source[-1].t - start
+    step = period / (len(source) - 1)
+    frames: list[CaptureFrame] = []
+    offset = 0.0
+    while offset <= duration_s:
+        for frame in source:
+            t = round(offset + frame.t - start, 3)
+            if t > duration_s:
+                return frames
+            frames.append(
+                frame.model_copy(
+                    update={"session_id": session_id, "seq": len(frames), "t": t}
+                )
+            )
+        offset += period + step
+    return frames

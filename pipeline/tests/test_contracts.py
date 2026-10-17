@@ -8,7 +8,8 @@ dashboard still writes by hand against a schema - its `Alert` type, the feedback
 its client posts, the two bodies its monitoring client casts inline - names the same
 fields. The payloads it used to copy by hand (the drift card's, what her nurses said,
 a pattern library entry's, both replay windows', the overview row, the shift handoff
-and the monitoring audit trail's logged change) are generated into
+and the monitoring audit trail's logged change), and the kept replays a person browses
+(SPEC section 17), are generated into
 `web/src/contracts.ts` instead, so a
 changed field breaks its build; what is left to test here is that they are in the
 generated file and that nothing keeps a second copy of them.
@@ -52,6 +53,7 @@ from routine_watch.contracts import (
     ObjectLabel,
     PatternTimeProfile,
     Pose,
+    ReplayMarker,
     RoomMonitoringHistory,
     Session,
     StepEvent,
@@ -479,13 +481,14 @@ def test_the_dashboards_payload_types_are_generated_not_copied() -> None:
     the dashboard imports them and a changed field fails its build instead. What is
     left to check here is that the generated file really carries them - a model
     dropped from `WEB_PAYLOADS` would regenerate clean - and that nobody has started
-    a second copy, time profile and feedback answer included."""
+    a second copy, time profile, feedback answer and replay marker included."""
     for model in WEB_PAYLOADS:
         assert ts_fields(model.__name__) == set(model.model_fields)
 
     copied = {model.__name__ for model in WEB_PAYLOADS} | {
         PatternTimeProfile.__name__,
         FeedbackAnswer.__name__,
+        ReplayMarker.__name__,
     }
     for path in WEB_SOURCES:
         if path == WEB_CONTRACTS:

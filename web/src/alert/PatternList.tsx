@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { PatternMatch, PatternUrgency, SuggestedCheck } from '../contracts.ts'
 import { SUGGESTED_CHECK_LABELS } from './SuggestedChecks.tsx'
 import './PatternList.css'
@@ -14,7 +15,9 @@ const URGENCY_LABELS: Record<PatternUrgency, string> = {
 }
 
 /** Possible patterns a flagged change is consistent with, ranked (SPEC section 9,
- * screen 4). Never diagnostic: always "consistent with", never "has". */
+ * screen 4): one card each, with the confidence as a number and a bar, the evidence
+ * lines behind it and the checks that would rule it out. Never diagnostic: always
+ * "consistent with", never "has". */
 export function PatternList({ patterns }: { patterns: PatternMatch[] }) {
   if (patterns.length === 0) {
     return <p className="muted">Change detected, no clear pattern.</p>
@@ -32,11 +35,24 @@ export function PatternList({ patterns }: { patterns: PatternMatch[] }) {
           >
             <div className="pattern__header">
               <h3 className="pattern__name">Consistent with: {pattern.name}</h3>
-              <span className="pattern__confidence">{confidencePct}% confidence</span>
+              <span className={`pattern__urgency pattern__urgency--${pattern.urgency}`}>
+                {URGENCY_LABELS[pattern.urgency]}
+              </span>
             </div>
-            <span className={`pattern__urgency pattern__urgency--${pattern.urgency}`}>
-              {URGENCY_LABELS[pattern.urgency]}
-            </span>
+            {/* The number carries the meaning; the bar only makes two patterns
+                comparable at a glance, so it is hidden from screen readers. */}
+            <div className="pattern__confidence-row">
+              <p className="pattern__confidence">
+                <span className="pattern__confidence-value tabular-nums">{confidencePct}%</span>{' '}
+                confidence
+              </p>
+              <span className="pattern__meter" aria-hidden="true">
+                <span
+                  className="pattern__meter-fill"
+                  style={{ '--confidence': pattern.confidence } as CSSProperties}
+                />
+              </span>
+            </div>
             {pattern.evidence.length > 0 && (
               <ul className="pattern__evidence">
                 {pattern.evidence.map((line, index) => (

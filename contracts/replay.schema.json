@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "An axis-aligned box, normalised to the frame: top-left to bottom-right, 0..1.",
+      "properties": {
+        "x1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y1",
+          "type": "number"
+        },
+        "x2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X2",
+          "type": "number"
+        },
+        "y2": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y2",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "CaptureFrame": {
+      "additionalProperties": false,
+      "description": "The single per-frame JSONL record (SPEC section 16).\n\nThe live camera, the pre-recorded fallback, tests and scenarios all feed the\npipeline through this one format. The frame itself is dropped after processing.",
+      "properties": {
+        "schema_version": {
+          "default": 1,
+          "description": "routine_watch.capture.FRAME_SCHEMA_VERSION when the record was written.",
+          "minimum": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "seq": {
+          "description": "Frame counter within the session, from 0.",
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "t": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T",
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$defs/CaptureSource"
+        },
+        "poses": {
+          "description": "One per person in frame. Two or more means somebody is assisting.",
+          "items": {
+            "$ref": "#/$defs/Pose"
+          },
+          "title": "Poses",
+          "type": "array"
+        },
+        "hands": {
+          "items": {
+            "$ref": "#/$defs/HandLandmarks"
+          },
+          "title": "Hands",
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ObjectDetection"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "required": [
+        "session_id",
+        "seq",
+        "t",
+        "source",
+        "poses",
+        "hands",
+        "objects"
+      ],
+      "title": "CaptureFrame",
+      "type": "object"
+    },
+    "CaptureSource": {
+      "description": "Where a capture frame came from. All three produce the same record.",
+      "enum": [
+        "camera",
+        "video",
+        "synthetic"
+      ],
+      "title": "CaptureSource",
+      "type": "string"
+    },
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    },
+    "HandLandmarks": {
+      "additionalProperties": false,
+      "description": "One hand. Steps are hand-object interactions (SPEC section 16).",
+      "properties": {
+        "handedness": {
+          "$ref": "#/$defs/Handedness"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "landmarks": {
+          "description": "The 21 MediaPipe hand landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 21,
+          "minItems": 21,
+          "title": "Landmarks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "handedness",
+        "score",
+        "landmarks"
+      ],
+      "title": "HandLandmarks",
+      "type": "object"
+    },
+    "Handedness": {
+      "description": "Which hand MediaPipe thinks it is looking at.",
+      "enum": [
+        "left",
+        "right"
+      ],
+      "title": "Handedness",
+      "type": "string"
+    },
+    "Landmark": {
+      "additionalProperties": false,
+      "description": "One MediaPipe landmark, normalised to the frame: x and y in 0..1, z relative.",
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pose landmarks only; hand landmarks do not report it.",
+          "title": "Visibility"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Landmark",
+      "type": "object"
+    },
+    "ObjectDetection": {
+      "additionalProperties": false,
+      "description": "One object box in one frame, from the local detector (SPEC section 6.1).\n\nThe detector always runs locally from downloaded weights, never hosted inference.",
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/ObjectLabel"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "box": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "track_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stable across frames while the tracker holds the object.",
+          "title": "Track Id"
+        }
+      },
+      "required": [
+        "label",
+        "confidence",
+        "box"
+      ],
+      "title": "ObjectDetection",
+      "type": "object"
+    },
+    "ObjectLabel": {
+      "description": "Classes the local detector reports (SPEC section 6.1).\n\nMaking tea first, then taking medication with water (SPEC nice-to-have 4), then\nthe two classes every task shares. A task graph says which of these count for\nwhich step, so a new task adds classes here and a `tasks/<name>.yaml` file and\nnothing else. A class the running weights were not trained on is simply never\nreported, and `routine_watch.detector.label_for` drops a class it does not know,\nso the two lists may land one training run apart.",
+      "enum": [
+        "kettle",
+        "cup",
+        "teabag",
+        "spoon",
+        "milk",
+        "sugar",
+        "pill_bottle",
+        "pill_organiser",
+        "glass",
+        "water_jug",
+        "hand",
+        "pouring"
+      ],
+      "title": "ObjectLabel",
+      "type": "string"
+    },
+    "Pose": {
+      "additionalProperties": false,
+      "description": "One person's body skeleton.",
+      "properties": {
+        "landmarks": {
+          "description": "The 33 MediaPipe pose landmarks, in MediaPipe's own order.",
+          "items": {
+            "$ref": "#/$defs/Landmark"
+          },
+          "maxItems": 33,
+          "minItems": 33,
+          "title": "Landmarks",
+          "type": "array"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        }
+      },
+      "required": [
+        "landmarks"
+      ],
+      "title": "Pose",
+      "type": "object"
+    },
+    "ReplayMarker": {
+      "additionalProperties": false,
+      "description": "One error inside a stored replay: what a viewer jumps to (SPEC section 17).\n\nThe error's own window in session time, so whoever is looking back at the attempt\ngoes straight to the moment rather than watching the whole thing. It carries the\n`error_id`, type, step and times of the `TaskError` it was made from, so the\nmarker and the alert's error list name the same moment; the frames it points into\nare the replay's own.",
+      "properties": {
+        "error_id": {
+          "minLength": 1,
+          "title": "Error Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ErrorType"
+        },
+        "step_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The step the error is about. Null only when no single step applies.",
+          "title": "Step Id"
+        },
+        "t_start": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "self_corrected": {
+          "default": false,
+          "description": "The person put it right themselves: still worth seeing, not a full error.",
+          "title": "Self Corrected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "error_id",
+        "type",
+        "t_start",
+        "t_end"
+      ],
+      "title": "ReplayMarker",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One kept replay in full (`GET /replays/{session_id}`, SPEC sections 17 and 8).\n\nThe skeleton of an attempt that went wrong, kept so a person and their supervisors\ncan look back and judge for themselves: poses, hand landmarks, object boxes and\ntimestamps, thinned to about ten a second, and never video. `markers` are its\nerrors, so the viewer can jump between them.",
+  "properties": {
+    "session_id": {
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    },
+    "person_id": {
+      "description": "Whose session it was. `Session.resident_id` under the name SPEC section 17 gives it: a person watches their own routine, supervisors look with them.",
+      "minLength": 1,
+      "title": "Person Id",
+      "type": "string"
+    },
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "duration_s": {
+      "description": "How long the attempt took, in seconds.",
+      "minimum": 0.0,
+      "title": "Duration S",
+      "type": "number"
+    },
+    "error_count": {
+      "description": "Errors found in the session, self-corrected ones included.",
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "error_types": {
+      "description": "Which kinds of error it had, each named once, in the order they happened.",
+      "items": {
+        "$ref": "#/$defs/ErrorType"
+      },
+      "title": "Error Types",
+      "type": "array"
+    },
+    "normal": {
+      "default": false,
+      "description": "This is the person's most recent session with no errors at all, kept as the comparison to look at the others against rather than because anything went wrong.",
+      "title": "Normal",
+      "type": "boolean"
+    },
+    "markers": {
+      "description": "The session's errors, oldest first: where to jump to in `frames`.",
+      "items": {
+        "$ref": "#/$defs/ReplayMarker"
+      },
+      "title": "Markers",
+      "type": "array"
+    },
+    "frames": {
+      "description": "The session's frames, oldest first. Skeletons, boxes and timestamps only: the image each was read from was dropped when it was processed.",
+      "items": {
+        "$ref": "#/$defs/CaptureFrame"
+      },
+      "title": "Frames",
+      "type": "array"
+    }
+  },
+  "required": [
+    "session_id",
+    "person_id",
+    "task_id",
+    "started_at",
+    "duration_s",
+    "error_count",
+    "error_types",
+    "markers",
+    "frames"
+  ],
+  "title": "Replay",
+  "type": "object"
+}

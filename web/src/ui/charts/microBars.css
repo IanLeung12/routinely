@@ -1,0 +1,23 @@
+/* MicroBars (web/src/ui/charts/MicroBars.tsx): the 14-day tick strip that sits in
+   a list row. Colours come from the status tokens, so a tick means the same thing
+   as the row's StatusChip; a day with no reading is a hairline, not a colour. */
+.micro-bars {
+  display: block;
+  flex: none;
+}
+
+.micro-bars__tick--normal {
+  fill: var(--status-normal);
+}
+
+.micro-bars__tick--watch {
+  fill: var(--status-watch);
+}
+
+.micro-bars__tick--flagged {
+  fill: var(--status-flagged);
+}
+
+.micro-bars__tick--missing {
+  fill: var(--hairline-strong);
+}

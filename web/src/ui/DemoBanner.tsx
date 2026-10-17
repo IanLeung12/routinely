@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { apiUrl } from '../config.ts'
 import './demoBanner.css'
 
-async function defaultReset() {
+/** What "Reset demo" does unless the caller passes its own `onReset`: puts the
+ * pipeline's demo state back and reloads. Exported so a caller can run it after
+ * clearing its own state (App.tsx also forgets the chosen role, SPEC section 17). */
+export async function resetDemoData() {
   const response = await fetch(`${apiUrl}/demo/reset`, { method: 'POST' })
   if (!response.ok) throw new Error(`demo reset failed: ${response.status}`)
   window.location.reload()
 }
 
-export function DemoBanner({ onDismiss, onReset = defaultReset }: { onDismiss?: () => void; onReset?: () => Promise<void> }) {
+export function DemoBanner({ onDismiss, onReset = resetDemoData }: { onDismiss?: () => void; onReset?: () => Promise<void> }) {
   const [resetting, setResetting] = useState(false)
   const [resetError, setResetError] = useState(false)
 

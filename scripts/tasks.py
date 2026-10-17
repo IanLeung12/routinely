@@ -251,6 +251,8 @@ def main():
     if a.cmd == "next":
         c = claimable(tasks, a.cls)
         return print(block(lines, tasks[c[0]]) if c else "NO_TASK")
+    if a.cmd == "auto" and os.path.exists(os.path.join(WT, "FROZEN")):
+        return print("NO_TASK")  # demo freeze: no new claims (delete FROZEN on the tasks branch to resume)
     if a.cmd == "auto":
         for _ in range(5):
             lines, tasks = load()

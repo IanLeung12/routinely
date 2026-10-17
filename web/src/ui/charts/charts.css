@@ -1,0 +1,18 @@
+/* LineChart: quiet marks, readable labels, no fill or decorative gradient. SVG
+   coordinates are chart units; visual colours and type use shared tokens. */
+.line-chart { margin: 0; position: relative; font-variant-numeric: tabular-nums; }
+.line-chart__viewport { overflow-x: auto; }
+.line-chart svg { display: block; width: 100%; min-width: 40rem; }
+.line-chart__summary { margin: var(--space-1) 0; color: var(--text-secondary); font-size: var(--text-xs); }
+.line-chart__axis { fill: var(--text-muted); font-size: var(--text-xs); }
+.line-chart__grid { stroke: var(--chart-grid); stroke-width: 1; stroke-dasharray: var(--chart-forecast-dash); }
+.line-chart__line, .line-chart__comparison { fill: none; stroke: var(--chart-line); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.line-chart__comparison { stroke: var(--chart-comparison); stroke-dasharray: var(--chart-forecast-dash); }
+.line-chart__band { fill: var(--chart-baseline); }
+.line-chart__mean { stroke: var(--chart-baseline-line); stroke-dasharray: var(--chart-forecast-dash); }
+.line-chart__marker { fill: var(--chart-line); }
+.line-chart__marker--flagged { fill: var(--status-flagged); }
+.line-chart__crosshair { stroke: var(--text-muted); stroke-dasharray: var(--chart-forecast-dash); }
+.line-chart__target { fill: transparent; stroke: transparent; cursor: crosshair; }
+.line-chart__target:focus-visible { stroke: var(--focus-ring-color); stroke-width: var(--focus-ring-width); outline: none; }
+.line-chart__tooltip { display: inline-block; padding: var(--space-2) var(--space-3); border: thin solid var(--hairline-strong); border-radius: var(--radius-xs); background: var(--surface-raised); color: var(--text); font-size: var(--text-xs); }

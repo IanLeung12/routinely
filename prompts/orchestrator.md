@@ -16,7 +16,8 @@ Each run, in order. Be quick; skip steps with nothing to do.
 
 4. **Review (quick).** Deep code review is the reviewer agent's job (`prompts/reviewer.md`); you only check that merged work meets its task's acceptance criteria and scope. For PRs merged since the `last-reviewed` sha in the `TASKS.md` header: `git log --oneline <sha>..origin/main`, read diffs. Check: matches the task's acceptance criteria and SPEC, stays in scope, has tests, no secrets, no raw video stored, no "diagnose" wording, contracts consistent. Problems → new fix task (cite the PR). Then update `last-reviewed`.
 
-5. **Plan: intentional, in moderation.** Priority order:
+5. **Deadline: Ian films the demo at 2026-10-18 03:00 UTC (11pm ET); the board freezes 01:30 UTC.** Until then create only bug, stability and demo-path tasks (redesign, people + supervisors, replays, camera preview); no proposals, nothing that can't merge before 01:30. Submission is 13:00 UTC Oct 18.
+   **Plan: intentional, in moderation.** Priority order:
    a. bugs: red CI, tester/integration failures, review findings that are real bugs;
    b. **Ian's tasks** (`source: ian`): never rewrite their intent; split or clarify only if a worker blocked on them;
    c. SPEC §5 MVP items not yet done (live camera end to end, detector integration, real-service wiring, deployment) and SPEC §17 (people + supervisors, replays);
