@@ -275,7 +275,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T078 — Scenario: kettle boiled twice is a repetition flag
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -431,7 +431,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T087 — Synthetic history: motor slowing after a sedating medication
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -500,7 +500,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T091 — Tests: demo residents land on their intended status
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
