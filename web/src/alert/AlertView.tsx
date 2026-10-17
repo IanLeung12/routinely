@@ -66,7 +66,9 @@ export function AlertView({
   const [loaded, setLoaded] = useState<{ alertId: string; alert: Alert | null } | null>(null)
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [replay, setReplay] = useState<{ alertId: string; replay: EvidenceReplay | null } | null>(null)
-  const [resident, setResident] = useState<{ alertId: string; name: string | null; records: CareRecord[] | null } | null>(null)
+  /** The alert's resident, fetched once the alert names them: their real name for the
+   * heading and the copied summary, and the care records shown beside the evidence. */
+  const [resident, setResident] = useState<{ alertId: string; name?: string; records: CareRecord[] | null } | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   /** Which alert focus has already landed on, so re-rendering after feedback is saved
@@ -106,7 +108,7 @@ export function AlertView({
     }
     fetchResident(loaded.alert.resident_id).then((fetched) => {
       if (!cancelled) {
-        setResident({ alertId, name: fetched?.name ?? null, records: fetched?.care_records ?? null })
+        setResident({ alertId, name: fetched?.name, records: fetched?.care_records ?? null })
       }
     })
     return () => {
@@ -137,6 +139,11 @@ export function AlertView({
     return () => window.clearTimeout(timeout)
   }, [copyStatus])
 
+  /** The name the API has for this resident, once it has loaded for the alert on screen.
+   * Undefined until then, so the screen falls back to the raw id rather than guessing a
+   * name from it and disagreeing with the rest of the app (T221). */
+  const residentName = resident !== null && resident.alertId === alertId ? resident.name : undefined
+
   /** One tap to copy the flag into the care record, so it reaches the chart without
    * retyping (SPEC section 9, like the handoff's "Copy summary", T151). */
   async function copySummary(alert: Alert) {
@@ -145,8 +152,7 @@ export function AlertView({
         setCopyStatus('Copy not available')
         return
       }
-      const residentName = resident !== null && resident.alertId === alertId ? resident.name : null
-      await navigator.clipboard.writeText(alertText(alert, residentName ?? undefined))
+      await navigator.clipboard.writeText(alertText(alert, residentName))
       setCopyStatus('Copied')
     } catch {
       setCopyStatus('Copy not available')
@@ -175,7 +181,6 @@ export function AlertView({
     body = <EmptyState message="No change flagged for review." />
   } else {
     const alert = loaded.alert
-    const residentName = resident !== null && resident.alertId === alertId ? resident.name : null
     heading = (
       <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>
         {residentName ?? alert.resident_id} flagged for review
