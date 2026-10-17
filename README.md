@@ -2,6 +2,21 @@
 
 Hack the Valley 11. Spec: `SPEC.md`. Agent rules: `AGENTS.md`.
 
+## Layout
+```
+pipeline/   Python 3.11 package (uv): capture → recogniser → task graph → errors → baseline, plus the FastAPI API
+web/        Vite + React + TypeScript nurse dashboard
+contracts/  schemas shared by pipeline/ and web/ (empty for now; `heavy` tasks only)
+scripts/    ci.sh (the one CI entrypoint), tasks.py (the board), worker.sh (worker loop)
+docs/       architecture and process-flow diagrams
+```
+- `pipeline/` — one module per stage of SPEC §6, each a placeholder a later task fills in. `cd pipeline && uv sync --all-extras`, then `uv run pytest` or `uv run uvicorn routine_watch.api:app --reload`.
+- `web/` — `cd web && npm install && npm run dev`. Reads the API from `VITE_API_URL` (`src/config.ts`); screens come from SPEC §9.
+- `contracts/` — one definition per shared shape, so the pipeline and the dashboard can't drift. See `contracts/README.md`.
+- `.env.example` — every env var the project uses. Copy to `.env`; never commit `.env`.
+
+Whole-repo checks: `scripts/ci.sh` (ruff + pytest for `pipeline/`, lint + test + build for `web/`).
+
 ## Run a worker (teammates)
 Needs `git`, `gh` (logged in), `python3`, and `claude` or `codex`.
 

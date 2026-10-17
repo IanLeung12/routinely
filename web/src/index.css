@@ -1,0 +1,73 @@
+/* Visual-first and calm: a nurse should read a screen in about 10 seconds
+   (SPEC section 9). Colours for status chips land with the overview screen. */
+:root {
+  --bg: #11131a;
+  --panel: #1a1d27;
+  --border: #2b2f3d;
+  --text: #e7e9ee;
+  --muted: #9aa1b1;
+
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  max-width: 34rem;
+  color: var(--muted);
+}
+
+.screens {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screens li {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.screens h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.screens p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.todo {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
