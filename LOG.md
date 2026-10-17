@@ -36,3 +36,8 @@ T034 | light | codex | merged first try | ~4k tok
 T035 | light | codex | merged first try | ~4k tok
 T036 | light | codex | merged first try | ~4k tok
 T045 | light | codex | merged first try | ~2k tok
+T042 | standard | claude-sonnet | merged first try | ~?k tok
+T029 | heavy | claude-opus | merged first try | ~?k tok
+T040 | light | codex | merged first try | ~3k tok
+T047 | light | codex | merged first try | ~3k tok
+T048 | light | codex | merged first try | ~4k tok
