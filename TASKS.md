@@ -463,14 +463,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T371 — Test: error list and suggested checks have accessible names
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/ErrorList.a11y.test.tsx, web/src/alert/SuggestedChecks.a11y.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:58Z
 - pr: —
 
 What: Screen-reader check for the two alert evidence lists: each is a labelled list/region and every item's name includes its time and step (errors) or check text (suggested checks).
