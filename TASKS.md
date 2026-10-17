@@ -355,15 +355,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T446 — Replay player: error markers on the timeline, speed, arrow-key stepping
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.markers.test.tsx, web/src/evidence/evidence.css
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T23:20Z
 - pr: —
 
 What: Carved from T413 (Ian's replays library). Extend the existing skeleton `ReplayPlayer` so a supervisor can analyse a replay: error markers on the timeline that jump to the moment, a 0.5×/1×/2× speed control, and frame-by-frame stepping with arrow keys. Read only `web/src/evidence/ReplayPlayer.tsx`, `web/src/evidence/ReplayPlayer.test.tsx` (style reference) and `web/src/ui/Button.tsx`.
