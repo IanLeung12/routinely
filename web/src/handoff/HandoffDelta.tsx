@@ -1,13 +1,11 @@
-import './HandoffDelta.css'
+import { Pill } from '../ui/Pill'
 
 /** More, fewer or the same, and the word that says which. Colour is the second
  * signal only: `label` carries the whole meaning, so the indicator reads the same in
  * greyscale, read aloud or pasted into a note. */
 type Comparison = {
-  /** `handoff-delta--` modifier: carries the colour, never the meaning. */
-  tone: 'more' | 'fewer' | 'same'
-  /** Decorative, so a row is scannable without reading; the label says it in words. */
-  glyph: string
+  tone: 'negative' | 'positive' | 'neutral'
+  direction?: 'up' | 'down'
   label: string
 }
 
@@ -19,18 +17,18 @@ type Comparison = {
  * difference and the count are read together. */
 function compare(flags: number, previousFlags: number): Comparison {
   if (flags > previousFlags) {
-    return { tone: 'more', glyph: '↑', label: `${flags - previousFlags} more than last shift` }
+    return { tone: 'negative', direction: 'up', label: `${flags - previousFlags} more than last shift` }
   }
   if (flags < previousFlags) {
-    return { tone: 'fewer', glyph: '↓', label: `${previousFlags - flags} fewer than last shift` }
+    return { tone: 'positive', direction: 'down', label: `${previousFlags - flags} fewer than last shift` }
   }
   // Equal. A quiet shift after a quiet shift is worth saying in its own words: "same
   // as last shift" beside a row with nothing flagged reads as "same amount of
   // something" rather than "nothing either time".
   if (flags === 0) {
-    return { tone: 'same', glyph: '=', label: 'Nothing flagged either shift' }
+    return { tone: 'neutral', label: 'Nothing flagged either shift' }
   }
-  return { tone: 'same', glyph: '=', label: 'Same as last shift' }
+  return { tone: 'neutral', label: 'Same as last shift' }
 }
 
 /** The same phrase the chip shows, in plain text, for a handoff that leaves the
@@ -69,14 +67,11 @@ export function HandoffDelta({
 }) {
   if (previousFlags === null || previousFlags === undefined) return null
 
-  const { tone, glyph, label } = compare(flags, previousFlags)
+  const { tone, direction, label } = compare(flags, previousFlags)
   return (
-    <span className={`handoff-delta handoff-delta--${tone}`}>
-      <span className="handoff-delta__glyph" aria-hidden="true">
-        {glyph}
-      </span>
+    <Pill className="handoff-delta" tone={tone} direction={direction}>
       <span className="handoff-delta__label">{label}</span>
-    </span>
+    </Pill>
   )
 }
 

@@ -155,11 +155,12 @@ and the session ends when you stop the stack:
 scripts/dev.sh down
 ```
 
-Two options:
+Three options:
 
 ```sh
 scripts/camera.sh --camera 1           # a second or external device
 scripts/camera.sh --record out.jsonl   # keep the capture records as well
+scripts/camera.sh --preview            # see the camera picture, on this device only
 ```
 
 Windows and Linux: index `0` is the built-in camera, and nothing asks for permission.
@@ -177,6 +178,48 @@ cd pipeline && uv run python -m routine_watch.replay ../.dev/my_session
 ```
 
 (Keep it out of `tests/scenarios/`, which is CI's own set.)
+
+### Seeing the camera picture (this device only)
+
+The dashboard draws skeletons, because that is all a capture record holds. While you
+are framing the camera — is the kettle in shot? is the counter lit enough for MediaPipe
+to find a hand? — you want the real picture too, so `--preview` adds it *under* the
+skeleton on the machine with the camera:
+
+```sh
+scripts/camera.sh --preview
+```
+
+It prints one more line:
+
+```
+PREVIEW_URL=http://127.0.0.1:8765/preview.mjpg
+```
+
+Open `LIVE_URL` as usual and press **Show camera preview (this device only)** on the
+skeleton view. The picture appears behind the skeleton and boxes, aligned to the same
+coordinates, with a **Preview · not recorded · this device only** badge on it. Press it
+again to go back to skeleton-only.
+
+**What the promise is.** The capture process serves the current frame itself, on
+`127.0.0.1` and nothing else: a client that is not this machine is refused, and so is a
+request whose `Host:` is not loopback, so no page anywhere can read it through somebody
+else's browser. One frame is held in memory at a time and dropped when the session ends.
+Nothing is written to disk, nothing goes to the API, and nothing reaches a supervisor —
+with the preview on, `--record` writes the same landmarks-and-boxes JSONL it always did
+(SPEC §8, §12). It is for the person standing at the camera, and nobody else.
+
+The toggle is only offered when the dashboard is open on the capture machine itself
+(`localhost`) *and* that machine's preview answers. On any other machine, on a recorded
+session, or without `--preview`, the Live screen is the skeleton view it has always
+been — no toggle, no message, nothing to explain.
+
+Two things worth knowing:
+
+- `PREVIEW_PORT` moves it off 8765 if something else is there; `scripts/camera.sh`
+  exports it to the dashboard as well, so use the script rather than setting it by hand.
+- The preview exists only while the camera is open, so the toggle appears a moment
+  after the first frame arrives, and goes when you stop the stack.
 
 ### What you'll see without detector weights
 
@@ -203,4 +246,9 @@ no camera session on camera 0: no camera at index 0
 
 Pausing the room from the resident's page stops the camera the same way it stops a
 replay (SPEC §12): the card says monitoring is paused, and nothing is filmed until
-it's back on.
+it's back on — and with it the preview, which lives exactly as long as the camera does.
+
+If `--preview` printed `PREVIEW_URL` but the toggle never appears, the capture process
+has no camera to preview: `.dev/api.log` says so (`no camera session on camera 0`), and
+the toggle waits for the first frame on purpose. A port already in use is in the same
+log (`no camera preview on port 8765`) and costs you the preview, never the session.

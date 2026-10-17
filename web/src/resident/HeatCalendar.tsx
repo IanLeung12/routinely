@@ -58,7 +58,7 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
         })}
       </div>
       </div>
-      <p>
+      <p className="heat-legend">
         <span aria-hidden="true" className="heat-swatch heat-swatch--low" />{' '}
         Lighter = fewer errors ·{' '}
         <span aria-hidden="true" className="heat-swatch heat-swatch--high" />{' '}
