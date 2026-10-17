@@ -252,7 +252,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T072 — Live camera session messages (capture → recogniser → live messages)
-- status: todo
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -261,7 +261,7 @@ Acceptance:
 - owner: —
 - claimed: —
 - pr: #74
-- note: merge conflict with main on PR #74: check out its branch, merge origin/main, fix, push
+- note: 
 
 What: `/ws/live` only replays recorded scenarios; the demo needs the camera path too (SPEC §10, §16 decision B). Build the generator that turns a live capture stream into the same messages `live.session_messages` yields, so wiring it into the route is a one-line follow-up.
 Interface: `async def camera_session_messages(frames: AsyncIterator[CaptureFrame] | Iterable[CaptureFrame], task: str = "tea") -> AsyncIterator[dict]` in `live_camera.py`, reusing `live.py`/`recogniser.py`/`replay.py` helpers (import, don't copy; don't edit `live.py` or `api.py`). Frames come from `capture.record_stream` with `FakeLandmarker`/`FakeDetector` in tests; never store frames.
