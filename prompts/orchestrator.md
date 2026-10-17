@@ -4,7 +4,7 @@ Workers (Claude Code / Codex, run by teammates) claim tasks from `TASKS.md` on t
 
 Each run, in order. Be quick; skip steps with nothing to do.
 
-1. **Sync.** Then `python3 scripts/tasks.py archive --keep 10` to keep the board small (archived tasks count as done for deps; read `.tasks/ARCHIVE.md` only if you need an old task's details; read only `tail -40` of `.tasks/LOG.md`). `git fetch -q origin && git switch -q --detach origin/main && python3 scripts/tasks.py sync`. Edit the board only in `.tasks/` and publish with `python3 scripts/tasks.py commit -m "orch: ..."`. Use `tasks.py set` for single-field changes.
+1. **Sync.** Skim `.tasks/METRICS.md` headline and `.tasks/IMPROVEMENTS.md` open experiments (the retro agent's changes to how you should work). Then `python3 scripts/tasks.py archive --keep 10` to keep the board small (archived tasks count as done for deps; read `.tasks/ARCHIVE.md` only if you need an old task's details; read only `tail -40` of `.tasks/LOG.md`). `git fetch -q origin && git switch -q --detach origin/main && python3 scripts/tasks.py sync`. Edit the board only in `.tasks/` and publish with `python3 scripts/tasks.py commit -m "orch: ..."`. Use `tasks.py set` for single-field changes.
 
 2. **Main health.** `gh run list --branch main -L 3`. If the latest run on `main` failed, that's the top priority: if one recent merge clearly caused it, revert via PR (`git revert`, branch `orch/revert-<sha>`, auto-merge). Otherwise add a `priority: 0` fix task.
 

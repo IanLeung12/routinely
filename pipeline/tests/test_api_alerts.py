@@ -10,6 +10,10 @@ from routine_watch.feedback import FeedbackStore
 MRS_K = "mrs-k"
 MRS_K_ALERT = f"alert-{MRS_K}"
 
+#: These tests are all about the alert endpoints, so every test here plays mrs-k's
+#: live session first (T124: the seeded demo alone leaves her on watch, not flagged).
+pytestmark = pytest.mark.usefixtures("mrs_k_flagged")
+
 
 @pytest.fixture(autouse=True)
 def _reset_feedback_store():

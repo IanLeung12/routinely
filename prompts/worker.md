@@ -10,7 +10,7 @@ Do it end to end without asking anyone. **You are non-interactive: ending your r
 4. Run `scripts/ci.sh` until it passes.
 5. Commit, push, open a PR titled `{{ID}}: <title>`. In the body: what changed (2–5 lines), how you tested it, `model: {{MODEL}}`, approximate tokens used.
 6. `gh pr merge --auto --squash --delete-branch`
-7. `python3 scripts/tasks.py set {{ID}} status=in-review pr=#<N> --agent {{AGENT}}`
+7. `python3 scripts/tasks.py set {{ID}} status=in-review pr=#<N> rating="<1-5>/5 <what was missing or unclear in the task, or 'clear'>" --agent {{AGENT}}`
 8. Wait for CI with `gh pr checks <N> --watch`. If it fails, fix it on the same branch (max 2 tries).
    Once merged: `python3 scripts/tasks.py set {{ID}} status=done --agent {{AGENT}}`.
    If still failing after 2 tries: `python3 scripts/tasks.py set {{ID}} status=blocked note="<why>" --agent {{AGENT}}`.
