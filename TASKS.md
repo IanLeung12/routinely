@@ -408,14 +408,14 @@ Acceptance:
 * `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T221 — Copy summary uses the resident's real name, not one guessed from the id
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts, web/src/alert/AlertView.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T10:35Z
 - pr: —
 - note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T221-wip-1031: start from it (git switch task/T221-wip-1031 && git merge origin/main)
 
