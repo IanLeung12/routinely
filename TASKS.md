@@ -461,7 +461,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T125 — Review: drift/evening/motor demo residents never leave "normal" (no "watch" for demo beat 6)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -470,7 +470,7 @@ Acceptance:
 - source: reviewer
 - owner: ian-claude-standard
 - claimed: 2026-10-17T07:48Z
-- pr: —
+- pr: #117
 
 What: `_status` only returns `watch` when the latest score beats a threshold built from the resident's *whole* history, so a slow drift raises its own bar: `mr-chen` (drift, recent scores 8–9, threshold ≈10.1), `mr-nguyen` (evening) and `mrs-patel` (motor) all show `normal`. SPEC §10 beat 6 needs Mr. D/Chen on `watch` with the slow-drift pattern, and T089's acceptance assumes it.
 Interface: in `demo.py`, build the baseline from the earliest sessions only (e.g. first 7 of `DEMO_DAYS`), and also return `watch` when `drift.drift(...)` over daily scores reports `trending` (same daily-mean helper as `api._daily_scores`; move it into `drift.py` rather than copying it). Normal residents must stay `normal`.
