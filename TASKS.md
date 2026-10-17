@@ -470,7 +470,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T111 — Demo residents: evening-only worsening and motor slowing
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
