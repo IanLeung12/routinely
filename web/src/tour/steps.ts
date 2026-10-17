@@ -19,7 +19,7 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     title: 'Alert',
-    body: "When two sessions in a row cross a resident's own threshold, an alert appears here and on the nurse's phone. A single off session never alerts on its own.",
+    body: "When at least two sessions within 48 hours cross a resident's own threshold, an alert appears here and on the nurse's phone. A single off session never alerts on its own.",
   },
   {
     title: 'Why',

@@ -16,6 +16,12 @@ describe('Tour', () => {
     }
   })
 
+  it('Alert step describes the flag rule as within 48 hours', () => {
+    const alertStep = TOUR_STEPS.find((step) => step.title === 'Alert')
+    expect(alertStep?.body).toContain('48 hours')
+    expect(alertStep?.body.toLowerCase()).not.toContain('in a row')
+  })
+
   it('disables Back on the first step and Next on the last step', () => {
     render(<Tour />)
     expect((screen.getByRole('button', { name: 'Back' }) as HTMLButtonElement).disabled).toBe(true)
