@@ -503,7 +503,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T138 — Review: AlertContext is never rendered, unstyled, and copies ContextTimeline
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: improvement
@@ -512,7 +512,8 @@ Acceptance:
 - area: web/src/alert/AlertContext.tsx, web/src/alert/AlertView.tsx, web/src/alert/alert.css, web/src/resident/ContextTimeline.tsx, web/src/resident/format.ts, web/src/alert/AlertView.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:10Z
-- pr: —
+- pr: #130
+- rating: 5/5 clear
 
 What: T112 added `AlertContext` but nothing imports it, so the alert screen still shows no care-record context (SPEC §5 bonus 5), and its `alert-context*` classes have no CSS. Its `describe()`/`time()` are verbatim copies of `ContextTimeline.tsx`. Fix: move `describe` and `time` into `web/src/resident/format.ts` (e.g. `describeCareRecord`, `recordTime`) and use them in both components; in `AlertView` render a `<Card><SectionHeader title="Recent care records" /><AlertContext records=… alertTs={alert.ts} /></Card>` fed from the resident detail's `care_records` (existing `web/src/resident/api.ts` fetch, mock fallback), hidden while loading; add `.alert-context*` styles in `alert.css` using `web/src/ui/` tokens only (no hard-coded colours).
 Interface: `AlertContext` props unchanged.
