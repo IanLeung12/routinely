@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T155 — Bug: alert opened after the live session shows other errors than the live session made
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: bug
