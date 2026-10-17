@@ -484,14 +484,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T137 — StatusChip: say what "Watch" means on hover and for screen readers
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/ui/StatusChip.tsx, web/src/ui/StatusChip.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:11Z
 - pr: —
 
 What: Now that demo residents reach "watch" (T125), a nurse needs to know in 10 s what each chip means. Add a short `title` + `aria-label` per status: flagged = "Change flagged for review", watch = "Worth watching: trending away from their usual routine", normal = "Within their usual range". Read only `web/src/ui/StatusChip.tsx`, its test and `web/src/ui/README.md`.
