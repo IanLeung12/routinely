@@ -83,7 +83,7 @@ What: Fey "stock detail" layout for a resident: header (name, status pill, top p
 Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T405 — Redesign 5/6: alert / evidence view
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
