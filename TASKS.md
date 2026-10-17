@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T028 — Alert / evidence view screen
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: feature
@@ -16,7 +16,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx, web/src/alert/ErrorList.tsx, web/src/alert/alert.css
 - owner: ian-claude-standard
 - claimed: 2026-10-17T05:28Z
-- pr: —
+- pr: #46
 
 What: SPEC §9 screen 4, readable in 10 seconds: plain-language summary on top, baseline comparison ("5.0 vs 0.2 normal over 14 days"), error list with m:ss timestamps and nurse-readable phrases (same wording as `pipeline/src/routine_watch/explain.py`), `SuggestedChecks`, and `FeedbackButtons` wired to `postFeedback`; after feedback show the updated threshold. Each error row has an `onOpenEvidence(error)` callback (replay view comes later). Don't touch App.tsx (T022 owns it); a later task wires navigation.
 Interface: `AlertView({alertId, onBack, onOpenEvidence?})` loads via `fetchAlert` (mock fallback); `ErrorList({errors, onOpen})`.
