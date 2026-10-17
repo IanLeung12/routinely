@@ -407,7 +407,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T278 — Refactor: move resident, drift, replay and pattern routes out of api.py
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
