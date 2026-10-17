@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
