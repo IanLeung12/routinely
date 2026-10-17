@@ -357,7 +357,7 @@ Acceptance:
 * Test covers the empty result; `cd web && npx vitest run src/alert/AlertView.test.tsx` and `scripts/ci.sh` pass.
 
 ### T182 — Review: false alarm makes the alert 404, so the cause answer can't be saved
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
