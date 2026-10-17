@@ -259,7 +259,7 @@ Acceptance:
 - Look at it (dev server `/landing.html`, desktop + 390 px wide); describe what you checked in the PR.
 
 ### T379 — Test: shift handoff Print button works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -349,7 +349,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
 
 ### T384 — Ghost replay: aria-label says what is being compared
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
