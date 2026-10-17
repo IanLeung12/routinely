@@ -1,11 +1,18 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { personNote, personStatus } from '../person/personNotes.ts'
 import { setPersonRoutineApi } from '../person/routine/api.ts'
 import { mockPersonRoutine, mockSteadyRoutine } from '../person/routine/mockRoutine.ts'
 import { acceptInvite, createInvite, currentPerson, setPeopleApi, supervisorsOf } from './api.ts'
 import { MyRoutine } from './MyRoutine.tsx'
+
+// MyRoutine.tsx loads this behind React.lazy so a supervisor's first paint never
+// carries it. Pay the dynamic-import/transform cost here, once, instead of in the
+// first test's findByRole, which otherwise races the 1s default timeout.
+beforeAll(async () => {
+  await import('../person/routine/RoutineSections.tsx')
+})
 
 beforeEach(() => {
   localStorage.clear()
