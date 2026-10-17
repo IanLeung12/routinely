@@ -4179,3 +4179,40 @@ Interface: read `pipeline/src/routine_watch/api.py` (search `monitoring`) and `w
 Acceptance:
 - tests with a stubbed `fetch` cover: URL + method + body, parsed result, throws on `ok: false`, throws on network error
 - `cd web && npm test` and `scripts/ci.sh` pass
+
+### T243 — Resident detail: monitoring switch reads and writes the real pause state
+- status: done
+- class: standard
+- priority: 1
+- kind: feature
+- deps: T242
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T11:57Z
+- pr: #235
+- rating: 5/5 clear
+
+What: `ResidentDetail` keeps the monitoring switch in local `useState(true)`, so pausing a room does nothing on the server (SPEC §12). Load the initial state from `fetchPausedRooms()` and call `setRoomMonitoring()` on toggle (T242).
+Interface: consume `web/src/about/monitoringApi.ts`; `MonitoringToggle` props unchanged. Optimistic toggle; if the PUT fails, revert the switch and show a short inline message ("Couldn't change monitoring. Try again."). If the GET fails (API down / mock mode), keep today's local-only behaviour, no error shown.
+Acceptance:
+- tests: initial state reflects a paused room; toggle sends PUT; failed PUT reverts + shows message; GET failure falls back to "on"
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T244 — Live screen: show "Monitoring paused" when /ws/live sends {"type":"paused"}
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: ian-claude
+- claimed: 2026-10-17T11:39Z
+- pr: #233
+- rating: 4/5 clear on the interface and acceptance, but the area named LiveScreen.tsx/LiveScreen.test.tsx while the hook is consumed by LiveSession.tsx, which owns the skeleton/task map the acceptance asks about
+
+What: since T149 (#226), `/ws/live` sends one `{"type": "paused", "room": "<room>"}` and closes if the demo resident's room is paused. `useLiveSession` counts that as data received, ignores the unknown type, and the live screen sits empty with no explanation. Handle it explicitly.
+Interface: add a `paused` message to the hook's `LiveMessage` union (web-side type only; don't touch `contracts/`) and a `paused: { room: string } | null` field to its state; do not fall back to mock data when paused. `LiveScreen` renders the `EmptyState` from `web/src/ui/` with "Monitoring is paused for room <room>" and a hint that it can be turned back on from the resident's page.
+Acceptance:
+- hook test: a fake socket sending `paused` then closing yields `paused.room`, no mock fallback
+- LiveScreen test: paused state shows the message, no skeleton/task map
+- `cd web && npm test` and `scripts/ci.sh` pass
