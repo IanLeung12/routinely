@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 1e51632
+- last-reviewed: a6feeef
 
 ## Tasks
 
@@ -505,4 +505,70 @@ Repro: `scripts/dev.sh up` → open http://localhost:5173 → click Mrs. K → l
 Expected: calendar sits in the dark theme; every day number readable. Actual: white block; "1" cell unreadable.
 Acceptance:
 - Vitest: no inline style contains a hex or `hsl(` literal; high-score cell (score ≥ 4) gets the light-text class/style; existing tests still pass.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T049 — Slow-drift trend card component
+- status: todo
+- class: light
+- priority: 2
+- deps: —
+- area: web/src/resident/DriftCard.tsx, web/src/resident/DriftCard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC Nice-to-have 6: show a slow upward trend in a resident's error score, separate from the sudden-change flag. Pure presentational component; not wired into any screen yet. Read only the files in `area`, `web/src/ui/Card.tsx`, `web/src/ui/README.md` and `pipeline/src/routine_watch/drift.py` (the data it will display).
+Interface: `export function DriftCard({ slopePerDay, days, trending, minDays = 7 }: { slopePerDay: number; days: number; trending: boolean; minDays?: number })`, built on the `Card` primitive. `days < minDays` → "Not enough history yet (N of 7 days)"; `trending` → heading "Slow drift" and text "Error score rising about +0.15 per day over N days. Flagged for review." (slope to 2 dp); otherwise "No slow drift over N days". Never use the word "diagnose". `data-state="insufficient|trending|stable"`; CSS vars only, no hex.
+Acceptance:
+- Vitest covers the three states, the 2 dp formatting, and asserts the text never matches /diagnos/i.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T050 — Drift endpoint for a resident
+- status: todo
+- class: standard
+- priority: 2
+- deps: —
+- area: pipeline/src/routine_watch/api.py (add the route only), pipeline/src/routine_watch/demo.py (expose daily scores only if needed), pipeline/tests/test_api_drift.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Back the drift card (T049) with data: `GET /residents/{resident_id}/drift` runs `routine_watch.drift.drift` over that resident's demo sessions, one point per day (mean score per date). The demo "slow drift" resident must come out `trending: true`, Mrs. K and the stable resident `false`.
+Interface: response `{"resident_id": str, "slope_per_day": float, "days": int, "trending": bool}`; 404 for unknown resident, same style as `get_resident`.
+Acceptance:
+- pytest via FastAPI TestClient: 200 shape, 404, drift resident trending, stable resident not trending.
+- `scripts/ci.sh` passes.
+
+### T051 — Feedback buttons announce the recorded choice
+- status: todo
+- class: light
+- priority: 3
+- deps: —
+- area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Accessibility (Execution/Clarity): after a tap, screen-reader and sighted users get a confirmation that the verdict was saved. Read only the files in `area`.
+Interface: keep the current props. Add a `<p role="status" aria-live="polite">` under the buttons: `value === 'confirmed'` → "Marked as confirmed", `'false_alarm'` → "Marked as false alarm", no value → empty. Wrap the buttons in `role="group"` with `aria-label="Nurse feedback"`. Keep `aria-pressed`.
+Acceptance:
+- Vitest: group label present; status text for each value; clicking calls `onChange` with the verdict; empty status with no value.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T052 — Demo-data banner component
+- status: todo
+- class: light
+- priority: 3
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/README.md (add one line)
+- source: proposed
+- owner: —
+- claimed: —
+- pr: —
+
+What: Responsible design / Clarity for judges: a thin banner stating the dashboard runs on synthetic residents. Component only; wiring into `App.tsx` is a later task. Read only the files in `area` and `web/src/ui/Card.tsx` (style).
+Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void })` renders `role="note"` with text "Demo mode: synthetic residents, no real patient data. Flags a change for review; never a diagnosis." and, if `onDismiss` is given, a "Dismiss" button. CSS vars only.
+Acceptance:
+- Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
 - `cd web && npm run lint && npm test && npm run build` passes.

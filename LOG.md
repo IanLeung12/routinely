@@ -29,3 +29,10 @@ T024 | light | codex | merged first try | ~5k tok
 T025 | light | claude-sonnet | merged first try | ~45k tok
 T022 | standard | claude-opus | merged first try | ~150k tok
 T026 | standard | claude-opus | merged first try | ~150k tok
+T027 | light | codex | merged first try | ~?k tok
+T031 | light | codex | merged first try | ~?k tok
+T033 | light | codex | merged first try | ~?k tok
+T034 | light | codex | merged first try | ~4k tok
+T035 | light | codex | merged first try | ~4k tok
+T036 | light | codex | merged first try | ~4k tok
+T045 | light | codex | merged first try | ~2k tok
