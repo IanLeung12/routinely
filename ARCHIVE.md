@@ -6558,3 +6558,21 @@ Interface: new `web/src/testSetup.ts` that, in a global `beforeEach`, does `vi.s
 Acceptance:
 - with a local `uvicorn` listening on :8000 (or not), `cd web && npx vitest run` exits 0 with no uncaught exception
 - `scripts/ci.sh` passes
+
+### T369 — Privacy panel: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/about/PrivacyPanel.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.mobile.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:30Z
+- pr: #357
+- rating: 5/5 clear
+
+What: Make the privacy panel readable at 375 px (no horizontal scroll, controls stack, text wraps), like the other phone-width tasks.
+Interface: read `web/src/about/PrivacyPanel.tsx` and the pattern in `web/src/resident/DriftCard.mobile.test.tsx` + `web/src/resident/driftCard.css`. Add a `@media (max-width: 480px)` block in a new `privacyPanel.css` imported by the panel; keep existing class names.
+Acceptance:
+- new `PrivacyPanel.mobile.test.tsx` renders at 375 px and checks the stacked class names exist
+- `scripts/ci.sh` passes
