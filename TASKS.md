@@ -148,7 +148,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T268 — Test: GET /handoff window bounds
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
