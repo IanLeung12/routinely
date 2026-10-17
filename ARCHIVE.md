@@ -3345,3 +3345,22 @@ Interface: local state in `UnitOverview`; buttons with `aria-pressed`; filters o
 Acceptance:
 - Tests: each filter shows only matching residents; empty case shows the message; default is All.
 - `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
+
+### T196 — App: Alerts list names residents; alert Back returns to where it was opened
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/App.tsx, web/src/App.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:43Z
+- pr: #190
+- rating: 5/5 clear
+
+What: The overview's Alerts list shows the raw id ("mrs-k: Change flagged for review"), not a name a nurse reads; and an alert opened from the shift handoff (T152, PR #177) goes Back to the overview instead of the handoff.
+Interface: In `App.tsx`, label each alert with the resident's display name from `fetchResidents()` (`web/src/overview/api.ts`; fall back to the id if not found). Track where the alert was opened from (`'overview' | 'handoff' | 'live'`) so `AlertView`'s `onBack` returns there.
+Acceptance:
+* App test: Alerts list shows "Mrs. K" (mock residents), not "mrs-k".
+* App test: Shift handoff → Open alert → Back lands on the handoff screen; overview → alert → Back lands on the overview.
+* `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
