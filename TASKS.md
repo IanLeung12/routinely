@@ -115,7 +115,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T081 — Live session result counts toward the resident's flag (demo step 4)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 1
 - kind: feature
@@ -123,7 +123,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_live_flag.py, docs/CODEMAP.md (notes only)
 - owner: ian-claude
 - claimed: 2026-10-17T06:46Z
-- pr: —
+- pr: #87
 
 What: SPEC §10 step 4: when a live (or fallback pre-recorded) session for Mrs. K finishes with qualifying errors, it must become one of her sessions, so her sparkline spikes and, being the second qualifying session in the window, the "possible delirium" flag and alert appear on the next `/residents` and `/alerts` fetch. Today `live.py` scores the session but nothing records it.
 Interface: new `session_log.py` (in-memory, process-local) `record(resident_id, session: Session) -> None`, `sessions_for(resident_id) -> list[Session]`, `reset()`; `live.py` records the finished session; `demo.py` merges logged sessions into the resident's history before scoring/flagging. Keep it swappable for T038's store later (same shape, no DB here).
