@@ -92,6 +92,17 @@ describe('UnitOverview', () => {
     expect(byName.get('Mr. Silva')?.querySelector('.resident-pattern')).toBeNull()
   })
 
+  it('refetches residents when refreshKey changes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { rerender } = render(<UnitOverview refreshKey={0} />)
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+
+    rerender(<UnitOverview refreshKey={1} />)
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+  })
+
   it('colours the status chip per status', async () => {
     vi.stubGlobal(
       'fetch',

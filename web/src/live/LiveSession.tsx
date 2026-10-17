@@ -7,7 +7,7 @@ import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
-import type { LiveStep, StepState } from './useLiveSession.ts'
+import type { LiveSessionEnded, LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 function formatClock(seconds: number): string {
@@ -72,15 +72,26 @@ export type LiveSessionProps = {
   scenario: string
   speed?: number
   onOpenAlert?: (alertId: string) => void
+  /** Called once per `session_end`, so the overview and alerts list can refetch
+   * without a page reload (the dashboard has no other source of truth for them). */
+  onSessionEnd?: (ended: LiveSessionEnded) => void
 }
 
 /** Screen 3 (SPEC section 9): skeleton view next to the task-graph map. Steps turn green
  * as they're done; an error ticker lists omissions and repeats/sequence errors as they
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
-export function LiveSession({ scenario, speed = 1, onOpenAlert }: LiveSessionProps) {
+export function LiveSession({ scenario, speed = 1, onOpenAlert, onSessionEnd }: LiveSessionProps) {
   const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
   const announcement = useAnnouncement(steps, states, errors, source)
+  const handledEnded = useRef<LiveSessionEnded | null>(null)
+
+  useEffect(() => {
+    if (ended && ended !== handledEnded.current) {
+      handledEnded.current = ended
+      onSessionEnd?.(ended)
+    }
+  }, [ended, onSessionEnd])
 
   return (
     <section className="live-session">
