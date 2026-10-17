@@ -37,7 +37,7 @@ What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T410 — Supervisor side: "People I support" + add a person
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -46,8 +46,9 @@ Acceptance: live updates still animate; tests updated for structure only; before
 - area: web/src/people/PeopleISupport.tsx, web/src/people/PeopleISupport.test.tsx, web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - owner: ian-claude-standard-3
 - claimed: 2026-10-17T22:02Z
-- pr: —
+- pr: #412
 - note: T408 already shipped PeopleISupport (list + add by code) in web/src/people/; extend it there; Person.context already holds the context line; new CSS under web/src/supporting/, not people.css.
+- rating: 4/5 clear, but T408 (merged before this task existed) had already implemented most of SPEC §17's supervisor routing in App.tsx outside this task's listed area, so the real gap was narrower (and less obvious) than the task text implied -- the note helped but didn't flag that
 
 What: Generalise the nurse overview into "People I support" (SPEC §17). Care-home supervisor sees the unit list as today; a family supervisor with one person goes straight to that person; anyone can **add a person** by entering an invite code (T408's mock API), with a clear "linked" confirmation. Each row/detail shows the person's context ("care home · Room 12" vs "lives alone").
 Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; existing overview behaviour kept for the care-home case; `scripts/ci.sh` passes. Screenshot in PR.
