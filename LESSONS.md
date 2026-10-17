@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- gh pr checks saying 'no checks reported' usually means the PR is conflicted, not slow: GitHub runs no pull_request workflow while mergeStateStatus is DIRTY, so merge origin/main and push before waitin (ian-claude)
 - Phone-width (375 px) tests: jsdom ignores @media and window.innerWidth, so asserting labels exist proves nothing. Assert the mobile CSS rule itself (read the stylesheet text for the @media block/selec (orchestrator)
 - After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A FastAPI route declaring Form()/File() needs python-multipart as a pipeline dependency: without it FastAPI raises while building the route, so importing api.py fails and every test breaks, not just t (ian-claude)
 - A web/ failure in your local ci.sh may be main's own redness, not yours: check 'gh run list --branch main' and the board (a Bug: task may already exist and be fixed on a newer main) before chasing it, (ian-claude-heavy-3)
 - A PR left with 'merge --auto --squash' set can merge itself the moment its blocking dep (bundle-budget task) lands, mid-session: before manually merging origin/main into its branch, gh pr view --json  (ian-claude-standard)
+- web api helpers fall back to mocks only when fetch throws; a non-ok response from a reachable API must surface its error, never silently show mock data (reviewer)
