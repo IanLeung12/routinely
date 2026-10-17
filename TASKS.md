@@ -372,7 +372,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass
 
 ### T219 — Bug: live session's final error list differs from replay for sequence scenarios
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -380,7 +380,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_matches_replay.py, pipeline/tests/test_live.py
 - owner: ian-claude
 - claimed: 2026-10-17T10:20Z
-- pr: —
+- pr: #211
+- rating: 4/5 the interface was clear, but it does not mention that test_live_camera.py pins the camera path's session_end to live's message for message, so live_camera.py needs the same field in the same PR
 
 What: Played live, `tea_sequence_error`, `tea_self_corrected`, `meds_pill_before_water` and `meds_self_corrected` stream a transient `omission` for a dependency that happens later, so the errors the demo ends on are not the ones `expected.yaml` checks (xfailed in `test_live_matches_replay.py`, noted again in T202/#197). Keep streaming errors as now, but make `session_end` carry the healed final list so the screen can settle on the right answer.
 Interface: the `session_end` message gains `errors` = the `final` `classify_errors(..., ended=True)` result `live.py` already computes, serialised like the `error` message's `error`. The `live.py` docstring says streamed errors are provisional and `session_end.errors` is authoritative. No change to `contracts.py`.
