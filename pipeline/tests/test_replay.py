@@ -12,6 +12,7 @@ wires the real recogniser and classifier in.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,7 @@ from routine_watch.replay import (
     load_scenario,
     main,
     replay,
+    run,
     scenario_dirs,
 )
 
@@ -50,6 +52,12 @@ REQUIRED_SCENARIOS = ("tea_normal", "tea_skip_teabag_pour_twice")
 
 #: A scenario directory holds these and nothing else. Never a clip (SPEC section 8).
 ALLOWED_FILES = {"expected.yaml", "frames.jsonl", "steps.jsonl", "README.md"}
+
+
+def test_run_rejects_an_empty_scenario() -> None:
+    scenario = replace(load_scenario(SCENARIOS_DIR / "tea_normal"), frames=(), events=())
+    with pytest.raises(ReplayError, match="no frames or events"):
+        run(scenario)
 
 
 # ---------------------------------------------------------------------- helpers
