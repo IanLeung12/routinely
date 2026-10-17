@@ -509,7 +509,7 @@ Acceptance:
 - New test file passes; no source changes; `scripts/ci.sh` passes.
 
 ### T259 — Shift handoff summary sentence mentions paused rooms
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
