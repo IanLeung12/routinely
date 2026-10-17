@@ -14,12 +14,14 @@ That makes claims atomic: only one agent can flip a task from todo to claimed.
   tasks.py stale [--minutes 90]             claimed tasks with no PR for too long
   tasks.py sync                             refresh ./.tasks from origin
   tasks.py commit -m "msg"                  commit+push manual edits in ./.tasks (orchestrator)
+  tasks.py archive [--keep 10]              move done tasks (except the newest N) to ARCHIVE.md
 """
 import argparse, datetime as dt, os, re, subprocess, sys, time
 
 ROOT = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
 WT = os.path.join(ROOT, ".tasks")
 FILE = os.path.join(WT, "TASKS.md")
+ARCHIVE = os.path.join(WT, "ARCHIVE.md")
 CLASSES = ["light", "standard", "heavy"]
 STATUSES = ["todo", "claimed", "in-review", "done", "blocked"]
 HEAD = re.compile(r"^### (T\d+)\b")
@@ -72,6 +74,14 @@ def load():
         return parse(fh.read())
 
 
+def archived_ids():
+    try:
+        with open(ARCHIVE) as fh:
+            return set(re.findall(r"^### (T\d+)", fh.read(), re.M))
+    except OSError:
+        return set()
+
+
 def deps_of(t):
     d = t["vals"].get("deps", "")
     return re.findall(r"T\d+", d)
@@ -80,6 +90,7 @@ def deps_of(t):
 def claimable(tasks, cls):
     """Todo tasks whose deps are done and whose class <= cls. Exact class first, then lower."""
     rank = CLASSES.index(cls)
+    archived = archived_ids()
     out = []
     for tid, t in tasks.items():
         v = t["vals"]
@@ -87,7 +98,7 @@ def claimable(tasks, cls):
             continue
         if CLASSES.index(v["class"]) > rank:
             continue
-        if any(tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
+        if any(d not in archived and tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
             continue
         prio = int(v.get("priority", "2") or 2)
         out.append((CLASSES.index(v["class"]) != rank, prio, int(tid[1:]), tid))
@@ -154,6 +165,7 @@ def main():
     s = sub.add_parser("list"); s.add_argument("--status")
     s = sub.add_parser("stale"); s.add_argument("--minutes", type=int, default=90)
     sub.add_parser("sync")
+    s = sub.add_parser("archive"); s.add_argument("--keep", type=int, default=10)
     s = sub.add_parser("commit"); s.add_argument("-m", required=True)
     a = p.parse_args()
 
@@ -212,6 +224,29 @@ def main():
                 lines, tasks = load()
                 return print(block(lines, tasks[c[0]]))
         return print("NO_TASK")
+    if a.cmd == "archive":
+        moved = []
+
+        def mut(lines, tasks):
+            moved.clear()
+            done = sorted((int(t[1:]), t) for t, v in tasks.items() if v["vals"].get("status") == "done")
+            go = [t for _, t in done[:max(0, len(done) - a.keep)]]
+            if not go:
+                return lines
+            drop = set()
+            blocks = []
+            for t in go:
+                b = tasks[t]
+                blocks.append("\n".join(lines[b["start"]:b["end"]]).rstrip() + "\n")
+                drop.update(range(b["start"], b["end"]))
+            old = open(ARCHIVE).read() if os.path.exists(ARCHIVE) else "# ARCHIVE\n\nDone tasks moved off the board by `tasks.py archive`. Read only when needed.\n"
+            with open(ARCHIVE, "w") as fh:
+                fh.write(old.rstrip() + "\n\n" + "\n".join(blocks))
+            git("add", "ARCHIVE.md")
+            moved.extend(go)
+            return [ln for i, ln in enumerate(lines) if i not in drop]
+        write_txn(mut, "archive done tasks")
+        return print(f"archived {len(moved)}: {' '.join(moved)}" if moved else "nothing to archive")
     if a.cmd == "claim":
         do_claim(a.id, a.agent)
         return print(f"claimed {a.id}")
