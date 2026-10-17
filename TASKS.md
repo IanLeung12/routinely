@@ -223,7 +223,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T112 — AlertContext: care-record context next to the alert (component only)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
