@@ -560,14 +560,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T359 — Test: guided tour copy uses flag-for-review wording
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/tour/steps.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:45Z
 - pr: —
 
 What: Guard the demo tour text against diagnosis wording, since judges read it first.
