@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
@@ -296,6 +297,33 @@ describe('Handoff', () => {
     rerender(<Handoff onBack={() => {}} />)
 
     expect(screen.queryByRole('button', { name: "Open Mrs. K's alert" })).toBeNull()
+  })
+
+  it('needs no mouse: tab to copy summary and back, and press Enter', async () => {
+    serve(served)
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    const onBack = vi.fn()
+    const user = userEvent.setup()
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+
+    render(<Handoff onBack={onBack} />)
+    await screen.findByText(served.summary)
+
+    await user.tab()
+    while (document.activeElement?.textContent !== 'Copy summary') {
+      await user.tab()
+    }
+    await user.keyboard('{Enter}')
+
+    expect((await screen.findByText('Copied')).getAttribute('role')).toBe('status')
+    expect(writeText).toHaveBeenCalledWith(handoffText(served))
+
+    while (document.activeElement?.textContent !== '← Back') {
+      await user.tab({ shift: true })
+    }
+    await user.keyboard('{Enter}')
+
+    expect(onBack).toHaveBeenCalledOnce()
   })
 
   it('goes back when asked', async () => {
