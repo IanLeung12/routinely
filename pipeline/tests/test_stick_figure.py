@@ -14,6 +14,9 @@ from routine_watch.contracts import (
     BoundingBox,
     Handedness,
 )
+from routine_watch.evidence import _with_skeleton
+from routine_watch.recogniser import recognise
+from routine_watch.replay import SCENARIOS_DIR, load_scenario
 from routine_watch.stick_figure import (
     HAND_SPAN,
     REST,
@@ -22,6 +25,11 @@ from routine_watch.stick_figure import (
     reaching_for,
     reaching_into,
 )
+
+#: Every scenario written at frame level, the only ones `_with_skeleton` ever touches.
+_FRAME_SCENARIOS = [
+    path.name for path in sorted(SCENARIOS_DIR.iterdir()) if (path / "frames.jsonl").is_file()
+]
 
 #: A spread of places to reach for: the corners, the middle, and well outside the
 #: frame, which a caller can ask for and must never get an invalid landmark from.
@@ -127,3 +135,17 @@ def test_the_same_point_always_gives_the_same_figure() -> None:
     """Deterministic, like every other stage: no clock and no random generator."""
     assert reaching_for((0.3, 0.6)) == reaching_for((0.3, 0.6))
     assert reaching_for((0.3, 0.6)) != reaching_for((0.3, 0.61))
+
+
+@pytest.mark.parametrize("name", _FRAME_SCENARIOS)
+def test_the_stand_in_skeleton_never_changes_what_the_recogniser_reads(name: str) -> None:
+    """`evidence._with_skeleton` promises a frame read by the recogniser still says
+    exactly what it did before (T207): pin that for every frame-level scenario."""
+    scenario = load_scenario(SCENARIOS_DIR / name)
+    session_id = scenario.frames[0].session_id
+
+    original = recognise(scenario.frames, scenario.graph, session_id=session_id)
+    skeletoned = [_with_skeleton(frame) for frame in scenario.frames]
+    with_stand_in = recognise(skeletoned, scenario.graph, session_id=session_id)
+
+    assert with_stand_in == original
