@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "description": "What a piece of evidence points at. Never a video clip (SPEC section 8).",
+      "enum": [
+        "step_event",
+        "skeleton_replay"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A pointer to evidence already stored: a step event, or a span of the skeleton\nreplay. Never a video clip (SPEC section 8).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "t_start": {
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when kind is step_event: the StepEvent it refers to.",
+          "title": "Event Id"
+        }
+      },
+      "required": [
+        "kind",
+        "t_start",
+        "t_end"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One everyday-action error found in a session (SPEC section 7).",
+  "properties": {
+    "error_id": {
+      "minLength": 1,
+      "title": "Error Id",
+      "type": "string"
+    },
+    "session_id": {
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/$defs/ErrorType"
+    },
+    "step_id": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The step the error is about. Null only when no single step applies.",
+      "title": "Step Id"
+    },
+    "t_start": {
+      "description": "Seconds since the session started.",
+      "minimum": 0.0,
+      "title": "T Start",
+      "type": "number"
+    },
+    "t_end": {
+      "minimum": 0.0,
+      "title": "T End",
+      "type": "number"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "self_corrected": {
+      "default": false,
+      "description": "The resident fixed it straight away: a weaker signal, not a full error.",
+      "title": "Self Corrected",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "error_id",
+    "session_id",
+    "type",
+    "t_start",
+    "t_end",
+    "evidence"
+  ],
+  "title": "TaskError",
+  "type": "object"
+}
