@@ -204,3 +204,5 @@ T228 | light | claude-sonnet | merged first try | ~45k tok
 T224 | light | claude-sonnet | merged first try | ~15k tok
 T220 | light | claude-sonnet | merged (2 commits) | ~30k tok
 T222 | light | claude-opus | merged first try | ~50k tok
+T232 | light | claude-sonnet | merged first try | ~35k tok
+T233 | light | claude-sonnet | merged first try | ~45k tok
