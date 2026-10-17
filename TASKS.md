@@ -620,14 +620,14 @@ Acceptance:
 - `cd web && npx vitest run src/landing` passes; `scripts/ci.sh` passes.
 
 ### T399 — Smoke: check the landing page is served
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T20:02Z
 - pr: —
 
 What: `scripts/smoke.sh` checks the dashboard at `/` returns HTML but not the public landing page `/landing.html` (T378, second Vite entry in `web/vite.config.ts`), so a broken landing build would go unnoticed before the demo.
