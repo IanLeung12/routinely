@@ -516,3 +516,39 @@ Interface: in `web/scripts/check-bundle.mjs` raise `BUDGET_BYTES` to `96_000` an
 Acceptance:
 - `cd web && npm run build && npm run check:bundle` passes.
 - `scripts/ci.sh` passes.
+
+### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- source: reviewer
+- deps: —
+- area: web/src/routines/types.ts, web/src/routines/RoutinesScreen.tsx, web/src/routines/RoutinesScreen.test.tsx, web/src/mock/routines.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `GET /routines` returns `Routine.summary()` (pipeline/src/routine_watch/routine_builder.py ~line 979): `id, title, task_id, built_in, source, step_count, needs_training` and NO `task_graph`. `web/src/routines/RoutinesScreen.tsx:77` reads `routine.task_graph.steps.length`, so with the API up the screen throws a TypeError (it only works on the offline mock, which includes `task_graph`).
+Interface: in `types.ts` add a `RoutineSummary` type matching `summary()`; `fetchRoutines()` in api.ts returns `RoutineSummary[]` (change only its type annotation; its fallback logic is T444). `RoutinesScreen.tsx` renders `${routine.step_count} steps`. Make `mockBuiltInRoutines` and the localStorage fallback rows in `mock/routines.ts` carry `step_count` and the other summary fields. Do not change the pipeline.
+Acceptance:
+- RoutinesScreen test feeds a fetch response shaped exactly like `summary()` (no task_graph) and asserts "N steps" renders.
+- `scripts/ci.sh` passes.
+
+### T444 — Review: routine builder shows a canned draft / fake save when the API refuses
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: T443
+- area: web/src/routines/api.ts, web/src/routines/api.test.ts, web/src/routines/RoutineBuilder.tsx, web/src/routines/RoutineBuilder.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/routines/api.ts` falls back to the mock on any non-ok response (same pattern as T441). A person's clip refused with 400/413/422/502 by `POST /routines/draft` comes back as a canned "make tea" draft as if Gemini had read their clip, and a `POST /routines` 422 (bad graph) / 409 (built-in id or library full) is silently "saved" to localStorage while the server never kept it.
+Interface: fall back to mocks/localStorage only inside `catch` (fetch threw = API unreachable). If the API answered non-ok, throw `Error(detail)` using the JSON `detail` string (FastAPI `{detail: string}`), else a generic message. `RoutineBuilder.tsx` shows that message with the existing error UI from web/src/ui/ and keeps the user's draft/graph on screen.
+Acceptance:
+- api.test.ts: 413 on draftFromVideo rejects with the detail; 409 on saveRoutine rejects and writes nothing to localStorage; fetch throwing still returns the mock.
+- `scripts/ci.sh` passes.
