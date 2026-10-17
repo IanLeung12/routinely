@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One attempt at one task by one resident (SPEC section 6.3).",
+  "properties": {
+    "session_id": {
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    },
+    "resident_id": {
+      "minLength": 1,
+      "title": "Resident Id",
+      "type": "string"
+    },
+    "task_id": {
+      "description": "The task graph that was being followed, e.g. 'make_tea'.",
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null while the session is live.",
+      "title": "Ended At"
+    },
+    "assisted": {
+      "default": false,
+      "description": "A second person was in frame. Excluded from the baseline.",
+      "title": "Assisted",
+      "type": "boolean"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Weighted sum of this session's errors. Null until the session ends.",
+      "title": "Score"
+    }
+  },
+  "required": [
+    "session_id",
+    "resident_id",
+    "task_id",
+    "started_at"
+  ],
+  "title": "Session",
+  "type": "object"
+}

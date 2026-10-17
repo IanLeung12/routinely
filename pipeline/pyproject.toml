@@ -13,6 +13,7 @@ dependencies = [
 # Installed by scripts/ci.sh via `uv sync --all-extras`.
 dev = [
     "httpx2>=2.13",  # fastapi.testclient needs an http client
+    "jsonschema>=4.23",  # validates payloads against contracts/*.schema.json
     "pytest>=8.3",
     "ruff>=0.7",
 ]

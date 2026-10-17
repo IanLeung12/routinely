@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "AlertFeedback": {
+      "additionalProperties": false,
+      "description": "What the care team said about an alert. Logged, and it moves the threshold.",
+      "properties": {
+        "verdict": {
+          "$ref": "#/$defs/FeedbackVerdict"
+        },
+        "by": {
+          "description": "Who answered.",
+          "minLength": 1,
+          "title": "By",
+          "type": "string"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "verdict",
+        "by",
+        "at"
+      ],
+      "title": "AlertFeedback",
+      "type": "object"
+    },
+    "AlertKind": {
+      "description": "How urgent the flag is: two bad sessions in 24-48 h, or a slow upward drift.",
+      "enum": [
+        "change_flag",
+        "trend"
+      ],
+      "title": "AlertKind",
+      "type": "string"
+    },
+    "BaselineComparison": {
+      "additionalProperties": false,
+      "description": "This resident's own history against what just happened (SPEC section 7).",
+      "properties": {
+        "task_id": {
+          "minLength": 1,
+          "title": "Task Id",
+          "type": "string"
+        },
+        "metric": {
+          "$ref": "#/$defs/BaselineMetric"
+        },
+        "observed": {
+          "title": "Observed",
+          "type": "number"
+        },
+        "baseline_mean": {
+          "title": "Baseline Mean",
+          "type": "number"
+        },
+        "baseline_sd": {
+          "minimum": 0.0,
+          "title": "Baseline Sd",
+          "type": "number"
+        },
+        "baseline_days": {
+          "description": "Days of history the baseline is built from.",
+          "minimum": 0,
+          "title": "Baseline Days",
+          "type": "integer"
+        },
+        "threshold": {
+          "description": "This resident's current threshold, tuned by feedback.",
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "task_id",
+        "metric",
+        "observed",
+        "baseline_mean",
+        "baseline_sd",
+        "baseline_days",
+        "threshold"
+      ],
+      "title": "BaselineComparison",
+      "type": "object"
+    },
+    "BaselineMetric": {
+      "description": "What a baseline comparison measures.",
+      "enum": [
+        "error_score",
+        "errors_per_day",
+        "step_duration_s",
+        "step_gap_s"
+      ],
+      "title": "BaselineMetric",
+      "type": "string"
+    },
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "description": "What a piece of evidence points at. Never a video clip (SPEC section 8).",
+      "enum": [
+        "step_event",
+        "skeleton_replay"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A pointer to evidence already stored: a step event, or a span of the skeleton\nreplay. Never a video clip (SPEC section 8).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "t_start": {
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set when kind is step_event: the StepEvent it refers to.",
+          "title": "Event Id"
+        }
+      },
+      "required": [
+        "kind",
+        "t_start",
+        "t_end"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "FeedbackVerdict": {
+      "description": "The nurse's answer to an alert, which tunes this resident's threshold.",
+      "enum": [
+        "confirmed",
+        "false_alarm"
+      ],
+      "title": "FeedbackVerdict",
+      "type": "string"
+    },
+    "SuggestedCheck": {
+      "description": "Checks an alert may suggest to the care team (SPEC section 6.4).",
+      "enum": [
+        "infection_or_uti",
+        "hydration",
+        "medication_review",
+        "cam_screen"
+      ],
+      "title": "SuggestedCheck",
+      "type": "string"
+    },
+    "TaskError": {
+      "additionalProperties": false,
+      "description": "One everyday-action error found in a session (SPEC section 7).",
+      "properties": {
+        "error_id": {
+          "minLength": 1,
+          "title": "Error Id",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ErrorType"
+        },
+        "step_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The step the error is about. Null only when no single step applies.",
+          "title": "Step Id"
+        },
+        "t_start": {
+          "description": "Seconds since the session started.",
+          "minimum": 0.0,
+          "title": "T Start",
+          "type": "number"
+        },
+        "t_end": {
+          "minimum": 0.0,
+          "title": "T End",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "self_corrected": {
+          "default": false,
+          "description": "The resident fixed it straight away: a weaker signal, not a full error.",
+          "title": "Self Corrected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "error_id",
+        "session_id",
+        "type",
+        "t_start",
+        "t_end",
+        "evidence"
+      ],
+      "title": "TaskError",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A change flagged for a human to review (SPEC section 7).\n\nRoutine Watch flags a change and shows the evidence behind it. It never diagnoses.",
+  "properties": {
+    "alert_id": {
+      "minLength": 1,
+      "title": "Alert Id",
+      "type": "string"
+    },
+    "resident_id": {
+      "minLength": 1,
+      "title": "Resident Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/AlertKind"
+    },
+    "session_ids": {
+      "description": "The sessions behind the flag. A single bad session never alerts.",
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Session Ids",
+      "type": "array"
+    },
+    "errors": {
+      "items": {
+        "$ref": "#/$defs/TaskError"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "baseline": {
+      "$ref": "#/$defs/BaselineComparison"
+    },
+    "summary": {
+      "description": "Plain language, written from the detected evidence only.",
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "suggested_checks": {
+      "items": {
+        "$ref": "#/$defs/SuggestedCheck"
+      },
+      "title": "Suggested Checks",
+      "type": "array"
+    },
+    "feedback": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AlertFeedback"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null until a nurse confirms it or calls it a false alarm."
+    }
+  },
+  "required": [
+    "alert_id",
+    "resident_id",
+    "created_at",
+    "kind",
+    "session_ids",
+    "errors",
+    "baseline",
+    "summary",
+    "suggested_checks"
+  ],
+  "title": "Alert",
+  "type": "object"
+}
