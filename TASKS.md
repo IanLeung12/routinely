@@ -7,6 +7,22 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
+### T342 — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-read MODELS.md flags
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: retro
+- deps: —
+- area: scripts/worker.sh
+
+What: E4's `--disallowedTools Monitor ScheduleWakeup` (MODELS.md, PR #271) never reached any running worker: worker.sh reads FLAGS once at start, and the host launcher passes a `FLAGS=` override for the heavy worker (`--model opus --effort max`) that drops it. Since then 2 light-worker sessions (T187, T307) still ended with "I'll wait for the CI monitor notification" and were released.
+Interface: in `scripts/worker.sh`, (1) inside the loop, before each claude/codex run, recompute flags from MODELS.md unless the caller set FLAGS (keep `FLAGS` env as the override); (2) for `TOOL=claude`, always append `--disallowedTools Monitor ScheduleWakeup` if the effective flags don't already contain `--disallowedTools`. Keep `MODEL=` in the prompt in sync.
+Acceptance:
+- `bash -n scripts/worker.sh` and shellcheck (if installed) pass
+- a dry check (e.g. `FLAGS='--model opus' TOOL=claude` with the claude call echoed, not run) shows `--disallowedTools Monitor ScheduleWakeup` in the command line; no change to codex flags
+- `scripts/ci.sh` passes
+
 ### T340 — Resident detail: give monitoring controls their own row under the name
 - status: claimed
 - class: standard
