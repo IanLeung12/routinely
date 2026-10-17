@@ -135,7 +135,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T117 — Web mock residents include the evening and motor residents
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
