@@ -163,8 +163,11 @@ export function ResidentDetail({
     body = (
       <>
         <header className="resident-detail__header">
-          <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
-          <span className="resident-room">Room {resident.room}</span>
+          <div className="resident-detail__title-row">
+            <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>{resident.name}</h1>
+            <span className="resident-room">Room {resident.room}</span>
+            <StatusChip status={resident.status} />
+          </div>
           <div className="resident-detail__monitoring">
             <MonitoringToggle
               room={resident.room}
@@ -192,11 +195,10 @@ export function ResidentDetail({
                 Consent: {resident.consent.given_by}, {resident.consent.on}
               </p>
             )}
+            {monitoringMessage && (
+              <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
+            )}
           </div>
-          <StatusChip status={resident.status} />
-          {monitoringMessage && (
-            <p className="resident-detail__monitoring-message" role="alert">{monitoringMessage}</p>
-          )}
         </header>
 
         <div className="resident-panels">
