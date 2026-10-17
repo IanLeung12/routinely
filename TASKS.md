@@ -373,7 +373,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T308 — Test: privacy panel and monitoring toggle work keyboard-only
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -381,7 +381,8 @@ Acceptance:
 - area: web/src/about/PrivacyPanel.keyboard.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T15:46Z
-- pr: —
+- pr: #302
+- rating: 5/5 clear
 
 What: Prove the privacy panel opens/closes and the room monitoring pause/resume toggle works with keyboard only (Tab, Enter/Space, Escape).
 Interface: new test file only; read web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, their .test.tsx files, and web/src/alert/AlertView.keyboard.test.tsx for style. Mock the API as the existing tests do.
