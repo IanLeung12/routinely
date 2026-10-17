@@ -180,6 +180,77 @@
       "title": "FeedbackVerdict",
       "type": "string"
     },
+    "PatternMatch": {
+      "additionalProperties": false,
+      "description": "One pattern a flagged change is consistent with (SPEC section 7.5).\n\nA flag says *something* changed; these say what kind of change it looks like, so\nthe care team knows what to rule out first. Scored by deterministic rules over\nfeatures the pipeline already has (`routine_watch.patterns`) against a library of\npatterns held as data (`routine_watch.patterns_library`), so the wording is always\n\"consistent with ... - consider ruling out ...\", and an empty list is a real\nanswer: a change was detected with no clear pattern.",
+      "properties": {
+        "pattern_id": {
+          "description": "The pattern in the library, e.g. 'sudden_change'.",
+          "minLength": 1,
+          "title": "Pattern Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "How the pattern is shown to a nurse.",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "urgency": {
+          "$ref": "#/$defs/PatternUrgency"
+        },
+        "evidence": {
+          "description": "Plain-language lines read off the features, e.g. 'omissions up to 1.0 a session from 0.0'.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "checks": {
+          "description": "What to rule out, from the library: a shared SuggestedCheck where one fits, otherwise the pattern's own wording.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SuggestedCheck"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pattern_id",
+        "name",
+        "confidence",
+        "urgency",
+        "evidence",
+        "checks"
+      ],
+      "title": "PatternMatch",
+      "type": "object"
+    },
+    "PatternUrgency": {
+      "description": "How soon a pattern wants a human to look (SPEC section 7.5).",
+      "enum": [
+        "routine",
+        "next_round",
+        "same_shift",
+        "urgent"
+      ],
+      "title": "PatternUrgency",
+      "type": "string"
+    },
     "SuggestedCheck": {
       "description": "Checks an alert may suggest to the care team (SPEC section 6.4).",
       "enum": [
@@ -311,6 +382,14 @@
         "$ref": "#/$defs/SuggestedCheck"
       },
       "title": "Suggested Checks",
+      "type": "array"
+    },
+    "patterns": {
+      "description": "The patterns this change is consistent with, best first (at most 3). Empty means a change was detected with no clear pattern.",
+      "items": {
+        "$ref": "#/$defs/PatternMatch"
+      },
+      "title": "Patterns",
       "type": "array"
     },
     "feedback": {

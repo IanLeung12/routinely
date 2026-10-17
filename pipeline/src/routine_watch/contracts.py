@@ -150,6 +150,15 @@ class SuggestedCheck(StrEnum):
     CAM_SCREEN = "cam_screen"
 
 
+class PatternUrgency(StrEnum):
+    """How soon a pattern wants a human to look (SPEC section 7.5)."""
+
+    ROUTINE = "routine"
+    NEXT_ROUND = "next_round"
+    SAME_SHIFT = "same_shift"
+    URGENT = "urgent"
+
+
 class FeedbackVerdict(StrEnum):
     """The nurse's answer to an alert, which tunes this resident's threshold."""
 
@@ -364,6 +373,31 @@ class AlertFeedback(_Contract):
     note: str | None = None
 
 
+class PatternMatch(_Contract):
+    """One pattern a flagged change is consistent with (SPEC section 7.5).
+
+    A flag says *something* changed; these say what kind of change it looks like, so
+    the care team knows what to rule out first. Scored by deterministic rules over
+    features the pipeline already has (`routine_watch.patterns`) against a library of
+    patterns held as data (`routine_watch.patterns_library`), so the wording is always
+    "consistent with ... - consider ruling out ...", and an empty list is a real
+    answer: a change was detected with no clear pattern.
+    """
+
+    pattern_id: Id = Field(description="The pattern in the library, e.g. 'sudden_change'.")
+    name: str = Field(min_length=1, description="How the pattern is shown to a nurse.")
+    confidence: Confidence
+    urgency: PatternUrgency
+    evidence: list[str] = Field(
+        description="Plain-language lines read off the features, e.g. 'omissions up to 1.0 "
+        "a session from 0.0'."
+    )
+    checks: list[SuggestedCheck | str] = Field(
+        description="What to rule out, from the library: a shared SuggestedCheck where one "
+        "fits, otherwise the pattern's own wording."
+    )
+
+
 class Alert(_Contract):
     """A change flagged for a human to review (SPEC section 7).
 
@@ -385,6 +419,11 @@ class Alert(_Contract):
         description="Plain language, written from the detected evidence only.",
     )
     suggested_checks: list[SuggestedCheck]
+    patterns: list[PatternMatch] = Field(
+        default_factory=list,
+        description="The patterns this change is consistent with, best first (at most 3). "
+        "Empty means a change was detected with no clear pattern.",
+    )
     feedback: AlertFeedback | None = Field(
         default=None, description="Null until a nurse confirms it or calls it a false alarm."
     )

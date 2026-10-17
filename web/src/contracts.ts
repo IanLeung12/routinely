@@ -23,6 +23,11 @@ export type Alert = {
   /** Plain language, written from the detected evidence only. */
   summary: string
   suggested_checks: SuggestedCheck[]
+  /**
+   * The patterns this change is consistent with, best first (at most 3). Empty means a change
+   * was detected with no clear pattern.
+   */
+  patterns?: PatternMatch[]
   /** Null until a nurse confirms it or calls it a false alarm. */
   feedback?: AlertFeedback | null
 }
@@ -181,6 +186,37 @@ export const OBJECT_LABEL_VALUES = [
   'pouring',
 ] as const
 export type ObjectLabel = (typeof OBJECT_LABEL_VALUES)[number]
+
+/**
+ * One pattern a flagged change is consistent with (SPEC section 7.5). A flag says *something*
+ * changed; these say what kind of change it looks like, so the care team knows what to rule out
+ * first. Scored by deterministic rules over features the pipeline already has
+ * (`routine_watch.patterns`) against a library of patterns held as data
+ * (`routine_watch.patterns_library`), so the wording is always "consistent with ... - consider
+ * ruling out ...", and an empty list is a real answer: a change was detected with no clear
+ * pattern.
+ */
+export type PatternMatch = {
+  /** The pattern in the library, e.g. 'sudden_change'. */
+  pattern_id: string
+  /** How the pattern is shown to a nurse. */
+  name: string
+  confidence: number
+  urgency: PatternUrgency
+  /**
+   * Plain-language lines read off the features, e.g. 'omissions up to 1.0 a session from 0.0'.
+   */
+  evidence: string[]
+  /**
+   * What to rule out, from the library: a shared SuggestedCheck where one fits, otherwise the
+   * pattern's own wording.
+   */
+  checks: (SuggestedCheck | string)[]
+}
+
+/** How soon a pattern wants a human to look (SPEC section 7.5). */
+export const PATTERN_URGENCY_VALUES = ['routine', 'next_round', 'same_shift', 'urgent'] as const
+export type PatternUrgency = (typeof PATTERN_URGENCY_VALUES)[number]
 
 /** One person's body skeleton. */
 export type Pose = {
