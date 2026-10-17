@@ -541,7 +541,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T208 — Bug: ghost replay "Today" caption is dark blue on the dark card, unreadable
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
