@@ -351,7 +351,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T230 — Review: live summary's "usually ~" averages the resident's whole history, drift included
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
