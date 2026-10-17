@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 02e89fa
+- last-reviewed: 47dd9b5
 
 ## Tasks
 
@@ -513,4 +513,41 @@ What: T037/T080 added `GET /sessions/{session_id}/replay` and `GET /residents/{r
 Fix: in `smoke.sh`, after fetching the first alert, read its `errors[0].session_id`, `t_start`, `t_end` and `resident_id` (same inline python3 JSON parsing the script already uses) and check both replay routes return a non-empty `frames` list; add `bash -n scripts/smoke.sh` to the "repo tooling" block of `ci.sh`. Read only these two files plus the two route handlers in `api.py`.
 Acceptance:
 - PASS/FAIL lines for both new checks; FAIL (non-zero exit) on 404 or empty frames.
+- `scripts/ci.sh` passes.
+
+### T109 — Resident detail: not-found, API-down and no-sessions states
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The resident screen must stay legible when things go wrong: an unknown resident id, the API being unreachable, or a resident with no sessions yet. A nurse should understand each state in 10 s.
+Interface: `ResidentDetail` only; reuse the existing `web/src/resident/api.ts` fetch (do not change it) and existing CSS classes/design tokens.
+Acceptance:
+- 404 → "Resident not found" with a link back to the unit overview.
+- network/5xx error → short plain message + a "Try again" button that refetches.
+- zero sessions → empty-state copy instead of blank charts (no crash in BaselineChart/HeatCalendar).
+- Tests for all three states in ResidentDetail.test.tsx; `scripts/ci.sh` passes.
+
+### T110 — Live task map: step state not conveyed by colour alone
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx, web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The red/amber flashes in the live task map (demo beat 3) are colour-only. Add a text/icon cue and an accessible name per step so the state reads for colour-blind judges and screen readers.
+Interface: each `role="listitem"` step gets an accessible name like "Add teabag — missed" / "Pour water — repeated" / "Boil kettle — done"; a visible icon or short label per non-pending state; legend uses the same icons.
+Acceptance:
+- Tests query steps by accessible name for each state (pending, active, done, omission, repeat/sequence).
+- No behaviour change to state transitions; existing tests still pass.
 - `scripts/ci.sh` passes.
