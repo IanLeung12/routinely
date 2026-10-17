@@ -515,14 +515,14 @@ Acceptance:
 - `contracts/README.md` lists it; `scripts/ci.sh` passes
 
 ### T251 — Shift handoff payload lists rooms whose monitoring is paused
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:03Z
 - pr: —
 
 What: A nurse taking over a shift must know which rooms aren't being watched; a paused room silently produces no flags, so today the handoff can read "all quiet" for a resident nobody was monitoring (SPEC §12).
