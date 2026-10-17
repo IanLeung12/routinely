@@ -394,7 +394,7 @@ Acceptance:
 - CODEMAP note for `api_state.py`; `scripts/ci.sh` passes.
 
 ### T285 — Docs: DEMO.md walks through pausing a room, the consent line and the audit trail
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
