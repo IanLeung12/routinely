@@ -370,7 +370,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` passes; `scripts/ci.sh` passes.
 
 ### T151 — Shift handoff: "Copy summary" button for the shift report
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -379,7 +379,8 @@ Acceptance:
 - source: proposed
 - owner: max_API_light
 - claimed: 2026-10-17T08:30Z
-- pr: —
+- pr: #144
+- rating: 4/5 Room is requested but absent from Handoff data; otherwise clear
 
 What: Nurses paste handoff notes into their shift report; one tap copies the handoff as plain text. Read only `web/src/handoff/Handoff.tsx`, `types.ts`, `mockHandoff.ts`, its test and `web/src/ui/Button.tsx`.
 Interface: `export function handoffText(h: Handoff): string` (summary line, then one line per resident: name, room, flagged sessions, unreviewed alerts, trend) in `Handoff.tsx`; a secondary `Button` "Copy summary" calling `navigator.clipboard.writeText(handoffText(...))`, then showing "Copied" (role=status) for 2 s; if clipboard is unavailable show "Copy not available" instead of throwing.
