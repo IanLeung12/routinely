@@ -3,9 +3,45 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: af2e93a
+- last-reviewed: ff9a0f1
 
 ## Tasks
+
+### T340 — Resident detail: give monitoring controls their own row under the name
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/resident.css, web/src/resident/ResidentDetail.layout.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Tester (TESTREPORT, main dc9a6ef) noted Mrs. K's header packs the monitoring switch, monitoring history and consent between the name and the status chip, so it reads cramped. Keep name, room and status chip on the first row; move the monitoring block (toggle, history, consent, error message) to a separate row below.
+Interface: wrap name/room/StatusChip in `.resident-detail__title-row`; `.resident-detail__monitoring` becomes a full-width row after it. No behaviour change.
+Acceptance:
+- New test `ResidentDetail.layout.test.tsx`: in the header, the status chip appears in DOM order before the monitoring toggle, and both still render; existing ResidentDetail and keyboard tests pass unchanged.
+- At 375 px nothing overflows horizontally (CSS uses wrap, no fixed widths).
+- `scripts/ci.sh` passes.
+
+### T341 — Test: pattern library urgency filter works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a keyboard-only test for the pattern library, like `web/src/overview/UnitOverview.keyboard.test.tsx` (read it first as the template). Read `web/src/patterns/PatternLibrary.tsx` and `web/src/patterns/PatternLibrary.filters.test.tsx` for how it is rendered with mock data.
+Interface: new file only; uses @testing-library/user-event `tab()` and `keyboard('{Enter}')` / `keyboard(' ')`.
+Acceptance:
+- Tabbing reaches the back button and every urgency filter button (role group "Filter by urgency").
+- Pressing Enter or Space on a filter sets its `aria-pressed="true"` and narrows the list; the back button fires `onBack` on Enter.
+- `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T187 — Test: App shows the live routine picker with tea selected
 - status: todo
