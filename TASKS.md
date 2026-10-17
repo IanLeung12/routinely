@@ -79,15 +79,16 @@ Acceptance:
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
 ### T194 — smoke.sh: seeded alert survives /demo/reset
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: T178
 - area: scripts/smoke.sh
-- owner: max_API_light
-- claimed: 2026-10-17T09:28Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released: stale claim (max_API_light, 90+ min)
 
 What: Reset must only drop live sessions and feedback, not the seeded demo history. After smoke.sh's POST /demo/reset, check GET /alerts still returns at least one alert.
 Interface: read `scripts/smoke.sh` (the `/demo/reset` block at the end and the existing `/alerts` check).
