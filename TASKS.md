@@ -138,7 +138,7 @@ Acceptance:
 * No other file changed.
 
 ### T180 — Handoff: each row says what's normal for that resident
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -147,7 +147,8 @@ Acceptance:
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:35Z
 - source: proposed
-- pr: —
+- pr: #188
+- rating: 5/5 clear
 
 What: Rationale: a night nurse reading the handoff can't tell whether "2 flags" is unusual for that resident. Each row gets a short muted line like "Usually 0.4 errors a session" so the change reads against her own normal (SPEC §7, Clarity).
 Interface: Read `web/src/handoff/Handoff.tsx`, `types.ts`, `api.ts`, `mockHandoff.ts` and the row fields in `pipeline/src/routine_watch/handoff.py`. If rows don't carry a baseline, take it from the resident detail fetch in `web/src/resident/api.ts` (one fetch per row is fine for the demo) and say so in the PR; don't change the API or `contracts/`.
