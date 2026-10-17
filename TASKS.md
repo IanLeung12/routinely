@@ -7,6 +7,21 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
+### T128 — tasks.py: stop reading fields at the task body
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- deps: —
+- area: scripts/tasks.py, tests/test_tasks_py.py (new or existing)
+- source: retro
+
+What: `parse()` treats every `- word: value` line in a task as a field, including acceptance bullets. On T071 an acceptance bullet `- mockLiveStream: emits ...` became a field, so `set note=...` inserted the note in the middle of the acceptance list. An acceptance bullet starting `- status:` would hijack the status. Fields are only the bullet block right after the `### T…` heading; stop collecting fields at the first blank line.
+Acceptance:
+- A task whose body has `- foo: bar` / `- status: x` bullets: `show` reports the header status, and `set note=...` inserts the note right after the header field block.
+- Existing board parses identically for header fields (run `python3 scripts/tasks.py list` before/after).
+- `scripts/ci.sh` passes.
+
 ### T062 — Nurse shift handoff summary (separate screen)
 - status: claimed
 - class: heavy
