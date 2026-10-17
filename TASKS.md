@@ -164,7 +164,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T067 — Scenario: optional milk and sugar both done is a clean session
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -289,7 +289,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T074 — Review: one stray second skeleton marks the whole session "assisted"
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
