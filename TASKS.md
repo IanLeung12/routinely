@@ -63,14 +63,14 @@ Acceptance:
 - smoke.sh hits the route once; `scripts/ci.sh` passes.
 
 ### T147 — Test: every shippable pattern has a replayable scenario
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: test
 - deps: T141, T142, T143
 - area: pipeline/tests/test_pattern_scenarios_cover_library.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:10Z
 - pr: —
 
 What: Guard SPEC §8 ("at least one replayable scenario per pattern") so a new pattern can't ship without one.
