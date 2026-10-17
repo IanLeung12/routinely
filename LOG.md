@@ -148,3 +148,10 @@ T170 | light | claude-sonnet | merged first try | ~15k tok
 T174 | light | codex | merged first try | ~3k tok
 T166 | standard | claude-opus | merged first try | ~105k tok
 T175 | light | claude-sonnet | merged first try | ~10k tok
+T176 | light | codex | merged first try | ~3k tok
+T143 | standard | claude-sonnet | merged first try | ~40k tok
+T167 | standard | claude-sonnet | merged first try | ~95k tok
+T160 | light | claude-sonnet | merged first try | ~15k tok
+T171 | light | codex | merged first try | ~4k tok
+T161 | standard | claude-opus | merged first try | ~75k tok
+T177 | light | claude-sonnet | merged first try | ~30k tok
