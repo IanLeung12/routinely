@@ -560,7 +560,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T123 — Bug: smoke.sh always fails the evidence replay check (alert body is overwritten)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
