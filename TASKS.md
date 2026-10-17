@@ -393,7 +393,7 @@ Acceptance:
 - CODEMAP note for `api_state.py`; `scripts/ci.sh` passes.
 
 ### T285 — Docs: DEMO.md walks through pausing a room, the consent line and the audit trail
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -401,7 +401,8 @@ Acceptance:
 - area: docs/DEMO.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T14:16Z
-- pr: —
+- pr: #276
+- rating: 5/5 clear
 
 What: DEMO.md never mentions the monitoring switch, so presenters skip the privacy story judges ask about. Add one short demo step after the Mrs. K resident detail.
 Interface: Read `docs/DEMO.md`, `web/src/resident/ResidentDetail.tsx` and `web/src/about/MonitoringToggle.tsx` for the exact on-screen copy. Step: open Mrs. K → point at the "Consent: ..." line → flip the switch to Paused ("No camera data is processed while paused", "Recent changes: Paused by nurse") → show the unit overview "Monitoring paused" chip and the shift handoff naming the paused room → resume (or `/demo/reset`).
