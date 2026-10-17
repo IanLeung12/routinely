@@ -515,7 +515,7 @@ Acceptance:
 - `cd web && npx vitest run` passes; `scripts/ci.sh` passes.
 
 ### T153 — Docs: demo runbook (docs/DEMO.md)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -523,7 +523,8 @@ Acceptance:
 - area: docs/DEMO.md (new)
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:29Z
-- pr: —
+- pr: #141
+- rating: 5/5 clear
 
 What: A one-page runbook for whoever drives the 3-minute demo: setup, the click path for each beat, and the fallback. Read only SPEC.md §10, `scripts/dev.sh`, `scripts/smoke.sh`, `tests/scenarios/README.md` and `web/src/App.tsx`.
 Interface: sections "Before you start" (exact commands, env such as OFFLINE_MODE), "Click path" (one bullet per SPEC §10 beat: which screen, which button, what the audience should see), "If something fails" (offline replay of `tea_skip_teabag_pour_twice`, no Wi-Fi, how to restart), "Reset between runs". Describe only what exists on main; say "flags a change for review", never "diagnoses".
