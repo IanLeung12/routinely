@@ -407,15 +407,16 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
 
 ### T227 — Test: stand-in skeleton never changes what the recogniser reads
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_stick_figure.py
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T10:50Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T227-wip-1053: start from it (git switch task/T227-wip-1053 && git merge origin/main)
 
 What: `evidence._with_skeleton` adds poses/hands to box-only frames and promises "a frame read by the recogniser still says exactly what it did before". Pin that promise for every frame-level scenario.
 Interface: read `pipeline/src/routine_watch/evidence.py` (`_with_skeleton`), `pipeline/src/routine_watch/stick_figure.py`, `pipeline/src/routine_watch/replay.py` (`load_scenario`, `SCENARIOS_DIR`). For each scenario dir under `tests/scenarios/` with a `frames.jsonl`, assert the recogniser's step/error output on the original frames equals the output on `_with_skeleton`-mapped frames (use whatever function `replay.py` already uses to turn frames into errors).
