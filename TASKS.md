@@ -412,7 +412,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T326 — Test: unit tests for session_log
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -420,7 +420,8 @@ Acceptance:
 - area: pipeline/tests/test_session_log.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T16:30Z
-- pr: —
+- pr: #316
+- rating: 5/5 clear
 
 What: `pipeline/src/routine_watch/session_log.py` (the in-process log that makes a live session count for the demo) has no direct unit test.
 Interface: read `pipeline/src/routine_watch/session_log.py`, `pipeline/tests/conftest.py`, and how `pipeline/tests/test_api_demo_reset.py` builds a Session/TaskError. New test file only; use a fixture that calls `session_log.reset()` before and after each test.
