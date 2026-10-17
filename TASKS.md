@@ -235,14 +235,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_hesitation.py -q` and `scripts/ci.sh` pass.
 
 ### T015 — Suggested checks rules
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/checks.py, pipeline/tests/test_checks.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:58Z
-- pr: —
+- pr: #10
 
 What: Pick the checks an alert suggests to the care team from the care-record context. Read only the files in `area`, `pipeline/src/routine_watch/synth/care_records.py` (for record dict shape; do not edit it) and `pipeline/pyproject.toml`. Never use the word "diagnose".
 Interface: `suggest_checks(care_records: list[dict], now: datetime, lookback_h: float = 72.0) -> list[str]`, values from `CHECKS = ("infection_or_uti", "hydration", "medication_review", "cam_screen")`. Rules over records with `ts` within `lookback_h` before `now`: any `temperature` ≥ 37.8 → `infection_or_uti`; any `fluid_intake` < 1000 → `hydration`; any `med_change` → `medication_review`; `cam_screen` always included last. Output order follows `CHECKS`, no duplicates. Records are dicts `{"resident_id","ts" (ISO 8601),"kind","value","note"}`.
