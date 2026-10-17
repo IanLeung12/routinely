@@ -137,14 +137,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T109 — Resident detail: not-found, API-down and no-sessions states
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:59Z
 - pr: —
 - note: WIP from a session that ended early is on branch task/T109-wip (ResidentDetail.tsx + test): start from it: git switch task/T109-wip && git merge origin/main
 
