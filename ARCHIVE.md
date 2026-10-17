@@ -6367,3 +6367,58 @@ Acceptance:
 - at 375 px the replay canvas scales to the container width and the play/scrub controls wrap onto their own row, touch targets ≥ 44 px
 - a vitest checks the stylesheet has a `max-width: 375px`-or-narrower media rule for `.replay-player` (same approach as existing phone-width tests)
 - `scripts/ci.sh` passes
+
+### T359 — Test: guided tour copy uses flag-for-review wording
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/tour/steps.test.ts
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:45Z
+- pr: #343
+- rating: 5/5 clear
+
+What: Guard the demo tour text against diagnosis wording, since judges read it first.
+Interface: read only `web/src/tour/steps.ts` (exports `TOUR_STEPS: {title, body}[]`) and `web/src/wording.test.ts` (existing wording-guard style to copy). Create `web/src/tour/steps.test.ts`.
+Acceptance:
+- for every step, `title` and `body` do not match `/diagnos|\bhas (delirium|dementia|a stroke)\b|treatment/i`
+- at least one step body contains "flags a change for review"; every step has a non-empty title and body
+- `cd web && npx vitest run src/tour/steps.test.ts` passes; `scripts/ci.sh` passes
+
+### T360 — Guided tour: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/tour/
+- owner: max_API_light
+- claimed: 2026-10-17T18:04Z
+- pr: #358
+
+What: The `?tour=1` guided tour card must fit a 375 px phone without horizontal scroll or clipped buttons, like the other phone-width tasks (T234, T238).
+Interface: read `web/src/tour/Tour.tsx` and `web/src/tour/Tour.test.tsx`; add `web/src/tour/tour.css` (if styles are inline, move only the layout ones) with an `@media (max-width: 480px)` block: card max-width `calc(100vw - 2rem)`, buttons wrap. Add `tour` to `css.include` only if you need `?raw` (that file is web/vite.config.ts — note it in the PR instead of editing it; read the CSS with `fs.readFileSync` in the test).
+Acceptance:
+- New test asserts the phone media query exists and sets the card's max-width and button wrapping.
+- No behaviour change; existing tour tests still pass.
+- `scripts/ci.sh` passes.
+
+### T361 — Test: overview sparklines have a text alternative
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/Sparkline.a11y.test.tsx, web/src/overview/Sparkline.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T17:47Z
+- pr: #346
+
+What: Screen-reader users must get the trend a sparkline shows. Test that each sparkline exposes an accessible name describing the trend (e.g. "Error rate over last 14 sessions, rising"); if it doesn't, add `role="img"` + `aria-label` in `Sparkline.tsx`.
+Interface: read `web/src/overview/Sparkline.tsx` and `web/src/overview/Sparkline.test.tsx` first; new test file uses `getByRole('img', { name: /.../ })`.
+Acceptance:
+- Test covers rising, flat and empty-data sparklines.
+- Wording never says "diagnose" or names a condition.
+- `scripts/ci.sh` passes.
