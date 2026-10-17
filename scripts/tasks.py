@@ -102,7 +102,7 @@ def area_paths(t):
     out = []
     for p in t["vals"].get("area", "").split(","):
         p = p.strip().split(" ")[0].rstrip("/").replace("*", "").rstrip("/")
-        if p and ("/" in p or "." in p) and p not in SHARED_OK:
+        if p and ("/" in p or "." in p) and p not in SHARED_OK and not (p.startswith("docs/") and p.endswith(".md")):
             out.append(p)
     return out
 
