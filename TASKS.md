@@ -85,7 +85,7 @@ Acceptance:
 * Wording says "flags a change for review"; no "diagnose". No other file changed.
 
 ### T203 — Shift handoff: print-friendly layout
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -94,7 +94,8 @@ Acceptance:
 - area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
 - owner: ian-claude
 - claimed: 2026-10-17T18:14Z
-- pr: —
+- pr: #353
+- rating: 4/5 acceptance asked for the .no-print rule inside handoff.css, but T353 already moved it to the shared print.css; the area also left out vite.config.ts's test.css.include, which a ?raw CSS assertion needs
 
 What: nurses hand off on paper; a "Print" button plus `@media print` rules (hide nav/banner/buttons, black on white, no row breaks across pages) make the handoff usable as a printout.
 Interface: read only the three area files. Button calls `window.print()`.
