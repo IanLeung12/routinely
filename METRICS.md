@@ -1,58 +1,57 @@
-# METRICS (last 6 h, generated 2026-10-17 22:03 UTC)
+# METRICS (last 6 h, generated 2026-10-17 23:04 UTC)
 
-- **Throughput:** 95/103 claimed tasks merged · 11 active workers · first-try success 83%
-- **Friction:** 0 PR CI failures · 12 releases (7 sessions ended early, 0 stale, 3 conflicts) · 6 blocked
-- **Main:** 1/115 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.7/5 · 67 bug/review tasks filed (all time)
-- **Host worker idle (recent log):** w1 0m, w2 78m, w3 3m, w4 3m, w5 0m, w6 0m, w7 33m, w8 0m
+- **Throughput:** 88/93 claimed tasks merged · 13 active workers · first-try success 76%
+- **Friction:** 7 PR CI failures · 18 releases (9 sessions ended early, 0 stale, 6 conflicts) · 8 blocked
+- **Main:** 4/111 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.7/5 · 73 bug/review tasks filed (all time)
+- **Host worker idle (recent log):** w1 3m, w2 84m, w3 3m, w4 3m, w5 0m, w6 6m, w7 36m, w8 0m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| light | 54 | 50 | 83 | 0 | 5 | 19 | 15k |
-| standard | 37 | 34 | 84 | 0 | 3 | 17 | 55k |
-| heavy | 12 | 11 | 75 | 0 | 4 | 28 | 212k |
+| light | 51 | 48 | 76 | 5 | 8 | 24 | 14k |
+| standard | 31 | 29 | 74 | 2 | 6 | 23 | 55k |
+| heavy | 11 | 11 | 82 | 0 | 4 | 36 | 210k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| improvement | 36 | 33 | 81 | 0 | 4 | 23 | 40k |
-| test | 34 | 34 | 91 | 0 | 3 | 16 | 25k |
-| feature | 22 | 18 | 68 | 0 | 5 | 27 | 125k |
-| bug | 9 | 8 | 89 | 0 | 0 | 18 | 55k |
+| improvement | 34 | 33 | 74 | 5 | 6 | 25 | 32k |
+| test | 23 | 23 | 91 | 0 | 2 | 18 | 28k |
+| feature | 22 | 21 | 73 | 1 | 7 | 28 | 130k |
+| bug | 12 | 9 | 58 | 1 | 3 | 27 | 45k |
 | docs | 2 | 2 | 100 | 0 | 0 | 15 | 10k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-light-2 | 17 | 17 | 94 | 0 | 1 | 12 | 25k |
-| ian-claude-standard | 16 | 15 | 81 | 0 | 2 | 17 | 45k |
-| ian-claude-standard-2 | 14 | 14 | 93 | 0 | 1 | 14 | 50k |
-| ian-claude | 11 | 11 | 82 | 0 | 4 | 27 | 190k |
-| max_API_light | 11 | 10 | 82 | 0 | 1 | 24 | 5k |
-| Max_codex_light | 11 | 10 | 82 | 0 | 1 | 22 | 4k |
-| ian-claude-heavy-2 | 8 | 7 | 75 | 0 | 1 | 20 | 90k |
-| max_API_standard | 6 | 5 | 67 | 0 | 1 | 27 | 9k |
-| ian-claude-heavy-3 | 5 | 4 | 80 | 0 | 0 | 24 | 105k |
-| ian-claude-standard-3 | 3 | 2 | 67 | 0 | 0 | 38 | 192k |
-| ian-claude-standard-4 | 1 | 0 | 0 | 0 | 0 | – | – |
+| ian-claude-standard | 16 | 15 | 69 | 1 | 4 | 18 | 48k |
+| ian-claude-light-2 | 11 | 11 | 100 | 0 | 0 | 12 | 25k |
+| Max_codex_light | 10 | 10 | 70 | 2 | 2 | 29 | 6k |
+| ian-claude | 10 | 10 | 70 | 0 | 5 | 28 | 190k |
+| ian-claude-standard-2 | 9 | 9 | 89 | 0 | 1 | 17 | 55k |
+| max_API_light | 8 | 8 | 100 | 0 | 0 | 24 | 4k |
+| ian-claude-heavy-2 | 7 | 7 | 86 | 0 | 1 | 20 | 90k |
+| ian-claude-heavy-3 | 7 | 6 | 86 | 0 | 1 | 31 | 100k |
+| max_API_standard | 6 | 6 | 67 | 0 | 2 | 27 | 10k |
+| ian-claude-standard-3 | 4 | 3 | 50 | 1 | 1 | 47 | 130k |
+| ian-claude-standard-4 | 2 | 1 | 0 | 1 | 1 | 58 | 220k |
+| max_API_standard-2 | 2 | 2 | 50 | 2 | 0 | 40 | 16k |
+| ian-laptop-standard | 1 | 0 | 0 | 0 | 0 | – | – |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| pipeline/src/routine_watch | 13 | 12 | 85 | 0 | 3 | 26 | 120k |
-| web/src/overview | 9 | 9 | 100 | 0 | 0 | 16 | 45k |
-| web/src/resident | 9 | 8 | 67 | 0 | 2 | 15 | 22k |
-| web/src/handoff | 6 | 6 | 83 | 0 | 1 | 22 | 30k |
-| web/src/live | 6 | 5 | 67 | 0 | 1 | 20 | 35k |
-| web/src/alert | 5 | 5 | 100 | 0 | 0 | 27 | 30k |
+| pipeline/src/routine_watch | 11 | 11 | 82 | 1 | 4 | 36 | 190k |
+| web/src/overview | 7 | 7 | 86 | 2 | 0 | 18 | 35k |
+| web/src/resident | 6 | 6 | 67 | 1 | 1 | 29 | 38k |
 | tests/scenarios | 5 | 5 | 100 | 0 | 0 | 17 | 45k |
-| web/src/ui | 4 | 4 | 100 | 0 | 0 | 25 | 8k |
+| web/src/handoff | 5 | 5 | 80 | 0 | 1 | 24 | 30k |
+| web/src/live | 5 | 4 | 60 | 0 | 2 | 23 | 45k |
+| web/src/replays | 5 | 3 | 60 | 0 | 1 | 26 | 28k |
+| web/src/alert | 4 | 4 | 100 | 0 | 0 | 28 | 28k |
 
 ## Problem tasks
-- T328 (light/test, Max_codex_light): blocked — Test: /ws/live WebSocket routes in api_live.py
-- T330 (light/improvement, ian-claude-light-2): released×1 blocked — Heat calendar: usable at phone width (375 px)
-- T334 (light/test, max_API_light): released×1 — Test: pattern checks and summaries never use diagnosis wording
 - T349 (light/improvement, Max_codex_light): blocked — worker.sh: always disallow Monitor/ScheduleWakeup for claude and re-re
 - T341 (light/test, max_API_light): blocked — Test: pattern library urgency filter works keyboard-only
 - T356 (heavy/feature, ian-claude): released×3 — Live camera on the dashboard: one command, laptop webcam → /ws/live
@@ -65,6 +64,9 @@
 - T394 (standard/improvement, ian-claude-standard): released×1 — Live: tell the nurse when the camera could not be opened (close code 4
 - T408 (heavy/feature, ian-claude-heavy-2): released×1 — Roles: role chooser, role-aware shell, mock people/linking API
 - T422 (light/improvement, ian-claude-standard): released×1 — Restyle: HeatCalendar in the Fey palette
+- T410 (standard/feature, ian-claude-standard-3): CI×1 — Supervisor side: "People I support" + add a person
+- T406 (standard/improvement, ian-claude-standard-4): released×1 — Redesign 6/6: live session + handoff
+- T421 (standard/improvement, ian-claude-standard-4): CI×1 — Restyle: BaselineChart + drift card on LineChart
 
 ## Low task ratings (≤3/5)
 - T366 3/5: 3/5 task assumed ErrorState is wired into UnitOverview but it isn't; fetchResidents swallows errors and falls back to mo
