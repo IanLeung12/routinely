@@ -117,7 +117,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T102 — Docs: README quickstart for teammates and judges
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: docs
