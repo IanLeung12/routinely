@@ -72,7 +72,7 @@ Acceptance:
 - owner: ian-claude
 - claimed: 2026-10-17T08:32Z
 - pr: #151
-- rating: 5/5 clear
+- rating: 4/5 clear on the mechanism; the false-alarm half needs the alert's top pattern at record time, which only api.py can pass - the area didn't list it
 
 What: SPEC §5 Nice to have 8. Causes a nurse confirmed for a resident nudge that pattern's weight up for her next alerts (and a false alarm on a top pattern nudges it down), bounded so one answer can't flip the ranking alone.
 Interface: `FeedbackStore.pattern_weights(resident_id) -> dict[str, float]` (default 1.0, clamped e.g. 0.7–1.3); `score_patterns(..., weights=None)` multiplies confidence before the threshold/sort; `build_alerts` passes the resident's weights. Evidence line notes "weighted by N past nurse answers" when weight ≠ 1.
