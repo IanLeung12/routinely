@@ -859,3 +859,92 @@ Acceptance:
 - `scripts/ci.sh` passes (incl. `scripts/e2e.sh`).
 - `python3 scripts/codemap.py pipeline` shows a single baseline/change module and a single task-graph module.
 - Remove the "Known overlaps" lines you fixed from `docs/CODEMAP.md`.
+
+### T041 — Second task: taking medication with water
+- status: done
+- class: heavy
+- priority: 3
+- kind: feature
+- deps: —
+- area: contracts/, pipeline/src/routine_watch/contracts.py, web/src/contracts.ts (regenerated), pipeline/src/routine_watch/tasks/meds.yaml, pipeline/tests/test_meds_graph.py, tests/scenarios/meds_normal/, tests/scenarios/meds_skip_water/
+- owner: —
+- claimed: —
+- pr: #59
+- note: PR #59 rebased, CI green, auto-merge on
+
+What: SPEC Nice-to-have 4: show the graph-based approach generalises. Add detector classes `pill_bottle`, `pill_organiser`, `glass`, `water_jug` (contracts change: regenerate schemas + TS via `uv run python -m routine_watch.contracts`), a `meds.yaml` graph (get glass → fill glass; open organiser → take pill → drink water; close organiser optional), and two step-level scenarios.
+Interface: `load_task("meds")` works; existing tea graph and scenarios untouched.
+Acceptance:
+- Graph tests (deps, optional step, aliases); `meds_skip_water` yields an omission of `drink_water`; contracts check in CI passes.
+- `scripts/e2e.sh` and `scripts/ci.sh` pass.
+
+### T052 — Demo-data banner component
+- status: done
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/README.md (add one line)
+- source: proposed
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:22Z
+- pr: #52
+
+What: Responsible design / Clarity for judges: a thin banner stating the dashboard runs on synthetic residents. Component only; wiring into `App.tsx` is a later task. Read only the files in `area` and `web/src/ui/Card.tsx` (style).
+Interface: `export function DemoBanner({ onDismiss }: { onDismiss?: () => void })` renders `role="note"` with text "Demo mode: synthetic residents, no real patient data. Changes are flagged for review only." (do not use the word "diagnosis" in any form; tests/test_privacy.py rejects it) and, if `onDismiss` is given, a "Dismiss" button. CSS vars only.
+Acceptance:
+- Vitest: text present, role=note, dismiss button only when `onDismiss` given and calls it.
+- note: fix CI on PR #52: orch changed the required text to avoid "diagnosis" (test_privacy.py). Update the component and test on branch task/T052-demo-banner, then set auto-merge.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T059 — Show the drift card on the resident detail screen
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx, web/src/resident/api.ts, web/src/mock/residentDetail.ts
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:35Z
+- pr: #49
+
+What: `DriftCard` (T049) is built but rendered nowhere. Show it on the resident detail screen, fed by a new `fetchDrift(residentId)` that calls `GET /residents/{id}/drift` and falls back to mock data like `fetchResident` does (the endpoint lands in T050).
+Interface: read `web/src/resident/DriftCard.tsx`, `web/src/resident/api.ts`, `web/src/resident/ResidentDetail.tsx`, `web/src/mock/residentDetail.ts`. Add `fetchDrift(residentId): Promise<{resident_id: string; slope_per_day: number; days: number; trending: boolean} | null>` in `api.ts`; render `<DriftCard slopePerDay days trending />` under the baseline chart; render nothing if `null`.
+Acceptance:
+- Test: the mock slow-drift resident shows the trending card; a resident with no drift data shows no card.
+- `scripts/ci.sh` passes.
+
+### T060 — Tests for resident date/format helpers
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/format.test.ts, web/src/resident/days.test.ts
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:35Z
+- pr: #50
+
+What: `web/src/resident/format.ts` and `days.ts` drive every date and score on the resident screen but have no direct tests. Add them; no source changes (if you find a bug, add a skipped test with a comment and note it in the PR).
+Interface: read only `web/src/resident/format.ts`, `web/src/resident/days.ts`, `web/src/resident/types.ts`. Cover `utcDate`, `formatDay`, `formatDayTime`, `formatDuration`, `formatScore`, `formatErrors`, `dailyScores` (incl. empty input, missing days → `null`, UTC day boundaries, invalid timestamps).
+Acceptance:
+- ≥1 test per exported function, edge cases above covered.
+- `scripts/ci.sh` passes.
+
+### T063 — Wire the alert evidence screen into the app
+- status: done
+- class: light
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/App.tsx, web/src/App.test.tsx
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:41Z
+- pr: #55
+
+What: `AlertView` (T028, `web/src/alert/AlertView.tsx`) is merged but `App.tsx` still shows an "Alert evidence — not built yet" placeholder, so the demo can't reach screen 4. Replace the placeholder with an "Alerts" section listing alerts and opening `AlertView` for one.
+Interface: in `App.tsx`, load alerts with `fetchAlerts()` from `web/src/alert/api.ts` (it falls back to `web/src/mock/alerts.ts`); render one button per alert (resident + plain-language label); clicking sets `openAlert` state and renders `<AlertView alertId={id} onBack={() => setOpenAlert(null)} />` in place of the overview (same pattern as `openResident`). Remove the `screens` placeholder array. Read only `App.tsx`, `App.test.tsx`, `alert/api.ts`, `alert/AlertView.tsx` (props), `mock/alerts.ts`.
+Acceptance:
+- No "not built yet" text remains in `App.tsx`.
+- App test: clicking the `mrs-k-change-1` alert shows the alert view; Back returns to the overview.
+- `scripts/ci.sh` passes.
