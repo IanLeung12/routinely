@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Alert } from '../contracts.ts'
 import { mockAlerts } from '../mock/alerts.ts'
@@ -62,6 +63,18 @@ function serve(
 
 function offline() {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network down')))
+}
+
+/** Press Tab (or Shift+Tab) until `target` has focus. Bounded by more presses than
+ * the screen has stops: a control a keyboard-only nurse can never reach is the bug
+ * this exists to catch, and an unbounded loop would hang the suite instead of
+ * naming it. */
+async function tabTo(user: UserEvent, target: HTMLElement, { shift = false } = {}) {
+  for (let presses = 0; presses < 12; presses += 1) {
+    await user.tab({ shift })
+    if (document.activeElement === target) return
+  }
+  throw new Error(`"${target.textContent}" is not reachable with ${shift ? 'Shift+Tab' : 'Tab'}`)
 }
 
 const served: HandoffData = {
@@ -299,28 +312,24 @@ describe('Handoff', () => {
     expect(screen.queryByRole('button', { name: "Open Mrs. K's alert" })).toBeNull()
   })
 
-  it('needs no mouse: tab to copy summary and back, and press Enter', async () => {
+  it('copies and goes back with no mouse, on Tab and Enter alone', async () => {
     serve(served)
     const writeText = vi.fn().mockResolvedValue(undefined)
     const onBack = vi.fn()
+    // Before the navigator stub: `setup` plants its own clipboard on the real one.
     const user = userEvent.setup()
-    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
-
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
     render(<Handoff onBack={onBack} />)
     await screen.findByText(served.summary)
 
-    await user.tab()
-    while (document.activeElement?.textContent !== 'Copy summary') {
-      await user.tab()
-    }
+    await tabTo(user, screen.getByRole('button', { name: 'Copy summary' }))
     await user.keyboard('{Enter}')
 
-    expect((await screen.findByText('Copied')).getAttribute('role')).toBe('status')
     expect(writeText).toHaveBeenCalledWith(handoffText(served))
+    expect((await screen.findByText('Copied')).getAttribute('role')).toBe('status')
 
-    while (document.activeElement?.textContent !== '← Back') {
-      await user.tab({ shift: true })
-    }
+    // Back sits above the summary, so Shift+Tab is the way a nurse returns to it.
+    await tabTo(user, screen.getByRole('button', { name: /Back/ }), { shift: true })
     await user.keyboard('{Enter}')
 
     expect(onBack).toHaveBeenCalledOnce()
