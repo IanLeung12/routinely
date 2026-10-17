@@ -7,12 +7,30 @@
   color: var(--muted);
 }
 
+/* Unclear capture (SPEC section 12). Grey is the dashboard's colour for unclear
+   everywhere else (index.css: red = omission/substitution, amber = sequence/repeat,
+   grey = unclear), and the line says so in words too, so the state never rests on
+   the colour alone. */
+.session-summary__unclear {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--error-grey-text);
+}
+
+.session-summary__why {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
 @media (max-width: 480px) {
   .session-summary {
     min-width: 0;
   }
 
-  .session-summary__line {
+  .session-summary__line,
+  .session-summary__unclear,
+  .session-summary__why {
     overflow-wrap: anywhere;
   }
 }

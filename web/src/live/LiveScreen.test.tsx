@@ -18,7 +18,7 @@ vi.mock('./LiveSession.tsx', () => ({
       </button>
       <button
         type="button"
-        onClick={() => onSessionEnd?.({ score: 3, flag: true, alert_id: 'alert-1' })}
+        onClick={() => onSessionEnd?.({ score: 3, flag: true, alert_id: 'alert-1', quality: 'ok' })}
       >
         stub end session
       </button>
@@ -93,7 +93,7 @@ describe('LiveScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'stub end session' }))
 
     expect(onOpenAlert).toHaveBeenCalledWith('alert-1')
-    expect(onSessionEnd).toHaveBeenCalledWith({ score: 3, flag: true, alert_id: 'alert-1' })
+    expect(onSessionEnd).toHaveBeenCalledWith({ score: 3, flag: true, alert_id: 'alert-1', quality: 'ok' })
   })
 
   it('labels the picker as a group', () => {

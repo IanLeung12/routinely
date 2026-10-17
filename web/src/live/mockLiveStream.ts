@@ -189,6 +189,9 @@ const SCRIPT: { delayMs: number; message: LiveMessage }[] = [
       score: 6.5,
       flag: true,
       alert_id: 'mock-alert-1',
+      // Badly made tea, clearly filmed: the offline demo shows the score and the
+      // comparison, not the "capture unclear" notice (SPEC section 12).
+      quality: 'ok',
       errors: [
         {
           error_id: 'mock-error-perseveration',
