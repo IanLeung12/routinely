@@ -12,8 +12,10 @@ function stripComments(src: string): string {
     .replace(/\/\/.*$/gm, "");
 }
 
+const BANNED = [/diagnos/i, /suffers from/i, /has delirium/i, /has dementia/i];
+
 describe("product wording", () => {
-  it("never says 'diagnose' or similar in non-test source", () => {
+  it("never uses banned diagnosis wording in non-test source", () => {
     const violations: string[] = [];
 
     for (const [path, src] of Object.entries(files)) {
@@ -24,7 +26,7 @@ describe("product wording", () => {
       const lines = stripped.split("\n");
 
       lines.forEach((line, idx) => {
-        if (/diagnos/i.test(line)) {
+        if (BANNED.some((re) => re.test(line))) {
           violations.push(`${path}:${idx + 1}: ${line.trim()}`);
         }
       });
