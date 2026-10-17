@@ -39,7 +39,7 @@ describe('ResidentDetail', () => {
   it('omits the drift card when the resident has no drift data', async () => {
     offline()
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
-    await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })
+    await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })
 
     expect(screen.queryByRole('region', { name: 'Slow drift' })).toBeNull()
   })
@@ -49,7 +49,7 @@ describe('ResidentDetail', () => {
 
     const { container } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })).toBeTruthy()
     expect(screen.getByText('Room 204')).toBeTruthy()
     expect(screen.getByText('Flagged')).toBeTruthy()
     expect(container.querySelectorAll('.session-row')).toHaveLength(MRS_K.sessions.length)
@@ -77,7 +77,7 @@ describe('ResidentDetail', () => {
     offline()
 
     const { container } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
-    await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })
+    await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })
 
     const rows = [...container.querySelectorAll('.session-row')]
     expect(rows[0].querySelector('.session-when')?.textContent).toBe('1 Jan, 18:02')
@@ -99,7 +99,7 @@ describe('ResidentDetail', () => {
     offline()
 
     const { container } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
-    await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })
+    await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })
 
     expect(container.querySelectorAll('.context-record')).toHaveLength(MRS_K.care_records.length)
     expect(screen.getByText('Medication change: amoxicillin')).toBeTruthy()
@@ -114,7 +114,7 @@ describe('ResidentDetail', () => {
     offline()
 
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
-    await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })
+    await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })
 
     const calendar = screen.getByRole('grid', { name: /daily error scores/i })
     expect(calendar.querySelectorAll('[role="gridcell"]')).toHaveLength(
@@ -162,7 +162,7 @@ describe('ResidentDetail', () => {
 
     render(<ResidentDetail residentId="mr-okafor" onBack={() => {}} />)
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Mr. Okafor' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mr. Okafor' })).toBeTruthy()
     expect(fetchMock).toHaveBeenCalledWith(`${apiUrl}/residents/mr-okafor`)
     expect(screen.getByText('Temperature 37.4 °C')).toBeTruthy()
     expect(screen.getByText('skipped step ×1')).toBeTruthy()
@@ -184,11 +184,11 @@ describe('ResidentDetail', () => {
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
     expect(await screen.findByText(/Could not reach the server/)).toBeTruthy()
-    expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: /try again/i }))
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })).toBeTruthy()
   })
 
   it('shows empty-state copy instead of blank charts for a resident with zero sessions', async () => {
@@ -210,7 +210,7 @@ describe('ResidentDetail', () => {
 
     render(<ResidentDetail residentId="mr-new" onBack={() => {}} />)
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Mr. New' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mr. New' })).toBeTruthy()
     expect(screen.getAllByText('No scored sessions yet.').length).toBeGreaterThan(0)
     expect(screen.getByText('No sessions recorded yet.')).toBeTruthy()
     expect(screen.queryByRole('img', { name: /baseline chart/i })).toBeNull()
@@ -239,6 +239,39 @@ describe('ResidentDetail', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /unit overview/i }))
     expect(onBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('has one h1 naming the resident, with h2 sections in reading order', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    await screen.findByText('Room 204')
+
+    const headings = screen.getAllByRole('heading')
+    const h1s = headings.filter((h) => h.tagName === 'H1')
+    expect(h1s).toHaveLength(1)
+    expect(h1s[0].textContent).toBe('Mrs. K')
+
+    const h2Titles = headings.filter((h) => h.tagName === 'H2').map((h) => h.textContent)
+    expect(h2Titles).toEqual(['Baseline', 'Daily scores', 'Sessions', 'Care records'])
+  })
+
+  it('moves focus to the h1 once the resident loads', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const heading = await screen.findByRole('heading', { level: 1 })
+    expect(document.activeElement).toBe(heading)
+  })
+
+  it('wraps the view in a landmark labelled by the h1', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+    const heading = await screen.findByRole('heading', { level: 1 })
+
+    expect(screen.getByRole('region', { name: heading.textContent ?? '' })).toBeTruthy()
   })
 })
 
@@ -270,7 +303,7 @@ describe('resident detail navigation', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /open mrs\. k/i }))
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mrs. K' })).toBeTruthy()
     expect(screen.queryByRole('heading', { level: 2, name: 'Unit overview' })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: /unit overview/i }))
@@ -278,7 +311,7 @@ describe('resident detail navigation', () => {
     expect(
       await screen.findByRole('heading', { level: 2, name: 'Unit overview' }),
     ).toBeTruthy()
-    expect(screen.queryByRole('heading', { level: 2, name: 'Mrs. K' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1, name: 'Mrs. K' })).toBeNull()
   })
 })
 
