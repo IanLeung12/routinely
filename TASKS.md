@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T406 — Redesign 6/6: live session + handoff
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
