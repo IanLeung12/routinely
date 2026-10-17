@@ -373,7 +373,7 @@ Acceptance:
 - offline only; `scripts/ci.sh` passes
 
 ### T335 — Test: dashboard source has no diagnosis wording
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
