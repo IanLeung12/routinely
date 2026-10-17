@@ -42,7 +42,10 @@ export default function App() {
       </header>
 
       {openHandoff ? (
-        <Handoff onBack={() => setOpenHandoff(false)} />
+        <Handoff
+          onBack={() => setOpenHandoff(false)}
+          onOpenAlert={id => { setOpenHandoff(false); setOpenAlert(id) }}
+        />
       ) : openAlert !== null ? (
         <AlertView alertId={openAlert} onBack={() => setOpenAlert(null)} />
       ) : openResident === null ? (

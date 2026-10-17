@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { fetchAlerts } from '../alert/api.ts'
+import type { Alert } from '../contracts.ts'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
@@ -63,6 +65,21 @@ function chipsFor(resident: HandoffResident): Chip[] {
   return chips
 }
 
+/** resident_id -> the alert to open from their row.
+ *
+ * The handoff's rows carry no alert id of their own (`pipeline/src/routine_watch/`
+ * `handoff.py` counts alerts, it doesn't name them), so the id comes from the alerts
+ * list, which serves one alert per flagged resident. The row's own `pending_review` is
+ * what says an alert still needs a nurse, so the first match is the one to open: once
+ * someone gives it a verdict the count drops and the row stops offering it. */
+function alertByResident(alerts: Alert[]): Record<string, string> {
+  const byResident: Record<string, string> = {}
+  for (const alert of alerts) {
+    byResident[alert.resident_id] ??= alert.alert_id
+  }
+  return byResident
+}
+
 /** The one line a nurse reads first, before any row. */
 function headline(residents: HandoffResident[], hours: number): string {
   if (residents.length === 0) return `Nothing to hand over for the last ${hours} hours`
@@ -85,12 +102,22 @@ export function handoffText(h: HandoffData): string {
 /** Shift handoff: one view of who changed in the hours this nurse was away, off the
  * main demo path. Rows needing attention come first (the pipeline sorts them), each
  * labelled in words as well as colour, with the plain-language summary above them. */
-export function Handoff({ onBack }: { onBack: () => void }) {
+export function Handoff({
+  onBack,
+  onOpenAlert,
+}: {
+  onBack: () => void
+  onOpenAlert?: (alertId: string) => void
+}) {
   const [copyStatus, setCopyStatus] = useState('')
   const [hours, setHours] = useState(DEFAULT_WINDOW_H)
   /** Tagged with the window it was fetched for, so switching windows shows the new
    * one loading rather than the last one's rows. */
   const [loaded, setLoaded] = useState<{ hours: number; result: HandoffResult } | null>(null)
+  /** Which alert each row opens. Fetched once: the alerts a resident has don't depend
+   * on the window, only on whether they are still flagged. Empty until it arrives, so
+   * a row offers the alert when there is one to offer and never a dead button. */
+  const [alertIds, setAlertIds] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -101,6 +128,16 @@ export function Handoff({ onBack }: { onBack: () => void }) {
       cancelled = true
     }
   }, [hours])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchAlerts().then((alerts) => {
+      if (!cancelled) setAlertIds(alertByResident(alerts))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (copyStatus !== 'Copied') return
@@ -162,6 +199,14 @@ export function Handoff({ onBack }: { onBack: () => void }) {
                     </span>
                   ))}
                 </span>
+                {onOpenAlert && resident.pending_review > 0 && alertIds[resident.resident_id] && (
+                  <Button
+                    aria-label={`Open ${resident.name}'s alert`}
+                    onClick={() => onOpenAlert(alertIds[resident.resident_id])}
+                  >
+                    Open alert
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

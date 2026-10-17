@@ -1,4 +1,5 @@
 import { EmptyState } from '../ui/EmptyState.tsx'
+import { formatScore } from './format.ts'
 
 type Day = { date: string; score: number | null }
 
@@ -38,7 +39,7 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
         ))}
         {orderedDays.map(({ date, score }) => {
           const weekday = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7
-          const label = `${date}: ${score === null ? 'no session' : `score ${score}`}`
+          const label = `${date}: ${score === null ? 'no session' : `score ${formatScore(score)}`}`
           const intensity = Math.round((Math.max(0, score ?? 0) / maximum) * 100)
 
           return (
@@ -62,7 +63,14 @@ export default function HeatCalendar({ days }: { days: Day[] }) {
           )
         })}
       </div>
-      <p>Darker = more errors that day. Grey = no session.</p>
+      <p>
+        <span aria-hidden="true" style={{ backgroundColor: 'color-mix(in srgb, var(--error-red-bg) 20%, var(--panel))', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        Lighter = fewer errors ·{' '}
+        <span aria-hidden="true" style={{ backgroundColor: 'var(--error-red-bg)', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        Darker = more errors ·{' '}
+        <span aria-hidden="true" style={{ backgroundColor: 'var(--error-grey-bg)', display: 'inline-block', width: '1em', height: '1em' }} />{' '}
+        Grey = no session
+      </p>
     </div>
   )
 }
