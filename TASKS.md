@@ -809,7 +809,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T104 — Session quality: mostly-unclear sessions are unclear, not scored
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -817,7 +817,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/quality.py (new), pipeline/tests/test_quality.py (new)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:33Z
-- pr: —
+- pr: #82
 
 What: SPEC §12/§13: pose and detection are less reliable with walkers, wheelchairs or bad lighting; low-confidence sessions must be treated as unclear rather than as errors, so they never push a resident toward a flag. Add the pure rule now; wiring it into replay/live is a later task (those files are busy).
 Interface: `session_quality(events: list[StepEvent], *, unclear_fraction: float = 0.4, min_events: int = 3) -> Literal["ok", "unclear"]`: `unclear` when there are fewer than `min_events` events or more than `unclear_fraction` of them are unclear / below confidence 0.6 (import an existing threshold constant from `recogniser.py` or `verifier.py` if one exists; don't copy it). Module docstring cites SPEC §12. Read `contracts.py` (`StepEvent` only) and `recogniser.py` / `verifier.py` for the constant. Add a one-line note for `docs/CODEMAP.md` in the PR description (don't edit it; it's busy).
