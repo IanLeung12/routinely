@@ -463,14 +463,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T275 — Live screen: notice a pause/resume made while the panel is open
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T13:19Z
 - pr: —
 
 What: Tester (TESTREPORT @1d6ee98) saw that toggling monitoring doesn't update an already-open live panel until remount or "Check again". Make the live panel react immediately.
