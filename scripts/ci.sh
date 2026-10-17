@@ -26,7 +26,8 @@ done
 for pkg in */package.json; do
   [ -f "$pkg" ] || continue
   d=$(dirname "$pkg"); echo "== node: $d"
-  (cd "$d" && npm ci --no-audit --no-fund && npm run lint --if-present && npm test --if-present && npm run build --if-present)
+  # check:bundle is the first-load JS budget (T260); --if-present so only web/ runs it.
+  (cd "$d" && npm ci --no-audit --no-fund && npm run lint --if-present && npm test --if-present && npm run build --if-present && npm run check:bundle --if-present)
 done
 
 echo "== e2e: scenario replay"
