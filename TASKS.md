@@ -358,7 +358,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T063 — Wire the alert evidence screen into the app
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
