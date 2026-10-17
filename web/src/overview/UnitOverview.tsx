@@ -4,6 +4,7 @@ import { EmptyState } from '../ui/EmptyState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResidents } from './api.ts'
+import './overview.css'
 import { Sparkline } from './Sparkline.tsx'
 import type { ResidentSummary, ResidentStatus } from './types.ts'
 

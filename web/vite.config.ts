@@ -7,9 +7,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
-    // Load the live-session stylesheet into jsdom so the task map's wrapping layout is
-    // testable with getComputedStyle (T120). Other CSS stays stubbed out, which is both
-    // faster and enough: those screens are tested through the DOM.
-    css: { include: [/src\/live\//] },
+    // Load the live-session and overview stylesheets into jsdom: the task map's wrapping
+    // layout is testable with getComputedStyle (T120), and the overview's phone media
+    // query is readable via `?raw` (T234 — jsdom doesn't evaluate @media itself). Other
+    // CSS stays stubbed out, which is both faster and enough: those screens are tested
+    // through the DOM.
+    css: { include: [/src\/live\//, /src\/overview\//] },
   },
 })
