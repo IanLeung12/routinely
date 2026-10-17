@@ -305,7 +305,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T446 — Replay player: error markers on the timeline, speed, arrow-key stepping
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: feature
