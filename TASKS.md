@@ -26,27 +26,6 @@ Acceptance:
 - new test in `test_time_of_day.py`: a session at 16:30 buckets as `evening`, matching `pattern_features`' late-day rule
 - `scripts/ci.sh` passes
 
-### T203 — Shift handoff: print-friendly layout
-- status: done
-- class: light
-- priority: 3
-- kind: feature
-- source: proposed
-- deps: —
-- area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- owner: ian-claude
-- claimed: —
-- pr: #353
-- rating: 4/5 acceptance asked for the .no-print rule inside handoff.css, but T353 already moved it to the shared print.css; the area also left out vite.config.ts's test.css.include, which a ?raw CSS assertion needs
-- note: merge conflict with main on PR #353: check out its branch, merge origin/main, fix, push
-
-What: nurses hand off on paper; a "Print" button plus `@media print` rules (hide nav/banner/buttons, black on white, no row breaks across pages) make the handoff usable as a printout.
-Interface: read only the three area files. Button calls `window.print()`.
-Acceptance:
-- "Print handoff" button; test mocks window.print and asserts it's called on click
-- handoff.css has an `@media print` block hiding `.no-print` elements and `break-inside: avoid` on rows
-- `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
-
 ### T212 — Docs: CODEMAP note that alerts read live session errors
 - status: todo
 - class: light
@@ -185,25 +164,6 @@ What: Add a 2–3 line note to the pipeline section of `docs/CODEMAP.md` (notes 
 Interface: docs only.
 Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
-
-### T352 — Test: web mockPatterns stays in step with the pipeline pattern library
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: pipeline/tests/test_mock_patterns_match_web.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T17:20Z
-- pr: #334
-- rating: 5/5 clear
-
-What: `web/src/patterns/mockPatterns.ts` says it mirrors `routine_watch.patterns_library.LIBRARY` (offline fallback, SPEC §13), but nothing checks it, so the offline pattern library can silently drift from the real one.
-Interface: new `pipeline/tests/test_mock_patterns_match_web.py`, modelled on `pipeline/tests/test_error_phrases_match_web.py` (regex-parse the TS file; no node). Read only those two files plus `pipeline/src/routine_watch/patterns_library.py`.
-Acceptance:
-- Asserts the set of `pattern_id`s in mockPatterns.ts equals LIBRARY's, and per pattern the `urgency` and `checks` list match.
-- If the mock has already drifted, do not edit web/; mark the failing case `xfail` with the reason and list the drift in the PR body.
-- `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
 
 ### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
 - status: claimed
