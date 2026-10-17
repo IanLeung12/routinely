@@ -420,14 +420,14 @@ Acceptance:
 - No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
 
 ### T307 — Test: replay player works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/evidence/ReplayPlayer.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:28Z
 - pr: —
 
 What: Prove the evidence replay player (play/pause, scrub, ghost toggle) is usable with Tab/Enter/Space/arrow keys only.
