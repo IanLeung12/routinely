@@ -329,7 +329,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T399 — Smoke: check the landing page is served
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -337,7 +337,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-standard
 - claimed: 2026-10-17T20:02Z
-- pr: —
+- pr: #383
+- rating: 5/5 clear
 
 What: `scripts/smoke.sh` checks the dashboard at `/` returns HTML but not the public landing page `/landing.html` (T378, second Vite entry in `web/vite.config.ts`), so a broken landing build would go unnoticed before the demo.
 Interface: add one check next to the existing `GET $DASHBOARD_URL -> HTML` block (~line 233): `GET $DASHBOARD_URL/landing.html` must return HTML containing `Routine Watch`; use the existing `get`/`pass`/`fail` helpers. Update the header comment listing what it checks.
