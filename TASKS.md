@@ -56,14 +56,14 @@ Acceptance:
 - Tests: "fill kettle" and "get cup" in either order are both valid; "pour" requires "teabag in cup"; optional steps can be skipped.
 
 ### T004 — Synthetic care-record generator
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - deps: T001
 - area: pipeline/routine_watch/synth/care_records.py, pipeline/tests/test_care_records.py
 - owner: ian-claude-light
 - claimed: 2026-10-17T03:22Z
-- pr: —
+- pr: #3
 
 What: Generate fake care-record context for demo residents: medication changes, temperature readings, daily fluid intake. Read only the files in `area` and `pipeline/pyproject.toml`.
 Interface: `generate_care_records(resident_id: str, days: int = 14, seed: int = 0, scenario: str = "normal") -> list[dict]`. Each dict: `{"resident_id", "ts" (ISO), "kind": "med_change"|"temperature"|"fluid_intake", "value", "note"}`. Scenario `"spike"`: new antibiotic 2 days before the end, temperature rises to ~38.2 °C in the last day, fluid intake drops. `"normal"`: no med changes, temp 36.4–37.0, fluids 1200–1800 ml/day.
