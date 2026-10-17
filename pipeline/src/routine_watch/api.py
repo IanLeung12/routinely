@@ -11,26 +11,26 @@ import os
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from . import __version__, session_log
 from .alerts import build_alerts, top_pattern_for
+from .api_live import router as _live_router
 from .contracts import Alert, AlertFeedback, FeedbackVerdict, SuggestedCheck
-from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents, status_for
+from .demo import DEMO_NOW, demo_residents, status_for
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
-from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
 from .monitoring import get_monitoring_store
 from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .patterns_library import LIBRARY as PATTERN_LIBRARY
 from .patterns_library import Pattern, TimeProfile
-from .replay import ReplayError
 
 app = FastAPI(title="Routine Watch API", version=__version__)
+app.include_router(_live_router)
 
 #: The dashboard's origin(s), so the browser's CORS check lets fetch() through
 #: (SPEC section 16): comma-separated, defaults to the dev dashboard's origin.
@@ -352,100 +352,3 @@ def resident_normal_replay(
         "resident_id": resident_id,
         "frames": [frame.model_dump(mode="json") for frame in frames],
     }
-
-
-class RoomMonitoringIn(BaseModel):
-    """The pause switch's body (SPEC §12): on resumes a room, off pauses it."""
-
-    on: bool
-
-
-def _pause_message(resident_id: str) -> dict | None:
-    """`{"type": "paused", "room": ...}` if `resident_id`'s room is paused right now
-    (SPEC §12), else `None`. `/ws/live` calls this both before a session starts and
-    again on every message, since a nurse can pause mid-session.
-    """
-    room = _room_for(resident_id)
-    if room is not None and not get_monitoring_store().is_on(room):
-        return {"type": "paused", "room": room}
-    return None
-
-
-def _room_for(resident_id: str) -> str | None:
-    """`resident_id`'s room, straight from `demo.demo_residents()` (SPEC §12: a room
-    or camera is linked to a resident by configuration), or `None` if there is no
-    such resident.
-    """
-    return next(
-        (resident["room"] for resident in demo_residents() if resident["id"] == resident_id),
-        None,
-    )
-
-
-@app.get("/monitoring")
-def get_monitoring() -> dict:
-    """Every room a nurse has paused right now (SPEC §12): backs the dashboard's
-    pause switch state.
-    """
-    return {"paused_rooms": get_monitoring_store().paused_rooms()}
-
-
-@app.put("/rooms/{room}/monitoring")
-def set_room_monitoring(room: str, body: RoomMonitoringIn) -> dict:
-    """Pause or resume monitoring for one room (SPEC §12), without touching any
-    other room. 404s for a room no demo resident is in.
-    """
-    if room not in {resident["room"] for resident in demo_residents()}:
-        raise HTTPException(status_code=404, detail="room not found")
-    get_monitoring_store().set(room, body.on)
-    return {"room": room, "on": body.on}
-
-
-@app.websocket("/ws/live")
-async def live_session(
-    websocket: WebSocket,
-    scenario: str = "",
-    speed: Annotated[float, Query(gt=0)] = 1.0,
-) -> None:
-    """The live view and its alerts, on one socket (SPEC section 16, decision B).
-
-    Plays the recorded scenario named by `?scenario=` through the pipeline in real
-    time, `?speed=` times as fast: frames, steps, the task map, errors as they are
-    classified, then the session's score and flag (`routine_watch.live`). That is also
-    the demo's fallback for a camera that fails (SPEC section 10), and the camera
-    plugs into the same generator later.
-
-    A session always lands against `demo.DEMO_RESIDENT` (`routine_watch.live`), so if
-    that resident's room is paused (SPEC §12), this sends one `paused` message naming
-    the room and closes instead - no scenario is loaded and no frames go out, the same
-    as monitoring being off for a real camera. The room is re-checked on every message,
-    so a nurse pausing mid-session stops the stream there too: the `paused` message
-    replaces whatever would have been sent next, and the session generator is closed
-    early so `session_messages` never records the unfinished session (same as a
-    dashboard disconnect).
-
-    An unknown scenario closes with 4404, and the socket closes normally when the
-    session ends.
-    """
-    await websocket.accept()
-    pause_message = _pause_message(DEMO_RESIDENT)
-    if pause_message is not None:
-        await websocket.send_json(pause_message)
-        await websocket.close()
-        return
-    try:
-        generator = session_messages(scenario_path(scenario), speed=speed)
-        async for message in generator:
-            pause_message = _pause_message(DEMO_RESIDENT)
-            if pause_message is not None:
-                await websocket.send_json(pause_message)
-                await generator.aclose()
-                await websocket.close()
-                return
-            await websocket.send_json(as_json(message))
-    except ReplayError:
-        await websocket.close(code=SCENARIO_NOT_FOUND)
-        return
-    except WebSocketDisconnect:  # the dashboard closed the tab mid-session
-        return
-    await websocket.close()
