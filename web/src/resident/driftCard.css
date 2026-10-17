@@ -1,0 +1,11 @@
+.drift-card {
+  color: var(--text);
+}
+
+.drift-card__summary {
+  color: var(--muted);
+}
+
+.drift-card[data-state="trending"] .drift-card__summary {
+  color: var(--error-amber-text);
+}

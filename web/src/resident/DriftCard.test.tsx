@@ -19,7 +19,8 @@ describe('DriftCard', () => {
   it('shows a review flag and rounds the daily slope to two decimal places', () => {
     render(<DriftCard slopePerDay={0.146} days={14} trending />)
     expect(screen.getByRole('heading', { name: 'Slow drift' })).toBeTruthy()
-    expect(screen.getByText('Error score rising about +0.15 per day over 14 days. Flagged for review.')).toBeTruthy()
+    const summary = screen.getByText('Error score rising about +0.15 per day over 14 days. Flagged for review.')
+    expect(summary.classList.contains('drift-card__summary')).toBe(true)
     expect(screen.getByRole('region').getAttribute('data-state')).toBe('trending')
   })
 
