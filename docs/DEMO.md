@@ -73,6 +73,24 @@ on one page — no screen to navigate to first.
   show the same signal leading to a different, less urgent action.
 - **Shift handoff:** click **Shift handoff**. Mrs. K's row shows her pending alert;
   click **Open alert** on that row to reach the same alert from a different screen.
+- **Optional — people, My routine, routine builder:** if there's time, these three
+  screens aren't on the main beat but round out the story (skip straight to Close
+  otherwise):
+  - **Myself / My routine:** flip **Viewing as** to **Myself**. The person's own
+    screen shows **My routine**, the **How this week looks** card against their
+    usual, and the **Your privacy** card — click **Pause watching** (then **Resume
+    watching**) to show the off switch. Under **Invite someone**, click **Invite
+    someone** to show the code a new supervisor would type in.
+  - **People I support:** flip **Viewing as** back to **Someone I support**, paste
+    that code into the invite-code box under **People I support**, and click **Add
+    person** — the new row appears immediately with **Open** and **Stop supporting**
+    on it.
+  - **Routines / routine builder:** click **New routine** in the top bar (either
+    role). On the **Describe it** tab, click the **Making toast** example, then
+    **Draft routine** — offline (the default) this returns a canned fake draft; set
+    `LIVE_API=1` to draft with the real model instead. Review the task map, use
+    **Edit the steps**, then click **Save routine** to add it to the **Routines**
+    list.
 - **Close:** nothing to click — say the lines on privacy (no video stored), that it
   only flags a change for review, the feedback loop, and prior art (SPEC §10.7, §11).
 
