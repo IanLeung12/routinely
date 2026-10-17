@@ -1,16 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { fetchAlerts } from './alert/api.ts'
+import { AlertView } from './alert/AlertView.tsx'
 import { LiveSession } from './live/LiveSession.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
 
-/** Screen 4 of SPEC section 9. A later task. */
-const screens = [
-  { name: 'Alert evidence', detail: 'Summary, error list, ghost replay, suggested checks' },
-]
-
 export default function App() {
   /** Which resident's detail is open, if any. Two screens don't need a router. */
   const [openResident, setOpenResident] = useState<string | null>(null)
+  const [openAlert, setOpenAlert] = useState<string | null>(null)
+  const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchAlerts().then(result => {
+      if (!cancelled) setAlerts(result)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <main className="app">
@@ -22,7 +29,9 @@ export default function App() {
         </p>
       </header>
 
-      {openResident === null ? (
+      {openAlert !== null ? (
+        <AlertView alertId={openAlert} onBack={() => setOpenAlert(null)} />
+      ) : openResident === null ? (
         <>
           <section>
             <h2>Unit overview</h2>
@@ -34,15 +43,18 @@ export default function App() {
             <LiveSession scenario="tea_skip_teabag_pour_twice" />
           </section>
 
-          <ul className="screens">
-            {screens.map((screen) => (
-              <li key={screen.name}>
-                <h2>{screen.name}</h2>
-                <p>{screen.detail}</p>
-                <span className="todo">not built yet</span>
-              </li>
-            ))}
-          </ul>
+          <section>
+            <h2>Alerts</h2>
+            <ul className="resident-list">
+              {alerts.map(alert => (
+                <li key={alert.alert_id} className="resident-row">
+                  <button type="button" className="resident-open" onClick={() => setOpenAlert(alert.alert_id)}>
+                    {alert.resident_id}: {alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         </>
       ) : (
         <ResidentDetail residentId={openResident} onBack={() => setOpenResident(null)} />

@@ -17,4 +17,6 @@ Your job: find real problems in the codebase that individual task reviews miss, 
 4. **File tasks.** At most **5 new tasks per run**, only issues that matter (would break the demo, mislead a nurse, violate a rule, or cost real time later). Skip nitpicks and pure style preferences, but do file worthwhile code or design improvements (duplication, unclear module boundaries, inconsistent UI, weak tests), not only bugs. Dedupe against `python3 scripts/tasks.py list` and the known-issues list. Use the task format in `prompts/orchestrator.md`, title prefix `Review:`, `source: reviewer`, `kind: bug|improvement|test|docs`, priority 0 for demo/privacy/correctness, else 1–2, class by the `MODELS.md` rubric. Each task must name exact files and a concrete fix, so a light worker can do most of them.
    Update `.tasks/REVIEW.md` (new `last-reviewed`, `next-area`, add filed issues, keep the list under 30 lines), then `python3 scripts/tasks.py commit -m "reviewer: <n> tasks"`.
 
+   If an issue is a repeatable pattern rather than a one-off, also add a lesson: `python3 scripts/tasks.py lesson "<rule>" --agent reviewer`.
+
 5. **Report.** If you filed nothing, reply exactly `[SILENT]`. Otherwise one line per task: `T0NN (prio) title`. No tables.

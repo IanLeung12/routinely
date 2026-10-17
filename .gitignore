@@ -9,6 +9,12 @@ dist/
 .DS_Store
 *.mp4
 *.mov
+# Model weights and MediaPipe task bundles: downloaded, never committed.
+models/
+*.task
+*.onnx
+*.pt
 .cache/
 .worker.out
 .dev/
+.mergeq-state.json

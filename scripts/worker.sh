@@ -50,6 +50,13 @@ rules = [("web", r"\bweb/"), ("pipeline", r"\bpipeline/|tests/scenarios"), ("inf
 guides = [g for g, pat in rules if re.search(pat, area) and os.path.exists(f"prompts/areas/{g}.md")]
 for g in guides:
     s += "\n\n---\n" + open(f"prompts/areas/{g}.md").read()
+# Shared lessons (tasks branch, kept short).
+try:
+    les = [l for l in open(".tasks/LESSONS.md").read().splitlines() if l.startswith("- ")]
+    if les:
+        s += "\n\n---\nLessons from earlier tasks (follow them):\n" + "\n".join(les[-40:])
+except OSError:
+    pass
 # Attach a code map of the task's area so the agent doesn't have to explore.
 import subprocess
 dirs = sorted({p.strip().rstrip("/").rsplit("/", 1)[0] if "." in p.strip().rsplit("/", 1)[-1] else p.strip().rstrip("/")
