@@ -470,7 +470,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T111 — Demo residents: evening-only worsening and motor slowing
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: feature
@@ -478,7 +478,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T07:23Z
-- pr: —
+- pr: #98
 
 What: SPEC §8 wants 5–6 demo residents, one per pattern. The generators for `"evening"` (T086) and `"motor"` (T087) exist but no demo resident uses them. Add two residents to the demo config with pinned seeds.
 Interface: two new entries in the resident config list in `demo.py` (`scenario: "evening"` and `scenario: "motor"`, new ids/names/rooms); no API or contract change.
