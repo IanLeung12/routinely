@@ -63,7 +63,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T192 — /demo/reset also resumes paused room monitoring
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -71,7 +71,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py (demo_reset only), pipeline/tests/test_api_demo_reset.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T11:34Z
-- pr: —
+- pr: #229
+- rating: 5/5 clear
 
 What: After T149 a rehearsal can pause a room, and `/demo/reset` leaves it paused. Make reset also call the monitoring store's `reset()`.
 Interface: read `pipeline/src/routine_watch/api.py` (`demo_reset`), `pipeline/src/routine_watch/monitoring.py` (`get_monitoring_store`, `MonitoringStore.reset`), `pipeline/tests/test_api_demo_reset.py`.
