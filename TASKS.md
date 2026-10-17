@@ -192,10 +192,11 @@ Acceptance:
 - kind: feature
 - source: ian
 - deps: T408
-- area: web/src/person/
+- area: web/src/people/MyRoutine.tsx, web/src/people/MyRoutine.test.tsx, web/src/person/routine/
 - owner: —
 - claimed: —
 - pr: —
+- note: T408 already shipped a basic MyRoutine in web/src/people/MyRoutine.tsx; extend it there, put new pieces under web/src/person/routine/ (own CSS file, not people.css). Use PrivacyCard (T429) and personNotes (T423).
 
 What: What someone watching themselves sees (SPEC §17). Calm and personal; never alarming or diagnostic. Use the mobbin MCP for 2–3 references of calm personal health/habit dashboards (and follow `docs/DESIGN.md` if it has landed).
 Interface (`web/src/person/MyRoutine.tsx` + pieces):
