@@ -424,7 +424,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T163 — Docs: web/src/ui/README.md lists every shared component
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
