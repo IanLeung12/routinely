@@ -111,24 +111,6 @@ Acceptance:
 - No horizontal scroll on the pattern library at 375 px; desktop unchanged.
 - `scripts/ci.sh` passes.
 
-### T245 — Smoke: check GET /monitoring and a PUT round-trip
-- status: done
-- class: light
-- priority: 2
-- kind: test
-- deps: T192
-- area: scripts/smoke.sh
-- owner: ian-claude-standard
-- claimed: 2026-10-17T12:58Z
-- pr: #255
-- rating: 5/5 clear
-
-What: `scripts/smoke.sh` doesn't exercise the monitoring endpoints added in T149 (#226). Add checks so the tester catches a broken pause switch.
-Interface: read `scripts/smoke.sh` (copy the `curl "${CURL_OPTS[@]}"` + `pass`/`fail` pattern) and `pipeline/src/routine_watch/api.py` (search `monitoring`). Before the final `/demo/reset` block: GET `/monitoring` returns JSON with `paused_rooms`; PUT pause on the demo resident's room, GET shows it paused, PUT resume, GET shows it gone; PUT on an unknown room returns 404. Always resume the room even if a check fails.
-Acceptance:
-- `scripts/dev.sh up && scripts/smoke.sh` passes with the new checks; `scripts/dev.sh down`
-- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass
-
 ### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
 - status: in-review
 - class: light
@@ -215,24 +197,6 @@ Interface: Read `web/src/overview/types.ts` (resident type), `web/src/resident/R
 Acceptance:
 - Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
 - `scripts/ci.sh` passes.
-
-### T256 — Refactor: move monitoring routes and /ws/live out of api.py
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_live.py, docs/CODEMAP.md
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T12:13Z
-- pr: #241
-- rating: 5/5 clear
-
-What: `api.py` is 450 lines mixing residents, alerts, feedback, replay, monitoring and the live socket. Move `GET /monitoring`, `PUT /rooms/{room}/monitoring`, `_room_for`, `_pause_message` and `/ws/live` into a new `api_live.py` (FastAPI `APIRouter`) included by `api.py`. Pure move: no behaviour or URL change.
-Interface: `api_live.router` included with `app.include_router(...)`; keep any names tests import from `routine_watch.api` re-exported there (grep `pipeline/tests` for `from routine_watch.api import`). Add a CODEMAP note.
-Acceptance:
-- No test file changes needed except imports; all of `pipeline/tests/test_api_monitoring.py`, `test_live*.py` pass unchanged.
-- `api.py` shrinks by ≥80 lines; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T257 — Contracts: JSON Schemas for /residents and /handoff payloads
 - status: done
