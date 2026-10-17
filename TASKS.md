@@ -338,7 +338,7 @@ Acceptance:
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
 ### T310 — Test: pattern library urgency filter (every option, reset, empty state)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
