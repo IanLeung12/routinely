@@ -36,7 +36,3 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 - New pipeline stage or rule → its own module, pure functions, a unit test, and a scenario if behaviour changes.
 - New screen → new folder under `web/src/`, built from `web/src/ui/`, with mock data and loading/empty/error states.
 - New shared shape → `contracts.py` first (heavy task), then regenerate schemas + TS.
-
-## Known overlaps to clean up
-- `baseline.py` vs `change_detection.py` (both describe per-resident baseline/change detection).
-- `task_graph.py` (placeholder) vs `tasks/graph.py` (real loader).
