@@ -12,6 +12,11 @@ python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh
 bash -n scripts/e2e.sh
 bash -n scripts/smoke.sh
+bash -n scripts/preflight.sh
+
+echo "== repo tooling: tests/"
+command -v uv >/dev/null || python3 -m pip install -q uv
+uv run --with pytest --no-project python -m pytest -q tests
 
 for proj in $(find . -maxdepth 2 -name pyproject.toml -not -path "./.tasks/*"); do
   d=$(dirname "$proj"); echo "== python: $d"
