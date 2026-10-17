@@ -426,14 +426,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T279 — Smoke: validate live API bodies against the contracts/ JSON Schemas
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T13:43Z
 - pr: —
 
 What: smoke.sh checks a few fields of each body by hand; the running stack can still drift from the published schemas. Add schema checks for the bodies it already fetches so the tester catches contract drift against a real stack, not just in unit tests.
