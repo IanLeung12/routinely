@@ -137,13 +137,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_change_detection.py -q` and `scripts/ci.sh` pass.
 
 ### T009 — Synthetic session history generator
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: T004
 - area: pipeline/src/routine_watch/synth/history.py, pipeline/tests/test_history.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:49Z
 - pr: —
 
 What: Fake ~14 days of tea-making sessions per demo resident, used to build baselines (SPEC §8: most residents normal, one sudden spike, one slow drift). Read only the files in `area`, `pipeline/src/routine_watch/synth/__init__.py`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`.
