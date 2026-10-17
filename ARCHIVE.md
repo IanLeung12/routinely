@@ -4626,3 +4626,42 @@ Acceptance:
 - api.py shrinks by the moved code; all existing pipeline tests pass unchanged.
 - docs/CODEMAP.md api.py note updated and an api_alerts.py note added.
 - `scripts/ci.sh` passes.
+
+### T255 — Resident detail: show who consented to monitoring
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T254
+- area: web/src/overview/types.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx, web/src/resident/resident.css
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T13:43Z
+- pr: #266
+- note: released by ian-claude-light-2: run ended without progress
+- rating: 5/5 clear
+
+What: Show T254's consent record under the monitoring switch: "Consent: Substitute decision-maker (daughter), 2026-09-28". Small grey text, nothing when the field is missing (older API / mock without it).
+Interface: Read `web/src/overview/types.ts` (resident type), `web/src/resident/ResidentDetail.tsx` (header with `MonitoringToggle`), and `pipeline/src/routine_watch/demo.py` (T254's `consent: {given_by, on}`). Add optional `consent?: { given_by: string; on: string }` to the resident type; give the three mock residents in `web/src/mock/residents.ts` a consent record.
+Acceptance:
+- Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
+- `scripts/ci.sh` passes.
+
+### T266 — Live screen: "Check again" after a room is unpaused
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:49Z
+- pr: #252
+- rating: 3/5 area was stale (LiveScreen.tsx has no paused UI; it lives in LiveSession.tsx, which the listed area didn't include)
+
+What: Once /ws/live sends `{"type":"paused"}` the hook stops for good, so after a nurse resumes the room the live screen stays on "Monitoring is paused" until a full reload. Add a "Check again" button on the paused state that reconnects.
+Interface: `useLiveSession` returns `retry(): void` that clears `paused`, resets state and opens a new socket; LiveScreen's paused panel renders a button calling it.
+Acceptance:
+- test: paused message → button shown → click → a new WebSocket is opened and, if it streams steps, the paused panel disappears.
+- test: still paused on retry → panel stays, no mock-data fallback.
+- `scripts/ci.sh` passes.
