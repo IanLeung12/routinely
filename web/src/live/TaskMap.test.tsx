@@ -27,6 +27,13 @@ describe('TaskMap', () => {
     expect(screen.getByRole('listitem').getAttribute('data-state')).toBe('pending')
   })
 
+  it('uses shared styles without injecting a component stylesheet', () => {
+    const { container } = render(<TaskMap steps={[{ id: 'wash', label: 'Wash hands' }]} states={{ wash: 'omission' }} />)
+    expect(container.querySelector('style')).toBeNull()
+    expect(screen.getByRole('list').className).toBe('task-map')
+    expect(screen.getByRole('listitem').className).toBe('step step--omission')
+  })
+
   it('renders an empty list without arrows for no steps', () => {
     render(<TaskMap steps={[]} states={{}} />)
 
