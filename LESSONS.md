@@ -40,3 +40,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - On Windows, scripts/dev.sh down may leave the Vite node child running; verify and stop that exact workspace Vite PID before ci.sh, or npm ci fails EPERM on the rolldown binding. (max_API_light)
 - web/src/wording.test.ts already existed with a partial check (only /diagnos/); T335 just needed the full banned list added, not a new file. (ian-claude-light-2)
 - When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
+- Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
