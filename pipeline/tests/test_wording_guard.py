@@ -1,5 +1,10 @@
-"""Guard SPEC's wording rule: patterns, checks and summaries never diagnose (SPEC §7.5)."""
+"""Guard the wording used by patterns, checks and offline summaries (SPEC §7.5)."""
 
+import json
+from datetime import datetime
+
+from routine_watch import demo
+from routine_watch.alerts import build_alerts
 from routine_watch.checks import suggest_checks
 from routine_watch.contracts import SuggestedCheck
 from routine_watch.explain import TemplateExplainer
@@ -42,8 +47,6 @@ def test_suggest_checks_offline_never_diagnoses():
         {"ts": "2024-01-01T09:00:00", "kind": "fluid_intake", "value": 500},
         {"ts": "2024-01-01T08:00:00", "kind": "med_change", "value": None},
     ]
-    from datetime import datetime
-
     result = suggest_checks(now_records, now=datetime.fromisoformat("2024-01-01T11:00:00"))
     for check in result:
         _assert_clean(check)
@@ -75,3 +78,26 @@ def test_template_explainer_never_diagnoses():
             scenario["errors"], scenario["baseline"], scenario["context"]
         )
         _assert_clean(summary)
+
+
+def test_demo_alert_wording_stays_review_only(monkeypatch):
+    monkeypatch.setenv("LIVE_API", "0")
+    monkeypatch.setattr(demo, "_live_sessions", lambda resident_id: [])
+    residents = demo.demo_residents()
+    # Exercise every demo scenario's alert, including normally unflagged ones,
+    # by lowering only this test's flag threshold. Generated sessions stay intact.
+    flagged = [
+        {
+            **resident,
+            "status": "flagged",
+            "baseline": {**resident["baseline"], "threshold": -1},
+        }
+        for resident in residents
+    ]
+    alerts = build_alerts(flagged)
+    assert {alert.resident_id for alert in alerts} == {
+        resident["id"] for resident in residents
+    }
+    assert alerts
+    for alert in alerts:
+        _assert_clean(json.dumps(alert.model_dump(mode="json")))
