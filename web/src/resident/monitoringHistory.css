@@ -23,10 +23,33 @@
   font-size: var(--text-sm);
 }
 
+.monitoring-history__change {
+  display: flex;
+  column-gap: var(--space-1);
+}
+
 .monitoring-history__what--paused {
   color: var(--error-amber-text);
 }
 
 .monitoring-history__what--on {
   color: var(--status-normal-text);
+}
+
+/* Phone width (375 px and similar, SPEC section 9): the who/action and timestamp
+   wrap onto their own lines, and the text grows to at least 14px, instead of
+   squeezing onto one line and forcing the row to scroll sideways. */
+@media (max-width: 480px) {
+  .monitoring-history__empty,
+  .monitoring-history__list {
+    font-size: var(--text-md);
+  }
+
+  .monitoring-history__change {
+    flex-wrap: wrap;
+  }
+
+  .monitoring-history__when {
+    flex-basis: 100%;
+  }
 }
