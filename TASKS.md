@@ -547,15 +547,15 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T107 — Review: evidence ghost layer replays the same frames as "today"
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - source: reviewer
 - deps: —
 - area: pipeline/src/routine_watch/evidence.py, pipeline/tests/test_evidence.py, tests/scenarios/tea_normal/frames.jsonl
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:02Z
 - pr: —
 
 What: `evidence.py` sets both `_ALERT_SCENARIO` and `_NORMAL_SCENARIO` to `tea_no_kettle`, so `GET /residents/{id}/normal_replay` returns exactly the frames of `GET /sessions/{id}/replay` (only `session_id` differs). On the alert screen the ghost overlay sits perfectly on top of today's skeleton, so demo step 5 ("compare against her normal routine") shows no difference.
