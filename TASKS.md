@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 400a27f
+- last-reviewed: 1898e3b
 
 ## Tasks
 
@@ -291,8 +291,8 @@ Acceptance:
 - claimed: —
 - pr: —
 
-What: T089 (PR #149) added `top_pattern` to `GET /residents` (computed in `demo.py` `_top_pattern`, only for watch/flagged residents) and shows it on the unit overview, but `docs/CODEMAP.md` notes don't mention it. Add a 1-3 line note.
-Interface: Read only `docs/CODEMAP.md`, `git show 597b34d --stat`, and `_top_pattern` in `pipeline/src/routine_watch/demo.py`. Edit notes only, not the generated file list. Use "consistent with" wording.
+What: T089 (PR #149) added `top_pattern` to `GET /residents` (computed in `demo.py` `_top_pattern`, only for watch/flagged residents) and shows it on the unit overview, but `docs/CODEMAP.md` notes don't mention it. Add a 1-3 line note. Also add one line that `web/src/live/LiveScreen.tsx` (T161, PR #166) wraps `LiveSession` with a tea/medication routine picker.
+Interface: Read only `docs/CODEMAP.md`, `git show 597b34d --stat`, `web/src/live/LiveScreen.tsx`, and `_top_pattern` in `pipeline/src/routine_watch/demo.py`. Edit notes only, not the generated file list. Use "consistent with" wording.
 Acceptance:
 - note names `demo._top_pattern`, the `top_pattern` field and `web/src/overview/UnitOverview.tsx`.
 - `scripts/ci.sh` passes.
@@ -475,4 +475,75 @@ Acceptance:
 What: `/residents` shows `top_pattern` from `demo.py` (`score_patterns` with no weights), while the alert's `patterns[0]` is re-weighted by `FeedbackStore.pattern_weights` (T130). After a nurse answers "what was it?", the overview chip and the alert can name different patterns for the same resident. `handoff.build_handoff` also calls `build_alerts(residents)` without `feedback=`. Fix: in `api._tuned`, when the resident has pattern weights, recompute `top_pattern` with `score_patterns(features, weights=..., answers=...)` (reuse `alerts._patterns` or expose a small helper) and pass the store into `build_alerts` in handoff.
 Acceptance:
 * Test: confirm an alert with a cause that reorders the ranking; `/residents` top_pattern id equals `/alerts/{id}` `patterns[0].pattern_id`.
+* `scripts/ci.sh` passes.
+
+### T184 — Test: status_for with the raw threshold gives each resident's own status
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_status_for.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: T167 (PR #163) added `demo.status_for(resident, threshold)`, which repeats the flag rule from `demo_residents()`. Pin that the two agree, so `/residents` can't drift from the demo's own status when no feedback has been given.
+Interface: Read only `pipeline/src/routine_watch/demo.py` (`status_for`, `demo_residents`), `pipeline/tests/conftest.py` (autouse `session_log.reset`) and `pipeline/tests/test_live_flag.py` (how a live session is recorded). New file only.
+Acceptance:
+* For every resident in `demo_residents()`, `status_for(r, r["baseline"]["threshold"]) == r["status"]`.
+* Same check after recording Mrs. K's live tea session the way `test_live_flag.py` does (she becomes flagged).
+* `status_for(r, 1e9)` is never "flagged".
+* `scripts/ci.sh` passes.
+
+### T185 — demo.py: one flag rule shared by demo_residents and status_for
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: T184
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `demo_residents()` and `status_for()` each build `timestamped`, call `flag_change` and `_watch`, then `_status` (the second copy calls `_watch(sessions, sessions, ...)` instead of `(history, sessions, ...)`, which only works because live sessions fall after the baseline cutoff). Pull this into one private helper both call, with no behaviour change.
+Interface: one private helper (e.g. `_status_from(history, sessions, scores, baseline: Baseline) -> str`); `status_for` signature unchanged; `api.py` untouched.
+Acceptance:
+* `flag_change(` and `_watch(` are each called once in `demo.py`.
+* T184's test and `pipeline/tests/test_demo*.py` pass unchanged.
+* `scripts/ci.sh` passes.
+
+### T186 — Live screen: ?task=meds opens on the medication routine
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The presenter wants to link straight to the second routine. `LiveScreen` (T161) always starts on tea; let `?task=meds` pick "Medication with water" first; `?task=tea`, anything else or no param keeps tea. Clicking a button still switches as now.
+Interface: Read only `web/src/live/LiveScreen.tsx` and its test. Read `window.location.search` once in the `useState` initializer (`URLSearchParams`); no router, don't write to the URL.
+Acceptance:
+* Tests: no param → "Making tea" `aria-pressed=true`; `?task=meds` → "Medication with water" pressed and `LiveSession` gets `meds_skip_water`; `?task=bogus` → tea.
+* `scripts/ci.sh` passes.
+
+### T187 — Test: App shows the live routine picker with tea selected
+- status: todo
+- class: light
+- priority: 3
+- kind: test
+- deps: —
+- area: web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T161 swapped `LiveSession` for `LiveScreen` in `App.tsx`; nothing at app level checks the picker is there. Add one test.
+Interface: Read only `web/src/App.tsx`, `web/src/App.test.tsx`, `web/src/live/LiveScreen.tsx`. Reuse App.test's existing fetch/websocket mocks.
+Acceptance:
+* Test: the "Routine to watch" group renders with "Making tea" pressed and "Medication with water" not pressed.
 * `scripts/ci.sh` passes.
