@@ -1,11 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch.alerts import build_alerts
 from routine_watch.api import KNOWN_CAUSES, app
 from routine_watch.demo import demo_residents
-from routine_watch.feedback import FeedbackStore
 from routine_watch.patterns_library import LIBRARY
 
 MRS_K = "mrs-k"
@@ -18,8 +17,8 @@ pytestmark = pytest.mark.usefixtures("mrs_k_flagged")
 
 @pytest.fixture(autouse=True)
 def _reset_feedback_store():
-    """Each test gets a clean feedback store: the API module keeps it global."""
-    api_module._feedback_store = FeedbackStore()
+    """Each test gets a clean feedback store: `api_state` keeps it global."""
+    api_state.reset()
 
 
 def test_build_alerts_flags_only_mrs_k():
@@ -107,8 +106,8 @@ def test_feedback_records_the_cause_for_the_resident():
 
     assert response.status_code == 200
     assert response.json()["feedback"]["cause"] == "sudden_change"
-    assert api_module._feedback_store.cause_of(MRS_K_ALERT) == "sudden_change"
-    assert api_module._feedback_store.cause_counts(MRS_K) == {"sudden_change": 1}
+    assert api_state._feedback_store.cause_of(MRS_K_ALERT) == "sudden_change"
+    assert api_state._feedback_store.cause_counts(MRS_K) == {"sudden_change": 1}
 
 
 def test_other_is_a_valid_cause():
@@ -128,7 +127,7 @@ def test_feedback_without_a_cause_still_works():
 
     assert response.status_code == 200
     assert response.json()["feedback"]["cause"] is None
-    assert api_module._feedback_store.cause_counts(MRS_K) == {}
+    assert api_state._feedback_store.cause_counts(MRS_K) == {}
 
 
 def test_reposting_without_a_cause_clears_it():
@@ -140,7 +139,7 @@ def test_reposting_without_a_cause_clears_it():
         response = client.post(f"/alerts/{MRS_K_ALERT}/feedback", json={"verdict": "confirmed"})
 
     assert response.json()["feedback"]["cause"] is None
-    assert api_module._feedback_store.cause_counts(MRS_K) == {}
+    assert api_state._feedback_store.cause_counts(MRS_K) == {}
 
 
 @pytest.mark.parametrize("cause", ["not_a_pattern", "", "Sudden change"])
@@ -152,7 +151,7 @@ def test_unknown_cause_is_422(cause):
         )
 
     assert response.status_code == 422
-    assert api_module._feedback_store.get(MRS_K_ALERT) is None
+    assert api_state._feedback_store.get(MRS_K_ALERT) is None
 
 
 def test_every_library_pattern_is_an_accepted_cause():

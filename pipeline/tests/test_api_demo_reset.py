@@ -10,9 +10,8 @@ never be used to wipe a real deployment's state from outside.
 import pytest
 from fastapi.testclient import TestClient
 
-from routine_watch import api as api_module
+from routine_watch import api_state
 from routine_watch.api import app
-from routine_watch.feedback import FeedbackStore
 
 MRS_K = "mrs-k"
 MRS_K_ALERT = f"alert-{MRS_K}"
@@ -22,8 +21,8 @@ pytestmark = pytest.mark.usefixtures("mrs_k_flagged")
 
 @pytest.fixture(autouse=True)
 def _reset_feedback_store():
-    """Each test gets a clean feedback store: the API module keeps it global."""
-    api_module._feedback_store = FeedbackStore()
+    """Each test gets a clean feedback store: `api_state` keeps it global."""
+    api_state.reset()
 
 
 def _status_of(client: TestClient, resident_id: str) -> str:
@@ -47,11 +46,11 @@ def test_reset_also_clears_logged_feedback(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DEMO_RESET", "1")
     with TestClient(app) as client:
         client.post(f"/alerts/{MRS_K_ALERT}/feedback", json={"verdict": "false_alarm"})
-        assert api_module._feedback_store.get(MRS_K_ALERT) is not None
+        assert api_state._feedback_store.get(MRS_K_ALERT) is not None
 
         client.post("/demo/reset")
 
-        assert api_module._feedback_store.get(MRS_K_ALERT) is None
+        assert api_state._feedback_store.get(MRS_K_ALERT) is None
 
 
 def test_reset_also_resumes_paused_room_monitoring(monkeypatch: pytest.MonkeyPatch):
