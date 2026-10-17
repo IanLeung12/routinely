@@ -389,14 +389,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T334 — Test: pattern checks and summaries never use diagnosis wording
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_wording_guard.py
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T17:16Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T334-wip-1701: start from it (git switch task/T334-wip-1701 && git merge origin/main)
 
