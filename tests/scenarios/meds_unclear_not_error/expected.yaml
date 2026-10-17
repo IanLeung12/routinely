@@ -1,0 +1,13 @@
+# An unclear low-confidence pill observation must not create an error.
+#
+# The meds counterpart of tea_unclear_not_error: take_pill is a required step the
+# verifier could not resolve, so it stays unclear rather than being dropped. It still
+# satisfies drink_water's dependency - nothing is missing - but it is never itself
+# the subject of an error (errors.py's rule: an unclear event can only ever make the
+# classifier quieter, never louder).
+
+task: meds
+steps: [get_glass, open_organiser, take_pill, fill_glass, drink_water]
+errors: []
+score: 0.0
+flag: false
