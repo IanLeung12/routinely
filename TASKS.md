@@ -154,7 +154,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_history.py -q` and `scripts/ci.sh` pass.
 
 ### T010 — Error classifier (graph rules)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - deps: T002, T003
