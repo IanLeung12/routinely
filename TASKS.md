@@ -169,7 +169,7 @@ Acceptance:
 - No production files changed. `cd web && npm test -- LiveScreen.keyboard` and `scripts/ci.sh` pass.
 
 ### T307 — Test: replay player works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
