@@ -808,14 +808,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T104 — Session quality: mostly-unclear sessions are unclear, not scored
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/quality.py (new), pipeline/tests/test_quality.py (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:33Z
 - pr: —
 
 What: SPEC §12/§13: pose and detection are less reliable with walkers, wheelchairs or bad lighting; low-confidence sessions must be treated as unclear rather than as errors, so they never push a resident toward a flag. Add the pure rule now; wiring it into replay/live is a later task (those files are busy).
