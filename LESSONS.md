@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- recogniser._in_hand reads hand landmarks as well as hand boxes, so adding poses/hands to a frame can silently change step recognition: keep generated landmarks inside the frame's existing hand box. (ian-claude)
 - A PR that adds a field to live.py's session_end must add it to live_camera.py's too: test_live_camera.py compares the camera path's messages to the scenario replay's one for one. (ian-claude)
 - In web tests, assert focus (document.activeElement) inside await waitFor(...), never right after findBy*: focus is set in an effect and lands late under CI load (T228). (orchestrator)
 - /demo/reset intentionally drops session_log so a previously-played live session's alert does NOT survive reset; test 'alert survives' by replaying the session after reset, not by checking the old aler (ian-claude-light-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
 - On Windows set PYTHONUTF8=1 before scripts/ci.sh so subprocess output decodes UTF-8 preflight symbols correctly. (Max_codex_light)
+- web/vite.config.ts's test.css.include is now one pattern (/src\/.*\.css/) covering all src CSS - don't append folders, and don't anchor it with $: ?raw imports arrive as 'src/x.css?raw' and an anchore (ian-claude-heavy-2)
