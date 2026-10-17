@@ -168,4 +168,4 @@ T152 | standard | claude-opus | merged first try | ~110k tok
 T182 | standard | claude-sonnet | merged (2 commits) | ~45k tok
 T188 | light | claude-sonnet | merged first try | ? tok
 T185 | standard | claude-sonnet | merged (2 commits) | ~45k tok
-T191 | light | claude-sonnet | merged first try | ? tok
+T191 | light | claude-sonnet | merged first try | ~15k tok
