@@ -360,6 +360,17 @@ class RoomMonitoringIn(BaseModel):
     on: bool
 
 
+def _pause_message(resident_id: str) -> dict | None:
+    """`{"type": "paused", "room": ...}` if `resident_id`'s room is paused right now
+    (SPEC §12), else `None`. `/ws/live` calls this both before a session starts and
+    again on every message, since a nurse can pause mid-session.
+    """
+    room = _room_for(resident_id)
+    if room is not None and not get_monitoring_store().is_on(room):
+        return {"type": "paused", "room": room}
+    return None
+
+
 def _room_for(resident_id: str) -> str | None:
     """`resident_id`'s room, straight from `demo.demo_residents()` (SPEC §12: a room
     or camera is linked to a resident by configuration), or `None` if there is no
@@ -407,19 +418,30 @@ async def live_session(
     A session always lands against `demo.DEMO_RESIDENT` (`routine_watch.live`), so if
     that resident's room is paused (SPEC §12), this sends one `paused` message naming
     the room and closes instead - no scenario is loaded and no frames go out, the same
-    as monitoring being off for a real camera.
+    as monitoring being off for a real camera. The room is re-checked on every message,
+    so a nurse pausing mid-session stops the stream there too: the `paused` message
+    replaces whatever would have been sent next, and the session generator is closed
+    early so `session_messages` never records the unfinished session (same as a
+    dashboard disconnect).
 
     An unknown scenario closes with 4404, and the socket closes normally when the
     session ends.
     """
     await websocket.accept()
-    room = _room_for(DEMO_RESIDENT)
-    if room is not None and not get_monitoring_store().is_on(room):
-        await websocket.send_json({"type": "paused", "room": room})
+    pause_message = _pause_message(DEMO_RESIDENT)
+    if pause_message is not None:
+        await websocket.send_json(pause_message)
         await websocket.close()
         return
     try:
-        async for message in session_messages(scenario_path(scenario), speed=speed):
+        generator = session_messages(scenario_path(scenario), speed=speed)
+        async for message in generator:
+            pause_message = _pause_message(DEMO_RESIDENT)
+            if pause_message is not None:
+                await websocket.send_json(pause_message)
+                await generator.aclose()
+                await websocket.close()
+                return
             await websocket.send_json(as_json(message))
     except ReplayError:
         await websocket.close(code=SCENARIO_NOT_FOUND)
