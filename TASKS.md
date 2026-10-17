@@ -513,7 +513,7 @@ Acceptance:
 - smoke.sh hits the route once; `scripts/ci.sh` passes.
 
 ### T145 — Live session "Flagged for review" banner links straight to the alert
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -521,7 +521,8 @@ Acceptance:
 - area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, web/src/App.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:17Z
-- pr: —
+- pr: #133
+- rating: 5/5 clear
 
 What: Demo beats 4→5 (SPEC §10): when the live session flags, the nurse should get to the evidence in one tap. The banner at `LiveSession.tsx` ~line 105 says "Flagged for review" but has no way to open the alert, even though `ended.alert_id` is there.
 Interface: add optional prop `onOpenAlert?: (alertId: string) => void` to `LiveSessionProps`; when `ended.flag && ended.alert_id && onOpenAlert`, render a `<button>` "Open alert" inside the banner calling it. In `App.tsx` pass `onOpenAlert={setOpenAlert}`. Read only those two files and `useLiveSession.ts` (for the `ended` type).
