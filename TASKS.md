@@ -562,7 +562,7 @@ Acceptance:
 - `cd web && npx vitest run src/tour` passes; `scripts/ci.sh` passes.
 
 ### T388 — Bug: integration.sh can't run next to a dev stack and kills it
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: bug
@@ -570,8 +570,9 @@ Acceptance:
 - area: scripts/integration.sh, scripts/dev.sh
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T19:19Z
-- pr: —
+- pr: #370
 - source: tester
+- rating: 5/5 clear
 
 What: `scripts/integration.sh` says it "uses its own ports (API 8100, dashboard 5273) so it can run next to a dev stack", but `dev.sh` keys "already running" off the shared `.dev/api.pid` / `.dev/web.pid`, so with `scripts/dev.sh up` already running it skips starting anything, then times out on :8100; its EXIT trap then runs `scripts/dev.sh down`, which stops the developer's :8000/:5173 stack too.
 Repro (main @ 8c81e18): `scripts/dev.sh up && scripts/integration.sh` → `FAIL dev.sh up: API already running (pid N) dashboard already running (pid M) timed out waiting for API at http://localhost:8100/health`; afterwards `curl localhost:5173` refuses.
