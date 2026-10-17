@@ -486,7 +486,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T362 — Scenario: tea_late_start_normal (long idle before the first step is not an error)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
