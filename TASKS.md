@@ -111,24 +111,6 @@ Acceptance:
 - No horizontal scroll on the pattern library at 375 px; desktop unchanged.
 - `scripts/ci.sh` passes.
 
-### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
-- status: done
-- class: light
-- priority: 2
-- kind: feature
-- deps: T242
-- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx, web/src/overview/overview.css
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:59Z
-- pr: #257
-- rating: 5/5 clear
-
-What: A nurse scanning the unit can't tell which rooms are paused (SPEC §12 privacy pause). On load, call `fetchPausedRooms()` and show a small grey "Monitoring paused" chip on each resident card whose `resident.room` is in the list.
-Interface: read `web/src/about/monitoringApi.ts` (`fetchPausedRooms(): Promise<string[]>`) and `web/src/overview/UnitOverview.tsx` (card markup around the `resident-room` span). If the fetch fails (API down / mock mode), show no chips and no error. Add the chip text to the card's `aria-label`.
-Acceptance:
-- tests (mock `fetchPausedRooms`): paused room shows the chip; others don't; fetch rejection shows no chip and the overview still renders
-- `cd web && npm test` and `scripts/ci.sh` pass
-
 ### T247 — Shift handoff: usable at phone width (375 px)
 - status: todo
 - class: light
@@ -164,24 +146,6 @@ Acceptance:
 - one parametrized test per scenario; fakes only, no real API calls
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
-### T253 — Shift handoff screen: show the rooms whose monitoring is paused
-- status: done
-- class: light
-- priority: 2
-- kind: feature
-- deps: T251
-- area: web/src/handoff/types.ts, web/src/handoff/mockHandoff.ts, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T13:06Z
-- pr: #259
-- rating: 5/5 clear
-
-What: Show T251's new `paused` list on the handoff screen so the incoming nurse sees which rooms weren't watched.
-Interface: Read `web/src/handoff/types.ts`, `Handoff.tsx`, `mockHandoff.ts` and T251's docstring in `pipeline/src/routine_watch/handoff.py`. Add `paused: { room: string; resident_id: string; name: string }[]` to the `Handoff` type (treat missing as `[]` for older APIs) and `monitoring_paused?: boolean` to `HandoffResident`. When non-empty, render one line above the rows: "Monitoring paused: <name> (room <room>), ..." and a "Monitoring paused" chip on those residents' rows. Include the line in `handoffText`. Mock gets `paused: []`.
-Acceptance:
-- Tests: no line when `paused` is empty or missing; line + chip when one room is paused; `handoffText` includes it.
-- `scripts/ci.sh` passes.
-
 ### T255 — Resident detail: show who consented to monitoring
 - status: todo
 - class: light
@@ -200,23 +164,6 @@ Interface: Read `web/src/overview/types.ts` (resident type), `web/src/resident/R
 Acceptance:
 - Tests in `ResidentDetail.test.tsx`: consent line renders with given_by and date; no line when `consent` is absent.
 - `scripts/ci.sh` passes.
-
-### T258 — Test: pause flow end to end in the API (pause → handoff → live → reset)
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: T251
-- area: pipeline/tests/test_pause_flow.py
-- owner: ian-claude-standard
-- claimed: 2026-10-17T12:16Z
-- pr: #242
-- rating: 5/5 clear
-
-What: Pausing a room now touches four places (monitoring store, `/handoff`, `/ws/live`, `/demo/reset`) built in separate PRs. One test walks the whole flow so a regression in any shows up.
-Interface: FastAPI `TestClient` only, fakes only. Steps: `PUT /rooms/204/monitoring {"on": false}` → `GET /monitoring` lists 204 → `GET /handoff` lists Mrs. K's room as paused (T251 field) → `/ws/live` first message is `{"type":"paused","room":"204"}` → `POST /demo/reset` → `/monitoring` empty and `/ws/live` sends `session_start`. Read `pipeline/tests/test_api_monitoring.py` and `conftest.py` for fixtures.
-Acceptance:
-- New test file passes; no source changes; `scripts/ci.sh` passes.
 
 ### T259 — Shift handoff summary sentence mentions paused rooms
 - status: done
