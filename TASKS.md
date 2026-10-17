@@ -482,14 +482,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T276 — Unit overview: "Paused" filter
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: —
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T13:23Z
 - pr: —
 
 What: T246 added a "Monitoring paused" chip; add a "Paused (N)" button to the existing filter group so a nurse can list paused rooms in one tap.
