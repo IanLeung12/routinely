@@ -265,13 +265,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_verifier.py -q` and `scripts/ci.sh` pass.
 
 ### T031 — On-disk API response cache + LIVE_API guard
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/api_cache.py, pipeline/tests/test_api_cache.py
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:05Z
 - pr: —
 
 What: Every paid API call (Gemini, Claude) must go through an on-disk cache under `.cache/api/` and only run when `LIVE_API=1`. Read only the files in `area`, `pipeline/src/routine_watch/hesitation.py` (code style) and `pipeline/pyproject.toml`. Standard library only.
