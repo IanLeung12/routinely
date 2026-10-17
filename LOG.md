@@ -45,3 +45,9 @@ T043 | standard | claude-sonnet | merged first try | ~?k tok
 T046 | light | codex | merged first try | ~?k tok
 T049 | light | codex | merged first try | ~?k tok
 T054 | light | codex | merged first try | ~?k tok
+T055 | light | codex | merged first try | ~?k tok
+T056 | light | codex | merged first try | ~4k tok
+T057 | light | codex | merged first try | ~3k tok
+T059 | light | codex | merged first try | ~4k tok
+T060 | light | codex | merged first try | ~4k tok
+T058 | standard | claude-sonnet | merged first try | ~55k tok
