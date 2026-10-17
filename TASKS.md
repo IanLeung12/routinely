@@ -519,14 +519,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T214 — TaskMapLegend: CSS classes instead of inline styles
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/live/TaskMapLegend.tsx, web/src/live/taskMap.css, web/src/live/TaskMapLegend.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:08Z
 - pr: —
 
 What: `TaskMapLegend.tsx` has three inline `style={{...}}` objects (list, item, swatch padding). Move them to classes in the existing `web/src/live/taskMap.css`, same pattern as T197/T200 (#193, #195). No visual change.
