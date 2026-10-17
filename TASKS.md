@@ -121,7 +121,7 @@ What: Fey "stock detail" layout for a resident: header (name, status pill, top p
 Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T405 — Redesign 5/6: alert / evidence view
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: improvement
@@ -129,7 +129,8 @@ Acceptance: same data and states (loading/empty/error) as now; before/after scre
 - area: web/src/alert/, web/src/evidence/, web/src/patterns/
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T20:48Z
-- pr: —
+- pr: #395
+- rating: 4/5 clear on what to build; the chart-kit caveat didn't say whether the time-of-day strip counts as a chart (kept it, restyled its container), and 'tests updated for structure only' left the h2 reading order and the baseline/threshold wording open — both had to change to follow SPEC section 9's order
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
 Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
