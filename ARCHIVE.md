@@ -4722,3 +4722,22 @@ Acceptance:
 - schema generated, contracts/README.md updated.
 - test fails if a field is added on one side only.
 - `scripts/ci.sh` passes.
+
+### T270 — Bug: integration check failing on main
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- owner: —
+- claimed: —
+- pr: —
+- source: integration
+- note: closed by orchestrator: tester confirms integration.sh passes @1d6ee98 (fixed by T231)
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 21fc468:
+  FAIL dashboard did not render (no 'Routine Watch' in DOM)
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.

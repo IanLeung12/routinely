@@ -128,25 +128,6 @@ Acceptance:
 - a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
-### T270 — Bug: integration check failing on main
-- status: done
-- class: standard
-- priority: 0
-- kind: bug
-- deps: —
-- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
-- owner: —
-- claimed: —
-- pr: —
-- source: integration
-- note: closed by orchestrator: tester confirms integration.sh passes @1d6ee98 (fixed by T231)
-
-What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 21fc468:
-  FAIL dashboard did not render (no 'Routine Watch' in DOM)
-Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
-Acceptance:
-- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
-
 ### T271 — Review: handoff summary counts a paused resident as "nothing to review"
 - status: done
 - class: light
