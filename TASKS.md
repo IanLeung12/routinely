@@ -357,7 +357,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T308 — Test: privacy panel and monitoring toggle work keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
