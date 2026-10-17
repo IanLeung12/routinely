@@ -262,7 +262,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T051 — Feedback buttons announce the recorded choice
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -271,7 +271,7 @@ Acceptance:
 - source: proposed
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:38Z
-- pr: —
+- pr: #53
 
 What: Accessibility (Execution/Clarity): after a tap, screen-reader and sighted users get a confirmation that the verdict was saved. Read only the files in `area`.
 Interface: keep the current props. Add a `<p role="status" aria-live="polite">` under the buttons: `value === 'confirmed'` → "Marked as confirmed", `'false_alarm'` → "Marked as false alarm", no value → empty. Wrap the buttons in `role="group"` with `aria-label="Nurse feedback"`. Keep `aria-pressed`.
