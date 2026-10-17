@@ -410,7 +410,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T282 — Integration: pausing a room makes /ws/live send "paused", resuming lets it run
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
