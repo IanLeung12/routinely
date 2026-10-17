@@ -501,14 +501,14 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass.
 
 ### T190 — Test: LiveScreen ignores unknown ?task values
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/live/LiveScreen.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T09:23Z
 - pr: —
 
 What: T186 added `?task=meds`; pin that anything else (absent, `?task=tea`, `?task=foo`) still opens the tea routine.
