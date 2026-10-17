@@ -24,6 +24,17 @@ def test_is_deterministic() -> None:
     assert demo_residents() == demo_residents()
 
 
+def test_demo_resident_status_snapshot() -> None:
+    assert {resident["id"]: resident["status"] for resident in demo_residents()} == {
+        "mrs-k": "watch",
+        "mr-chen": "watch",
+        "mrs-ahmed": "normal",
+        "mr-silva": "normal",
+        "mr-nguyen": "watch",
+        "mrs-patel": "watch",
+    }
+
+
 def test_statuses_are_known_tiers() -> None:
     assert {resident["status"] for resident in demo_residents()} <= STATUSES
 
