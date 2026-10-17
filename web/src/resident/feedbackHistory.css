@@ -1,0 +1,42 @@
+/* What nurses said about this resident's alerts, and the ranking it changed
+   (SPEC Nice to have 8). A quiet record under the session list: the answers are
+   already given, this is only the receipt for them. */
+.feedback-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--text);
+}
+
+.feedback-history__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.feedback-history__answer {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* Verdict first, in words as well as colour, so the row reads the same without it. */
+.feedback-history__verdict--confirmed {
+  color: var(--status-flagged-text);
+}
+
+.feedback-history__verdict--false-alarm {
+  color: var(--status-normal-text);
+}
+
+.feedback-history__ranking {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.feedback-history__ranking--lower {
+  color: var(--muted);
+}

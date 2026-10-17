@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockResidents } from '../mock/residents.ts'
 import overviewCss from './overview.css?raw'
@@ -354,6 +355,64 @@ describe('UnitOverview', () => {
 
     expect(await screen.findByText('No rooms paused.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
+  })
+
+  it('opens a resident with Tab + Enter, keyboard-only', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+    const onSelect = vi.fn()
+    const user = userEvent.setup()
+
+    render(<UnitOverview onSelect={onSelect} />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const mrsKOpen = screen.getByRole('button', { name: /^Open Mrs\. K, room 204/ })
+
+    // Tab through the filter group (All, Flagged, Watch, Paused) to reach the first resident row.
+    for (let i = 0; i < 20 && document.activeElement !== mrsKOpen; i++) {
+      await user.tab()
+    }
+    await waitFor(() => {
+      expect(document.activeElement).toBe(mrsKOpen)
+    })
+
+    await user.keyboard('{Enter}')
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
+    expect(onSelect).toHaveBeenCalledWith('mrs-k')
+  })
+
+  it('activates the Watch status filter with Tab + Space, keyboard-only', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResidents }),
+    )
+    const user = userEvent.setup()
+
+    render(<UnitOverview />)
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
+    })
+
+    const watchButton = screen.getByRole('button', { name: 'Watch' })
+
+    for (let i = 0; i < 20 && document.activeElement !== watchButton; i++) {
+      await user.tab()
+    }
+    await waitFor(() => {
+      expect(document.activeElement).toBe(watchButton)
+    })
+
+    await user.keyboard(' ')
+
+    await waitFor(() => {
+      expect(rowNames()).toEqual(['Mr. Chen', 'Mr. Nguyen', 'Mrs. Patel'])
+    })
+    expect(watchButton.getAttribute('aria-pressed')).toBe('true')
   })
 })
 
