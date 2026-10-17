@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 3aa6819
-- next-area: scripts+ci
+- last-reviewed: 355d6b1
+- next-area: tests/scenarios
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -20,6 +20,7 @@
 - T126 session_log leaks across tests; need conftest reset
 - T138 AlertContext unused/unstyled, dup of ContextTimeline
 - T166/T167/T168 handoff baseline, tuned threshold, push name (merged)
+- T204 tour copy: "two in a row" vs 2-in-48h flag rule
 - T182 false alarm un-flags -> alert 404, cause re-post fails
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
 - (noted) API resident/handoff payloads have no contracts/ schema; web types hand-mirrored

@@ -571,3 +571,22 @@ Acceptance:
 - "Print handoff" button; test mocks window.print and asserts it's called on click
 - handoff.css has an `@media print` block hiding `.no-print` elements and `break-inside: avoid` on rows
 - `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
+
+### T204 — Review: demo tour misstates the flag rule ("two sessions in a row")
+- status: todo
+- class: light
+- priority: 2
+- kind: bug
+- source: reviewer
+- deps: —
+- area: web/src/tour/steps.ts, web/src/tour/Tour.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: the "Alert" step (T164, #186) says an alert appears "when two sessions in a row cross a resident's own threshold". The real rule (`pipeline/src/routine_watch/change_detection.py` `flag_change`) is at least `FLAG_MIN_SESSIONS` (2) sessions above threshold within a 48-hour window, consecutive or not. A presenter reading this card would misdescribe the product to judges. Reword to "when at least two sessions within 48 hours cross a resident's own threshold".
+Interface: read only the area files.
+Acceptance:
+- Alert step copy names "within 48 hours", no "in a row"
+- Tour test asserts the Alert step body contains "48 hours"
+- `cd web && npm test -- Tour` and `scripts/ci.sh` pass
