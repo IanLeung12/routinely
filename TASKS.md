@@ -476,7 +476,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T063 — Wire the alert evidence screen into the app
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: feature
@@ -484,7 +484,7 @@ Acceptance:
 - area: web/src/App.tsx, web/src/App.test.tsx
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:41Z
-- pr: —
+- pr: #55
 
 What: `AlertView` (T028, `web/src/alert/AlertView.tsx`) is merged but `App.tsx` still shows an "Alert evidence — not built yet" placeholder, so the demo can't reach screen 4. Replace the placeholder with an "Alerts" section listing alerts and opening `AlertView` for one.
 Interface: in `App.tsx`, load alerts with `fetchAlerts()` from `web/src/alert/api.ts` (it falls back to `web/src/mock/alerts.ts`); render one button per alert (resident + plain-language label); clicking sets `openAlert` state and renders `<AlertView alertId={id} onBack={() => setOpenAlert(null)} />` in place of the overview (same pattern as `openResident`). Remove the `screens` placeholder array. Read only `App.tsx`, `App.test.tsx`, `alert/api.ts`, `alert/AlertView.tsx` (props), `mock/alerts.ts`.
