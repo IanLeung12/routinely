@@ -43,7 +43,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T192 — /demo/reset also resumes paused room monitoring
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
