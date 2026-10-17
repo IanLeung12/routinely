@@ -445,7 +445,7 @@ Acceptance:
 - `scripts/ci.sh` passes and its output includes the "First-load JS (gzipped):" and "Budget:" lines from web/scripts/check-bundle.mjs.
 
 ### T274 — Refactor: smoke.sh JSON checks through one helper; demo room read from /residents
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
