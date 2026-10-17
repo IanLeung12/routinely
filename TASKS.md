@@ -63,7 +63,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T076 — Tests for ContextTimeline and BaselineChart
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
