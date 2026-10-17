@@ -61,6 +61,7 @@ from typing import Any
 from .contracts import CaptureFrame, StepEvent, TaskError
 from .errors import classify_errors
 from .live import MAX_FRAME_FPS, StepState, step_states
+from .quality import session_quality
 from .recogniser import FLICKER_GAP_S, _Scene, _scenes, _spans, recognise
 from .replay import Expected, ReplayError, Scenario, score_session
 from .tasks import TaskGraph, load_task
@@ -169,6 +170,12 @@ async def camera_session_messages(
         "score": score,
         "flag": flag,
         "alert_id": f"alert-{session_id}" if flag else None,
+        # Whether the camera saw enough of it to be scored at all (SPEC section 12): a
+        # walker, a blocked view or a dim kitchen reads as `unclear`, which is the one
+        # thing a live session can say about its own capture and the reason the score
+        # beside it is 0.0. `live.session_messages` sends the same field off the same
+        # rule, so neither path can say more about a recording than the other.
+        "quality": session_quality(events),
     }
 
 

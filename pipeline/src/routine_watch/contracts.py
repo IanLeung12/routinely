@@ -64,6 +64,13 @@ Id = Annotated[str, Field(min_length=1)]
 #: A number of days, never negative.
 Days = Annotated[float, Field(ge=0.0)]
 
+#: Whether enough of a session's capture could be read to score it (SPEC section 12).
+#: `"unclear"` is a walker, a wheelchair, bad lighting - capture the pipeline cannot
+#: trust - and never an error: an unclear session is neither scored nor counted
+#: towards a flag. `routine_watch.quality.session_quality` is the rule that decides
+#: it, and re-exports this alias for the stages that read it.
+Quality = Literal["ok", "unclear"]
+
 #: How a pattern is shown to a nurse: a few words, never a paragraph. Bounded so that
 #: a map whose values are these (`ResidentFeedback.pattern_names`, keyed by pattern
 #: id) still has nowhere an image could hide (SPEC section 8), which is what
@@ -597,6 +604,12 @@ class LiveSessionEnd(_Contract):
     )
     alert_id: Id | None = Field(
         description="The alert that flag shows up in, or null when nothing is flagged."
+    )
+    quality: Quality = Field(
+        description="Whether enough of this session's capture could be read to score it "
+        "(SPEC section 12). 'unclear' - a walker, a blocked view, bad lighting - is never "
+        "an error: the session is neither scored nor counted towards a flag, so the screen "
+        "says the capture was unclear instead of showing it as a clean session."
     )
 
 

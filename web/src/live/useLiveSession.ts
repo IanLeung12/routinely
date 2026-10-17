@@ -10,6 +10,12 @@ export type StepState = 'pending' | 'done' | 'omission' | 'repeat' | 'sequence'
 /** One step of the session's task graph, for the task map (SPEC section 10). */
 export type LiveStep = { id: string; label: string; optional: boolean }
 
+/** Mirrors `LiveSessionEnd.quality` (SPEC section 12): whether enough of the capture
+ * could be read to score the session at all. `unclear` is a walker, a blocked view or
+ * bad lighting - never an error, and never a score either, so the screen says the
+ * capture was unclear instead of showing it as a clean session. */
+export type SessionQuality = 'ok' | 'unclear'
+
 /** The T029 WebSocket protocol, mirroring `contracts/live_message.schema.json`:
  * `pipeline/tests/test_live_contract.py` fails if this union and the schema's `oneOf`
  * stop listing the same messages. */
@@ -19,12 +25,27 @@ export type LiveMessage =
   | { type: 'step'; event: StepEvent }
   | { type: 'step_state'; states: Record<string, StepState> }
   | { type: 'error'; error: TaskError }
-  | { type: 'session_end'; score: number; flag: boolean; alert_id: string | null; errors?: TaskError[] }
+  /** `quality` is optional here the way `errors` is: the pipeline always sends both,
+   * and a `session_end` without them reads as a scored session with the errors already
+   * streamed rather than as a broken message. */
+  | {
+      type: 'session_end'
+      score: number
+      flag: boolean
+      alert_id: string | null
+      errors?: TaskError[]
+      quality?: SessionQuality
+    }
   /** Monitoring is off for this resident's room (SPEC section 12): the API sends this
    * instead of a session and closes. */
   | { type: 'paused'; room: string }
 
-export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }
+export type LiveSessionEnded = {
+  score: number
+  flag: boolean
+  alert_id: string | null
+  quality: SessionQuality
+}
 
 /** This machine's camera, as `/ws/live?source=camera` takes it: which device (`index`,
  * 0 being the laptop's own) and which task graph to read it against (`task`, a
@@ -113,7 +134,12 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
       return {
         ...state,
         errors: message.errors ?? state.errors,
-        ended: { score: message.score, flag: message.flag, alert_id: message.alert_id },
+        ended: {
+          score: message.score,
+          flag: message.flag,
+          alert_id: message.alert_id,
+          quality: message.quality ?? 'ok',
+        },
         source,
       }
     default:

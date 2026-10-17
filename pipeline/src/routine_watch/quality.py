@@ -8,12 +8,14 @@ sessions before scoring sees them.
 """
 
 from collections.abc import Sequence
-from typing import Literal
 
-from .contracts import StepEvent
+from .contracts import Quality, StepEvent
 from .recogniser import MIN_STEP_CONFIDENCE
 
-Quality = Literal["ok", "unclear"]
+#: Re-exported from `routine_watch.contracts`, where it is a field of the live
+#: socket's `session_end` (`LiveSessionEnd.quality`): the stages read it from here,
+#: beside the rule that decides it.
+__all__ = ["Quality", "session_quality"]
 
 
 def session_quality(
