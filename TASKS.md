@@ -411,7 +411,7 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass; against `scripts/dev.sh up` all checks pass.
 
 ### T195 — Unit overview: All / Flagged / Watch filter
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -420,7 +420,8 @@ Acceptance:
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:35Z
-- pr: —
+- pr: #187
+- rating: 5/5 clear
 
 What: Rationale: on a real unit a nurse wants only the residents needing attention in one tap (Clarity). Add a three-way filter above the resident list; All stays default so the demo path is unchanged.
 Interface: local state in `UnitOverview`; buttons with `aria-pressed`; filters on the existing resident `status`; empty filter result uses `EmptyState` "No residents flagged for review." / "No residents to watch.".
