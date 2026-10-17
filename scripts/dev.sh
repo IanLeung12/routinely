@@ -9,6 +9,9 @@
 #
 # Ports: API_PORT (default 8000), DASHBOARD_PORT (default 5173).
 # Logs: .dev/api.log, .dev/web.log. PIDs: .dev/api.pid, .dev/web.pid.
+# Set DEV_DIR to use a different pid/log directory, e.g. to run a second,
+# independent stack (on different ports) without it mistaking the default
+# stack's pid files for its own, or stopping them on `down`.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -17,7 +20,7 @@ DASHBOARD_PORT=${DASHBOARD_PORT:-5173}
 API_URL="http://localhost:${API_PORT}"
 DASHBOARD_URL="http://localhost:${DASHBOARD_PORT}"
 
-DEV_DIR=.dev
+DEV_DIR=${DEV_DIR:-.dev}
 API_PID_FILE="$DEV_DIR/api.pid"
 WEB_PID_FILE="$DEV_DIR/web.pid"
 API_LOG="$DEV_DIR/api.log"
