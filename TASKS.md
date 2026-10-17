@@ -210,14 +210,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T116 — Scenario: pill taken before the water is poured is a sequence error
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/meds_pill_before_water/
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:00Z
 - pr: —
 
 What: The second task has only a normal and an omission scenario. Add a step-level scenario where the pill is taken before the glass is filled, producing exactly one sequence error.
