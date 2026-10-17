@@ -383,14 +383,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T121 — Bug: demo alert lists placeholder errors ("skipped the task at 0:00" ×4) and grows on every page load
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts*.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T07:53Z
 - pr: —
 - source: tester
 
