@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: b9e7a1d
+- last-reviewed: b9fb831
 
 ## Tasks
 
@@ -629,3 +629,58 @@ Acceptance:
 - Test with a fake capture iterator: `/ws/live?source=camera` yields session_start, frames, steps, session_end like a scenario.
 - `scripts/ci.sh` passes without mediapipe/opencv installed (lazy imports).
 - `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
+
+### T353 — Improvement: one shared print stylesheet for alert view and resident detail
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/print.css, web/src/main.tsx, web/src/alert/alert.css, web/src/resident/residentPrint.css, web/src/resident/ResidentDetail.tsx, web/src/print.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/alert/alert.css` (T289) and `web/src/resident/residentPrint.css` (T333) carry the same `@media print` block (`.no-print`, black-on-white `html, body, body *`). Move the shared rules into one `web/src/print.css` imported once from `main.tsx`; keep only screen-specific print rules (e.g. hiding the app header while a resident is open) in each component's CSS, and delete `residentPrint.css` if nothing specific remains.
+Interface: `web/src/print.css` with `.no-print` utility + black-on-white rules; no TSX behaviour change beyond the import.
+Acceptance:
+- `grep -c '@media print' web/src/alert/alert.css web/src/resident/*.css` shows the shared rules exist only in `web/src/print.css`
+- existing `AlertView.test.tsx` and `ResidentDetail.print.test.tsx` still pass unchanged; add `web/src/print.test.ts` that asserts `print.css` defines `.no-print`
+- `scripts/ci.sh` passes
+
+### T354 — Scenario: meds_session_unclear_no_flag (whole medication session too unclear to score)
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_session_unclear_no_flag/, pipeline/tests/test_scenarios_meds_unclear.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The medication task's twin of T344 (PR #330): a medication session whose capture is low-confidence throughout must be classed unclear by `routine_watch.quality.session_quality`, score 0.0, raise no errors and never flag, even after a prior bad session. Generate frames the way `tests/scenarios/meds_unclear_not_error/` and the synth scripts do; read `tests/scenarios/README.md` for the format.
+Interface: `tests/scenarios/meds_session_unclear_no_flag/{frames.jsonl,expected.yaml}`; consumed by `scripts/e2e.sh`.
+Acceptance:
+- `scripts/e2e.sh` runs the new scenario green; `expected.yaml` asserts no errors, no flag, quality unclear
+- pytest asserts `session_quality(events) == "unclear"` for it
+- `scripts/ci.sh` passes
+
+### T355 — Shift handoff: say when a room's capture was too unclear to score this shift
+- status: todo
+- class: heavy
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T343
+- area: pipeline/src/routine_watch/contracts.py, contracts/, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/store.py, pipeline/tests/test_handoff_unclear.py, web/src/contracts.ts, web/src/handoff/HandoffRow.tsx, web/src/handoff/mockHandoff.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: since T342 unclear sessions are dropped from history, so repeated bad lighting or a blocked camera goes unnoticed; the incoming nurse should see "2 sessions too unclear to score — check the camera view" for that room. Keep a per-room count of unclear sessions (timestamps only, never frames, never in the resident's scored history) and surface it as `HandoffResident.unclear_sessions: int` for the window.
+Interface: `HandoffResident.unclear_sessions: int` (default 0; regenerate schema and web types the repo's way, update every consumer and mock in the same PR); the handoff row shows the line only when > 0. Wording is about the capture, never the resident.
+Acceptance:
+- pytest: two unclear live sessions in the window → `unclear_sessions == 2`, resident's history and flag unchanged; outside the window → 0
+- web test: row shows the camera line when > 0 and nothing when 0
+- `scripts/ci.sh` passes
