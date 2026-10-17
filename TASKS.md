@@ -354,7 +354,7 @@ Acceptance:
 - `cd web && npx vitest run src/live/SessionSummary.test.tsx` and `scripts/ci.sh` pass
 
 ### T224 — LiveScreen: CSS file instead of inline <style>
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
