@@ -129,7 +129,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T273 — CI: run the first-load bundle budget check after the web build
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -137,7 +137,8 @@ Acceptance:
 - area: scripts/ci.sh
 - owner: ian-claude
 - claimed: 2026-10-17T14:12Z
-- pr: —
+- pr: #280
+- rating: 5/5 clear
 
 What: T260 (#251) added `npm run check:bundle` in web/ but nothing runs it, so the budget never fails a PR. Wire it into CI right after the build.
 Interface: in `scripts/ci.sh`, the node loop line `(cd "$d" && npm ci ... && npm run build --if-present)`: append `&& npm run check:bundle --if-present` so it only runs for packages that define it. Read only `scripts/ci.sh` and `web/package.json`. Touch nothing else.
