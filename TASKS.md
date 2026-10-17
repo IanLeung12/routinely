@@ -429,7 +429,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_session_log.py` and `scripts/ci.sh` pass
 
 ### T327 — Test: unit tests for pattern_features.extract_features
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
