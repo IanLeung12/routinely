@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 3753fd7
+- last-reviewed: b56a4fd
 
 ## Tasks
 
@@ -490,3 +490,58 @@ Interface: `export function useDocumentTitle(title: string): void` in `web/src/u
 Acceptance:
 - Vitest test for the hook: sets the title, updates on change, restores on unmount.
 - No changes to screen components outside `App.tsx`; `scripts/ci.sh` passes.
+
+### T298 — Test: pattern library works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Add a test that the pattern library screen is usable with the keyboard alone, like T287 did for alert feedback (see `web/src/alert/FeedbackButtons.test.tsx` for the style).
+Interface: read `web/src/patterns/PatternLibrary.tsx`, `web/src/patterns/PatternLibrary.test.tsx`, `web/src/alert/FeedbackButtons.test.tsx`. Only edit `web/src/patterns/PatternLibrary.test.tsx`.
+Acceptance:
+- Test tabs to the Back button with `@testing-library/user-event` (or `fireEvent.keyDown` if user-event isn't installed), presses Enter, and asserts `onBack` was called once.
+- Test asserts every pattern name is an `h3` under the page's heading (heading order intact for screen readers).
+- `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
+
+### T299 — Scenarios: meds_single_bad_no_flag and meds_pill_three_times
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_single_bad_no_flag/, tests/scenarios/meds_pill_three_times/
+- owner: —
+- claimed: —
+- pr: —
+
+What: The meds routine has fewer scenarios than tea. Mirror `tea_single_bad_no_flag` (one bad session among normal ones must not flag) and `tea_teabag_three_times` (a step repeated three times) for the meds routine, so the tester's e2e covers both routines equally.
+Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the same format as `tests/scenarios/tea_single_bad_no_flag/` and `tests/scenarios/meds_pill_twice/`. No pipeline code changes; if a scenario exposes a pipeline bug, keep the expected (correct) behaviour, mark it as known-failing the way tests/scenarios/README.md describes (or note it in the PR) and say so in the PR.
+Acceptance:
+- Both scenarios run in `scripts/e2e.sh` and pass.
+- `meds_single_bad_no_flag` expects no flag; `meds_pill_three_times` expects the repeated-step error type used by `meds_pill_twice`.
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T300 — Pattern library: filter by urgency
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/urgencyFilter.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: the library lists every pattern in one long column; a nurse wants to see "what needs checking this shift" first. Add a row of filter buttons (All / Urgent / Check this shift / Check next round / Routine) above the list.
+Interface: `PatternLibrary` keeps fetching the same data; filter state is local (`useState`), buttons use `aria-pressed`, labels come from the existing `URGENCY_LABELS`. Put new styles in the new `urgencyFilter.css` (don't touch `PatternLibrary.css`, T240 owns it). Separate screen, not on the demo path.
+Acceptance:
+- Default is All; picking a level shows only those patterns; a level with no patterns shows an `EmptyState` ("No patterns at this level."), not an error.
+- Buttons are reachable and togglable by keyboard; test covers filtering and the empty case.
+- `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
