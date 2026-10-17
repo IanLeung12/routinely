@@ -189,7 +189,7 @@ Acceptance:
 - `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
 
 ### T160 — Unit overview: empty state when the unit has no residents
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: improvement
