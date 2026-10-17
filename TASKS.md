@@ -443,7 +443,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
 
 ### T232 — Bug: alert feedback buttons (Confirmed / False alarm / cause) render unstyled
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -451,8 +451,9 @@ Acceptance:
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/alert.css, web/src/alert/FeedbackButtons.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T11:06Z
-- pr: —
+- pr: #218
 - source: tester
+- rating: 5/5 clear
 
 What: On the alert view (main 13032a4), the Feedback section's "Confirmed" / "False alarm" and the "What was it?" cause buttons show as tiny browser-default buttons (white border, small text), unlike every other button on the dashboard. "Confirmed" is the demo's closing click (SPEC §10) and is easy to miss. `.feedback-button` only has an `[aria-pressed='true']` rule in `alert.css`; there is no base style.
 Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open http://localhost:5173, let the live tea session finish, click "Open alert", scroll to Feedback.
