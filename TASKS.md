@@ -459,7 +459,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T440 — Bug: flaky unit test test_frames_in_thread_hands_over_every_record_in_order
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -467,8 +467,9 @@ Acceptance:
 - area: pipeline/tests/test_api_live_camera.py
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T22:06Z
-- pr: —
+- pr: #419
 - source: orchestrator
+- rating: 5/5 clear - the diagnosis, the exact call to make and the 20x acceptance loop were all in the task; only extra was that main was separately red on the bundle budget (T442/T421), so the branch needed rebasing onto e34c2a5 before ci.sh could pass
 
 What: Failed main CI run 39073146552 (@24033f5, unrelated .gitattributes commit). `frames_in_thread` drops the newest record once `max_pending` (default `MAX_PENDING_FRAMES = 30`, pipeline/src/routine_watch/live_camera.py:94) are waiting, and FakeCamera's clip has ~43 frames, so when the capture thread outruns the event loop on a loaded runner, frames get dropped and `drain(camera) == camera.frames` fails. That's a timing race in the test, not a product bug.
 Interface: test-only change. In `test_frames_in_thread_hands_over_every_record_in_order` (line ~298), call `drain(camera, max_pending=len(camera.frames) + 1)` so nothing can be dropped. Check the other tests in the file that compare a full list (not `stop_after`/`max_pending=0`) for the same race and fix them the same way. Do not change live_camera.py.
