@@ -27,6 +27,7 @@ Acceptance:
 - status: claimed
 - class: standard
 - priority: 1
+- kind: feature
 - deps: T027
 - area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx, web/src/alert/ErrorList.tsx, web/src/alert/alert.css
 - owner: ian-claude-standard
@@ -59,6 +60,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: T031
 - area: pipeline/src/routine_watch/verifier.py, pipeline/tests/test_verifier.py, pipeline/pyproject.toml
 - owner: —
@@ -91,6 +93,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: T031
 - area: pipeline/src/routine_watch/explain_claude.py, pipeline/tests/test_explain_claude.py, pipeline/pyproject.toml
 - owner: —
@@ -171,6 +174,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: T029
 - area: pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_evidence.py
 - owner: —
@@ -187,6 +191,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/store.py, pipeline/sql/schema.sql, pipeline/tests/test_store.py, pipeline/pyproject.toml, .env.example
 - owner: —
@@ -203,6 +208,7 @@ Acceptance:
 - status: claimed
 - class: heavy
 - priority: 1
+- kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/detector.py, pipeline/tests/test_capture.py, pipeline/pyproject.toml (optional extra `capture`), .env.example
 - owner: ian-claude
@@ -235,6 +241,7 @@ Acceptance:
 - status: todo
 - class: heavy
 - priority: 3
+- kind: feature
 - deps: —
 - area: contracts/, pipeline/src/routine_watch/contracts.py, web/src/contracts.ts (regenerated), pipeline/src/routine_watch/tasks/meds.yaml, pipeline/tests/test_meds_graph.py, tests/scenarios/meds_normal/, tests/scenarios/meds_skip_water/
 - owner: —
@@ -268,6 +275,7 @@ Acceptance:
 - status: in-review
 - class: standard
 - priority: 1
+- kind: feature
 - deps: —
 - area: web/src/live/LiveSession.tsx, web/src/live/useLiveSession.ts, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx, web/src/App.tsx (add the nav entry only)
 - owner: ian-claude-standard
@@ -284,6 +292,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/notify.py, pipeline/tests/test_notify.py, .env.example
 - owner: —
@@ -316,6 +325,7 @@ Acceptance:
 - status: in-review
 - class: light
 - priority: 2
+- kind: feature
 - deps: —
 - area: web/src/alert/ConfidenceBadge.tsx, web/src/alert/ConfidenceBadge.test.tsx
 - owner: max-codex-light-2
@@ -366,6 +376,7 @@ Acceptance:
 - status: in-review
 - class: light
 - priority: 2
+- kind: feature
 - deps: —
 - area: web/src/resident/DriftCard.tsx, web/src/resident/DriftCard.test.tsx
 - owner: max-codex-light-1
@@ -382,6 +393,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 2
+- kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/api.py (add the route only), pipeline/src/routine_watch/demo.py (expose daily scores only if needed), pipeline/tests/test_api_drift.py
 - owner: —
@@ -398,6 +410,7 @@ Acceptance:
 - status: todo
 - class: light
 - priority: 3
+- kind: feature
 - deps: —
 - area: web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
 - source: proposed
@@ -415,6 +428,7 @@ Acceptance:
 - status: todo
 - class: light
 - priority: 3
+- kind: feature
 - deps: —
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/README.md (add one line)
 - source: proposed
@@ -449,6 +463,7 @@ Acceptance:
 - status: in-review
 - class: light
 - priority: 1
+- kind: improvement
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/SkeletonView.tsx, web/src/index.css (add tokens/rules only), web/src/live/TaskMap.test.tsx
 - source: reviewer
@@ -466,6 +481,7 @@ Acceptance:
 - status: claimed
 - class: light
 - priority: 2
+- kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/live.py, pipeline/tests/test_replay.py, pipeline/tests/test_live.py
 - source: reviewer
@@ -483,6 +499,7 @@ Acceptance:
 - status: claimed
 - class: light
 - priority: 2
+- kind: test
 - deps: —
 - area: tests/scenarios/tea_abandoned/, tests/scenarios/README.md
 - owner: max-codex-light-1
@@ -499,6 +516,7 @@ Acceptance:
 - status: todo
 - class: light
 - priority: 2
+- kind: feature
 - deps: —
 - area: web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
 - owner: —
@@ -515,6 +533,7 @@ Acceptance:
 - status: todo
 - class: standard
 - priority: 1
+- kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/baseline.py, pipeline/src/routine_watch/change_detection.py, pipeline/src/routine_watch/task_graph.py, pipeline/src/routine_watch/tasks/, pipeline/tests/, docs/CODEMAP.md
 - owner: —
