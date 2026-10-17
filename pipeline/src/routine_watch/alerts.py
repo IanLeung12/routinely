@@ -25,7 +25,8 @@ from .contracts import (
     TaskError,
 )
 from .demo import DEMO_DAYS, DEMO_NOW
-from .explain import TemplateExplainer
+from .explain import Explainer
+from .explain_claude import get_explainer
 
 #: How far back a session still counts toward the flag (SPEC section 7).
 FLAG_WINDOW_H = 48.0
@@ -37,7 +38,10 @@ CONTEXT_LOOKBACK_H = 72.0
 #: carries a count of errors per type rather than individual step events.
 _UNKNOWN_STEP = "the task"
 
-_explainer = TemplateExplainer()
+
+def _get_explainer() -> Explainer:
+    """Wraps `get_explainer()` so tests can monkeypatch the explainer used here."""
+    return get_explainer()
 
 
 def build_alerts(residents: list[dict]) -> list[Alert]:
@@ -129,7 +133,7 @@ def _build_alert(resident: dict) -> Alert:
         }
         for error in errors
     ]
-    summary = _explainer.summarise(
+    summary = _get_explainer().summarise(
         explainer_errors,
         {
             "observed": len(errors),
