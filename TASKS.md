@@ -121,7 +121,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_scoring.py -q` and `scripts/ci.sh` pass.
 
 ### T008 — Per-resident baseline and change flag
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
