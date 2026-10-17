@@ -45,7 +45,12 @@ PY
 # Rendered dashboard (needs a headless Chrome; skipped if none).
 CHROME=${CHROME:-$(ls ~/.cache/ms-playwright/chromium_headless_shell-*/*/chrome-headless-shell 2>/dev/null | head -1)}
 if [ -n "$CHROME" ]; then
-  dom=$("$CHROME" --no-sandbox --headless --virtual-time-budget=8000 --dump-dom "$WEB/" 2>/dev/null)
+  dom=""
+  for attempt in 1 2 3; do
+    dom=$("$CHROME" --no-sandbox --headless --virtual-time-budget=8000 --dump-dom "$WEB/" 2>/dev/null)
+    echo "$dom" | grep -q "Routine Watch" && break
+    [ "$attempt" -lt 3 ] && sleep 3
+  done
   echo "$dom" | grep -q "Routine Watch" || fail "dashboard did not render (no 'Routine Watch' in DOM)"
   echo "$dom" | grep -qiE "something went wrong|uncaught|cannot read prop" && fail "dashboard rendered an error"
 fi

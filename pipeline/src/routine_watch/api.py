@@ -8,29 +8,29 @@ so far; later tasks add the event and session routes backed by a real database.
 """
 
 import os
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
 
 from . import __version__, session_log
-from .alerts import build_alerts, top_pattern_for
+from .alerts import top_pattern_for
+from .api_alerts import KNOWN_CAUSES, OTHER_CAUSE, AlertFeedbackIn  # noqa: F401 (re-export)
+from .api_alerts import router as _alerts_router
 from .api_live import router as _live_router
-from .contracts import Alert, AlertFeedback, FeedbackVerdict, SuggestedCheck
+from .contracts import SuggestedCheck
 from .demo import DEMO_NOW, demo_residents, status_for
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .monitoring import get_monitoring_store
-from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .patterns_library import LIBRARY as PATTERN_LIBRARY
 from .patterns_library import Pattern, TimeProfile
 
 app = FastAPI(title="Routine Watch API", version=__version__)
 app.include_router(_live_router)
+app.include_router(_alerts_router)
 
 #: The dashboard's origin(s), so the browser's CORS check lets fetch() through
 #: (SPEC section 16): comma-separated, defaults to the dev dashboard's origin.
@@ -52,39 +52,6 @@ _SUMMARY_FIELDS = ("id", "name", "room", "status", "top_pattern", "scores")
 
 #: In-memory only (SPEC MVP 7): no DB, so feedback resets when the API restarts.
 _feedback_store = FeedbackStore()
-
-#: The MVP has no nurse logins yet; every one-tap feedback is logged under this name.
-_FEEDBACK_BY = "nurse"
-
-#: A nurse who saw a cause the pattern library has no pattern for answers with this.
-OTHER_CAUSE = "other"
-
-#: Every answer "what was it?" accepts (SPEC section 5, MVP 8): one of the library's
-#: patterns, or "other". Anything else is a typo or a stale client, so it is a 422
-#: rather than a cause nobody can count later.
-KNOWN_CAUSES = frozenset(PATTERNS_BY_ID) | {OTHER_CAUSE}
-
-
-class AlertFeedbackIn(BaseModel):
-    """The one-tap feedback body (SPEC section 5, MVP 7), plus "what was it?" (MVP 8)."""
-
-    verdict: FeedbackVerdict
-    note: str | None = None
-    cause: str | None = Field(
-        default=None,
-        description='The answer to "what was it?": a pattern_id, "other", or null for '
-        "no answer.",
-    )
-
-    @field_validator("cause")
-    @classmethod
-    def _known_cause(cls, value: str | None) -> str | None:
-        if value is not None and value not in KNOWN_CAUSES:
-            raise ValueError(
-                f"unknown cause {value!r}: expected a pattern_id from the library "
-                f'or "{OTHER_CAUSE}"'
-            )
-        return value
 
 
 def _tuned(resident: dict) -> dict:
@@ -127,32 +94,6 @@ def _flagged_residents() -> list[dict]:
         for resident in demo_residents()
         if resident["status"] == "flagged" and _tuned(resident)["status"] == "flagged"
     ]
-
-
-def _alerts_by_id() -> dict[str, Alert]:
-    """Every raw-flagged resident's alert, keyed by id.
-
-    Looks up by the raw flag rather than `_flagged_residents()`'s feedback-tuned
-    subset, so an alert a nurse has just tuned away with a "false alarm" (SPEC MVP 7)
-    still resolves here: `GET /alerts/{id}` and a second feedback POST (the "what was
-    it?" cause) must keep working on it even after `/alerts` stops listing it.
-    """
-    residents = [resident for resident in demo_residents() if resident["status"] == "flagged"]
-    return {
-        alert.alert_id: alert
-        for alert in build_alerts(residents, feedback=_feedback_store)
-    }
-
-
-def _alert_payload(alert: Alert) -> dict:
-    """The alert as JSON, with its feedback and feedback-tuned threshold applied."""
-    payload = alert.model_dump(mode="json")
-    feedback = _feedback_store.get(alert.alert_id)
-    payload["feedback"] = feedback.model_dump(mode="json") if feedback else None
-    payload["baseline"]["threshold"] = _feedback_store.threshold(
-        alert.resident_id, base=alert.baseline.threshold
-    )
-    return payload
 
 
 @app.get("/health")
@@ -219,57 +160,6 @@ def resident_drift(resident_id: str) -> dict:
         "days": result.days,
         "trending": result.trending,
     }
-
-
-@app.get("/alerts")
-def list_alerts() -> list[dict]:
-    """Every current alert (SPEC section 5, MVP 5): one per still-flagged resident."""
-    return [
-        _alert_payload(alert)
-        for alert in build_alerts(_flagged_residents(), feedback=_feedback_store)
-    ]
-
-
-@app.get("/alerts/{alert_id}")
-def get_alert(alert_id: str) -> dict:
-    """One alert's full evidence: errors, baseline comparison and suggested checks."""
-    alerts = _alerts_by_id()
-    if alert_id not in alerts:
-        raise HTTPException(status_code=404, detail="alert not found")
-    return _alert_payload(alerts[alert_id])
-
-
-@app.post("/alerts/{alert_id}/feedback")
-def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
-    """One-tap nurse feedback (SPEC section 5, MVP 7): tunes this resident's threshold.
-
-    An optional `cause` is the answer to "what was it?" (MVP 8): the pattern the change
-    turned out to be, or "other". It is logged against the resident and re-weights her
-    pattern ranking on later alerts (Nice to have 8), together with the pattern this
-    alert led with, which is what a "false alarm" is a false alarm on.
-
-    Re-posting the same alert replaces its verdict and its cause rather than
-    double-counting them.
-    """
-    alerts = _alerts_by_id()
-    if alert_id not in alerts:
-        raise HTTPException(status_code=404, detail="alert not found")
-    alert = alerts[alert_id]
-    feedback = AlertFeedback(
-        verdict=body.verdict,
-        by=_FEEDBACK_BY,
-        at=datetime.now(UTC),
-        note=body.note,
-        cause=body.cause,
-    )
-    _feedback_store.record(
-        alert_id,
-        alert.resident_id,
-        feedback,
-        cause=feedback.cause,
-        top_pattern=alert.patterns[0].pattern_id if alert.patterns else None,
-    )
-    return _alert_payload(alert)
 
 
 def _time_profile_payload(time_profile: TimeProfile) -> dict:
