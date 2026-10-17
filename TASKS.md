@@ -537,14 +537,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T120 — Bug: live task map overflows; the red/amber steps are hidden off to the right
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/*.css
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T07:30Z
 - pr: —
 - source: tester
 
