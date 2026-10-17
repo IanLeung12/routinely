@@ -187,13 +187,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_recogniser.py -q` and `scripts/ci.sh` pass.
 
 ### T012 — Demo residents API
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: T007, T008, T009, T004
 - area: pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_api_residents.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:24Z
 - pr: —
 
 What: Serve the 3–5 synthetic demo residents (SPEC §8: most normal, one spike, one drift; demo resident "Mrs. K" is the spike) to the dashboard, scored and flagged with the existing pure functions. Offline, no DB yet.
