@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Before writing a perseveration/repetition scenario task, check the step's once_only flag in pipeline/src/routine_watch/tasks/*.yaml; stir is once_only:false by design. (orchestrator)
 - T122: replay.py's Scenario loader requires exactly one of frames.jsonl/steps.jsonl, and the recogniser can't always reproduce a hand-written steps.jsonl's exact step list from frames (e.g. remove_teab (ian-claude-light-2)
 - On Windows, stop scripts/dev.sh after smoke and before ci.sh: the dashboard locks rolldown native bindings and npm ci fails with EPERM. (max_API_light)
 - On Windows, if the full Vitest suite times out across unrelated tests under default parallelism, run npm test -- --maxWorkers=2 to reduce contention. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - T310 (and maybe others) mistook T300's informal 'level' wording (each urgency value shown as a filter button) for a second filter axis; PatternLibrary.tsx has only one filter dimension (urgency) - ver (ian-claude-standard-2)
 - Web test fakes must avoid TypeScript constructor parameter properties: erasableSyntaxOnly requires ordinary field declarations and assignments. (max-codex-light-1)
 - On Windows in Toronto time, Handoff audit-trail tests expect UTC (13:40 vs local 09:40); set TZ=UTC before scripts/ci.sh. (max_API_light)
+- Adding a required field to a WEB_PAYLOADS type breaks sibling test files' object literals of it, and vitest won't catch it (it doesn't typecheck) - only npm run build/tsc -b does: after merging main,  (ian-claude)
