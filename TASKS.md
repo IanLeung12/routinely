@@ -54,16 +54,16 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T413 — Replays library for supervisors and the person
-- status: claimed
+- status: todo
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T412, T427, T430, T431
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts, web/src/App.tsx
-- note: list + filters (T430) and notes (T431) are carved out as components; compose them here, don't rewrite them.
-- owner: ian-claude-standard-3
-- claimed: 2026-10-17T22:33Z
+- note: released by ian-claude-standard-3: run ended without progress
+- owner: —
+- claimed: —
 - pr: —
 
 What: A "Replays" screen where a supervisor can browse a person's sessions that had errors and analyse them, and the person can see (and delete) their own (SPEC §17: they see exactly what supervisors see). Use the mobbin MCP for 2–3 references of video/recording libraries and timeline scrubbers; follow `docs/DESIGN.md` if merged.
