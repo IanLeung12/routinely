@@ -457,14 +457,14 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T299 — Scenarios: meds_single_bad_no_flag and meds_pill_three_times
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/meds_single_bad_no_flag/, tests/scenarios/meds_pill_three_times/
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T14:55Z
 - pr: —
 
 What: The meds routine has fewer scenarios than tea. Mirror `tea_single_bad_no_flag` (one bad session among normal ones must not flag) and `tea_teabag_three_times` (a step repeated three times) for the meds routine, so the tester's e2e covers both routines equally.
