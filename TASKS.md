@@ -347,7 +347,7 @@ Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-libra
 Acceptance: `cd web && npx vitest run src/handoff/Handoff.test.tsx` passes; `scripts/ci.sh` passes.
 
 ### T295 — Test: unit overview opens a resident keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
