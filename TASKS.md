@@ -267,7 +267,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain.py -q` and `scripts/ci.sh` pass.
 
 ### T017 — Explainer: name the step, not just the error type
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
