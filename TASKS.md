@@ -316,7 +316,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T318 — Unit overview: sort residents by most recent change
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
@@ -395,7 +395,7 @@ Acceptance:
 * `cd web && npm test -- Handoff.keyboard` passes; `scripts/ci.sh` passes.
 
 ### T322 — Drift card: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
