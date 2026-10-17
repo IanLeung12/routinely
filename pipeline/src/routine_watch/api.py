@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, field_validator
 from . import __version__
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
-from .demo import DEMO_NOW, demo_residents
+from .demo import DEMO_NOW, demo_residents, status_for
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
@@ -84,10 +84,37 @@ class AlertFeedbackIn(BaseModel):
         return value
 
 
+def _tuned(resident: dict) -> dict:
+    """`resident`, with its status (and `top_pattern`) recomputed against this
+    resident's feedback-tuned threshold (SPEC MVP 7) instead of the raw baseline
+    one, so `/residents` and `/alerts` agree with `/handoff` and the alert payload
+    once a nurse's feedback moves the bar a session is judged against.
+    """
+    threshold = _feedback_store.threshold(resident["id"], base=resident["baseline"]["threshold"])
+    status = status_for(resident, threshold)
+    top_pattern = resident["top_pattern"] if status != "normal" else None
+    return {**resident, "status": status, "top_pattern": top_pattern}
+
+
+def _flagged_residents() -> list[dict]:
+    """Residents still flagged once their nurse-feedback-tuned threshold applies:
+    what `/alerts` builds alerts from, so feedback that tunes an alert away takes it
+    off the list rather than leaving it to show against a threshold it no longer
+    clears. Only ever a subset of the raw-flagged residents, so this never asks
+    `build_alerts` to build an alert for a resident whose raw threshold it never
+    qualified against.
+    """
+    return [
+        resident
+        for resident in demo_residents()
+        if resident["status"] == "flagged" and _tuned(resident)["status"] == "flagged"
+    ]
+
+
 def _alerts_by_id() -> dict[str, Alert]:
     return {
         alert.alert_id: alert
-        for alert in build_alerts(demo_residents(), feedback=_feedback_store)
+        for alert in build_alerts(_flagged_residents(), feedback=_feedback_store)
     }
 
 
@@ -111,7 +138,10 @@ def health() -> dict[str, str]:
 @app.get("/residents")
 def list_residents() -> list[dict]:
     """Unit overview (SPEC section 9): status chip and sparkline per resident."""
-    return [{field: resident[field] for field in _SUMMARY_FIELDS} for resident in demo_residents()]
+    return [
+        {field: resident[field] for field in _SUMMARY_FIELDS}
+        for resident in (_tuned(resident) for resident in demo_residents())
+    ]
 
 
 def _resident_or_404(resident_id: str) -> dict:
@@ -125,7 +155,7 @@ def _resident_or_404(resident_id: str) -> dict:
 @app.get("/residents/{resident_id}")
 def get_resident(resident_id: str) -> dict:
     """Resident detail (SPEC section 9): sessions, care records and baseline."""
-    return _resident_or_404(resident_id)
+    return _tuned(_resident_or_404(resident_id))
 
 
 @app.get("/residents/{resident_id}/drift")
@@ -143,10 +173,10 @@ def resident_drift(resident_id: str) -> dict:
 
 @app.get("/alerts")
 def list_alerts() -> list[dict]:
-    """Every current alert (SPEC section 5, MVP 5): one per flagged resident."""
+    """Every current alert (SPEC section 5, MVP 5): one per still-flagged resident."""
     return [
         _alert_payload(alert)
-        for alert in build_alerts(demo_residents(), feedback=_feedback_store)
+        for alert in build_alerts(_flagged_residents(), feedback=_feedback_store)
     ]
 
 
