@@ -450,15 +450,15 @@ Interface:
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
 
 ### T414 — Bug: resident detail still shows the old threshold after "Confirmed" changes it
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - source: tester
 - deps: —
 - area: pipeline/src/routine_watch/api_state.py, pipeline/tests/test_api_feedback_threshold.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T20:22Z
 - pr: —
 
 What: After a nurse clicks "Confirmed" on Mrs. K's alert, the alert view shows "Current threshold: 2.3" (was 2.4), but going back to Mrs. K's resident detail the baseline chart still says "flag threshold 2.4". `api_state._tuned()` recomputes `status`/`top_pattern` against the feedback-tuned threshold but returns `baseline.threshold` unchanged, so `/residents` and `/residents/{id}` disagree with the alert payload (SPEC MVP 7: threshold visibly changes).
