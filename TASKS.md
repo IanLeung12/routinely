@@ -377,7 +377,7 @@ Acceptance:
 - `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
 
 ### T358 — Evidence replay player: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
