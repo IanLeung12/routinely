@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 47dd9b5
+- last-reviewed: 3f170ef
 
 ## Tasks
 
@@ -483,4 +483,142 @@ Interface: each `role="listitem"` step gets an accessible name like "Add teabag 
 Acceptance:
 - Tests query steps by accessible name for each state (pending, active, done, omission, repeat/sequence).
 - No behaviour change to state transitions; existing tests still pass.
+- `scripts/ci.sh` passes.
+
+### T111 — Demo residents: evening-only worsening and motor slowing
+- status: todo
+- class: standard
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §8 wants 5–6 demo residents, one per pattern. The generators for `"evening"` (T086) and `"motor"` (T087) exist but no demo resident uses them. Add two residents to the demo config with pinned seeds.
+Interface: two new entries in the resident config list in `demo.py` (`scenario: "evening"` and `scenario: "motor"`, new ids/names/rooms); no API or contract change.
+Acceptance:
+- pytest in `test_demo.py`: both new residents appear in `demo_residents()`, deterministic across calls; the evening resident's evening (≥16:00) sessions in the last 7 days average ≥3× the errors of its morning ones; the existing four residents keep their current status (the T091 status test still passes unchanged).
+- `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T112 — AlertContext: care-record context next to the alert (component only)
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/alert/AlertContext.tsx (new), web/src/alert/AlertContext.test.tsx (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §5 Nice to have 5: show care-record context (new meds, temperature, fluids) beside an alert. Build a small component that shows only the records from the 72 h before the alert time, newest first; not wired into AlertView yet.
+Interface: `AlertContext({ records: CareRecord[], alertTs: string, windowHours?: number })`. Read only `web/src/resident/types.ts` (CareRecord), `web/src/resident/ContextTimeline.tsx` (copy its formatting; reuse its helpers if exported) and `web/src/ui/EmptyState.tsx`. Empty window → EmptyState "No care-record changes in the last 3 days".
+Acceptance:
+- vitest: filters to the window, orders newest first, med_change rows are labelled as medication, empty state shown when nothing is in the window.
+- `scripts/ci.sh` passes.
+
+### T113 — Pattern scenarios: one replayable scenario per pattern
+- status: todo
+- class: standard
+- priority: 1
+- kind: test
+- deps: T084
+- area: tests/scenarios/pattern_*/, tests/scenarios/README.md, pipeline/src/routine_watch/replay.py (expected top-pattern check only), pipeline/tests/test_replay.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: SPEC §8: at least one scenario per MVP pattern (sudden change, slow drift) with the expected top pattern in `expected.yaml`, plus "no clear pattern" for a flag that matches none.
+Interface: optional `top_pattern: <pattern id> | none` key in `expected.yaml`; `scripts/e2e.sh` fails when the scorer's top pattern differs. Scenarios without the key are unaffected.
+Acceptance:
+- ≥3 new scenarios (`pattern_sudden_change`, `pattern_slow_drift`, `pattern_none`), each with history context in the same format existing flagging scenarios use.
+- pytest covers the new key (match, mismatch, absent); `scripts/e2e.sh` passes; README table updated.
+
+### T114 — api.py: one resident lookup helper instead of copy-pasted loops
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `get_resident`, `resident_drift` and the replay routes each loop over `demo_residents()` and raise the same 404. Extract `_resident_or_404(resident_id) -> dict` and use it everywhere. No behaviour change.
+Interface: private helper in `api.py`; routes and responses unchanged. Read only `api.py` and `pipeline/tests/test_api*.py`.
+Acceptance:
+- No remaining `for resident in demo_residents()` loops in route bodies.
+- New test: every resident-scoped route returns 404 with `{"detail": "resident not found"}` for an unknown id.
+- `scripts/ci.sh` passes.
+
+### T115 — Docs: CODEMAP notes for drift endpoint, evidence sources, smoke.sh, feedback causes
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Recent merges (T050 drift endpoint, T107 evidence replays `tea_no_kettle` with a `tea_normal` ghost, T098/T108 `scripts/smoke.sh`, T100 feedback causes) aren't in the CODEMAP notes. Add 1–3 lines each.
+Interface: notes only; read the module docstrings of `pipeline/src/routine_watch/{api,evidence,feedback,drift}.py` and the header of `scripts/smoke.sh`. Run `python3 scripts/codemap.py` to regenerate the file list.
+Acceptance:
+- Each of the four is described where a newcomer would look; no stale claims (e.g. "evidence replays one scenario").
+- `scripts/ci.sh` passes.
+
+### T116 — Scenario: pill taken before the water is poured is a sequence error
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_pill_before_water/
+- owner: —
+- claimed: —
+- pr: —
+
+What: The second task has only a normal and an omission scenario. Add a step-level scenario where the pill is taken before the glass is filled, producing exactly one sequence error.
+Interface: `steps.jsonl` + `expected.yaml` in the same format as `tests/scenarios/meds_skip_water/`. Read only `pipeline/src/routine_watch/tasks/meds.yaml`, `tests/scenarios/meds_skip_water/*` and `tests/scenarios/tea_sequence_error/*`.
+Acceptance:
+- `scripts/e2e.sh` passes with the new scenario listed; the error list is exactly one sequence error on the correct step.
+- Note in the PR that `tests/scenarios/README.md` needs a row (outside area; the orchestrator will batch README rows).
+
+### T117 — Web mock residents include the evening and motor residents
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: T111
+- area: web/src/mock/residents.ts, web/src/mock/residentDetail.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: The offline web fallback should show the same residents as the API after T111. Add the two new residents (same ids, names, rooms, status) to the web mocks.
+Interface: mirror the ids/names from `pipeline/src/routine_watch/demo.py`; keep the existing mock shape.
+Acceptance:
+- vitest: mock list ids equal the API demo ids (hard-coded list in the test, with a comment pointing at demo.py).
+- `scripts/ci.sh` passes.
+
+### T118 — Pattern library page: what each pattern looks for and its source
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- deps: T084
+- area: pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_api_patterns.py (new), web/src/patterns/ (new), web/src/App.tsx (one nav entry)
+- owner: —
+- claimed: —
+- pr: —
+- source: proposed
+
+What: Rationale: judges (Clarity, responsible design §12) can see every pattern's signals, rule-out checks and source citation, showing it is a cited rules library, not an LLM guess. Read-only screen, separate from the demo path.
+Interface: `GET /patterns` → the library as JSON (id, name, signals, time profile, checks, urgency, source); `web/src/patterns/PatternLibrary.tsx` lists them with "consistent with" wording.
+Acceptance:
+- pytest: route returns every library entry with a non-empty source; vitest: renders each pattern, urgent one visually distinct, no "diagnos" text.
 - `scripts/ci.sh` passes.
