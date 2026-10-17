@@ -6312,3 +6312,58 @@ Acceptance:
 - `scripts/e2e.sh` runs the new scenario green; `expected.yaml` asserts no errors, no flag, quality unclear
 - pytest asserts `session_quality(events) == "unclear"` for it
 - `scripts/ci.sh` passes
+
+### T247 — Shift handoff: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T203
+- area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:46Z
+- pr: #359
+- rating: 5/5 clear
+
+What: Same treatment T234/T235 gave the overview and live screen: at 375 px the handoff page has no horizontal scroll, rows stack, and buttons are at least 44 px tall.
+Interface: read `web/src/handoff/Handoff.tsx`, `web/src/handoff/handoff.css`, and `web/src/overview/overview.css` (copy its `@media (max-width: 480px)` approach). CSS plus at most class-name changes in `Handoff.tsx`; no behaviour change.
+Acceptance:
+- a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
+- existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
+
+### T357 — Scenario: meds_long_pause_not_error (long pause under the abandonment cut-off)
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_long_pause_not_error/
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T17:39Z
+- pr: #344
+- rating: 5/5 clear
+
+What: The medication task's version of `tests/scenarios/tea_long_pause_not_error`: an otherwise-correct meds session with one ~100 s gap between two steps (under `routine_watch.errors.ABANDON_AFTER_S`), which must not surface as an error or flag.
+Interface: `tests/scenarios/meds_long_pause_not_error/{steps.jsonl,expected.yaml}`, step-level like `meds_normal`; copy the comment style of `tea_long_pause_not_error/expected.yaml`. No pipeline code changes.
+Acceptance:
+- `expected.yaml`: `task: meds`, full correct step list, `errors: []`, `score: 0.0`, `flag: false`
+- `scripts/e2e.sh` passes with the new scenario counted; `scripts/ci.sh` passes
+
+### T358 — Evidence replay player: usable at phone width (375 px)
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/
+- owner: ian-claude-standard
+- claimed: 2026-10-17T17:43Z
+- pr: #350
+- rating: 5/5 clear
+
+What: A nurse opening an alert on a phone should be able to watch the skeleton replay and use its controls without horizontal scrolling. Follow the 375 px pattern other screens already use (see `web/src/alert/alert.css`, `web/src/live/liveScreen.css`).
+Interface: `ReplayPlayer.tsx` / `GhostReplay.tsx` keep their props; styles go in the existing stylesheet for `.replay-player` (or a new `web/src/evidence/evidence.css` imported by `ReplayPlayer.tsx`). No behaviour change.
+Acceptance:
+- at 375 px the replay canvas scales to the container width and the play/scrub controls wrap onto their own row, touch targets ≥ 44 px
+- a vitest checks the stylesheet has a `max-width: 375px`-or-narrower media rule for `.replay-player` (same approach as existing phone-width tests)
+- `scripts/ci.sh` passes
