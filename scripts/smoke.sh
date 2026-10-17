@@ -11,10 +11,14 @@
 # GET /residents, GET /residents/mrs-k, GET /residents/mrs-k/feedback,
 # GET /alerts, GET /alerts/<first id>, GET /monitoring,
 # GET /rooms/<demo room>/monitoring/history and that the dashboard
-# (DASHBOARD_PORT, default 5173) returns HTML. Also validates the
+# (DASHBOARD_PORT, default 5173) returns HTML, and that its public landing
+# page at /landing.html also returns HTML containing "Routine Watch" and
+# differs from the dashboard's own response (Vite's dev server falls back to
+# index.html for any unknown path, so a landing page missing from the build
+# would otherwise still answer 200 with HTML). Also validates the
 # residents/resident/feedback/handoff/alert-detail/monitoring/room-history
-# bodies against their schemas in `contracts/`, and the first message of a fresh
-# `/ws/live` session against `contracts/live_message.schema.json` (SKIP, not
+# bodies against their schemas in `contracts/`, and the first message of a
+# fresh `/ws/live` session against `contracts/live_message.schema.json` (SKIP, not
 # FAIL, if jsonschema or websockets isn't importable). Prints PASS/FAIL per
 # check and exits non-zero if any failed.
 # Never sets LIVE_API, never POSTs feedback. POSTs /demo/reset once, last, since
@@ -230,14 +234,31 @@ else
   fail "GET /alerts/<first id>: no alert id to test (empty /alerts, or /alerts failed)"
 fi
 
+dashboard_body=""
 if body=$(get "$DASHBOARD_URL"); then
   if printf '%s' "$body" | grep -qi '<html'; then
     pass "GET $DASHBOARD_URL -> HTML"
   else
     fail "GET $DASHBOARD_URL: response did not look like HTML"
   fi
+  dashboard_body="$body"
 else
   fail "GET $DASHBOARD_URL: no response (is 'scripts/dev.sh up' running?)"
+fi
+
+# Vite's dev server falls back to serving index.html for any unknown path, so
+# a landing page that's gone missing from the build still answers 200 with
+# HTML; compare against $dashboard_body (the dashboard's own response, above)
+# to tell a real landing page apart from that fallback.
+if body=$(get "$DASHBOARD_URL/landing.html"); then
+  if printf '%s' "$body" | grep -qi '<html' && printf '%s' "$body" | grep -q 'Routine Watch' \
+    && [ "$body" != "$dashboard_body" ]; then
+    pass "GET $DASHBOARD_URL/landing.html -> HTML"
+  else
+    fail "GET $DASHBOARD_URL/landing.html: response did not look like the landing page"
+  fi
+else
+  fail "GET $DASHBOARD_URL/landing.html: no response (is 'scripts/dev.sh up' running?)"
 fi
 
 replay_args=""
