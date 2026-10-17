@@ -420,7 +420,7 @@ Acceptance:
 - `cd web && npx vitest run src/patterns` and `scripts/ci.sh` pass.
 
 ### T299 — Scenarios: meds_single_bad_no_flag and meds_pill_three_times
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
