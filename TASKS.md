@@ -306,7 +306,7 @@ What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` (tokens) 
 Acceptance: renders N bars; compare series only when present; callout shows its label; has an accessible name and a visually hidden data table; `cd web && npx vitest run src/ui/charts/BarChart.test.tsx`.
 
 ### T419 — Chart kit: MicroBars (14-day tick strip)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: improvement
