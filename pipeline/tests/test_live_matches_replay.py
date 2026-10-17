@@ -6,8 +6,15 @@ Two things turn a scenario recording into an outcome: `routine_watch.replay`, wh
 demo plays when the camera or Wi-Fi gives out. Nothing asserted the two agree, so a
 change to one could leave the demo showing different errors from what CI tested. This
 plays every playable scenario through `session_messages` at a very high speed and
-compares the errors and the flag it sends against the same `expected.yaml` the
+compares the errors and the flag it ends on against the same `expected.yaml` the
 offline replay is checked against.
+
+What a live session *ends on* is `session_end`'s `errors`, not the `error` messages it
+streamed: a step done before a dependency reports the dependency missing at the time
+it is checked and reports itself as a sequence error once that dependency lands, so
+the stream holds both readings while the finished session's classification holds only
+the second (`live.py`, "the end is the finished session's"). The stream is still
+checked here, as the superset it is meant to be.
 
 The autouse `_empty_log` fixture (`conftest.py`) keeps this from recording live
 sessions against the demo resident across tests.
@@ -27,26 +34,6 @@ from routine_watch.replay import load_scenario, scenario_dirs
 
 #: A session played this much faster than recorded finishes instantly.
 FAST = 1000.0
-
-#: These scenarios' `expected.yaml` has a `sequence` error: a step done before a
-#: dependency it depends on, with that dependency done later. Read in one shot
-#: (`replay.py`, and live's own classification right before `session_end`), the
-#: dependency's later event is already in the timeline, so it is never reported
-#: missing - only the sequence error is. Read step by step as a live session plays
-#: (`errors.classify_errors(..., ended=False)`), the dependency has not happened yet
-#: at the moment it is checked, so live also reports it as a transient `omission`
-#: before the later event turns it into a `sequence` error. `live.py` documents this
-#: as deliberate ("errors accumulate; the task map heals"), but it means the demo's
-#: error list is not the one `expected.yaml` (and CI) checked for these three. Real
-#: mismatch, not a test bug: flagged here for the orchestrator to file, not fixed here.
-_SEQUENCE_HEALS_FROM_A_TRANSIENT_OMISSION = frozenset(
-    {
-        "tea_sequence_error",
-        "tea_self_corrected",
-        "meds_pill_before_water",
-        "meds_self_corrected",
-    }
-)
 
 
 def _scenario_names() -> list[str]:
@@ -68,16 +55,13 @@ async def _play(name: str) -> tuple[list[TaskError], dict[str, Any]]:
 
 @pytest.mark.parametrize("name", _scenario_names())
 def test_live_matches_replay(name: str) -> None:
-    if name in _SEQUENCE_HEALS_FROM_A_TRANSIENT_OMISSION:
-        pytest.xfail(
-            reason="live reports a sequence error's dependency missing before the "
-            "later event heals it; expected.yaml only has the healed state (T162)"
-        )
-
     expected = load_scenario(scenario_path(name)).expected
-    errors, end = asyncio.run(_play(name))
+    streamed, end = asyncio.run(_play(name))
 
     want = Counter((str(error.type), error.step) for error in expected.errors)
-    got = Counter((str(error.type), error.step_id) for error in errors)
+    got = Counter((str(error.type), error.step_id) for error in end["errors"])
     assert got == want
     assert end["flag"] == expected.flag
+    # The stream is every reading the session went through, so it holds the errors it
+    # ended on and whatever healed on the way, never less.
+    assert {error.error_id for error in streamed} >= {error.error_id for error in end["errors"]}
