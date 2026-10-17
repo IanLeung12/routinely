@@ -444,14 +444,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T312 — Test: resident detail feedback history after reset shows the empty state
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/ResidentDetail.reset.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:47Z
 - pr: —
 
 What: T304 (#298) proved the API clears feedback on demo reset; add the dashboard side: after a reset the resident detail "What nurses said" card shows "No nurse answers yet" instead of stale answers.
