@@ -319,14 +319,14 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T291 — Web: drift, pattern-library and replay types generated from contracts.py
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/contracts.py, web/src/contracts.ts, web/src/resident/api.ts, web/src/patterns/types.ts, web/src/evidence/api.ts, pipeline/tests/test_contracts.py, contracts/
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T14:57Z
 - pr: —
 
 What: Follow-up from T280 (PR #273): the web still mirrors `ResidentDrift`, `PatternLibraryEntry` and the replay payloads by hand, guarded only by field-name tests. Emit them into the generated `web/src/contracts.ts` and make the consumers import them, so a contract change breaks the web build instead of a string-match test.
