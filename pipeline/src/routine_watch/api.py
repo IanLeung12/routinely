@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from . import __version__, session_log
-from .alerts import build_alerts
+from .alerts import build_alerts, top_pattern_for
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import DEMO_NOW, demo_residents, status_for
 from .drift import daily_scores, drift
@@ -92,8 +92,23 @@ def _tuned(resident: dict) -> dict:
     """
     threshold = _feedback_store.threshold(resident["id"], base=resident["baseline"]["threshold"])
     status = status_for(resident, threshold)
-    top_pattern = resident["top_pattern"] if status != "normal" else None
+    top_pattern = _top_pattern(resident) if status != "normal" else None
     return {**resident, "status": status, "top_pattern": top_pattern}
+
+
+def _top_pattern(resident: dict) -> dict | None:
+    """This resident's overview pattern chip, ranked by her own nurses' answers.
+
+    `demo.py` ranks the patterns with no weights, so once a nurse has answered "what
+    was it?" the raw field and this resident's alert can name different patterns for
+    the same change (SPEC Nice to have 8). With answers logged, rank it the way her
+    alert does (`alerts.top_pattern_for`); with none the two already agree, so the raw
+    field stands and `/residents` does no extra work for a unit nobody has answered
+    about yet.
+    """
+    if not _feedback_store.pattern_weights(resident["id"]):
+        return resident["top_pattern"]
+    return top_pattern_for(resident, _feedback_store)
 
 
 def _flagged_residents() -> list[dict]:
