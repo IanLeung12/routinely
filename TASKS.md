@@ -521,14 +521,14 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T211 — Test: alert "Copy summary" text keeps the safe wording
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/alertText.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:00Z
 - pr: —
 
 What: T199 (#189) added `web/src/alert/alertText.ts`, the text a nurse pastes into the chart. Pin its wording rules with tests.
