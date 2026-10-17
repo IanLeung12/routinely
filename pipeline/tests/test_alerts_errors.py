@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from routine_watch.alerts import _graph_for, _task_errors, build_alerts
+from routine_watch.alerts import _graph_for, build_alerts, task_errors
 from routine_watch.demo import DEMO_RESIDENT, demo_residents
 from routine_watch.live import scenario_path, session_messages
 from routine_watch.tasks import TaskGraphError
@@ -81,7 +81,7 @@ def test_task_errors_assigns_real_steps_from_history_only_session():
         "assisted": False,
     }
 
-    errors = _task_errors("mrs-k-9", session)
+    errors = task_errors("mrs-k-9", session)
 
     graph = _graph_for("tea")
     assert len(errors) == 3
@@ -103,7 +103,7 @@ def test_task_errors_resolves_a_live_session_named_by_its_graph_id():
         "assisted": False,
     }
 
-    errors = _task_errors("mrs-k-10", session)
+    errors = task_errors("mrs-k-10", session)
 
     assert errors[0].step_id is not None
 

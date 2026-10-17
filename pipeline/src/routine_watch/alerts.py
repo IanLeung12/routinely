@@ -12,6 +12,11 @@ in `routine_watch.feedback`; the API route that wires the two together lives in
 `routine_watch.api`. Pass that store as `build_alerts(residents, feedback=store)` and
 each resident's own answers to "what was it?" also re-weight her pattern ranking
 (SPEC Nice to have 8).
+
+`session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` are public
+because the shift handoff (`routine_watch.handoff`) writes its own summary from the
+same evidence: a nurse reads both about the same session, so both must name the same
+steps, at the same times, against the same baseline.
 """
 
 from __future__ import annotations
@@ -68,6 +73,16 @@ def build_alerts(residents: list[dict], feedback: FeedbackStore | None = None) -
     ]
 
 
+def session_id_for(resident_id: str, index: int) -> str:
+    """The id of a resident's `index`-th session in `demo_residents`.
+
+    The demo history has no session ids of its own, so this is the one convention for
+    making them: anything reading the same session (an alert, the handoff) derives the
+    same id and so the same `TaskError.error_id`s.
+    """
+    return f"{resident_id}-{index}"
+
+
 def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
     """The sessions behind the flag: id, session dict and score, oldest first.
 
@@ -84,7 +99,7 @@ def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
     for index, (session, point) in enumerate(sessions_and_scores):
         ts = datetime.fromisoformat(session["ts"])
         if window_start <= ts <= DEMO_NOW and point["score"] > threshold:
-            qualifying.append((f"{resident['id']}-{index}", session, point["score"]))
+            qualifying.append((session_id_for(resident["id"], index), session, point["score"]))
     return qualifying
 
 
@@ -118,7 +133,7 @@ def _step_candidates(graph: TaskGraph, error_type: str) -> tuple[str, ...]:
     return candidates or graph.step_ids
 
 
-def _task_errors(session_id: str, session: dict) -> list[TaskError]:
+def task_errors(session_id: str, session: dict) -> list[TaskError]:
     """Synthetic per-instance errors from a session's error-type counts.
 
     The demo history only tracks how many errors of each type a session had, not the
@@ -154,7 +169,7 @@ def _task_errors(session_id: str, session: dict) -> list[TaskError]:
     return errors
 
 
-def _distinct_clauses(errors: list[TaskError]) -> list[dict]:
+def distinct_clauses(errors: list[TaskError]) -> list[dict]:
     """`errors` as explainer input, minus any whose type, step and displayed
     timestamp exactly repeat an earlier one (the explainer renders all three, so a
     repeat there is a repeated clause in the summary, SPEC section 7's "no two bad
@@ -183,7 +198,7 @@ def _context(care_records: list[dict]) -> list[str]:
     ]
 
 
-def _normal_error_rate(resident: dict) -> float:
+def normal_error_rate(resident: dict) -> float:
     """This resident's own average errors per session, over their full history."""
     counts = [sum(session["errors"].values()) for session in resident["sessions"]]
     return sum(counts) / len(counts) if counts else 0.0
@@ -218,7 +233,7 @@ def _build_alert(resident: dict, feedback: FeedbackStore | None = None) -> Alert
     errors = [
         error
         for session_id, session, _ in qualifying
-        for error in _task_errors(session_id, session)
+        for error in task_errors(session_id, session)
     ]
 
     baseline = resident["baseline"]
@@ -232,12 +247,12 @@ def _build_alert(resident: dict, feedback: FeedbackStore | None = None) -> Alert
         threshold=baseline["threshold"],
     )
 
-    explainer_errors = _distinct_clauses(errors)
+    explainer_errors = distinct_clauses(errors)
     summary = _get_explainer().summarise(
         explainer_errors,
         {
             "observed": len(errors),
-            "baseline_mean": round(_normal_error_rate(resident), 2),
+            "baseline_mean": round(normal_error_rate(resident), 2),
             "baseline_days": DEMO_DAYS,
         },
         _context(resident["care_records"]),

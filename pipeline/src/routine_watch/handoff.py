@@ -34,9 +34,16 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import NamedTuple
 
-from .alerts import build_alerts
-from .contracts import Alert
+from .alerts import (
+    build_alerts,
+    distinct_clauses,
+    normal_error_rate,
+    session_id_for,
+    task_errors,
+)
+from .contracts import Alert, TaskError
 from .demo import demo_residents
 from .drift import daily_scores, drift
 from .explain import Explainer
@@ -46,13 +53,13 @@ from .feedback import FeedbackStore
 #: A nursing shift, and so the window the handoff looks back over by default.
 DEFAULT_WINDOW_H = 12
 
-#: Stand-in for the step an error happened at. The demo history carries a count of
-#: errors per type per session, not the step events, and a handoff line is the wrong
-#: place to guess: the alert screen is where a nurse reads step-by-step evidence.
-_UNKNOWN_STEP = "the task"
 
-#: Only so two errors in one session read as two clauses rather than one repeated.
-_ERROR_SPACING_S = 10.0
+class _FlaggedSession(NamedTuple):
+    """A session above its own resident's threshold, and whose session it is."""
+
+    resident: dict
+    session_id: str
+    session: dict
 
 
 def _get_explainer() -> Explainer:
@@ -81,12 +88,12 @@ def build_handoff(
     pending = _pending_by_resident(build_alerts(residents), now, hours, feedback)
 
     rows = []
-    flagged_sessions = []
+    flagged_sessions: list[_FlaggedSession] = []
     for resident in residents:
         threshold = _threshold(resident, feedback)
         flagged = [
-            session
-            for session, score in _window_sessions(resident, now, hours)
+            _FlaggedSession(resident, session_id, session)
+            for session_id, session, score in _window_sessions(resident, now, hours)
             if score > threshold
         ]
         flagged_sessions.extend(flagged)
@@ -104,16 +111,21 @@ def build_handoff(
     return {
         "window_hours": hours,
         "residents": rows,
-        "summary": _summary(rows, flagged_sessions, residents, hours),
+        "summary": _summary(rows, flagged_sessions, hours),
     }
 
 
-def _window_sessions(resident: dict, now: datetime, hours: int) -> list[tuple[dict, float]]:
-    """The resident's sessions that ran inside the window, with their scores."""
+def _window_sessions(resident: dict, now: datetime, hours: int) -> list[tuple[str, dict, float]]:
+    """The resident's sessions that ran inside the window: id, session and score.
+
+    The id is `alerts.session_id_for`'s, the one that session's alert gives it, so an
+    error this handoff mentions and the same error on the alert screen are one error.
+    """
     start = now - timedelta(hours=hours)
+    sessions_and_scores = zip(resident["sessions"], resident["scores"], strict=True)
     return [
-        (session, point["score"])
-        for session, point in zip(resident["sessions"], resident["scores"], strict=True)
+        (session_id_for(resident["id"], index), session, point["score"])
+        for index, (session, point) in enumerate(sessions_and_scores)
         if start <= datetime.fromisoformat(session["ts"]) <= now
     ]
 
@@ -162,74 +174,63 @@ def _review_first(row: dict) -> tuple[int, int, bool, str]:
     return (-row["flags"], -row["pending_review"], not row["trending"], row["name"])
 
 
-def _summary(
-    rows: list[dict], flagged_sessions: list[dict], residents: list[dict], hours: int
-) -> str:
+def _summary(rows: list[dict], flagged_sessions: list[_FlaggedSession], hours: int) -> str:
     """The handoff's plain-language line, written by the `Explainer` (fake by default).
 
-    It is given only what the pipeline found. The errors are the ones in the most
-    recent flagged session - the session a nurse would open first, and the one the
-    explainer's sentence is about - while the context lines carry the window's own
-    totals, resident by resident.
+    It is given only what the pipeline found, about one session: the most recent
+    flagged one, which is the session a nurse would open first and the one the
+    explainer's sentence is about. Its errors come from `alerts.task_errors`, so the
+    handoff names the steps and times that session's own alert names rather than a
+    second guess at them, and they are measured against that resident's own history
+    and nobody else's (SPEC section 7). A quiet window has no session to compare, so
+    its numbers are zeros rather than somebody else's average.
+
+    The context lines say whose session it is, then carry the window's own totals
+    resident by resident.
     """
-    errors = _explainer_errors(_latest(flagged_sessions))
-    baseline = {
-        "observed": len(errors),
-        "baseline_mean": round(_unit_error_rate(residents), 2),
-        "baseline_days": _history_days(residents),
-    }
-    return _get_explainer().summarise(errors, baseline, _context(rows, hours))
-
-
-def _latest(sessions: list[dict]) -> dict | None:
-    """The most recent of the window's flagged sessions, or None if none was flagged."""
-    if not sessions:
-        return None
-    return max(sessions, key=lambda session: datetime.fromisoformat(session["ts"]))
-
-
-def _explainer_errors(session: dict | None) -> list[dict]:
-    """One entry per error in that session, in the `Explainer` interface's shape."""
-    if session is None:
-        return []
-    errors = []
-    t = 0.0
-    for error_type, count in sorted(session["errors"].items()):
-        for _ in range(count):
-            errors.append({"type": error_type, "step_id": _UNKNOWN_STEP, "t_start": t})
-            t += _ERROR_SPACING_S
-    return errors
-
-
-def _unit_error_rate(residents: list[dict]) -> float:
-    """What a session on this unit normally costs: mean errors per session, all history."""
-    counts = [
-        sum(session["errors"].values())
-        for resident in residents
-        for session in resident["sessions"]
-    ]
-    return sum(counts) / len(counts) if counts else 0.0
-
-
-def _history_days(residents: list[dict]) -> int:
-    """How many calendar days of history that unit average is drawn from."""
-    return len(
-        {
-            datetime.fromisoformat(session["ts"]).date()
-            for resident in residents
-            for session in resident["sessions"]
+    latest = _latest(flagged_sessions)
+    if latest is None:
+        errors: list[TaskError] = []
+        baseline = {"observed": 0, "baseline_mean": 0.0, "baseline_days": 0}
+    else:
+        errors = task_errors(latest.session_id, latest.session)
+        baseline = {
+            "observed": len(errors),
+            "baseline_mean": round(normal_error_rate(latest.resident), 2),
+            "baseline_days": _history_days(latest.resident),
         }
+    return _get_explainer().summarise(
+        distinct_clauses(errors), baseline, _context(rows, hours, latest)
     )
 
 
-def _context(rows: list[dict], hours: int) -> list[str]:
-    """The window, then one line per resident worth a look, then the quiet rest.
+def _latest(flagged: list[_FlaggedSession]) -> _FlaggedSession | None:
+    """The most recent of the window's flagged sessions, or None if none was flagged."""
+    if not flagged:
+        return None
+    return max(flagged, key=lambda item: datetime.fromisoformat(item.session["ts"]))
+
+
+def _history_days(resident: dict) -> int:
+    """How many calendar days this resident's own average is drawn from."""
+    return len(
+        {datetime.fromisoformat(session["ts"]).date() for session in resident["sessions"]}
+    )
+
+
+def _context(rows: list[dict], hours: int, latest: _FlaggedSession | None) -> list[str]:
+    """Whose session it is, the window, then one line per resident worth a look, then
+    the quiet rest.
 
     These lines reach the nurse as written, whichever explainer is in play, so they are
-    the handoff's own facts: the window's length, who to look at and why.
+    the handoff's own facts: whose session the sentence is about, the window's length,
+    who to look at and why.
     """
     review = [row for row in rows if _needs_review(row)]
-    lines = [f"last {hours} h, {_count(len(rows), 'resident')}"]
+    lines = []
+    if latest is not None:
+        lines.append(f"this session is {latest.resident['name']}'s")
+    lines.append(f"last {hours} h, {_count(len(rows), 'resident')}")
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
     quiet = len(rows) - len(review)
     if quiet:
