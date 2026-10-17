@@ -331,13 +331,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_replay.py -q` and `scripts/ci.sh` pass.
 
 ### T021 — Alerts + feedback API
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - deps: T012, T015, T016, T018
 - area: pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:46Z
 - pr: —
 
 What: Build `Alert` contracts for flagged demo residents (summary from `TemplateExplainer`, checks from `checks.suggest_checks`, errors from their latest sessions) and expose them plus the one-tap nurse feedback loop (SPEC §5 MVP 5 and 7).
