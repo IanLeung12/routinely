@@ -134,3 +134,7 @@ T140 | light | claude-sonnet | merged first try | ~30k tok
 T146 | light | claude-sonnet | merged first try | ~15k tok
 T106 | light | codex | merged first try | ~6k tok
 T129 | heavy | claude-opus | merged first try | ~120k tok
+T154 | standard | claude-sonnet | merged first try | ~45k tok
+T168 | light | codex | merged first try | ~4k tok
+T089 | standard | claude-sonnet | merged first try | ~130k tok
+T163 | light | claude-sonnet | merged first try | ~15k tok

@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 0b00d1e
+- last-reviewed: ef7da74
 
 ## Tasks
 
@@ -532,3 +532,105 @@ Interface: Read only `live.py` lines 250-290 and `tests/test_live_notify.py`. Ke
 Acceptance:
 - test asserts the summary contains the resident's display name and not the id.
 - `scripts/ci.sh` passes.
+
+### T169 — Test: scenarios README lists every scenario folder
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_scenarios_readme.py (new), tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: The "The scenarios here" table in `tests/scenarios/README.md` is hand-maintained and will drift as scenarios are added. Add a test that every directory under `tests/scenarios/` appears in that table as `` `name` `` and every name in the table is a real directory.
+Interface: Read only `tests/scenarios/README.md` (section "## The scenarios here") and `ls tests/scenarios/`. New `pipeline/tests/test_scenarios_readme.py` locates the repo root from `__file__` (`Path(__file__).resolve().parents[2]`). If a folder is missing from the table, add a one-line row for it (read its `expected.yaml` to describe it).
+Acceptance:
+- test fails with the missing/extra names listed when the table and folders disagree.
+- `scripts/ci.sh` passes.
+
+### T170 — Test: dashboard error wording matches explain.py
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_error_phrases_match_web.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/ui/errorTypes.ts` `PHRASES` copies `pipeline/src/routine_watch/explain.py` `_PHRASES` by hand ("same wording as..."). Add a pipeline test that reads the TS file as text and checks each error type's phrase matches the Python template (Python `{step}` ↔ TS `${step}`).
+Interface: Read only `pipeline/src/routine_watch/explain.py` lines 1-30 and `web/src/ui/errorTypes.ts`. Parse lines like `omission: (step) => \`skipped ${step}\`,` with a regex; import `_PHRASES` from `routine_watch.explain`. Do not change either source file.
+Acceptance:
+- test passes on current main and fails if one phrase is edited on either side (check manually, don't commit that).
+- same set of error types on both sides.
+- `scripts/ci.sh` passes.
+
+### T171 — Sparkline: nurse-readable screen-reader label
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/overview/Sparkline.tsx, web/src/overview/Sparkline.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The overview sparkline's label reads "error score trend, latest 2.4000001" (raw float, lowercase). Make it "Error score over the last N sessions, latest 2.4" using `formatScore` from `web/src/resident/format.ts`.
+Interface: Read only `web/src/overview/Sparkline.tsx`, its test, and `formatScore` in `web/src/resident/format.ts` (import it; don't modify format.ts). Empty sparkline stays `aria-hidden`.
+Acceptance:
+- test asserts the label for a 3-point series with a long float latest value.
+- `cd web && npm test -- Sparkline` and `scripts/ci.sh` pass.
+
+### T172 — Heat calendar: colour legend and formatted scores
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The heat calendar has no legend, so a nurse can't tell what darker red means, and cell labels show raw scores ("score 3.4000001"). Add a one-line legend under the grid ("Lighter = fewer errors · Darker = more errors · Grey = no session", with small swatches using the same CSS vars) and format cell labels with `formatScore`.
+Interface: Read only `web/src/resident/HeatCalendar.tsx`, its test, and `formatScore` in `web/src/resident/format.ts` (import; don't modify). Swatches `aria-hidden`; legend text visible.
+Acceptance:
+- tests: legend text rendered; a cell label uses the formatted score.
+- `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass.
+
+### T173 — Docs: CODEMAP note for the overview's top pattern
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T089 (PR #149) added `top_pattern` to `GET /residents` (computed in `demo.py` `_top_pattern`, only for watch/flagged residents) and shows it on the unit overview, but `docs/CODEMAP.md` notes don't mention it. Add a 1-3 line note.
+Interface: Read only `docs/CODEMAP.md`, `git show 597b34d --stat`, and `_top_pattern` in `pipeline/src/routine_watch/demo.py`. Edit notes only, not the generated file list. Use "consistent with" wording.
+Acceptance:
+- note names `demo._top_pattern`, the `top_pattern` field and `web/src/overview/UnitOverview.tsx`.
+- `scripts/ci.sh` passes.
+
+### T174 — Test: demo top_pattern is set only for watch/flagged residents
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo_top_pattern.py (new)
+- owner: —
+- claimed: —
+- pr: —
+
+What: Pin the new `top_pattern` behaviour of `demo_residents()`: `None` for every `normal` resident; for each non-normal resident either `None` or a dict with exactly `pattern_id`, `name`, `urgency`, where `pattern_id` exists in the pattern library and `urgency` is a valid urgency value; and Mrs. K (`mrs-k`) has a non-None top pattern.
+Interface: Read only `pipeline/src/routine_watch/demo.py` (`_top_pattern`, `demo_residents`) and the pattern ids in `pipeline/src/routine_watch/patterns_library.py`. Don't change source files; if Mrs. K's top pattern is `None`, assert what it is and note it in the PR instead of changing code.
+Acceptance:
+- `cd pipeline && pytest tests/test_demo_top_pattern.py` and `scripts/ci.sh` pass.
