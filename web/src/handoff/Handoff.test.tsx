@@ -1,5 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Alert } from '../contracts.ts'
+import { mockAlerts } from '../mock/alerts.ts'
 import { Handoff, handoffText } from './Handoff.tsx'
 import { mockHandoff } from './mockHandoff.ts'
 import type { Handoff as HandoffData } from './types.ts'
@@ -10,8 +12,22 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function serve(handoff: HandoffData) {
-  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => handoff })
+/** Two of Mrs. K's alerts, and one for Mr. Chen, whose row has nothing pending yet:
+ * `/alerts` lists every flagged resident's alert whatever the handoff's window, so the
+ * row's own count is what decides whether there is an alert waiting to be opened. */
+const alerts: Alert[] = [
+  { ...mockAlerts[0], alert_id: 'mrs-k-change-1', resident_id: 'mrs-k' },
+  { ...mockAlerts[0], alert_id: 'mrs-k-change-2', resident_id: 'mrs-k' },
+  { ...mockAlerts[0], alert_id: 'mr-chen-trend-1', resident_id: 'mr-chen' },
+]
+
+/** The screen reads two routes: `/handoff` for the rows, `/alerts` for the alert each
+ * row opens. */
+function serve(handoff: HandoffData, alertList: Alert[] = alerts) {
+  const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve({
+    ok: true,
+    json: async () => (url.includes('/alerts') ? alertList : handoff),
+  }))
   vi.stubGlobal('fetch', fetch)
   return fetch
 }
@@ -147,7 +163,10 @@ describe('Handoff', () => {
     }
     const fetch = vi.fn().mockImplementation((url: string) => Promise.resolve({
       ok: true,
-      json: async () => (url.includes('hours=24') ? day : twelve),
+      json: async () => {
+        if (url.includes('/alerts')) return alerts
+        return url.includes('hours=24') ? day : twelve
+      },
     }))
     vi.stubGlobal('fetch', fetch)
 
@@ -159,6 +178,62 @@ describe('Handoff', () => {
     expect(await screen.findByText(day.summary)).toBeTruthy()
     expect(await screen.findByRole('heading', { name: 'Last 24 hours' })).toBeTruthy()
     expect(fetch.mock.calls.map(([url]) => url as string).some(url => url.includes('hours=24'))).toBe(true)
+  })
+
+  it("opens the resident's own alert from their row", async () => {
+    serve(served)
+    const onOpenAlert = vi.fn()
+
+    render(<Handoff onBack={() => {}} onOpenAlert={onOpenAlert} />)
+
+    const open = await screen.findByRole('button', { name: "Open Mrs. K's alert" })
+    expect(open.textContent).toBe('Open alert')
+
+    fireEvent.click(open)
+
+    expect(onOpenAlert).toHaveBeenCalledWith('mrs-k-change-1')
+  })
+
+  it('offers the alert only on rows with one still to review', async () => {
+    serve(served)
+
+    render(<Handoff onBack={() => {}} onOpenAlert={vi.fn()} />)
+
+    await screen.findByRole('button', { name: "Open Mrs. K's alert" })
+    // Mr. Chen has an alert of his own but nothing left to review this window, and
+    // Mrs. Ahmed has nothing at all: neither row sends a nurse to an alert screen.
+    expect(screen.queryByRole('button', { name: "Open Mr. Chen's alert" })).toBeNull()
+    expect(screen.queryByRole('button', { name: "Open Mrs. Ahmed's alert" })).toBeNull()
+    expect(screen.getAllByRole('button', { name: /^Open .*alert$/ })).toHaveLength(1)
+  })
+
+  it('offers nothing to tap when the list has no alert for that resident', async () => {
+    serve({
+      ...served,
+      residents: [
+        { resident_id: 'mrs-k', name: 'Mrs. K', flags: 2, pending_review: 1, trending: false },
+        { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', flags: 0, pending_review: 1, trending: false },
+      ],
+    })
+
+    render(<Handoff onBack={() => {}} onOpenAlert={vi.fn()} />)
+
+    // Mrs. K's button proves the alerts have arrived; the list holds none of
+    // Mr. Nguyen's, so his row offers a nurse no button rather than a dead one.
+    await screen.findByRole('button', { name: "Open Mrs. K's alert" })
+    expect(screen.getByText('Mr. Nguyen')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: "Open Mr. Nguyen's alert" })).toBeNull()
+  })
+
+  it('offers no alert when the screen has nowhere to send a nurse', async () => {
+    serve(served)
+
+    const { rerender } = render(<Handoff onBack={() => {}} onOpenAlert={vi.fn()} />)
+    await screen.findByRole('button', { name: "Open Mrs. K's alert" })
+
+    rerender(<Handoff onBack={() => {}} />)
+
+    expect(screen.queryByRole('button', { name: "Open Mrs. K's alert" })).toBeNull()
   })
 
   it('goes back when asked', async () => {

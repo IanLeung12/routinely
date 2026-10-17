@@ -88,6 +88,23 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
   })
 
+  it("opens the resident's alert from the shift handoff", async () => {
+    await act(async () => { render(<App />) })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Shift handoff' }))
+    })
+    expect(await screen.findByRole('heading', { name: 'Shift handoff' })).toBeTruthy()
+
+    // The evidence is one tap from the handoff row (SPEC section 9).
+    await act(async () => {
+      fireEvent.click(await screen.findByRole('button', { name: "Open Mrs. K's alert" }))
+    })
+
+    expect(await screen.findByText(/^Flagged for review:/)).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Suggested checks' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Shift handoff' })).toBeNull()
+  })
+
   it('refetches residents and alerts when the live session ends with a flag', async () => {
     const watchResident: ResidentSummary = {
       id: 'mrs-k', name: 'Mrs. K', room: '204', status: 'watch', top_pattern: null, scores: [],
