@@ -235,13 +235,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_hesitation.py -q` and `scripts/ci.sh` pass.
 
 ### T015 — Suggested checks rules
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/checks.py, pipeline/tests/test_checks.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:58Z
 - pr: —
 
 What: Pick the checks an alert suggests to the care team from the care-record context. Read only the files in `area`, `pipeline/src/routine_watch/synth/care_records.py` (for record dict shape; do not edit it) and `pipeline/pyproject.toml`. Never use the word "diagnose".
