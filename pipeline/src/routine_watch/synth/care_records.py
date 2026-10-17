@@ -1,7 +1,7 @@
 """Synthetic care-record generator for demo residents."""
 
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 def generate_care_records(
@@ -9,7 +9,7 @@ def generate_care_records(
 ) -> list[dict]:
     rng = random.Random(seed)
     records: list[dict] = []
-    end = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    end = datetime(2026, 1, 1, tzinfo=UTC)
     start = end - timedelta(days=days)
 
     for day in range(days):
