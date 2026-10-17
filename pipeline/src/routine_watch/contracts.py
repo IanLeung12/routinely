@@ -10,6 +10,11 @@ the copies other languages read cannot drift:
     contracts/examples/capture.jsonl  a few sample frames, for fixtures and scenarios
     web/src/contracts.ts              TypeScript types for the dashboard
 
+Two kinds live here. `CONTRACTS` are the records that flow between the stages and
+into the dashboard. `PROTOCOLS` are the messages a socket carries - the live view's
+`oneOf`, an envelope around those records - and get a schema but no TypeScript,
+because the dashboard reads the socket through its own types.
+
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
 clip, and every model forbids unknown fields, so a raw frame cannot travel through a
 contract even by accident. Skeletons, boxes and timestamps only.
@@ -29,9 +34,9 @@ import textwrap
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
 #: Bump whenever the per-frame JSONL record changes shape. It lives here, with the
 #: record it describes; `routine_watch.capture` re-exports it, because the capture
@@ -435,7 +440,128 @@ class Alert(_Contract):
     )
 
 
-#: Every top-level contract, one JSON Schema file each.
+# ------------------------------------------------------ the live socket's messages
+
+
+#: The states the dashboard's task map draws (`web/src/live/TaskMap.tsx`), which is
+#: also `routine_watch.live.StepState`: a step is pending until it happens and done
+#: once it has, with an error against it painting it red or amber (SPEC section 10).
+StepStateName = Literal["pending", "done", "omission", "repeat", "sequence"]
+
+
+class LiveStep(_Contract):
+    """One step of the task map, as `session_start` sends it (SPEC section 10)."""
+
+    id: Id = Field(description="The step in the task graph, e.g. 'teabag_in_cup'.")
+    label: str = Field(min_length=1, description="How the step is shown to a nurse.")
+    optional: bool = Field(description="A step the task does not require, e.g. sugar.")
+
+
+class LiveSessionStart(_Contract):
+    """Sent first and once: the task graph this session is following, so the dashboard
+    draws the map the session actually ran rather than assuming it is always tea."""
+
+    type: Literal["session_start"]
+    session_id: Id
+    task_id: Id = Field(description="The task graph being followed, e.g. 'make_tea'.")
+    steps: list[LiveStep] = Field(description="Every step, in the task map's reading order.")
+
+
+class LiveStepStates(_Contract):
+    """The task map as it stands. Sent first with every step pending, and again
+    whenever it changes: that is the map going red and amber mid-session (SPEC
+    section 10). Always the current reading, so a step that turns out not to have been
+    missing goes back to done."""
+
+    type: Literal["step_state"]
+    states: dict[Id, StepStateName] = Field(
+        description="One state per step of the task, keyed by step id."
+    )
+
+
+class LiveFrame(_Contract):
+    """One capture record for the skeleton view: landmarks, boxes and a timestamp,
+    never an image (SPEC section 8). Capped at `routine_watch.live.MAX_FRAME_FPS`."""
+
+    type: Literal["frame"]
+    frame: CaptureFrame
+
+
+class LiveStepEvent(_Contract):
+    """One step of the task, sent once the step is over."""
+
+    type: Literal["step"]
+    event: StepEvent
+
+
+class LiveTaskError(_Contract):
+    """One error, sent when it is first classified and once only.
+
+    Provisional: an unfinished session is classified again after every step, so this
+    is how it read at that moment, and `session_end` carries the list the finished
+    session settles on (`routine_watch.live`).
+    """
+
+    type: Literal["error"]
+    error: TaskError
+
+
+class LiveSessionEnd(_Contract):
+    """The finished session, and the last message a session sends."""
+
+    type: Literal["session_end"]
+    errors: list[TaskError] = Field(
+        description="The finished session's whole list, which is what it scored: the "
+        "reading to settle on, where the error messages are every reading on the way to it."
+    )
+    score: float = Field(ge=0.0, description="Weighted sum of this session's errors.")
+    flag: bool = Field(
+        description="Whether this resident's own history, with this session now in it, "
+        "flags a change for review (SPEC section 7)."
+    )
+    alert_id: Id | None = Field(
+        description="The alert that flag shows up in, or null when nothing is flagged."
+    )
+
+
+class LivePaused(_Contract):
+    """Monitoring is off for this resident's room (SPEC section 12), so nothing is
+    being watched: the socket sends this in place of what would have come next - the
+    session itself, or the rest of it when a nurse pauses mid-session - and closes."""
+
+    type: Literal["paused"]
+    room: str = Field(min_length=1, description="The room whose monitoring is paused.")
+
+
+#: One message, discriminated on `type`: the schema's `oneOf`.
+LiveMessageBody = Annotated[
+    LiveSessionStart
+    | LiveStepStates
+    | LiveFrame
+    | LiveStepEvent
+    | LiveTaskError
+    | LiveSessionEnd
+    | LivePaused,
+    Field(discriminator="type"),
+]
+
+
+class LiveMessage(RootModel[LiveMessageBody]):
+    """One message on the live WebSocket (`/ws/live`, SPEC section 16 decision B).
+
+    The live view crosses the pipeline/web boundary over this one socket, so its
+    messages are a shared shape like any other: `routine_watch.live` yields the
+    session's own (`session_start`, `step_state`, `frame`, `step`, `error`,
+    `session_end`), `routine_watch.api` sends `paused` instead when the room's
+    monitoring is off, and the dashboard reads them in
+    `web/src/live/useLiveSession.ts`.
+
+    A message is an envelope, not a record: what it carries is the contracts above,
+    and nothing is stored from the socket itself.
+    """
+
+
+#: Every top-level contract: a JSON Schema file and a TypeScript type each.
 CONTRACTS: tuple[type[_Contract], ...] = (
     CaptureFrame,
     ObjectDetection,
@@ -444,6 +570,16 @@ CONTRACTS: tuple[type[_Contract], ...] = (
     Session,
     Alert,
 )
+
+#: The wire protocols: a schema file each, like the contracts above, but no
+#: TypeScript. A protocol is an envelope around the contracts rather than a record
+#: anything stores, and the dashboard reads the live socket through its own types
+#: (`web/src/live/useLiveSession.ts`), so the schema is what the two sides are held
+#: to - `pipeline/tests/test_live_contract.py` validates a real session against it.
+PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
+
+#: Everything that has a schema file in `contracts/`.
+SCHEMAS: tuple[type[BaseModel], ...] = (*CONTRACTS, *PROTOCOLS)
 
 
 # ------------------------------------------------------------------- generation
@@ -675,7 +811,7 @@ def generated_files(root: Path | None = None) -> dict[Path, str]:
             json_schema(model), indent=2
         )
         + "\n"
-        for model in CONTRACTS
+        for model in SCHEMAS
     }
     files[base / "contracts" / "examples" / "capture.jsonl"] = "".join(
         json.dumps(frame.model_dump(mode="json")) + "\n" for frame in example_capture_frames()
