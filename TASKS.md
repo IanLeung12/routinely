@@ -506,7 +506,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T369 — Privacy panel: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -514,7 +514,8 @@ Acceptance:
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.mobile.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T18:30Z
-- pr: —
+- pr: #357
+- rating: 5/5 clear
 
 What: Make the privacy panel readable at 375 px (no horizontal scroll, controls stack, text wraps), like the other phone-width tasks.
 Interface: read `web/src/about/PrivacyPanel.tsx` and the pattern in `web/src/resident/DriftCard.mobile.test.tsx` + `web/src/resident/driftCard.css`. Add a `@media (max-width: 480px)` block in a new `privacyPanel.css` imported by the panel; keep existing class names.
