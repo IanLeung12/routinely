@@ -422,15 +422,15 @@ Acceptance:
 - If you add a module or script, add a CODEMAP note in this PR.
 
 ### T416 — Local camera preview: real video + skeleton overlay, this device only
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T424
 - area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, docs/DEMO.md, SPEC.md
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-2
+- claimed: 2026-10-17T21:04Z
 - pr: —
 
 What: Ian wants to see the actual camera picture during a live session, not just the skeleton. Keep the privacy promise: video never leaves the capture machine, is never stored, never reaches the API or a remote supervisor.
