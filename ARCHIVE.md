@@ -948,3 +948,89 @@ Acceptance:
 - No "not built yet" text remains in `App.tsx`.
 - App test: clicking the `mrs-k-change-1` alert shows the alert view; Back returns to the overview.
 - `scripts/ci.sh` passes.
+
+### T064 — Show the task map legend on the live session screen
+- status: done
+- class: light
+- priority: 2
+- kind: feature
+- deps: —
+- area: web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:43Z
+- pr: #57
+
+What: `TaskMapLegend` (T057) exists but is not rendered anywhere. Render it inside the "Task map" card in `LiveSession.tsx`, directly below `<TaskMap>`.
+Interface: `import { TaskMapLegend } from './TaskMapLegend.tsx'`; no prop changes. Read only `LiveSession.tsx`, `LiveSession.test.tsx`, `TaskMapLegend.tsx`.
+Acceptance:
+- LiveSession test asserts the list labelled "Task map legend" is present with the five state labels.
+- `scripts/ci.sh` passes.
+
+### T065 — Docs: scenario README table lists only 4 of 8 scenarios
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: tests/scenarios/README.md
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:45Z
+- pr: #58
+
+What: The "The scenarios here" table in `tests/scenarios/README.md` misses `tea_sequence_error`, `tea_single_bad_no_flag`, `tea_substitution`, `tea_unclear_not_error`. Add one row each (level steps/frames + one sentence on what it guards), taken from the comment at the top of each `tests/scenarios/<name>/expected.yaml`. Also drop the stale sentence saying hesitation is missing if `pipeline/src/routine_watch/hesitation.py` now produces hesitation errors (check its docstring; if unsure, leave it).
+Interface: docs only. Read only the README and the four `expected.yaml` files (plus `hesitation.py` docstring).
+Acceptance:
+- Table has one row per directory in `tests/scenarios/` (8 rows, alphabetical or grouped as today).
+- `scripts/ci.sh` passes.
+
+### T066 — Scenario: self-corrected slip is reported but does not flag
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_self_corrected/
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:48Z
+- pr: #60
+
+What: SPEC §7 says a mistake the resident fixes within a short window is a weaker "self-corrected slip", not a full error. No scenario covers it. Add a steps-level scenario where the resident pours before the teabag is in, then puts the teabag in and pours again within the window.
+Interface: `tests/scenarios/tea_self_corrected/{steps.jsonl,expected.yaml}`. Read only `tests/scenarios/README.md` (format), `tests/scenarios/tea_sequence_error/` (template), `pipeline/src/routine_watch/tasks/tea.yaml` (step ids) and the docstring + `SELF_CORRECT_WINDOW_S` in `pipeline/src/routine_watch/errors.py`. Record the actual replay output (`cd pipeline && uv run python -m routine_watch.replay ../tests/scenarios/tea_self_corrected`) in `expected.yaml`, and assert `score:` so a change to self-correction weighting shows up. Give it a `history:` with one earlier bad session so the scenario proves the slip alone does not push it over to `flag: true` (adjust if the real output disagrees; say so in the comment).
+Acceptance:
+- `scripts/e2e.sh tests/scenarios/tea_self_corrected` passes; header comment says what it guards.
+- `scripts/ci.sh` passes.
+
+### T067 — Scenario: optional milk and sugar both done is a clean session
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_milk_sugar/
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:49Z
+- pr: #61
+
+What: `tea_normal` skips sugar; nothing checks that doing both optional steps (milk and sugar) is never counted as an error or perseveration. Add a steps-level scenario doing every step including milk and sugar, with 3+ clean history sessions, expecting no errors, `score: 0.0`, `flag: false`.
+Interface: `tests/scenarios/tea_milk_sugar/{steps.jsonl,expected.yaml}`. Read only `tests/scenarios/README.md`, `tests/scenarios/tea_normal/` (template) and `pipeline/src/routine_watch/tasks/tea.yaml`.
+Acceptance:
+- `scripts/e2e.sh tests/scenarios/tea_milk_sugar` passes with the recorded real output.
+- `scripts/ci.sh` passes.
+
+### T069 — Tests for ErrorList and SuggestedChecks
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/ErrorList.test.tsx, web/src/alert/SuggestedChecks.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:54Z
+- pr: #63
+
+What: Both components have no tests. Read only `web/src/alert/ErrorList.tsx`, `web/src/alert/SuggestedChecks.tsx`, `web/src/contracts.ts` (types `TaskError`, `SuggestedCheck`) and `web/src/alert/FeedbackButtons.test.tsx` (test style).
+Interface: new test files only; do not change the components.
+Acceptance:
+- ErrorList: each error type renders its phrase (e.g. omission → "skipped <step>"), the timestamp formats as m:ss, and the chip colour matches red/amber/grey; an empty list renders without crashing.
+- SuggestedChecks: renders one item per check, and nothing (or an empty state) for an empty list.
+- `cd web && npm run lint && npm test && npm run build` passes.
