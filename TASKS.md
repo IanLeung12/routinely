@@ -513,15 +513,15 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
 
 ### T249 — Review: pausing a room mid-session doesn't stop the live session
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T11:52Z
 - pr: —
 
 What: `/ws/live` checks `get_monitoring_store().is_on(room)` only once before the session starts. If a nurse pauses the room while a session is streaming, frames keep going out and the finished session is still recorded into the resident's history (and can flag them), although the UI says "No camera data is processed while paused" (SPEC §12).
