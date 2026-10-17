@@ -1,5 +1,6 @@
 import { describeCareRecord, formatDayTime, recordTime } from './format.ts'
 import type { CareRecord } from './types.ts'
+import './contextTimeline.css'
 
 /** Care records next to the chart, newest first (SPEC section 9, screen 2): meds,
  * temperature and fluids a nurse reads alongside a change. Context only — the
