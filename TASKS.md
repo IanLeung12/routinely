@@ -318,7 +318,7 @@ Acceptance:
 - `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
 
 ### T196 — App: Alerts list names residents; alert Back returns to where it was opened
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
