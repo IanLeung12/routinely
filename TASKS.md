@@ -38,7 +38,7 @@ What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T410 — Supervisor side: "People I support" + add a person
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
@@ -314,7 +314,7 @@ Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layou
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
 
 ### T433 — Redesign follow-up: pattern library onto the Fey system
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
@@ -335,7 +335,7 @@ Acceptance:
 - existing tests pass (update selectors only, keep behaviour); `cd web && npx vitest run src/patterns && npm run lint`.
 
 ### T434 — Redesign follow-up: guided tour card on the Fey system
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
@@ -375,7 +375,7 @@ Acceptance:
 - existing tests pass (selectors only, keep the phone-width wrapping assertion meaningful); `cd web && npx vitest run src/about && npm run lint`.
 
 ### T436 — Review: camera preview MJPEG readable by any website open on the capture machine
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
