@@ -9,7 +9,9 @@ consistent with and suggested checks.
 
 The one-tap nurse feedback loop (MVP 7) that tunes thresholds from these alerts lives
 in `routine_watch.feedback`; the API route that wires the two together lives in
-`routine_watch.api`.
+`routine_watch.api`. Pass that store as `build_alerts(residents, feedback=store)` and
+each resident's own answers to "what was it?" also re-weight her pattern ranking
+(SPEC Nice to have 8).
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ from .contracts import (
 from .demo import DEMO_DAYS, DEMO_NOW
 from .explain import Explainer
 from .explain_claude import get_explainer
+from .feedback import FeedbackStore
 from .patterns import extract_features, score_patterns
 from .tasks import TASKS_DIR, TaskGraph, TaskGraphError, load_task
 
@@ -50,10 +53,19 @@ def _get_explainer() -> Explainer:
     return get_explainer()
 
 
-def build_alerts(residents: list[dict]) -> list[Alert]:
+def build_alerts(residents: list[dict], feedback: FeedbackStore | None = None) -> list[Alert]:
     """One alert per flagged resident (SPEC section 7: a single bad session never
-    alerts, so only residents `demo_residents` already flagged get one)."""
-    return [_build_alert(resident) for resident in residents if resident["status"] == "flagged"]
+    alerts, so only residents `demo_residents` already flagged get one).
+
+    `feedback` is the nurse feedback logged so far: it re-weights each resident's
+    pattern ranking by what her own alerts turned out to be (SPEC Nice to have 8).
+    Without it the ranking is the pattern library against her features alone.
+    """
+    return [
+        _build_alert(resident, feedback)
+        for resident in residents
+        if resident["status"] == "flagged"
+    ]
 
 
 def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
@@ -177,11 +189,12 @@ def _normal_error_rate(resident: dict) -> float:
     return sum(counts) / len(counts) if counts else 0.0
 
 
-def _patterns(resident: dict) -> list[PatternMatch]:
+def _patterns(resident: dict, feedback: FeedbackStore | None) -> list[PatternMatch]:
     """The patterns this resident's change is consistent with (SPEC section 7.5).
 
     Deterministic rules over the features the pipeline already has, ranked against the
-    pattern library. An empty list is a real answer: a change with no clear pattern.
+    pattern library, then nudged by this resident's own past nurse answers (MVP 8 and
+    Nice to have 8). An empty list is a real answer: a change with no clear pattern.
     """
     features = extract_features(
         resident["sessions"],
@@ -190,10 +203,16 @@ def _patterns(resident: dict) -> list[PatternMatch]:
         now=DEMO_NOW,
         window_h=FLAG_WINDOW_H,
     )
-    return score_patterns(features)
+    if feedback is None:
+        return score_patterns(features)
+    return score_patterns(
+        features,
+        weights=feedback.pattern_weights(resident["id"]),
+        answers=feedback.pattern_answers(resident["id"]),
+    )
 
 
-def _build_alert(resident: dict) -> Alert:
+def _build_alert(resident: dict, feedback: FeedbackStore | None = None) -> Alert:
     qualifying = _qualifying_sessions(resident)
     session_ids = [session_id for session_id, _, _ in qualifying]
     errors = [
@@ -236,5 +255,5 @@ def _build_alert(resident: dict) -> Alert:
         suggested_checks=[
             SuggestedCheck(check) for check in suggest_checks(resident["care_records"], DEMO_NOW)
         ],
-        patterns=_patterns(resident),
+        patterns=_patterns(resident, feedback),
     )
