@@ -15,6 +15,7 @@ import HeatCalendar from './HeatCalendar.tsx'
 import { SessionList } from './SessionList.tsx'
 import { dailyScores } from './days.ts'
 import type { Resident } from './types.ts'
+import './resident.css'
 
 const HEADING_ID = 'resident-detail-heading'
 
