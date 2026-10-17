@@ -530,15 +530,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T254 — Demo residents carry a consent record (who opted in, when)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - source: proposed
 - deps: —
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo_consent.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:10Z
 - pr: —
 
 What: SPEC §12 says the resident or their substitute decision-maker opts in per room, but nothing shows that consent exists. Add a seeded consent record per demo resident so judges see consent is part of the design (Responsible design / Usefulness).
