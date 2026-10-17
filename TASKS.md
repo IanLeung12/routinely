@@ -210,7 +210,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T121 — Bug: demo alert lists placeholder errors ("skipped the task at 0:00" ×4) and grows on every page load
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
