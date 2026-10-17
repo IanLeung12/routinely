@@ -325,7 +325,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T066 — Scenario: self-corrected slip is reported but does not flag
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
