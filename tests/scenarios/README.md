@@ -93,6 +93,8 @@ carry the per-step history needed to exercise it.
 | `tea_single_bad_no_flag` | steps | One bad session after quiet history produces errors without flagging a change. |
 | `tea_substitution` | steps | Stirring with milk instead of a spoon produces exactly one substitution error. |
 | `tea_unclear_not_error` | steps | An unclear, low-confidence teabag observation must not produce an error. |
+| `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
+| `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 
 ## Adding one
 

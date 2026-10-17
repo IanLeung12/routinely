@@ -1,0 +1,60 @@
+# Taking medication with water, as a dependency graph (SPEC nice-to-have 4).
+#
+# The second task, here to show the approach generalises: nothing outside this file
+# and the four detector classes it names knows that meds are a task at all. The step
+# recogniser, the error classifier, the session score and the change flag all read the
+# graph, so `load_task("meds")` is the whole of the feature.
+#
+# Two branches that do not wait on each other - the glass is fetched and filled, the
+# organiser is opened and the pill taken out - meeting at the step that matters:
+# swallowing the pill with water. Doing the pill side first and the glass side first
+# are both correct, so neither order may ever show up as an error.
+#
+# The field meanings are the same as tea.yaml's; that file documents them.
+
+id: take_meds
+title: Take medication with water
+
+# Extra names that mean the same detector class: a care home calls the weekly
+# organiser a dosette box, and a glass of water a tumbler.
+aliases:
+  dosette_box: pill_organiser
+  tumbler: glass
+
+steps:
+  - id: get_glass
+    label: Get a glass
+    objects: [glass]
+
+  - id: fill_glass
+    label: Fill the glass with water
+    deps: [get_glass]
+    objects: [water_jug, glass]
+
+  - id: open_organiser
+    label: Open the pill organiser
+    # A bottle and a weekly organiser are both how a resident keeps their pills, so
+    # neither is a substitution for the other.
+    objects: [pill_organiser, pill_bottle]
+
+  - id: take_pill
+    label: Take the pill out
+    deps: [open_organiser]
+    objects: [pill_organiser, pill_bottle]
+
+  - id: drink_water
+    label: Drink the water
+    # The point of the task: the pill goes down with water, so this waits on both
+    # branches. Skipping it is a dry swallow, and an omission.
+    deps: [take_pill, fill_glass]
+    objects: [glass]
+    # Another sip is normal, so a repeat is never perseveration.
+    once_only: false
+
+  - id: close_organiser
+    label: Close the organiser
+    deps: [take_pill]
+    objects: [pill_organiser, pill_bottle]
+    # Leaving it open is untidy, not an error.
+    optional: true
+

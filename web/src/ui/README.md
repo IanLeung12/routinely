@@ -10,3 +10,4 @@ hard-code hex/px values in components; add a token if one is missing.
 - `EmptyState` — message for a list or chart with nothing to show yet.
 - `ErrorState` — message for a failed fetch or offline mode, announced as an alert.
 - `Loading` — placeholder shown while a screen's data is still being fetched.
+- `DemoBanner` — synthetic-data notice with an optional dismiss callback.
