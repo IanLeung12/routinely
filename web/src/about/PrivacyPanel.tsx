@@ -1,12 +1,13 @@
 import { useId } from 'react'
+import './privacyPanel.css'
 
 export function PrivacyPanel() {
   const headingId = useId()
 
   return (
-    <section aria-labelledby={headingId}>
+    <section className="privacy-panel" aria-labelledby={headingId}>
       <h2 id={headingId}>Privacy and limits</h2>
-      <ul>
+      <ul className="privacy-panel__list">
         <li>Only skeleton points and object boxes leave the camera. No video is stored.</li>
         <li>No face recognition. Each camera is linked to a room by configuration.</li>
         <li>It flags a change for a nurse to review. It is not a medical assessment.</li>
