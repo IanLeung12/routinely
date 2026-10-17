@@ -448,7 +448,7 @@ Acceptance:
 - `scripts/ci.sh` passes with no change to existing expected outputs.
 
 ### T056 — Scenario: tea abandoned mid-task
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -456,7 +456,7 @@ Acceptance:
 - area: tests/scenarios/tea_abandoned/, tests/scenarios/README.md
 - owner: max-codex-light-1
 - claimed: 2026-10-17T05:30Z
-- pr: —
+- pr: #47
 
 What: No e2e scenario covers abandonment (resident starts tea, then nothing for >120 s with required steps left). Add one, written at step level, so the tester replays it end to end.
 Interface: `tests/scenarios/tea_abandoned/{steps.jsonl,expected.yaml}`. Read only: `tests/scenarios/README.md` (format), `tests/scenarios/tea_no_kettle/` (example with history), `pipeline/src/routine_watch/errors.py` lines 50-150 (abandonment rule, `ABANDON_AFTER_S = 120`), `pipeline/tests/test_errors.py` abandonment section. Steps: fill_kettle, get_cup, boil, then a gap >120 s, then one more step (or stop); expected errors include `abandonment` plus whatever omissions the classifier reports (run it and record the real output, don't guess). Give it a `history:` so it flags (two bad sessions within 48 h, ≥3 prior). Add a row to the README table.
