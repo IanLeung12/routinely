@@ -222,22 +222,22 @@ Acceptance:
 - pytest cases: a step id with no history is never flagged; empty input returns an empty list; a duration just above vs just below the threshold; zero-length durations; history for one step doesn't affect another step.
 - `scripts/ci.sh` passes.
 
-### T096 — Scenario: stirring three times is perseveration
-- status: blocked
+### T096 — Scenario: teabag added three times is perseveration, stirring twice is not
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
-- area: tests/scenarios/tea_stir_three_times/
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T07:15Z
+- area: tests/scenarios/tea_teabag_three_times/
+- owner: —
+- claimed: —
 - pr: —
-- note: NEEDS HUMAN: tea.yaml marks stir once_only:false ('stirring again is normal, never perseveration'), so repeating stir can never trigger a perseveration error under current rules. Task area is scoped to tests/scenarios/ only, can't edit tea.yaml. Need a decision: pick a different once_only step for this scenario, or change stir's once_only flag (heavy task).
+- note: rewritten by orchestrator: stir is once_only:false in tea.yaml by design (repeat stirring is normal), so use teabag_in_cup (once_only default true) instead.
 
-What: Repeating a step is the signal behind the executive pattern (SPEC §7.5, perseveration with intact order). Add a steps-level scenario: a complete, correctly ordered tea session where `stir` happens three times in a row. Read only `tests/scenarios/README.md` and `tests/scenarios/tea_substitution/` (copy its shape). Do not edit `tests/scenarios/README.md` (a later docs task adds the rows).
-Interface: `tests/scenarios/tea_stir_three_times/{expected.yaml,steps.jsonl}` with a comment saying what it's for; no history, so `flag: false`.
+What: Repeating a once-only step after other steps is the signal behind the executive pattern (SPEC §7.5, perseveration with intact order). Add a steps-level scenario: a complete, correctly ordered tea session where `teabag_in_cup` is done again after `pour` and once more after `stir`, and `stir` itself happens twice (which must NOT count). Read only `pipeline/src/routine_watch/tasks/tea.yaml` (the `once_only` comment at the top), `tests/scenarios/tea_kettle_twice/` and `tests/scenarios/tea_substitution/` (copy their shape). Do not edit `tests/scenarios/README.md` or `tea.yaml`.
+Interface: `tests/scenarios/tea_teabag_three_times/{expected.yaml,steps.jsonl}` with a comment saying what it's for; no history, so `flag: false`.
 Acceptance:
-- `scripts/e2e.sh tests/scenarios/tea_stir_three_times` passes and asserts the perseveration error(s) on `stir` and no omission/sequence errors.
+- `scripts/e2e.sh tests/scenarios/tea_teabag_three_times` passes and asserts perseveration error(s) on `teabag_in_cup` only, none on `stir`, and no omission/sequence errors.
 - `scripts/ci.sh` passes.
 
 ### T097 — Scenario: two bad sessions 60 h apart do not flag
