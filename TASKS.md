@@ -374,7 +374,7 @@ Acceptance:
   * `scripts/ci.sh` passes
 
 ### T286 — Privacy panel: say pauses are logged and where consent is recorded
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -382,7 +382,8 @@ Acceptance:
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T14:23Z
-- pr: —
+- pr: #279
+- rating: 5/5 clear
 
 What: The privacy panel's opt-in bullet predates the consent record (T255) and the audit trail (T262). Make it concrete in nurse-readable words.
 Interface: In `web/src/about/PrivacyPanel.tsx`, replace only the last bullet with two: "Residents or their decision-maker opt in; who consented and when is shown on each resident's page." and "Monitoring can be paused per room; every pause and resume is logged with who and when."
