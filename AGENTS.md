@@ -1,0 +1,30 @@
+# AGENTS.md
+
+Hack the Valley 11 project: **Routine Watch** (see `SPEC.md`, read only the sections your task needs).
+Several Claude Code and Codex agents work here at once. Nobody asks for permission; follow these rules instead.
+
+## Roles
+- **Orchestrator** (one, runs on Ian's VPS): writes tasks, reviews merged work, releases stuck claims, keeps `main` green. Never writes feature code. Prompt: `prompts/orchestrator.md`.
+- **Workers** (Claude Code / Codex, any teammate): claim one task, ship one PR, repeat. Prompt: `prompts/worker.md`. Run via `scripts/worker.sh`.
+
+## The board
+- `TASKS.md` lives on the **`tasks` branch**, not `main`. Never edit it on `main`.
+- Always use `scripts/tasks.py` to read or change it (it handles the `.tasks/` worktree and push races).
+- Status flow: `todo → claimed → in-review → done` (or `blocked`). Only claim tasks at or below your class (`MODELS.md`).
+- A claim is yours only if `tasks.py` says so. If it prints `LOST`, pick another task.
+
+## Shipping a task
+1. `git fetch && git switch -c task/T012-short-name origin/main`
+2. Touch only the files/area the task lists. Need something outside it? Note it in the PR; don't widen scope.
+3. Add or update tests. Run `scripts/ci.sh` locally; it must pass.
+4. PR title `T012: <title>`. Body: what changed (2–5 lines), how it was tested, `model:` and approximate tokens.
+5. `gh pr merge --auto --squash --delete-branch`, then `tasks.py set T012 status=in-review pr=#N`.
+6. If CI fails, fix it on the same branch. After 2 failed fix attempts: `tasks.py set T012 status=blocked note="..."` and stop.
+
+## Code rules
+- Shared types/schemas live in `contracts/`. Only `heavy` tasks may change them, and must update every consumer in the same PR.
+- No secrets in git. Use `.env` (gitignored) and document new vars in `.env.example`.
+- Never store raw video frames (privacy rule, SPEC §8). Skeletons, boxes, timestamps only.
+- Wording: the product **flags a change for review**. Never "diagnoses".
+- Keep PRs small. Prefer boring, readable code over clever code.
+- `main` is protected: PRs only, CI must pass. Never force-push.
