@@ -5832,3 +5832,61 @@ Acceptance:
 - one parametrised pytest; each route with id `nobody` returns 404 with a JSON `detail`
 - if a route returns something else, don't change product code: mark that case `xfail(strict=True)` with reason and mention it in the PR body
 - `scripts/ci.sh` passes
+
+### T331 — Test: heat calendar cells have accessible names
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/HeatCalendar.a11y.test.tsx
+- owner: Max_codex_light
+- claimed: 2026-10-17T16:56Z
+- pr: #327
+- rating: 5/5 clear
+
+What: Colour alone must not carry meaning. Assert each heat calendar cell exposes its date and error count to screen readers.
+Interface: read `web/src/resident/HeatCalendar.tsx` and `web/src/resident/HeatCalendar.test.tsx` (fixture). Use Testing Library `getAllByRole`/`getByLabelText`.
+Acceptance:
+- every rendered day cell has an accessible name containing the date and the count (e.g. "17 Oct: 2 errors"); zero-error days say "no errors"
+- if the component lacks this today, mark the test `it.fails` and say so in the PR body (no product change in this task)
+- `scripts/ci.sh` passes
+
+### T332 — Replay and ghost replay respect prefers-reduced-motion
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/GhostReplay.tsx, web/src/evidence/reducedMotion.ts, web/src/evidence/reducedMotion.test.ts, web/src/evidence/ReplayPlayer.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T16:36Z
+- pr: #318
+- rating: 4/5 task assumed GhostReplay autoplays on its own but it is a static render driven by AlertView's fixed t prop; nothing to gate there
+
+What: Accessibility: when the OS asks for reduced motion, replays must not autoplay; they show the first (or flagged) frame and wait for Play.
+Interface: `prefersReducedMotion(): boolean` in `reducedMotion.ts` (matchMedia, safe when matchMedia is missing); ReplayPlayer and GhostReplay read it on mount. Manual Play still animates.
+Acceptance:
+- tests mock `matchMedia` both ways: autoplay unchanged when false; no autoplay + Play button focused-able when true
+- existing ReplayPlayer keyboard tests still pass
+- `scripts/ci.sh` passes
+
+### T333 — Resident detail: print-friendly layout
+- status: done
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/resident/residentPrint.css, web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.print.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T17:06Z
+- pr: #329
+- rating: 5/5 clear
+
+What: Rationale: nurses bring a resident's summary to care conferences/family meetings; matches the alert (T289) and handoff (T203) print layouts. Add a Print button and `@media print` styles for resident detail.
+Interface: `residentPrint.css` imported by `ResidentDetail.tsx`; a "Print" button calling `window.print()`; print hides nav, buttons and the replay, shows name, consent line, baseline chart, heat calendar, drift card and feedback history on white. Follow the approach of `web/src/alert/alert.css` print rules.
+Acceptance:
+- test: Print button exists, is keyboard reachable, calls `window.print` (mocked)
+- no new wording that diagnoses; screen layout unchanged
+- `scripts/ci.sh` passes
