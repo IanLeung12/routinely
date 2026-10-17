@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 8f7b286
+- last-reviewed: c29b593
 
 ## Tasks
 
@@ -188,6 +188,7 @@ What: T166 (PR #159) made `alerts.session_id_for`, `task_errors`, `distinct_clau
 Interface: Read only `docs/CODEMAP.md`, `git show e4f8fe1 --stat` and the module docstrings of `pipeline/src/routine_watch/alerts.py` and `handoff.py`. Edit notes only, not the generated file list.
 Acceptance:
 * 2-4 line note next to the existing handoff/alert notes naming the four shared functions and why (same steps, same times, same baseline).
+* Also one line that handoff rows open the resident's alert by looking up the id in `GET /alerts` (T152, `web/src/handoff/Handoff.tsx` `alertByResident`).
 * No other file changed.
 
 ### T180 — Handoff: each row says what's normal for that resident
@@ -478,3 +479,74 @@ Interface: local state in `UnitOverview`; buttons with `aria-pressed`; filters o
 Acceptance:
 - Tests: each filter shows only matching residents; empty case shows the message; default is All.
 - `cd web && npm test -- UnitOverview` and `scripts/ci.sh` pass.
+
+### T196 — App: Alerts list names residents; alert Back returns to where it was opened
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/App.tsx, web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The overview's Alerts list shows the raw id ("mrs-k: Change flagged for review"), not a name a nurse reads; and an alert opened from the shift handoff (T152, PR #177) goes Back to the overview instead of the handoff.
+Interface: In `App.tsx`, label each alert with the resident's display name from `fetchResidents()` (`web/src/overview/api.ts`; fall back to the id if not found). Track where the alert was opened from (`'overview' | 'handoff' | 'live'`) so `AlertView`'s `onBack` returns there.
+Acceptance:
+* App test: Alerts list shows "Mrs. K" (mock residents), not "mrs-k".
+* App test: Shift handoff → Open alert → Back lands on the handoff screen; overview → alert → Back lands on the overview.
+* `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
+
+### T197 — Heat calendar legend: CSS classes instead of inline styles
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: T172 (PR #176) added three legend swatches with long inline `style={{...}}` objects. Move them to classes so the colours live in one place with the grid cells.
+Interface: Read only `web/src/resident/HeatCalendar.tsx` and `web/src/alert/alert.css` (example of a component stylesheet). Create `heatCalendar.css` with `.heat-swatch`, `.heat-swatch--low`, `.heat-swatch--high`, `.heat-swatch--none` using the same CSS variables; import it in `HeatCalendar.tsx`. No visible change.
+Acceptance:
+* No `style={{` left on the legend swatches; legend text unchanged ("Lighter = fewer errors", "Darker = more errors", "Grey = no session").
+* `cd web && npx vitest run src/resident/HeatCalendar.test.tsx` passes.
+
+### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since T152 (PR #177), each handoff row with an alert pending review has an "Open alert" button. The runbook's handoff step doesn't say so.
+Interface: Read only `docs/DEMO.md` and `web/src/handoff/Handoff.tsx` (the `Open alert` button). Add 1-3 lines to the handoff step.
+Acceptance:
+* DEMO.md says the presenter can click "Open alert" on Mrs. K's handoff row to reach her alert.
+* Wording says "flags a change for review"; no "diagnose". No other file changed.
+
+### T199 — Alert view: "Copy summary" for the chart note
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/alert/AlertView.tsx, web/src/alert/alertText.ts, web/src/alert/alertText.test.ts, web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: nurses chart what they saw; one tap copies the alert as plain text (like the handoff's Copy summary, T151) so the flag reaches the care record without retyping (Usefulness).
+Interface: `alertText(alert: Alert): string` in `alertText.ts`: resident, "Change flagged for review", the summary, errors with times, "Consistent with: …" pattern names, suggested checks. A `Copy summary` button in `AlertView` using `navigator.clipboard.writeText`, with a "Copied" status like `web/src/handoff/Handoff.tsx`.
+Acceptance:
+* Unit test on `alertText` for the mock alert: contains "flagged for review" and "Consistent with", never "diagnos".
+* AlertView test: clicking Copy summary calls clipboard with `alertText(alert)` and shows "Copied".
+* `scripts/ci.sh` passes.

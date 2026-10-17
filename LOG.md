@@ -161,3 +161,10 @@ T147 | light | claude-sonnet | merged first try | ~15k tok
 T162 | standard | claude-sonnet | merged (2 commits) | ~60k tok
 T184 | light | codex | merged first try | ~4k tok
 T186 | light | claude-sonnet | merged first try | ~15k tok
+T178 | light | claude-sonnet | merged first try | ~45k tok
+T173 | light | claude-sonnet | merged first try | ~15k tok
+T172 | light | codex | merged first try | ~4k tok
+T152 | standard | claude-opus | merged first try | ~110k tok
+T182 | standard | claude-sonnet | merged (2 commits) | ~45k tok
+T188 | light | claude-sonnet | merged first try | ? tok
+T185 | standard | claude-sonnet | merged (2 commits) | ~45k tok
