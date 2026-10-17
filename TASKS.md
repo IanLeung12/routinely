@@ -315,14 +315,14 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T020 — Replay harness uses the real error classifier
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - deps: T005, T010, T014
 - area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:40Z
-- pr: —
+- pr: #21
 
 What: Review finding on PR #13: `replay.find_errors` is still the stub T005 shipped. Replace it with `errors.classify_errors` (plus `hesitation.hesitations` where a baseline is available) so `scripts/e2e.sh` exercises the real pipeline.
 Interface: delete the stub body; `replay` calls `classify_errors(events, graph, session_id=..., ended=True)`. Keep the public replay CLI/output format unchanged so `scripts/e2e.sh` and `expected.yaml` files still work.
