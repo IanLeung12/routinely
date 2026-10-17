@@ -5890,3 +5890,81 @@ Acceptance:
 - test: Print button exists, is keyboard reachable, calls `window.print` (mocked)
 - no new wording that diagnoses; screen layout unchanged
 - `scripts/ci.sh` passes
+
+### T330 — Heat calendar: usable at phone width (375 px)
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/heatCalendar.css
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:26Z
+- pr: #337
+- note: re-queued by orch: previous attempt blocked only by local Windows env (rolldown EPERM / port clash, see LESSONS), not the fix; branch was never pushed, so redo the small CSS change from origin/main
+- rating: 4/5 clear, but acceptance criteria conflicted (0.6875rem shrink from a prior attempt violated the >=12px rule)
+
+What: Same series as T234/T239: at 375 px the heat calendar must fit without horizontal page scroll and keep readable cells.
+Interface: read `web/src/resident/heatCalendar.css`, `web/src/resident/HeatCalendar.tsx`, and the `@media` block in `web/src/overview/overview.css` for the breakpoint convention. CSS only.
+Acceptance:
+- `@media (max-width: 480px)` rules: cells shrink or the grid scrolls inside its own card (not the page); labels stay ≥ 12 px
+- dark theme tokens still used (no hard-coded colours)
+- PR body has a 375 px screenshot from `scripts/dev.sh up` (or states why not)
+- `scripts/ci.sh` passes
+
+### T334 — Test: pattern checks and summaries never use diagnosis wording
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_wording_guard.py
+- owner: max_API_light
+- claimed: 2026-10-17T17:16Z
+- pr: #336
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T334-wip-1701: start from it (git switch task/T334-wip-1701 && git merge origin/main)
+
+What: Guard SPEC's wording rule in code: every pattern name, description, rule-out check and generated summary says "consistent with"/"check", never "diagnos", "has <condition>", or treatment advice.
+Interface: read `pipeline/src/routine_watch/patterns_library.py`, `pipeline/src/routine_watch/checks.py`, `pipeline/src/routine_watch/explain.py` (offline/fake path). Iterate every pattern and the offline explanation for each scenario alert you can build cheaply (use `demo.py` data).
+Acceptance:
+- case-insensitive banned list: `diagnos`, `has delirium`, `has dementia`, `suffers from`, `prescribe`, `dose`; test fails with the offending string
+- offline only; `scripts/ci.sh` passes
+
+### T335 — Test: dashboard source has no diagnosis wording
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/wording.test.ts
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T17:16Z
+- pr: #331
+- rating: 4/5 clear, but test file already existed with partial check
+
+What: Same rule as T334 for the dashboard: a vitest that reads every non-test `.ts`/`.tsx` under `web/src/` and fails on banned user-facing wording.
+Interface: use `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', eager: true })` (or node `fs`), skip `*.test.*` and `contracts.ts`.
+Acceptance:
+- banned (case-insensitive): `diagnos`, `suffers from`, `has delirium`, `has dementia`; failure message names file + line
+- passes on current main (if not, list hits in PR body and leave the fix to a follow-up bug task)
+- `scripts/ci.sh` passes
+
+### T336 — Review: unclear sessions are scored and can flag (quality.py never wired)
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/tests/test_replay.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T16:35Z
+- pr: #322
+- rating: 5/5 clear, precise diff; the one gap was that wiring quality broke two pre-existing test_live_camera.py tests outside the listed area (zero-event fixtures became unclear by session_quality's own pinned min_events rule), which needed a surgical fix not mentioned in the task
+
+What: `quality.session_quality` (SPEC §7/§12: low-confidence sessions are "unclear", never errors) is imported nowhere in `pipeline/src`. `replay.score_session` scores and flags every session regardless, so a session with mostly unclear/low-confidence events (bad lighting, walker) can push a resident to a flag. Fix: in `replay.score_session`, compute `session_quality(events)`; when `"unclear"`, return score 0.0 and flag False (same treatment as assisted). Add `"quality": "ok"|"unclear"` to the dict `replay_scenario` returns. `live.py` (~line 290) and `live_camera.py` (~line 150) call `score_session`, so they inherit the fix; pass events through if the signature changes, nothing else there.
+Interface: `score_session(scenario, errors, events)` -> unchanged `(score, assisted, flag)` tuple; update the three call sites.
+Acceptance:
+- new test: a scenario built in-test with >40% `unclear` or sub-threshold events gets `flag: False`, `score: 0.0`, `quality: "unclear"`
+- every existing scenario in `tests/scenarios/` still matches its expected.yaml (replay tests / `scripts/e2e.sh` pass)
+- `scripts/ci.sh` passes
