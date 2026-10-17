@@ -5,7 +5,7 @@ You have already been assigned this task (status is `claimed`, owner is you):
 
 Do it end to end without asking anyone:
 1. Read `AGENTS.md`. Read only the parts of `SPEC.md` and the code that this task needs.
-2. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main`
+2. `git fetch -q && git switch -c task/{{ID}}-<short-name> origin/main` (if the task already has a `pr:`, check out that PR's branch instead and fix it)
 3. Implement it. Stay inside the task's `area`. Write or update tests.
 4. Run `scripts/ci.sh` until it passes.
 5. Commit, push, open a PR titled `{{ID}}: <title>`. In the body: what changed (2–5 lines), how you tested it, `model: {{MODEL}}`, approximate tokens used.
