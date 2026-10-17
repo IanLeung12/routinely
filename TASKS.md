@@ -226,7 +226,7 @@ Acceptance:
 - `scripts/integration.sh` passes locally on main (paste its last line in the PR); `scripts/ci.sh` passes.
 
 ### T283 — Resident detail: "What nurses said" — past feedback answers and the pattern ranking they changed
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 2
 - kind: feature
@@ -235,7 +235,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude
 - claimed: 2026-10-17T14:36Z
-- pr: —
+- pr: #287
+- rating: 4/5 clear on the interface and the acceptance; it didn't say where the pattern *name* for the card's copy comes from (the store returns a cause id, so the route needed a pattern_names map), and the demo only ever has one alert per resident, so 'answers' can only hold one row per resident today
 
 What: Rationale: the feedback loop (T130, Nice-to-have 8) re-weights patterns silently; judges and nurses can't see the AI learning. Expose a resident's recorded answers and current pattern weights and show them as a small card on the resident detail screen.
 Interface: `FeedbackStore.history(resident_id) -> list[{alert_id, verdict, cause, at}]` (newest first) plus existing `pattern_weights()`; route `GET /residents/{id}/feedback` → `{"answers": [...], "pattern_weights": {pattern_id: float}}` (404 for unknown resident) in the residents routes module from T278. Web: `fetchFeedbackHistory(id)` in resident/api.ts, `<FeedbackHistory>` card under the session list: "Confirmed · consistent with <pattern name> · 13:40" rows and "Ranking now favours: <pattern>" when weights exist; empty state "No nurse answers yet". Don't add a contracts/ schema here (contracts/ is busy with T269/T280); note it in the PR for a follow-up.
