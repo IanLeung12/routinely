@@ -363,15 +363,15 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T377 — Review: DEMO.md shift-handoff step is after "Close" (out of run order)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - source: reviewer
 - deps: —
 - area: docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T19:29Z
 - pr: —
 
 What: the "Shift handoff" bullet added in the last merge sits after the "Close" bullet, separated by a blank line, so the presenter reads it after closing.
