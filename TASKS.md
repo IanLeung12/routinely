@@ -93,15 +93,15 @@ Acceptance:
 - Keyboard + screen-reader friendly; mobile width works; `scripts/ci.sh` passes. Screenshot in PR.
 
 ### T410 — Supervisor side: "People I support" + add a person
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T408
 - area: web/src/people/PeopleISupport.tsx, web/src/people/PeopleISupport.test.tsx, web/src/supporting/, web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T22:02Z
 - pr: —
 - note: T408 already shipped PeopleISupport (list + add by code) in web/src/people/; extend it there; Person.context already holds the context line; new CSS under web/src/supporting/, not people.css.
 
