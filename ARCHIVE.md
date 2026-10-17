@@ -5432,3 +5432,60 @@ Interface: new test file only; read web/src/about/PrivacyPanel.tsx, web/src/abou
 Acceptance:
 - Keyboard-only: open panel, reach the toggle, pause then resume a room, focus is not lost after each action.
 - No production code changes. `scripts/ci.sh` passes.
+
+### T309 — Monitoring history card: usable at phone width (375 px)
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/MonitoringHistory.tsx, web/src/resident/monitoringHistory.css, web/src/resident/MonitoringHistory.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:36Z
+- pr: #299
+- rating: 5/5 clear
+
+What: The resident page's monitoring audit trail (who paused/resumed, when) should read cleanly at 375 px, matching how T239 made resident detail work on phones.
+Interface: CSS media query in monitoringHistory.css; markup changes only if needed for wrapping.
+Acceptance:
+- At 375 px: no horizontal scroll, rows wrap to two lines (who/action, then time), text >= 14 px.
+- Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
+
+### T310 — Test: pattern library urgency filter (every option, reset, empty state)
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/patterns/PatternLibrary.filters.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:57Z
+- pr: #304
+- note: rewritten by orchestrator: the library has one filter (urgency); there is no level filter. Test that one axis only.
+- rating: 5/5 clear
+
+What: The pattern library has a single urgency filter (T300). Test each option narrows the list to matching patterns, "All" restores the full list, and an urgency with no matching patterns shows the empty state.
+Interface: new test file only. Read web/src/patterns/PatternLibrary.tsx and web/src/patterns/PatternLibrary.test.tsx (copy its fetch mock). Do not change PatternLibrary.tsx.
+Acceptance:
+- Covers: every urgency button, "All" reset, exactly one button has aria-pressed="true", empty state when a mocked list has no pattern of the chosen urgency.
+- At least one case operates the filter by keyboard (Tab + Enter/Space).
+- `scripts/ci.sh` passes.
+
+### T311 — Test: handoff payload without `paused` / `monitoring_paused` still validates and renders
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_handoff_defaults.py, web/src/handoff/Handoff.defaults.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T15:42Z
+- pr: #300
+- rating: 5/5 clear
+
+What: T292 (#297) made `Handoff.paused` and `HandoffResident.monitoring_paused` optional with defaults (false / []); lock that in on both sides so an older or trimmed payload never breaks the shift handoff.
+Interface: new test files only; read pipeline/src/routine_watch/contracts.py (Handoff, HandoffResident, PausedRoom), web/src/handoff/Handoff.tsx, web/src/handoff/mockHandoff.ts.
+Acceptance:
+- Pipeline: a Handoff dict without `paused` and residents without `monitoring_paused` validates; defaults are `[]` / `False`; round-trips through `model_dump`.
+- Web: Handoff renders a payload missing both fields with no crash, no paused-rooms section, and no "paused" label on any row.
+- `scripts/ci.sh` passes.
