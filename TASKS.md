@@ -93,7 +93,7 @@ Acceptance:
 - area: web/src/patterns/PatternLibrary.keyboard.test.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T17:31Z
-- pr: #340
+- pr: #342
 - note: PR #340 open; CI running on GitHub (local CI failure was env-only)
 
 What: Add a keyboard-only test for the pattern library, like `web/src/overview/UnitOverview.keyboard.test.tsx` (read it first as the template). Read `web/src/patterns/PatternLibrary.tsx` and `web/src/patterns/PatternLibrary.filters.test.tsx` for how it is rendered with mock data.
