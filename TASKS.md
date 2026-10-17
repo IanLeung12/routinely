@@ -430,7 +430,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T055 — Review: session scoring duplicated in replay.py and live.py
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
