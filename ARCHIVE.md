@@ -5793,3 +5793,42 @@ Acceptance:
 - covers at least: flat history (no drift); slow downward trend; sudden change; evening-only worsening; a sedating care record inside its window appears in the context and an old one doesn't; empty sessions don't crash
 - deterministic (fixed `now`, no wall clock)
 - `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
+
+### T328 — Test: /ws/live WebSocket routes in api_live.py
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_live_ws.py
+- owner: Max_codex_light
+- claimed: 2026-10-17T16:41Z
+- pr: #321
+- note: GitHub CI passed; local CI hit known App.test.tsx undici WebSocket environment error despite all tests passing.
+- rating: 5/5 clear
+
+What: `api_live.py` has no direct test file. Add WebSocket tests with FastAPI `TestClient` for the live route.
+Interface: read `pipeline/src/routine_watch/api_live.py`, `pipeline/src/routine_watch/api_state.py`, `pipeline/src/routine_watch/monitoring.py` and one existing API test in `pipeline/tests/` for the client fixture. Call `api_state.reset()` before each test.
+Acceptance:
+- covers: a normal run sends at least one message then a session-end message; a paused room gets the "paused" message and no step events; an unknown scenario/room gets a clear error or close (whatever the code does today, asserted)
+- offline only, no LIVE_API calls
+- `scripts/ci.sh` passes
+
+### T329 — Test: resident routes return 404 for an unknown resident
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_api_residents_404.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T16:42Z
+- pr: #323
+- rating: 5/5 clear
+
+What: Every `/residents/{id}/...` route in `api_residents.py` should answer an unknown id with 404, not 500 or an empty 200.
+Interface: read `pipeline/src/routine_watch/api_residents.py` and `pipeline/src/routine_watch/api.py` (router wiring). Parametrise over every GET route under `/residents/{id}` found in `api_residents.py`.
+Acceptance:
+- one parametrised pytest; each route with id `nobody` returns 404 with a JSON `detail`
+- if a route returns something else, don't change product code: mark that case `xfail(strict=True)` with reason and mention it in the PR body
+- `scripts/ci.sh` passes
