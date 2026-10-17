@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: docs
 - deps: —
 - area: docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:57Z
 - pr: —
 
 What: T166 (PR #159) made `alerts.session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` public so `handoff.py` writes its summary from the same evidence as the alert, against that resident's own baseline. CODEMAP notes don't say so.
