@@ -208,3 +208,16 @@ These categories come from neuropsychology research on everyday-action errors, a
 - Ian prefers concise answers, visual-first output, honest prior-art checks, and discussing plans before building.
 - On Discord: no tables (use bullet lists), and send images as attachments.
 - The YC student credits available are Supabase, Roboflow, Anthropic, OpenAI, Google/Gemini, AWS, Langfuse, Deepgram, Vapi, Tavus, Browser Use, Firecrawl, AgentMail and Blaxel. Of these, the spec uses only Roboflow, Supabase, Anthropic, Gemini, Langfuse and optionally AWS.
+
+---
+
+## 16. Architecture decisions (locked)
+
+Diagrams: `docs/routine-watch-architecture.png` (components), `docs/routine-watch-flow.png` (process flow).
+
+- **Single capture stream.** The capture process emits one JSONL record per frame (skeleton + hand landmarks + object boxes + timestamp). Live camera, the pre-recorded fallback, tests and scenarios all feed the pipeline through this same format.
+- **A. Verifier privacy:** only on low-confidence/pre-error moments, send Gemini 4–8 low-res frames cropped to the counter (no face), from a ~5 s in-memory ring buffer. Never stored. Timeout ~3 s → event marked `unclear`.
+- **B. Alerts:** the FastAPI WebSocket that carries the live view also carries alerts. Supabase is optional, only for phone push later.
+- **C. Placement:** the whole pipeline (capture → recogniser → task graph → errors → session score) runs on the demo laptop and works offline. It uplinks events, sessions and downsampled skeletons to the backend on Vultr (FastAPI + baseline/change detection + alert builder + dashboard), which stores in Tiger Data.
+- **Roboflow:** detector runs locally from downloaded weights. No hosted inference. Humans run training (max 2–3 runs, 50 credits/month).
+- **Hands:** use MediaPipe hand landmarks as well as pose; task steps are hand–object interactions.
