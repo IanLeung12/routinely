@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 2a452d7
+- last-reviewed: e8f5ab0
 
 ## Tasks
 
@@ -685,4 +685,56 @@ What: The live screen comes from live.py and the alert view from replay.py; noth
 Interface: read pipeline/src/routine_watch/live.py (session_messages, as_json), replay.py (run), scenario.py (load_scenario). Test only: if a scenario disagrees, mark it `xfail(strict=True)` with the reason and list it in the PR body; don't change pipeline code.
 Acceptance:
 - `cd pipeline && pytest tests/test_live_replay_parity.py` passes quickly (fake clock, no real sleeps).
+- `scripts/ci.sh` passes.
+
+### T398 — Test: landing page works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/landing/Landing.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: the public landing page (T378) has no keyboard test; judges may tab through it.
+Interface: new file `web/src/landing/Landing.keyboard.test.tsx` only. Read `web/src/landing/Landing.tsx` and copy the style of `web/src/alert/AlertView.keyboard.test.tsx` (uses `@testing-library/user-event` `tab()`).
+Acceptance:
+- Render `<Landing />`; tabbing reaches, in order, the "Open the dashboard" link (href `/`), the "#how-it-works" link, the `/?tour=1` tour link, and the GitHub source link; each is focusable and has an accessible name.
+- Every `h2` section has an `id` so the in-page link target exists (assert `#how-it-works` resolves to an element).
+- `cd web && npx vitest run src/landing` passes; `scripts/ci.sh` passes.
+
+### T399 — Smoke: check the landing page is served
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: `scripts/smoke.sh` checks the dashboard at `/` returns HTML but not the public landing page `/landing.html` (T378, second Vite entry in `web/vite.config.ts`), so a broken landing build would go unnoticed before the demo.
+Interface: add one check next to the existing `GET $DASHBOARD_URL -> HTML` block (~line 233): `GET $DASHBOARD_URL/landing.html` must return HTML containing `Routine Watch`; use the existing `get`/`pass`/`fail` helpers. Update the header comment listing what it checks.
+Acceptance:
+- With `scripts/dev.sh up`, `scripts/smoke.sh` passes and prints the new pass line; with the landing entry removed from the build it fails with a readable message.
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
+
+### T400 — Docs: DEMO.md points judges at the landing page
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/DEMO.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: DEMO.md never mentions the public landing page at `/landing.html` (T378), which is the judges' first impression and links into the dashboard and guided tour.
+Interface: in `docs/DEMO.md`, add one line to the setup/"before you start" section: open `http://localhost:5173/landing.html` (or the deployed URL) on a second tab to hand to judges; its "Open the dashboard" button goes to `/`, the tour link to `/?tour=1`. Read only `docs/DEMO.md` and `web/src/landing/Landing.tsx`. No other file.
+Acceptance:
+- One short addition, matching the existing bullet style; no change to the run order.
 - `scripts/ci.sh` passes.
