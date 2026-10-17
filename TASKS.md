@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 6759ed1
+- last-reviewed: 9b30224
 
 ## Tasks
 
@@ -472,3 +472,74 @@ Acceptance:
 - Route body validates against the new schema in a pipeline test (empty, and with one answer + cause).
 - `web/src/resident/types.ts` has no hand-written copy of these shapes; `test_generated_files_are_up_to_date` covers it.
 - `scripts/ci.sh` passes.
+
+### T302 — Test: alert view works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/AlertView.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Like T295 (`web/src/overview/UnitOverview.test.tsx`, keyboard section), prove a nurse can work Mrs. K's alert with Tab/Enter/Space only.
+Interface: read `web/src/alert/AlertView.tsx`, `web/src/alert/AlertView.test.tsx` (for fixtures/mocks) and `web/src/alert/FeedbackButtons.test.tsx`. New file only; use `@testing-library/user-event` `user.tab()` / `user.keyboard('{Enter}')`.
+Acceptance:
+- Test tabs from the top of the alert to each feedback button and confirms one with the keyboard; the confirmation text appears; no element in the tab order lacks an accessible name.
+- If a real keyboard trap is found, don't fix it: note it in the PR body.
+- `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass.
+
+### T303 — Test: resident detail works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/ResidentDetail.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Prove a nurse can move through Mrs. K's resident page (drift card, heat calendar, feedback history, back button) with keyboard only.
+Interface: read `web/src/resident/ResidentDetail.tsx` and `web/src/resident/ResidentDetail.test.tsx` (copy its fetch mocks). New file only; `user-event` `user.tab()`.
+Acceptance:
+- Test reaches the back control and every interactive element on the page by Tab, each has an accessible name, and Enter on back calls the back handler.
+- Real keyboard bugs are noted in the PR body, not fixed here.
+- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
+
+### T304 — Test: demo reset clears feedback history
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_feedback_reset.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `GET /residents/{id}/feedback` (T283) must be empty again after `/demo/reset`, or a second demo run shows the first run's answers.
+Interface: read `pipeline/src/routine_watch/api_state.py` (`reset`), `pipeline/src/routine_watch/feedback.py` (`history`, `reset`), and `pipeline/tests/test_feedback_history.py` for the client fixture. New file only.
+Acceptance:
+- Test posts a feedback answer for an alert, sees it in `/residents/{id}/feedback`, calls `/demo/reset`, then sees `answers == []` and `pattern_weights == {}`.
+- `cd pipeline && python -m pytest tests/test_feedback_reset.py` and `scripts/ci.sh` pass.
+
+### T305 — Feedback history card: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 3
+- kind: improvement
+- deps: —
+- area: web/src/resident/feedbackHistory.css, web/src/resident/FeedbackHistory.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same as T247 but for the new feedback history card on the resident page: no horizontal scroll and readable rows at 375 px.
+Interface: read `web/src/resident/FeedbackHistory.tsx` and `web/src/resident/feedbackHistory.css`. CSS-only change (add a `@media (max-width: 480px)` block); don't edit the component.
+Acceptance:
+- At ≤480 px each answer's verdict, cause and time wrap onto their own lines instead of overflowing; long pattern names wrap (`overflow-wrap: anywhere`).
+- The new test asserts the card renders its rows with the classes the media query targets (jsdom can't measure layout).
+- `cd web && npx vitest run src/resident` and `scripts/ci.sh` pass.
