@@ -492,7 +492,7 @@ Acceptance:
 - `contracts/README.md` lists both; `scripts/ci.sh` passes.
 
 ### T258 — Test: pause flow end to end in the API (pause → handoff → live → reset)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -500,7 +500,8 @@ Acceptance:
 - area: pipeline/tests/test_pause_flow.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T12:16Z
-- pr: —
+- pr: #242
+- rating: 5/5 clear
 
 What: Pausing a room now touches four places (monitoring store, `/handoff`, `/ws/live`, `/demo/reset`) built in separate PRs. One test walks the whole flow so a regression in any shows up.
 Interface: FastAPI `TestClient` only, fakes only. Steps: `PUT /rooms/204/monitoring {"on": false}` → `GET /monitoring` lists 204 → `GET /handoff` lists Mrs. K's room as paused (T251 field) → `/ws/live` first message is `{"type":"paused","room":"204"}` → `POST /demo/reset` → `/monitoring` empty and `/ws/live` sends `session_start`. Read `pipeline/tests/test_api_monitoring.py` and `conftest.py` for fixtures.
