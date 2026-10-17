@@ -21,3 +21,24 @@ export async function setRoomMonitoring(room: string, on: boolean): Promise<void
     throw new Error(`setRoomMonitoring failed: ${response.status}`)
   }
 }
+
+/** One logged change to a room's monitoring switch (SPEC §12): `on` false is a pause,
+ * true a resume, `by` whoever made it and `at` an ISO 8601 timestamp. */
+export type MonitoringChange = {
+  on: boolean
+  by: string
+  at: string
+}
+
+/** This room's recent monitoring changes, newest first, from
+ * GET /rooms/{room}/monitoring/history (SPEC §12): the audit trail under the switch. */
+export async function fetchMonitoringHistory(room: string): Promise<MonitoringChange[]> {
+  const response = await fetch(`${apiUrl}/rooms/${encodeURIComponent(room)}/monitoring/history`)
+  if (!response.ok) {
+    throw new Error(`fetchMonitoringHistory failed: ${response.status}`)
+  }
+  const body = (await response.json()) as { history?: MonitoringChange[] }
+  // A body without a history is a room with no changes to show, not a broken screen:
+  // the trail sits inside the resident detail and must never take it down.
+  return body.history ?? []
+}

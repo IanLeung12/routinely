@@ -1,26 +1,33 @@
 """Per-room monitoring switch and the live WebSocket (SPEC §12, section 16 decision B).
 
-Split out of `api.py`: `GET /monitoring`, `PUT /rooms/{room}/monitoring` and
-`/ws/live` all turn on the same room-pause state, kept together here.
+Split out of `api.py`: `GET /monitoring`, `PUT /rooms/{room}/monitoring`,
+`GET /rooms/{room}/monitoring/history` and `/ws/live` all turn on the same room-pause
+state, kept together here.
 """
 
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .demo import DEMO_RESIDENT, demo_residents
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
-from .monitoring import get_monitoring_store
+from .monitoring import DEFAULT_BY, get_monitoring_store
 from .replay import ReplayError
 
 router = APIRouter()
 
 
 class RoomMonitoringIn(BaseModel):
-    """The pause switch's body (SPEC §12): on resumes a room, off pauses it."""
+    """The pause switch's body (SPEC §12): on resumes a room, off pauses it.
+
+    `by` is who to log the change under in the room's audit trail
+    (`GET /rooms/{room}/monitoring/history`). The MVP has no nurse logins, so the
+    dashboard leaves it out and every change is one anonymous nurse's.
+    """
 
     on: bool
+    by: str = Field(default=DEFAULT_BY, min_length=1, max_length=60)
 
 
 def _pause_message(resident_id: str) -> dict | None:
@@ -45,6 +52,14 @@ def _room_for(resident_id: str) -> str | None:
     )
 
 
+def _known_room_or_404(room: str) -> None:
+    """Raise a 404 unless some demo resident is in `room` (SPEC §12: rooms come from
+    configuration, so an unknown one is a stale client rather than a room to pause).
+    """
+    if room not in {resident["room"] for resident in demo_residents()}:
+        raise HTTPException(status_code=404, detail="room not found")
+
+
 @router.get("/monitoring")
 def get_monitoring() -> dict:
     """Every room a nurse has paused right now (SPEC §12): backs the dashboard's
@@ -56,12 +71,26 @@ def get_monitoring() -> dict:
 @router.put("/rooms/{room}/monitoring")
 def set_room_monitoring(room: str, body: RoomMonitoringIn) -> dict:
     """Pause or resume monitoring for one room (SPEC §12), without touching any
-    other room. 404s for a room no demo resident is in.
+    other room, and log the change against the room. 404s for a room no demo
+    resident is in.
     """
-    if room not in {resident["room"] for resident in demo_residents()}:
-        raise HTTPException(status_code=404, detail="room not found")
-    get_monitoring_store().set(room, body.on)
+    _known_room_or_404(room)
+    get_monitoring_store().set(room, body.on, by=body.by)
     return {"room": room, "on": body.on}
+
+
+@router.get("/rooms/{room}/monitoring/history")
+def room_monitoring_history(room: str) -> dict:
+    """Who paused or resumed monitoring in this room, and when (SPEC §12).
+
+    Newest first, at most `monitoring.MAX_HISTORY` changes, each
+    `{"on": bool, "by": str, "at": ISO 8601 str}`: what the resident screen shows
+    under the room's switch, so a paused camera is accountable rather than silent.
+    Empty until somebody changes the switch, and `/demo/reset` empties it again.
+    404s for a room no demo resident is in, like the switch itself.
+    """
+    _known_room_or_404(room)
+    return {"room": room, "history": get_monitoring_store().history(room)}
 
 
 @router.websocket("/ws/live")
