@@ -899,6 +899,7 @@ source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
     { name = "fastapi" },
+    { name = "httpx2" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "uvicorn" },
@@ -912,7 +913,6 @@ capture = [
     { name = "opencv-python" },
 ]
 dev = [
-    { name = "httpx2" },
     { name = "jsonschema" },
     { name = "pytest" },
     { name = "ruff" },
@@ -922,7 +922,7 @@ dev = [
 requires-dist = [
     { name = "anthropic", specifier = ">=0.40" },
     { name = "fastapi", specifier = ">=0.115" },
-    { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.13" },
+    { name = "httpx2", specifier = ">=2.13" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.23" },
     { name = "mediapipe", marker = "extra == 'capture'", specifier = ">=0.10.18" },
     { name = "onnxruntime", marker = "extra == 'capture'", specifier = ">=1.19" },
