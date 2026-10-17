@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 32993e5
+- last-reviewed: 52eb629
 
 ## Tasks
 
@@ -189,8 +189,9 @@ Acceptance:
 - priority: 0
 - kind: feature
 - source: ian
-- deps: T412, T427
-- area: web/src/replays/, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts
+- deps: T412, T427, T430, T431
+- area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/mock/replays.ts, web/src/App.tsx
+- note: list + filters (T430) and notes (T431) are carved out as components; compose them here, don't rewrite them.
 - owner: —
 - claimed: —
 - pr: —
@@ -496,3 +497,39 @@ Interface: `export function PrivacyCard({ paused, onTogglePause, supervisorNames
 Acceptance:
 - Vitest: paused/unpaused text + `aria-pressed`, click calls `onTogglePause`, 0/1/2/3 supervisor names; no "diagnos", "patient", "danger", "warning", "emergency" in rendered text.
 - `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
+
+### T430 — Replays: list with error-type filter and empty state (component)
+- status: todo
+- class: light
+- priority: 0
+- kind: feature
+- deps: —
+- area: web/src/replays/ReplayList.tsx, web/src/replays/ReplayList.test.tsx, web/src/replays/replayList.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Carved from T413 (Ian's replays library). A presentational list of a person's replays that T413's screen will drop in. No fetching, no routing.
+Interface: `export function ReplayList(props: { replays: ReplaySummary[]; normal?: ReplaySummary | null; onOpen: (sessionId: string) => void })`. Rows newest first: date/time (from `started_at`), `task_id`, one `Pill` per `error_types` entry (labels from `web/src/ui/errorTypes.ts`), duration as "m:ss". Above the list a filter (`SegmentedControl` from `web/src/ui/`): "All" plus each error type that appears; filtering is local state. If `normal` is given, show it last, labelled "Most recent normal session (for comparison)". Empty state via `web/src/ui/EmptyState.tsx`: "No sessions with errors in the last 30 days". Each row is a button calling `onOpen(session_id)`.
+Files to read: `web/src/contracts.ts` lines 425–535 (`PersonReplays`, `ReplaySummary`), `web/src/ui/Pill.tsx`, `web/src/ui/Row.tsx`, `web/src/ui/SegmentedControl.tsx`, `web/src/ui/EmptyState.tsx`, `web/src/ui/errorTypes.ts`, `docs/DESIGN.md` (tokens only). Use CSS vars from `web/src/index.css`; no new colours.
+Acceptance:
+- Vitest in `ReplayList.test.tsx`: newest-first order, filter narrows rows and "All" restores, empty state text, normal row shown last with its label, clicking a row calls `onOpen` with the id, rows reachable by Tab and activated by Enter.
+- No "diagnos"/"patient" in copy. `cd web && npx vitest run src/replays/ReplayList` and `scripts/ci.sh` pass.
+
+### T431 — Replays: supervisor notes on a replay (component, local only)
+- status: todo
+- class: light
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/replays/ReplayNotes.tsx, web/src/replays/ReplayNotes.test.tsx, web/src/replays/replayNotes.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Carved from T413. Supervisors leave short notes on a replay, shown with author and time; the person sees the same notes (SPEC §17: they see exactly what supervisors see). Local state only, no API.
+Interface: `export type ReplayNote = { id: string; author: string; at: string; text: string }`; `export function ReplayNotes(props: { notes: ReplayNote[]; canAdd: boolean; author: string; onAdd: (note: ReplayNote) => void; now?: () => Date })`. Lists notes oldest first ("Author · 21:40", time from `at`); when `canAdd`, a labelled textarea + "Add note" `Button` (disabled on empty/whitespace, trims text, clears after add). Empty: "No notes yet."
+Files to read: `web/src/ui/Button.tsx`, `web/src/ui/Card.tsx`, `web/src/ui/SectionHeader.tsx`, `docs/DESIGN.md` (tokens only); CSS vars from `web/src/index.css`.
+Acceptance:
+- Vitest: notes in order with author + time, add flow calls `onAdd` with trimmed text and the given author, button disabled on blank input, `canAdd=false` hides the form, empty text shown.
+- `cd web && npx vitest run src/replays/ReplayNotes` and `scripts/ci.sh` pass.
