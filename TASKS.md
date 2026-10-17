@@ -594,7 +594,7 @@ Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
 
 ### T352 — Test: web mockPatterns stays in step with the pipeline pattern library
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -602,7 +602,8 @@ Acceptance:
 - area: pipeline/tests/test_mock_patterns_match_web.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T17:20Z
-- pr: —
+- pr: #334
+- rating: 5/5 clear
 
 What: `web/src/patterns/mockPatterns.ts` says it mirrors `routine_watch.patterns_library.LIBRARY` (offline fallback, SPEC §13), but nothing checks it, so the offline pattern library can silently drift from the real one.
 Interface: new `pipeline/tests/test_mock_patterns_match_web.py`, modelled on `pipeline/tests/test_error_phrases_match_web.py` (regex-parse the TS file; no node). Read only those two files plus `pipeline/src/routine_watch/patterns_library.py`.
