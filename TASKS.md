@@ -357,7 +357,7 @@ Acceptance:
 * Test covers the empty result; `cd web && npx vitest run src/alert/AlertView.test.tsx` and `scripts/ci.sh` pass.
 
 ### T182 — Review: false alarm makes the alert 404, so the cause answer can't be saved
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -366,7 +366,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:15Z
-- pr: —
+- pr: #178
+- rating: 5/5 clear
 
 What: Since T167, `_alerts_by_id()` builds alerts only from `_flagged_residents()` (feedback-tuned). A "false alarm" raises the resident's threshold 10%; if that un-flags her, the alert disappears, so `GET /alerts/{id}` and the next `POST /alerts/{id}/feedback` return 404. AlertView posts the verdict, then posts again with the "what was it?" cause, so the nurse sees "Feedback could not be saved" and can never correct a mistaken tap. Fix: look alerts up by id from every raw-flagged resident (`build_alerts([r for r in demo_residents() if r["status"] == "flagged"], feedback=_feedback_store)`); keep the tuned filter only for the `/alerts` list.
 Acceptance:
