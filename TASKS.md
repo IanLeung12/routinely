@@ -794,14 +794,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T098 — scripts/smoke.sh: hit every API route of a running stack
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/smoke.sh (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:29Z
 - pr: —
 
 What: The tester and the demo-day checklist need one command that proves a running `scripts/dev.sh up` stack answers correctly, without a browser. Read `scripts/dev.sh`, `scripts/e2e.sh` (style) and the route list in `pipeline/src/routine_watch/api.py`.
