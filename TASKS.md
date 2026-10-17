@@ -164,25 +164,6 @@ Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.d
 Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
-### T368 — Test infra: every web test gets a fake WebSocket by default
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- deps: —
-- area: web/vite.config.ts, web/src/testSetup.ts, web/src/App.test.tsx
-- owner: Max_codex_light
-- claimed: 2026-10-17T18:37Z
-- pr: #354
-- rating: 5/5 clear
-- note: merge conflict with main on PR #354: check out its branch, merge origin/main, fix, push
-
-What: Local `scripts/ci.sh` keeps failing with an undici `ERR_INVALID_ARG_TYPE` WebSocket error (blocked T351, LESSONS lines 28 and 42) because some web tests render screens that open a real socket to localhost:8000. Stub it once for the whole suite.
-Interface: new `web/src/testSetup.ts` that, in a global `beforeEach`, does `vi.stubGlobal('WebSocket', FakeWebSocket)` using the existing helper in `web/src/live/testWebSocket.ts` (read it first), and registers it as `test.setupFiles: ['src/testSetup.ts']` in `web/vite.config.ts`. Tests that already stub WebSocket keep working (their own stub wins). Drop the now-redundant stub in `App.test.tsx` only if it stays green.
-Acceptance:
-- with a local `uvicorn` listening on :8000 (or not), `cd web && npx vitest run` exits 0 with no uncaught exception
-- `scripts/ci.sh` passes
-
 ### T369 — Privacy panel: usable at phone width (375 px)
 - status: done
 - class: light
