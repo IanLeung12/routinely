@@ -1,4 +1,4 @@
-import type { ResidentStatus } from './types.ts'
+import type { ResidentStatus } from '../overview/types.ts'
 
 const LABELS: Record<ResidentStatus, string> = {
   normal: 'Normal',
@@ -11,3 +11,5 @@ const LABELS: Record<ResidentStatus, string> = {
 export function StatusChip({ status }: { status: ResidentStatus }) {
   return <span className={`status-chip status-chip--${status}`}>{LABELS[status]}</span>
 }
+
+export default StatusChip

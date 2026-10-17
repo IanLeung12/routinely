@@ -10,10 +10,57 @@
   --amber: #e8b33d;
   --alarm: #f0636a;
 
+  /* Status chip colours (SPEC section 9: normal / watch / flagged). */
+  --status-normal-bg: #16331f;
+  --status-normal-text: #5fd889;
+  --status-watch-bg: #3a2f12;
+  --status-watch-text: #e8b33d;
+  --status-flagged-bg: #3a1518;
+  --status-flagged-text: #f0636a;
+
+  /* Error category colours (SPEC section 7): red = omission/substitution,
+     amber = sequence/repeat, grey = unclear/low-confidence. */
+  --error-red-bg: #3a1518;
+  --error-red-text: #f0636a;
+  --error-amber-bg: #3a2f12;
+  --error-amber-text: #e8b33d;
+  --error-grey-bg: #2e323f;
+  --error-grey-text: #b9bfcc;
+
+  /* Spacing scale. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Radii. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-full: 999px;
+
+  /* Type scale. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  /* Focus ring, used on every interactive element. */
+  --focus-ring-color: var(--accent);
+  --focus-ring-width: 2px;
+
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   background: var(--bg);
   color-scheme: dark;
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 * {
@@ -151,18 +198,18 @@ h1 {
 }
 
 .status-chip--normal {
-  background: #16331f;
-  color: #5fd889;
+  background: var(--status-normal-bg);
+  color: var(--status-normal-text);
 }
 
 .status-chip--watch {
-  background: #3a2f12;
-  color: #e8b33d;
+  background: var(--status-watch-bg);
+  color: var(--status-watch-text);
 }
 
 .status-chip--flagged {
-  background: #3a1518;
-  color: #f0636a;
+  background: var(--status-flagged-bg);
+  color: var(--status-flagged-text);
 }
 
 /* Resident detail (SPEC section 9, screen 2): baseline chart, daily scores, sessions
@@ -204,15 +251,17 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
 }
 
-.panel {
+.panel,
+.card {
   min-width: 0;
   padding: 1rem 1.25rem;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-md);
   background: var(--panel);
 }
 
-.panel--wide {
+.panel--wide,
+.card--wide {
   grid-column: 1 / -1;
 }
 
@@ -363,4 +412,108 @@ h1 {
   color: #11131a;
   font-size: 0.75rem;
   text-align: center;
+}
+
+/* Design-system primitives (web/src/ui/). Shared across screens so parallel web
+   tasks don't drift (T042). */
+
+.error-chip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.error-chip--red {
+  background: var(--error-red-bg);
+  color: var(--error-red-text);
+}
+
+.error-chip--amber {
+  background: var(--error-amber-bg);
+  color: var(--error-amber-text);
+}
+
+.error-chip--grey {
+  background: var(--error-grey-bg);
+  color: var(--error-grey-text);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #87b9ff;
+}
+
+.btn--secondary {
+  border-color: var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn--danger {
+  border-color: var(--alarm);
+  background: transparent;
+  color: var(--error-red-text);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--error-red-bg);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.section-header__title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.empty-state,
+.loading {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.error-state {
+  margin: 0;
+  color: var(--error-red-text);
+  font-size: var(--text-sm);
 }

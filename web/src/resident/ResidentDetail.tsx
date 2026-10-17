@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { StatusChip } from '../overview/StatusChip.tsx'
+import { EmptyState } from '../ui/EmptyState.tsx'
+import { Loading } from '../ui/Loading.tsx'
+import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResident } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
 import { ContextTimeline } from './ContextTimeline.tsx'
@@ -39,9 +41,9 @@ export function ResidentDetail({
 
   let body: ReactNode
   if (loaded === null || loaded.residentId !== residentId) {
-    body = <p className="muted">Loading resident…</p>
+    body = <Loading label="Loading resident…" />
   } else if (loaded.resident === null) {
-    body = <p className="muted">No data for resident {residentId}.</p>
+    body = <EmptyState message={`No data for resident ${residentId}.`} />
   } else {
     const resident = loaded.resident
     const days = dailyScores(resident.scores)
@@ -62,7 +64,7 @@ export function ResidentDetail({
           <section className="panel">
             <h3>Daily scores</h3>
             {days.length === 0 ? (
-              <p className="muted">No scored sessions yet.</p>
+              <EmptyState message="No scored sessions yet." />
             ) : (
               <div className="heat-calendar">
                 <HeatCalendar days={days} />

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Loading } from '../ui/Loading.tsx'
+import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResidents } from './api.ts'
 import { Sparkline } from './Sparkline.tsx'
-import { StatusChip } from './StatusChip.tsx'
 import type { ResidentSummary, ResidentStatus } from './types.ts'
 
 const STATUS_ORDER: Record<ResidentStatus, number> = { flagged: 0, watch: 1, normal: 2 }
@@ -29,7 +30,7 @@ export function UnitOverview({ onSelect }: { onSelect?: (residentId: string) => 
   }, [])
 
   if (residents === null) {
-    return <p className="muted">Loading residents…</p>
+    return <Loading label="Loading residents…" />
   }
 
   return (
