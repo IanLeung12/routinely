@@ -334,7 +334,7 @@ Acceptance:
 - Header comment in expected.yaml explains the shape in 2-4 lines.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: claimed
+- status: blocked
 - class: standard
 - priority: 2
 - kind: test
@@ -343,6 +343,7 @@ Acceptance:
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:22Z
 - pr: —
+- note: NOT a human-needed block, a code gap: motor_slowing requires=(durations_up,) but replay.py's top_pattern_of never sets duration_s on history or current-session dicts (HistorySession has no duration field either), so duration_ratio is always None in scenario replay and durations_up never reaches SIGNAL_PRESENT. Only demo.py/synth/history.py populate duration_s. Pattern is unreachable from tests/scenarios/*/steps.jsonl+expected.yaml without a replay.py change (add duration_s to HistorySession + pass session durations through top_pattern_of), which is pipeline code outside this task's area.
 
 What: Same as T142 for SPEC §7.5's `motor_slowing` pattern: slower steps and hesitation without new sequence errors.
 Interface: `tests/scenarios/pattern_motor_slowing/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/pattern_slow_drift/`, `top_pattern: motor_slowing`. Read the `motor_slowing` entry in `pipeline/src/routine_watch/patterns_library.py` for its signals. Don't change pipeline code; if unreachable without code changes, set blocked with the reason.
