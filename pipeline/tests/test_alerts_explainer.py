@@ -1,7 +1,13 @@
+import pytest
+
 from routine_watch import alerts as alerts_module
 from routine_watch.alerts import build_alerts
 from routine_watch.demo import demo_residents
 from routine_watch.explain import TemplateExplainer
+
+#: Both tests need a flagged demo resident to summarise (T124: the seeded demo
+#: alone leaves mrs-k on watch, not flagged).
+pytestmark = pytest.mark.usefixtures("mrs_k_flagged")
 
 
 def test_build_alerts_defaults_to_template_output(monkeypatch):

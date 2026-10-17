@@ -28,13 +28,17 @@ def test_statuses_are_known_tiers() -> None:
     assert {resident["status"] for resident in demo_residents()} <= STATUSES
 
 
-def test_spike_resident_is_flagged() -> None:
-    assert _by_id()["mrs-k"]["status"] == "flagged"
+def test_spike_resident_is_on_watch_before_the_live_session() -> None:
+    """SPEC section 10 beats 2-3: her normal weeks leave one qualifying session,
+    not yet the two a flag needs - the live session on stage is the second."""
+    assert _by_id()["mrs-k"]["status"] == "watch"
 
 
-def test_only_the_spike_resident_is_flagged() -> None:
+def test_no_resident_is_flagged_before_a_live_session() -> None:
+    """Flagging mrs-k purely from the seed would make beat 4 - the live session
+    that is "the second qualifying session" - a no-op (SPEC section 10)."""
     statuses = [resident["status"] for resident in demo_residents()]
-    assert statuses.count("flagged") == 1
+    assert statuses.count("flagged") == 0
 
 
 @pytest.mark.parametrize("resident_id", ["mrs-ahmed", "mr-silva"])
