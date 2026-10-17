@@ -738,6 +738,11 @@ class HandoffResident(_Contract):
 
     resident_id: Id
     name: str = Field(min_length=1)
+    room: str = Field(
+        min_length=1,
+        description="The resident's room, so a handed-over line says where to go "
+        "(SPEC section 9) and the printed or pasted handoff is usable on its own.",
+    )
     flags: int = Field(ge=0, description="Sessions in the window above this resident's bar.")
     pending_review: int = Field(ge=0, description="Alerts in the window with no verdict yet.")
     trending: bool = Field(

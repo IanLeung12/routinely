@@ -7,10 +7,12 @@
  * verdict on yet, and `trending` whether their error score is on a slow rise (which
  * takes weeks to show, so it is read over their whole history, not this window).
  * A session above baseline is evidence, not a flagged change: one bad session never
- * raises an alert on its own (SPEC section 7). */
+ * raises an alert on its own (SPEC section 7). `room` is where to find them, so a row
+ * on screen or in the copied handoff says which door to walk to. */
 export type HandoffResident = {
   resident_id: string
   name: string
+  room: string
   flags: number
   pending_review: number
   trending: boolean

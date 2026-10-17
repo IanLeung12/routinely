@@ -10,8 +10,8 @@ functions the dashboard already uses - offline, deterministic, no DB::
 
     build_handoff(DEMO_NOW, hours=12)
     # {"window_hours": 12,
-    #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "flags": 1,
-    #                 "pending_review": 1, "trending": False,
+    #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "room": "204",
+    #                 "flags": 1, "pending_review": 1, "trending": False,
     #                 "monitoring_paused": False}, ...],
     #  "paused": [],
     #  "summary": "..."}
@@ -80,9 +80,10 @@ def build_handoff(
 
     Every resident is listed, quiet ones included with `flags: 0`, so a nurse can see
     that the unit was looked at rather than guess why someone is missing. Rows needing
-    attention come first. `feedback` is the nurse feedback logged so far: it tunes the
-    threshold each session is measured against and takes reviewed alerts out of
-    `pending_review`.
+    attention come first, each with the resident's room, so a row read aloud or pasted
+    into a handoff note says which door to walk to. `feedback` is the nurse feedback
+    logged so far: it tunes the threshold each session is measured against and takes
+    reviewed alerts out of `pending_review`.
 
     A paused room produces no flags at all (SPEC section 12), which would otherwise
     read as "all quiet" for a resident nobody was watching. `paused` lists every room
@@ -125,6 +126,7 @@ def build_handoff(
             {
                 "resident_id": resident["id"],
                 "name": resident["name"],
+                "room": resident["room"],
                 "flags": len(flagged),
                 "pending_review": pending.get(resident["id"], 0),
                 "trending": _trending(resident),

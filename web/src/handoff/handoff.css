@@ -101,6 +101,12 @@
   font-weight: 600;
 }
 
+/* Where to find them: the same line the overview and resident screens carry. */
+.handoff__room {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
 .handoff__baseline {
   color: var(--muted);
   font-size: var(--text-xs);
