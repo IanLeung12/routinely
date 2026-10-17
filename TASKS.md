@@ -215,7 +215,7 @@ Acceptance:
 - `cd web && npx vitest run src/ui/DemoBanner` passes; `scripts/ci.sh` passes.
 
 ### T387 — Test: guided tour works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
