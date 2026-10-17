@@ -25,7 +25,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_evidence.py -q` and `scripts/ci.sh` pass.
 
 ### T038 — Session store: in-memory default + Tiger Data (TimescaleDB)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -33,7 +33,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/store.py, pipeline/sql/schema.sql, pipeline/tests/test_store.py, pipeline/pyproject.toml, .env.example
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T06:01Z
-- pr: —
+- pr: #67
 
 What: SPEC §6.3 and the Tiger Data prize: sessions, step events and errors stored as time series. In-memory is the default so tests/CI/demo need no DB; Timescale only when `DATABASE_URL` is set.
 Interface: `class Store(Protocol)`: `add_session(Session)`, `add_events(list[StepEvent])`, `add_errors(list[TaskError])`, `sessions(resident_id, task_id, since: datetime) -> list[Session]`, `errors_for(session_id) -> list[TaskError]`. `MemoryStore`; `TimescaleStore(dsn)` using psycopg 3 (optional extra `db`); `schema.sql` creates `sessions`, `step_events`, `task_errors` with hypertables on the time column; `get_store()` picks by env. Not wired into the API yet.
