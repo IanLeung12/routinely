@@ -485,7 +485,7 @@ Acceptance:
 - Only docs/DEMO.md changes; `scripts/ci.sh` passes.
 
 ### T189 — Demo banner: "Reset demo" button
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -493,7 +493,8 @@ Acceptance:
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T09:23Z
-- pr: —
+- pr: #182
+- rating: 5/5 clear
 
 What: Presenters need a one-click way to undo a rehearsal's flag and feedback. Add a "Reset demo" button to the demo banner that POSTs `/demo/reset` and then reloads the page.
 Interface: `DemoBanner({ onDismiss?, onReset? })`; default `onReset` does `fetch(\`${apiBase}/demo/reset\`, {method:'POST'})` using the API base from `web/src/config.ts`, then `window.location.reload()`. On a non-2xx/network error show inline "Couldn't reset the demo" text, no throw.
