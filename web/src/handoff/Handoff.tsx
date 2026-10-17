@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { fetchAlerts } from '../alert/api.ts'
+import { fetchMonitoringHistory } from '../about/monitoringApi.ts'
+import type { MonitoringChange } from '../about/monitoringApi.ts'
 import type { Alert } from '../contracts.ts'
 import { fetchResident } from '../resident/api.ts'
 import { formatScore } from '../resident/format.ts'
@@ -94,12 +96,32 @@ function baselineLine(mean: number | null | undefined): string | null {
   return `Usually ${formatScore(mean)} errors a session`
 }
 
+/** 'HH:MM' in the nurse's own timezone: unlike the resident screens (which read UTC
+ * off the pipeline, SPEC section 9), who paused a room and when is written by a nurse
+ * on this shift, so the time on screen should match their own clock (T281). */
+function formatLocalTime(ts: string): string {
+  const date = new Date(ts)
+  if (Number.isNaN(date.getTime())) return ts
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
 /** One line naming every paused room, or null when nothing was paused (SPEC section
  * 12): a nurse reads this above the rows, so a quiet paused room reads as "nobody was
- * watching" rather than "all quiet". */
-function pausedLine(paused: PausedRoom[] | undefined): string | null {
+ * watching" rather than "all quiet". `pauseDetails` names who paused each room and
+ * when, read from the room's own audit trail (T281); a room missing from it (history
+ * fetch failed or found no pause entry) just keeps today's plain line. */
+function pausedLine(
+  paused: PausedRoom[] | undefined,
+  pauseDetails: Record<string, MonitoringChange | null> = {},
+): string | null {
   if (!paused || paused.length === 0) return null
-  return `Monitoring paused: ${paused.map((room) => `${room.name} (room ${room.room})`).join(', ')}`
+  return `Monitoring paused: ${paused.map((room) => {
+    const change = pauseDetails[room.room]
+    const detail = change ? `, paused by ${change.by} at ${formatLocalTime(change.at)}` : ''
+    return `${room.name} (room ${room.room})${detail}`
+  }).join(', ')}`
 }
 
 /** The one line a nurse reads first, before any row. */
@@ -113,8 +135,11 @@ function headline(residents: HandoffResident[], hours: number): string {
 /** The handoff as plain text, for pasting into a shift note or a message. One line
  * per resident, each naming the room: the text leaves the screen behind, so a nurse
  * reading it elsewhere still knows which door the row is about. */
-export function handoffText(h: HandoffData): string {
-  const paused = pausedLine(h.paused)
+export function handoffText(
+  h: HandoffData,
+  pauseDetails: Record<string, MonitoringChange | null> = {},
+): string {
+  const paused = pausedLine(h.paused, pauseDetails)
   return [
     h.summary,
     ...(paused ? [paused] : []),
@@ -151,6 +176,9 @@ export function Handoff({
    * it from the resident detail endpoint instead - one fetch per row, fine for the
    * demo's unit size. */
   const [baselines, setBaselines] = useState<Record<string, number | null>>({})
+  /** room -> the newest audit entry that paused it, or null once fetched with none
+   * found. Keyed by room rather than resident, same as `Handoff.paused` (T281). */
+  const [pauseDetails, setPauseDetails] = useState<Record<string, MonitoringChange | null>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -195,6 +223,32 @@ export function Handoff({
   }, [loaded])
 
   useEffect(() => {
+    if (loaded === null) return
+    const paused = loaded.result.handoff.paused ?? []
+    if (paused.length === 0) return
+    let cancelled = false
+    Promise.all(
+      paused.map((room) =>
+        fetchMonitoringHistory(room.room)
+          .then((history) => [room.room, history.find((change) => !change.on) ?? null] as const)
+          .catch(() => [room.room, null] as const),
+      ),
+    ).then((entries) => {
+      if (cancelled) return
+      setPauseDetails((previous) => {
+        const next = { ...previous }
+        for (const [room, change] of entries) {
+          next[room] = change
+        }
+        return next
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loaded])
+
+  useEffect(() => {
     if (copyStatus !== 'Copied') return
     const timeout = window.setTimeout(() => setCopyStatus(''), 2000)
     return () => window.clearTimeout(timeout)
@@ -206,7 +260,7 @@ export function Handoff({
         setCopyStatus('Copy not available')
         return
       }
-      await navigator.clipboard.writeText(handoffText(handoff))
+      await navigator.clipboard.writeText(handoffText(handoff, pauseDetails))
       setCopyStatus('Copied')
     } catch {
       setCopyStatus('Copy not available')
@@ -234,8 +288,8 @@ export function Handoff({
           </Button>
           {copyStatus && <p role="status">{copyStatus}</p>}
         </Card>
-        {pausedLine(handoff.paused) && (
-          <p className="handoff__paused">{pausedLine(handoff.paused)}</p>
+        {pausedLine(handoff.paused, pauseDetails) && (
+          <p className="handoff__paused">{pausedLine(handoff.paused, pauseDetails)}</p>
         )}
         {handoff.residents.length === 0 ? (
           <EmptyState message="No residents on this unit yet." />
