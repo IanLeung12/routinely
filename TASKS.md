@@ -409,14 +409,14 @@ Acceptance:
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
 
 ### T042 — Design system: tokens + shared UI primitives
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - deps: —
 - area: web/src/index.css, web/src/ui/, web/src/ui/*.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T05:06Z
-- pr: —
+- pr: #33
 
 What: One visual language for every screen so parallel web tasks don't drift. Keep the current calm dark theme; extend it, don't restyle.
 Interface: tokens in `web/src/index.css` (colour incl. status normal/watch/flagged and error red/amber/unclear grey, spacing scale, radii, type scale, focus ring); shared components in `web/src/ui/`: `Card`, `StatusChip` (move/replace `overview/StatusChip.tsx`), `Button` (primary/secondary/danger), `SectionHeader`, `EmptyState`, `ErrorState`, `Loading`; `web/src/ui/README.md` with one-line usage each.
