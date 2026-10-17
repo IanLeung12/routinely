@@ -50,16 +50,19 @@
 }
 
 @media (max-width: 480px) {
-  /* 1fr tracks still enforce a content-based minimum width (the "Mon"/"Sun" labels),
-     which can be wider than a phone's seven-column budget; minmax(0, 1fr) lets them
-     shrink to fit the card instead of pushing the page into horizontal scroll. */
+  /* The grid scrolls inside its own card instead of shrinking cells below a
+     readable 12px, which would otherwise be needed to fit 7 columns at 375px. */
+  .heat-grid-scroll {
+    overflow-x: auto;
+  }
+
   .heat-grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(2.5rem, 1fr));
   }
 
   .heat-grid__header,
   .heat-cell {
     padding: 4px;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
   }
 }
