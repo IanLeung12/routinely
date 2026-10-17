@@ -7,26 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
-- status: done
-- class: standard
-- priority: 3
-- kind: feature
-- deps: T148
-- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py (new)
-- source: proposed
-- owner: ian-claude-standard
-- claimed: 2026-10-17T11:25Z
-- pr: #226
-- note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T149-wip-1051: start from it (git switch task/T149-wip-1051 && git merge origin/main)
-- rating: 4/5 clear, except the WIP branch noted in the task had drifted far from main (unrelated demo.py/web diffs) and needed re-applying just the api.py/test slice onto fresh main
-
-What: Expose the T148 store so the dashboard's pause switch is real. While a room is paused, `/ws/live` for a scenario whose resident is in that room sends one `{"type": "paused", "room": ...}` message and closes instead of streaming frames (no camera data processed).
-Interface: `GET /monitoring` → `{"paused_rooms": [...]}`; `PUT /rooms/{room}/monitoring` body `{"on": bool}` → `{"room": str, "on": bool}`; uses `monitoring.get_monitoring_store()`. Room→resident comes from `demo.demo_residents()`; unknown room → 404.
-Acceptance:
-- tests: default empty, pause/resume round trip, 404 for unknown room, paused live session gets the `paused` message and no frames (TestClient websocket); store reset between tests.
-- `scripts/ci.sh` passes.
-
 ### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
 - status: todo
 - class: light
@@ -131,44 +111,6 @@ What: T155 (#192) made `alerts.task_errors` return the real `error_events` of a 
 Interface: read `pipeline/src/routine_watch/alerts.py` (`session_id_for`, `task_errors` docstrings) and `pipeline/src/routine_watch/session_log.py`. Edit notes only, not the generated file list.
 Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
-
-### T222 — Review: Copy summary says "Change flagged" for slow-trend alerts
-- status: done
-- class: light
-- priority: 1
-- kind: bug
-- deps: T221
-- area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts
-- owner: ian-claude
-- claimed: 2026-10-17T10:48Z
-- pr: #217
-- source: reviewer
-- rating: 5/5 clear - the task named the exact file, the exact conditional and the two test assertions
-
-What: `alertText` (T199/T211, #189/#198) always writes the line `Change flagged for review`, but `Alert.kind` can be `'trend'`, which the overview labels `Slow trend for review` (`web/src/App.tsx` ~line 112). A nurse pasting a trend alert into the chart records the wrong kind of finding.
-Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`, and `AlertKind` in `web/src/contracts.ts`. Replace the fixed string with `alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'`.
-Acceptance:
-* test: a `kind: 'trend'` alert's copied text contains `Slow trend for review` and not `Change flagged`; a change alert keeps `Change flagged for review`
-* `cd web && npm test` passes
-
-### T223 — SessionSummary: CSS file instead of inline <style>, reuse formatDuration
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/live/SessionSummary.tsx, web/src/live/sessionSummary.css, web/src/live/SessionSummary.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T10:27Z
-- pr: #210
-- rating: 5/5 clear
-
-What: `SessionSummary.tsx` (from PR #204) injects a `<style>` block, against the CSS-class cleanup done in T214/T215 (see `web/src/resident/driftCard.css` for the pattern), and re-implements `formatDuration` that `web/src/resident/format.ts` already exports.
-Interface: move the two rules into `web/src/live/sessionSummary.css` imported by the component; use `formatDuration` from `../resident/format.ts` only if its output matches the current strings in `SessionSummary.test.tsx`, otherwise keep the local one and add a one-line comment why.
-Acceptance:
-- no `<style>` element left in `SessionSummary.tsx`; rendered text unchanged
-- existing SessionSummary tests pass unchanged (only add, don't loosen)
-- `cd web && npx vitest run src/live/SessionSummary.test.tsx` and `scripts/ci.sh` pass
 
 ### T224 — LiveScreen: CSS file instead of inline <style>
 - status: done
