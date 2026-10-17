@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T245 — Smoke: check GET /monitoring and a PUT round-trip
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -120,7 +120,8 @@ Acceptance:
 - area: scripts/smoke.sh
 - owner: ian-claude-standard
 - claimed: 2026-10-17T12:58Z
-- pr: —
+- pr: #255
+- rating: 5/5 clear
 
 What: `scripts/smoke.sh` doesn't exercise the monitoring endpoints added in T149 (#226). Add checks so the tester catches a broken pause switch.
 Interface: read `scripts/smoke.sh` (copy the `curl "${CURL_OPTS[@]}"` + `pass`/`fail` pattern) and `pipeline/src/routine_watch/api.py` (search `monitoring`). Before the final `/demo/reset` block: GET `/monitoring` returns JSON with `paused_rooms`; PUT pause on the demo resident's room, GET shows it paused, PUT resume, GET shows it gone; PUT on an unknown room returns 404. Always resume the room even if a check fails.
