@@ -360,19 +360,15 @@ describe('AlertView', () => {
 /** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
  * stylesheet text directly (verified against a real Chrome print preview of the Mrs. K
  * alert for T289: resident, errors, patterns, rule-outs and checks print in black on
- * white over 1-2 pages, with no dark backgrounds, nav, replay or feedback buttons). */
+ * white over 1-2 pages, with no dark backgrounds, nav, replay or feedback buttons).
+ * The shared no-print/black-on-white rules moved to print.css in T353; see
+ * print.test.ts. This file keeps the screen-specific app-shell rule. */
 describe('alert.css print layout', () => {
-  it('hides every no-print element when printing', () => {
+  it('hides the app shell header and demo banner while an alert is open', () => {
     const printBlock = alertCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
     expect(printBlock).toBeTruthy()
 
-    expect(printBlock).toMatch(/\.no-print\s*\{[^}]*display:\s*none/)
-  })
-
-  it('forces black text on a white background regardless of the dark theme', () => {
-    const printBlock = alertCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
-
-    expect(printBlock).toMatch(/body \*\s*\{[^}]*background:\s*#fff/)
-    expect(printBlock).toMatch(/body \*\s*\{[^}]*color:\s*#000/)
+    expect(printBlock).toMatch(/\.app:has\(\.alert-view\) > header\s*,/)
+    expect(printBlock).toMatch(/\.app:has\(\.alert-view\) > \.demo-banner\s*\{[^}]*display:\s*none/)
   })
 })

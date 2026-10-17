@@ -62,22 +62,10 @@ describe('ResidentDetail print', () => {
 })
 
 /** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
- * stylesheet text directly, following alert.css's print test (T289). */
+ * stylesheet text directly, following alert.css's print test (T289). The shared
+ * no-print/black-on-white rules moved to print.css in T353; see print.test.ts.
+ * This file keeps the screen-specific app-shell rule. */
 describe('residentPrint.css print layout', () => {
-  it('hides every no-print element when printing', () => {
-    const printBlock = residentPrintCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
-    expect(printBlock).toBeTruthy()
-
-    expect(printBlock).toMatch(/\.no-print\s*\{[^}]*display:\s*none/)
-  })
-
-  it('forces black text on a white background regardless of the dark theme', () => {
-    const printBlock = residentPrintCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
-
-    expect(printBlock).toMatch(/body \*\s*\{[^}]*background:\s*#fff/)
-    expect(printBlock).toMatch(/body \*\s*\{[^}]*color:\s*#000/)
-  })
-
   it('hides the app shell header and demo banner while a resident is open', () => {
     const printBlock = residentPrintCss.match(/@media print \{([\s\S]*)\}\s*$/)?.[1]
 
