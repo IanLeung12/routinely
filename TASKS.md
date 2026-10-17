@@ -150,14 +150,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T241 — Test: no user-facing web copy says "diagnose" or "has <condition>"
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/wording.test.ts (new)
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T12:45Z
 - pr: —
 
 What: The wording rule (AGENTS.md: the product flags a change for review, lists patterns it is "consistent with", never "diagnoses") is only checked per component. Add one guard test that scans every non-test `web/src/**/*.ts(x)` file's string literals and JSX text for `diagnos` (case-insensitive) and fails with the file and line.
