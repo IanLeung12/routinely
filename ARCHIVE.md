@@ -4123,3 +4123,59 @@ Interface: read only `web/src/alert/AlertView.test.tsx` and `web/src/evidence/Re
 Acceptance:
 - No app code changed; only AlertView.test.tsx.
 - `cd web && for i in 1 2 3 4 5; do npx vitest run --pool=threads --maxWorkers=1 src/alert/AlertView.test.tsx || exit 1; done` passes, and `scripts/ci.sh` passes.
+
+### T238 — Alert view: usable at phone width (375 px)
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/alert.css, web/src/alert/PatternList.css
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T11:32Z
+- pr: #232
+- rating: 4/5 clear, but the /alerts/<id> URL in the acceptance criteria doesn't exist (no router — alerts open via in-page state), so verifying required scripting a headless-Chrome click-through instead of a direct navigate
+
+What: Nurses open alerts from a phone (push alert, SPEC §5 nice-to-have 3), but the alert screen has no responsive rules. Add a `@media (max-width: 480px)` block to `alert.css` and `PatternList.css` (same breakpoint as T235's `live/liveScreen.css`) so the header, error list, pattern cards, suggested checks and feedback buttons stack without horizontal scroll.
+Interface: CSS only in the two files listed; no markup or class name changes. If the ghost replay figure (styled in `web/src/index.css`) still overflows, note it in the PR instead of editing index.css.
+Acceptance:
+- No horizontal scroll on `/alerts/<id>` at 375 px; feedback buttons wrap and stay ≥44 px tall tap targets.
+- Desktop layout unchanged.
+- `scripts/ci.sh` passes; PR body notes the viewport widths checked (e.g. Playwright screenshot at 375 and 1280).
+
+### T239 — Resident detail: usable at phone width (375 px)
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/driftCard.css, web/src/resident/heatCalendar.css, web/src/resident/resident.css (new), web/src/resident/ResidentDetail.tsx
+- owner: —
+- claimed: —
+- pr: #231
+- rating: 5/5 clear
+- note: merged as #231
+
+What: The resident detail screen (baseline chart, slow-drift card, heat calendar, sessions, care records) has no responsive rules. Add `@media (max-width: 480px)` rules so it reads on a phone: chart and calendar scale to the card width (or scroll inside their own card, never the page), lists stack.
+Interface: CSS in the listed files; `resident.css` is new and imported by ResidentDetail.tsx for any rules not owned by DriftCard/HeatCalendar. Don't move rules out of `web/src/index.css` (T234 owns that pattern for the overview); add overrides instead.
+Acceptance:
+- No page-level horizontal scroll on `/residents/mrs-k` at 375 px; desktop layout unchanged.
+- Existing resident tests still pass; `scripts/ci.sh` passes; PR body notes the widths checked.
+
+### T242 — Web: monitoring API client (GET /monitoring, PUT /rooms/{room}/monitoring)
+- status: done
+- class: light
+- priority: 1
+- kind: feature
+- deps: —
+- area: web/src/about/monitoringApi.ts, web/src/about/monitoringApi.test.ts
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:39Z
+- pr: #230
+- rating: 5/5 clear
+
+What: T149 (#226) added the pipeline endpoints behind the room pause switch, but the web has no client for them. Add a small typed client; no UI changes.
+Interface: read `pipeline/src/routine_watch/api.py` (search `monitoring`) and `web/src/config.ts` (`apiUrl`), copy the fetch style of `web/src/resident/api.ts`. Export `fetchPausedRooms(): Promise<string[]>` (GET `${apiUrl}/monitoring`, returns `paused_rooms`) and `setRoomMonitoring(room: string, on: boolean): Promise<void>` (PUT `${apiUrl}/rooms/${encodeURIComponent(room)}/monitoring` with the JSON body the endpoint expects). Both throw on network error or non-ok response.
+Acceptance:
+- tests with a stubbed `fetch` cover: URL + method + body, parsed result, throws on `ok: false`, throws on network error
+- `cd web && npm test` and `scripts/ci.sh` pass
