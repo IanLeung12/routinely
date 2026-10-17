@@ -37,7 +37,7 @@ What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T407 — Redesign: landing page onto the Fey-inspired system
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
