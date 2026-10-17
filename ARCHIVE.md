@@ -6440,3 +6440,64 @@ Interface: copy the layout of `tests/scenarios/tea_long_pause_not_error/` (`step
 Acceptance:
 - `scripts/e2e.sh` runs the new scenario and it passes: zero errors, no flag.
 - `scripts/ci.sh` passes.
+
+### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
+- status: done
+- class: heavy
+- priority: 0
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/api_live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/capture.py, scripts/camera.sh, pipeline/tests/test_api_live_camera.py, docs/DEMO.md
+- owner: ian-claude
+- claimed: 2026-10-17T18:41Z
+- pr: #366
+- note: released by ian-claude: run ended without progress
+- rating: 4/5 clear on the interface and the acceptance cases; it didn't say how 'waiting for object detector' should reach the screen (a new live message would be a contract change, so I inferred it from frames with no object boxes), nor that scripts/camera.sh installing the capture extra breaks test_capture's CLI-stderr assertion
+
+What: Ian wants to try the real camera locally. `capture.py --camera 0` already writes JSONL and `live_camera.camera_session_messages()` already turns a frame stream into live messages, but `/ws/live` only plays recorded scenarios. Wire them together so the dashboard's Live screen shows his webcam session.
+Interface:
+- `/ws/live?source=camera[&camera=0]` streams `camera_session_messages()` from a capture iterator running in a background thread (same pause handling as scenarios). Default stays the recorded scenario.
+- `scripts/camera.sh`: on a laptop, `uv sync --extra capture`, download the two MediaPipe task bundles into `models/` if missing (URLs in `capture._MODEL_URLS`), start the stack (`dev.sh up`), and print the dashboard URL with the Live screen pointed at the camera (a `?source=camera` toggle or query param in `web/src/live/` if needed). Optional `--record out.jsonl` also saves the capture stream (never video).
+- Without detector weights (`DETECTOR_WEIGHTS`), skeleton and hands still stream live and steps show as "waiting for object detector"; say so on screen instead of looking broken.
+- macOS: note camera permission for the terminal in `docs/DEMO.md`; Windows/Linux index 0 default.
+Acceptance:
+- Test with a fake capture iterator: `/ws/live?source=camera` yields session_start, frames, steps, session_end like a scenario.
+- `scripts/ci.sh` passes without mediapipe/opencv installed (lazy imports).
+- `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
+
+### T364 — Scenario: meds_late_start_normal (long idle before the first step is not an error)
+- status: done
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_late_start_normal/, pipeline/tests/test_scenarios_meds_late_start.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T18:12Z
+- pr: #351
+- rating: 5/5 clear
+
+What: Medication twin of T362: a resident idles a long time before picking up the pill bottle, then completes the routine correctly; must produce zero errors and no flag.
+Interface: copy the layout of `tests/scenarios/meds_normal/` (`steps.jsonl`, `expected.yaml`) and the test style of `pipeline/tests/test_scenarios_meds_unclear.py` (`load_scenario`, `replay`). Pipeline code is out of scope: if it fails, set the task blocked with the failing output.
+Acceptance:
+- new pytest passes; `scripts/e2e.sh` runs the scenario: zero errors, `flag: false`.
+- one line added to `tests/scenarios/README.md`.
+- `scripts/ci.sh` passes.
+
+### T365 — Test: live session summary has accessible names
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/live/SessionSummary.a11y.test.tsx, web/src/live/SessionSummary.tsx
+- owner: Max_codex_light
+- claimed: 2026-10-17T18:05Z
+- pr: #355
+- rating: 4/5 clear except quality is not rendered by this component
+
+What: The end-of-session summary on the live screen must be readable by a screen reader: a heading, and each figure (duration, errors, quality) with a text label, not only an icon or colour.
+Interface: read `web/src/live/SessionSummary.tsx` and `web/src/live/SessionSummary.test.tsx`. Add `SessionSummary.a11y.test.tsx` using `getByRole('heading')` and `getByText`/`getByLabelText`. Only if a figure has no accessible name, add an `aria-label` in `SessionSummary.tsx` (no visual change).
+Acceptance:
+- new test passes; `cd web && npx vitest run src/live/SessionSummary` green.
+- `scripts/ci.sh` passes.
