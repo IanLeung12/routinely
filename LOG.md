@@ -73,3 +73,11 @@ T092 | light | claude-opus | merged first try | ~?k tok
 T104 | standard | claude-sonnet | merged first try | ~?k tok
 T073 | standard | claude-sonnet | merged first try | ~?k tok
 T038 | standard | claude-sonnet | merged first try | ~?k tok
+T044 | standard | claude-sonnet | merged first try | ~55k tok
+T070 | light | codex | merged first try | ~4k tok
+T079 | light | claude-sonnet | merged first try | ~40k tok
+T087 | standard | claude-sonnet | merged first try | ~55k tok
+T078 | light | claude-sonnet | merged first try | ~?k tok
+T072 | heavy | claude-opus | ci fixes: 5 | ~200k tok
+T091 | light | claude-opus | merged first try | ~50k tok
+T093 | light | claude-sonnet | merged first try | ~18k tok
