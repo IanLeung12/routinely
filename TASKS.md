@@ -8,13 +8,13 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T001 — Monorepo scaffold
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - deps: —
 - area: repo root, pipeline/, web/, contracts/, scripts/ci.sh
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T03:11Z
 - pr: —
 
 What: Create the project skeleton every later task builds on.
