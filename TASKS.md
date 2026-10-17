@@ -325,7 +325,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T377 — Review: DEMO.md shift-handoff step is after "Close" (out of run order)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: docs
@@ -334,7 +334,8 @@ Acceptance:
 - area: docs/DEMO.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T19:29Z
-- pr: —
+- pr: #371
+- rating: 5/5 clear
 
 What: the "Shift handoff" bullet added in the last merge sits after the "Close" bullet, separated by a blank line, so the presenter reads it after closing.
 Interface: move it into the run list between "Why / not just delirium" and "Close", reword to match the other bullets (bold beat name, what to click, what appears). No other file.
