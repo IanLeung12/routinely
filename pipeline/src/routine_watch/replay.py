@@ -55,6 +55,9 @@ SCENARIOS_DIR = repo_root() / "tests" / "scenarios"
 #: fixed instant. Same scenario, same flag, whenever it runs.
 REPLAY_EPOCH = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
 
+#: Brief passers-by or stray pose detections must not suppress a session's score.
+ASSISTED_MIN_S = 2.0
+
 
 #: Any contract read out of a scenario file.
 _Record = TypeVar("_Record", bound=BaseModel)
@@ -223,10 +226,24 @@ def session_id_of(scenario: Scenario) -> str:
     raise ReplayError(f"{scenario.path}: no frames or events")
 
 
+def assisted_of(frames: Sequence[CaptureFrame], min_seconds: float = ASSISTED_MIN_S) -> bool:
+    """Whether consecutive multi-person frames show sustained assistance."""
+    started: float | None = None
+    for frame in sorted(frames, key=lambda frame: frame.t):
+        if len(frame.poses) < 2:
+            started = None
+            continue
+        if started is None:
+            started = frame.t
+        if frame.t - started >= min_seconds:
+            return True
+    return False
+
+
 def score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]:
     """The same finished-session verdict for offline replay and live playback."""
     # Read every frame, including ones the live stream downsamples away.
-    assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)
+    assisted = assisted_of(scenario.frames)
     counts = Counter(str(error.type) for error in errors if not error.self_corrected)
     self_corrected = sum(1 for error in errors if error.self_corrected)
     score = session_score(counts, self_corrected, assisted)

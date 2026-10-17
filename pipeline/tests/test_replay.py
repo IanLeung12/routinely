@@ -35,6 +35,7 @@ from routine_watch.replay import (
     Expected,
     HistorySession,
     ReplayError,
+    assisted_of,
     change_flag,
     check,
     compare,
@@ -233,7 +234,11 @@ def test_a_session_with_staff_in_frame_is_assisted_and_scores_zero(tmp_path: Pat
     # The cup travels while held, which is what the recogniser's `get_cup` rule reads.
     carried_from = [("cup", box(0.10, 0.70, 0.20, 0.82)), ("hand", box(0.12, 0.72, 0.18, 0.80))]
     carried_to = [("cup", box(0.40, 0.44, 0.50, 0.58)), ("hand", box(0.42, 0.46, 0.48, 0.56))]
-    frames = [frame(0, 0.0, carried_from, people=2), frame(1, 0.5, carried_to, people=2)]
+    frames = [
+        frame(0, 0.0, carried_from, people=2),
+        frame(1, 0.5, carried_to, people=2),
+        frame(2, 2.0, carried_to, people=2),
+    ]
     path = write_scenario(
         tmp_path / "assisted",
         "steps: [get_cup]\nerrors: []\nflag: false\n",
@@ -244,6 +249,37 @@ def test_a_session_with_staff_in_frame_is_assisted_and_scores_zero(tmp_path: Pat
     assert result["steps"] == ["get_cup"]
     assert result["errors"]  # the rest of the task never happened
     assert result["score"] == 0.0
+
+
+def test_one_stray_second_pose_does_not_suppress_session_score() -> None:
+    scenario = load_scenario(SCENARIOS_DIR / "tea_no_kettle")
+    frames = list(scenario.frames)
+    frames[1] = frame(frames[1].seq, frames[1].t, [], people=2)
+    result = run(replace(scenario, frames=tuple(frames)))
+    assert result["assisted"] is False
+    assert result["score"] == 6.0
+
+
+@pytest.mark.parametrize("duration, expected", [(1.999, False), (2.0, True), (3.0, True)])
+def test_assistance_requires_consecutive_frames_spanning_two_seconds(duration, expected) -> None:
+    frames = [frame(0, 0, [], people=2), frame(1, duration, [], people=2)]
+    assert assisted_of(frames) is expected
+
+
+def test_single_person_frame_resets_the_assistance_timer() -> None:
+    frames = [
+        frame(0, 0, [], people=2), frame(1, 1, [], people=1),
+        frame(2, 2, [], people=2), frame(3, 3, [], people=2),
+    ]
+    assert not assisted_of(frames)
+
+
+def test_assistance_uses_elapsed_time_and_custom_threshold() -> None:
+    frames = [frame(1, 11, [], people=2), frame(0, 10, [], people=2)]
+    assert not assisted_of(frames)
+    assert assisted_of(frames, min_seconds=1.0)
+    assert not assisted_of([])
+    assert not assisted_of([frame(0, 0, [], people=2)])
 
 
 # ------------------------------------------------------- expected vs got, and the CLI
