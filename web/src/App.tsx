@@ -72,77 +72,80 @@ export default function App() {
   }
 
   return (
-    <main className="app">
-      {showTour && (
-        <Suspense fallback={<Loading label="Loading tour…" />}>
-          <Tour />
-        </Suspense>
-      )}
-      <DemoBanner />
-      <header>
-        <h1>Routine Watch</h1>
-        <p className="tagline">
-          Watches a resident make a cup of tea and flags a change in their routine for a
-          nurse to review.
-        </p>
-        {!openHandoff && !openPatternLibrary && (
-          <>
-            <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
-            <Button variant="secondary" onClick={() => setOpenPatternLibrary(true)}>
-              Pattern library
-            </Button>
-          </>
+    <>
+      <a href="#main" className="skip-link">Skip to main content</a>
+      <main id="main" className="app">
+        {showTour && (
+          <Suspense fallback={<Loading label="Loading tour…" />}>
+            <Tour />
+          </Suspense>
         )}
-      </header>
+        <DemoBanner />
+        <header>
+          <h1>Routine Watch</h1>
+          <p className="tagline">
+            Watches a resident make a cup of tea and flags a change in their routine for a
+            nurse to review.
+          </p>
+          {!openHandoff && !openPatternLibrary && (
+            <>
+              <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
+              <Button variant="secondary" onClick={() => setOpenPatternLibrary(true)}>
+                Pattern library
+              </Button>
+            </>
+          )}
+        </header>
 
-      {openAlert !== null ? (
-        <AlertView alertId={openAlert} onBack={closeAlert} />
-      ) : openHandoff ? (
-        <Suspense fallback={<Loading label="Loading shift handoff…" />}>
-          <Handoff
-            onBack={() => setOpenHandoff(false)}
-            onOpenAlert={id => openAlertFrom('handoff', id)}
-          />
-        </Suspense>
-      ) : openPatternLibrary ? (
-        <Suspense fallback={<Loading label="Loading pattern library…" />}>
-          <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
-        </Suspense>
-      ) : openResident === null ? (
-        <>
-          <section>
-            <h2>Unit overview</h2>
-            <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
-          </section>
-
-          <section>
-            <h2>Live session</h2>
-            <LiveScreen
-              onOpenAlert={id => openAlertFrom('live', id)}
-              onSessionEnd={() => setRefreshKey((key) => key + 1)}
+        {openAlert !== null ? (
+          <AlertView alertId={openAlert} onBack={closeAlert} />
+        ) : openHandoff ? (
+          <Suspense fallback={<Loading label="Loading shift handoff…" />}>
+            <Handoff
+              onBack={() => setOpenHandoff(false)}
+              onOpenAlert={id => openAlertFrom('handoff', id)}
             />
-          </section>
+          </Suspense>
+        ) : openPatternLibrary ? (
+          <Suspense fallback={<Loading label="Loading pattern library…" />}>
+            <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
+          </Suspense>
+        ) : openResident === null ? (
+          <>
+            <section>
+              <h2>Unit overview</h2>
+              <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
+            </section>
 
-          <section>
-            <h2>Alerts</h2>
-            <ul className="resident-list">
-              {alerts.map(alert => (
-                <li key={alert.alert_id} className="resident-row">
-                  <button
-                    type="button"
-                    className="resident-open"
-                    onClick={() => openAlertFrom('overview', alert.alert_id)}
-                  >
-                    {residentName(alert.resident_id)}: {alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      ) : (
-        <ResidentDetail residentId={openResident} onBack={() => setOpenResident(null)} />
-      )}
-    </main>
+            <section>
+              <h2>Live session</h2>
+              <LiveScreen
+                onOpenAlert={id => openAlertFrom('live', id)}
+                onSessionEnd={() => setRefreshKey((key) => key + 1)}
+              />
+            </section>
+
+            <section>
+              <h2>Alerts</h2>
+              <ul className="resident-list">
+                {alerts.map(alert => (
+                  <li key={alert.alert_id} className="resident-row">
+                    <button
+                      type="button"
+                      className="resident-open"
+                      onClick={() => openAlertFrom('overview', alert.alert_id)}
+                    >
+                      {residentName(alert.resident_id)}: {alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        ) : (
+          <ResidentDetail residentId={openResident} onBack={() => setOpenResident(null)} />
+        )}
+      </main>
+    </>
   )
 }

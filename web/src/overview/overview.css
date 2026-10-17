@@ -85,6 +85,15 @@
   margin-left: auto;
 }
 
+.resident-paused-chip {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--error-grey-bg);
+  color: var(--error-grey-text);
+  font-size: 0.75rem;
+}
+
 /* Nurses check the board on a phone on the floor (T234): below 480px, stack each
    row's name/room, status + top pattern, and sparkline instead of squeezing them
    onto one line and forcing horizontal scroll. */
