@@ -133,7 +133,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T080 — Evidence view: skeleton replay and ghost overlay on the alert screen
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: feature
