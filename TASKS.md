@@ -522,7 +522,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T211 — Test: alert "Copy summary" text keeps the safe wording
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -530,7 +530,8 @@ Acceptance:
 - area: web/src/alert/alertText.test.ts
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T10:00Z
-- pr: —
+- pr: #198
+- rating: 4/5 clear, but acceptance criterion about display name required a small fix to alertText.ts beyond pure test-writing
 
 What: T199 (#189) added `web/src/alert/alertText.ts`, the text a nurse pastes into the chart. Pin its wording rules with tests.
 Interface: read only `web/src/alert/alertText.ts` and `web/src/alert/alertText.test.ts`; use the alert fixture the existing test uses.
