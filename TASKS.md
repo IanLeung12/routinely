@@ -350,7 +350,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T150 — Resident detail: show the room monitoring switch
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -359,7 +359,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:29Z
-- pr: —
+- pr: #142
+- rating: 5/5 clear
 
 What: Put T103's `MonitoringToggle` next to "Room {resident.room}" in the resident detail header so judges see the privacy control in the demo. Local `useState(true)` only for now (API wiring after T149). Read only `web/src/resident/ResidentDetail.tsx`, its test and `web/src/about/MonitoringToggle.tsx`.
 Interface: `<MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />`.
