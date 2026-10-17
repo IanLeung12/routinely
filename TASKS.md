@@ -473,14 +473,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T266 — Live screen: "Check again" after a room is unpaused
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/live/useLiveSession.ts, web/src/live/useLiveSession.test.ts, web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T12:49Z
 - pr: —
 
 What: Once /ws/live sends `{"type":"paused"}` the hook stops for good, so after a nurse resumes the room the live screen stays on "Monitoring is paused" until a full reload. Add a "Check again" button on the paused state that reconnects.
