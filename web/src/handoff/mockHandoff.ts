@@ -5,16 +5,18 @@ import type { Handoff } from './types.ts'
  * API is unreachable - the same state `mock/alerts.ts` assumes. Kept next to the
  * screen the way `live/mockLiveStream.ts` is. Mrs. K has two sessions above her own
  * baseline and an alert nobody has reviewed; Mr. Chen and Mr. Nguyen are on a slow
- * rise; the rest of the unit has nothing to review. */
+ * rise; the rest of the unit has nothing to review. Nobody was flagged the shift
+ * before this one, the same `previous_flags` the pipeline serves for this window
+ * (T324), so Mrs. K's row reads as two more than last shift offline too. */
 export const mockHandoff: Handoff = {
   window_hours: 12,
   residents: [
-    { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false },
-    { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, pending_review: 0, trending: true },
-    { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', room: '126', flags: 0, pending_review: 0, trending: true },
-    { resident_id: 'mr-silva', name: 'Mr. Silva', room: '117', flags: 0, pending_review: 0, trending: false },
-    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', room: '108', flags: 0, pending_review: 0, trending: false },
-    { resident_id: 'mrs-patel', name: 'Mrs. Patel', room: '132', flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, previous_flags: 0, pending_review: 1, trending: false },
+    { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, previous_flags: 0, pending_review: 0, trending: true },
+    { resident_id: 'mr-nguyen', name: 'Mr. Nguyen', room: '126', flags: 0, previous_flags: 0, pending_review: 0, trending: true },
+    { resident_id: 'mr-silva', name: 'Mr. Silva', room: '117', flags: 0, previous_flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-ahmed', name: 'Mrs. Ahmed', room: '108', flags: 0, previous_flags: 0, pending_review: 0, trending: false },
+    { resident_id: 'mrs-patel', name: 'Mrs. Patel', room: '132', flags: 0, previous_flags: 0, pending_review: 0, trending: false },
   ],
   paused: [],
   summary:
