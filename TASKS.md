@@ -442,14 +442,14 @@ Interface: Read `web/src/handoff/Handoff.tsx` and its test. With `@testing-libra
 Acceptance: `cd web && npx vitest run src/handoff/Handoff.test.tsx` passes; `scripts/ci.sh` passes.
 
 ### T295 — Test: unit overview opens a resident keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/overview/UnitOverview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:48Z
 - pr: —
 
 What: The first demo step is opening Mrs. K from the unit overview; prove a keyboard user can do it.
