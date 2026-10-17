@@ -450,7 +450,7 @@ Acceptance:
 * `cd web && npm test -- Handoff.keyboard` passes; `scripts/ci.sh` passes.
 
 ### T322 — Drift card: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -458,7 +458,8 @@ Acceptance:
 - area: web/src/resident/driftCard.css, web/src/resident/DriftCard.mobile.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T16:23Z
-- pr: —
+- pr: #312
+- rating: 5/5 clear
 
 What: The resident drift card has no small-screen rules; at 375 px it must not scroll sideways and its rows should stack.
 Interface: read `web/src/resident/DriftCard.tsx`, `web/src/resident/driftCard.css` and `web/src/resident/resident.css` (copy its `@media (max-width: 480px)` approach). CSS only; no behaviour change. New test `DriftCard.mobile.test.tsx` asserts the card renders with its existing class names (smoke-level, like other `*.mobile.test.tsx` files if any exist).
