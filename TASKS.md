@@ -409,7 +409,7 @@ Acceptance:
   * `cd web && npm test -- FeedbackButtons` and `scripts/ci.sh` pass
 
 ### T288 — Smoke: validate /monitoring, room history and the first /ws/live message against contracts/
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
