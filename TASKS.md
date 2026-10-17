@@ -535,7 +535,7 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes.
 
 ### T093 — Heat calendar: weekday headers and a legend
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
