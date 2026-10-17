@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
@@ -5,7 +6,7 @@ import type { ErrorType, TaskError } from '../contracts.ts'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
-import type { LiveStep } from './useLiveSession.ts'
+import type { LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 /** Plain-language names for the error types in SPEC section 7. */
@@ -44,6 +45,49 @@ function errorText(steps: LiveStep[], error: TaskError): string {
   return `${ERROR_LABELS[error.type]} · ${stepLabel(steps, error.step_id)} · ${formatClock(error.t_start)}`
 }
 
+/** Drives the screen-reader-only live region: one short sentence per step completion,
+ * raised flag, or connection change, so a nurse who isn't looking at the screen still
+ * hears what just happened (SPEC section 9 says the screen must read in ~10 seconds,
+ * which assumes sight; this is the non-visual equivalent). */
+function useAnnouncement(
+  steps: LiveStep[],
+  states: Record<string, StepState>,
+  errors: TaskError[],
+  source: 'live' | 'mock',
+): string {
+  const [announcement, setAnnouncement] = useState('')
+  const prevStates = useRef<Record<string, StepState>>({})
+  const prevErrorCount = useRef(0)
+  const prevSource = useRef(source)
+
+  useEffect(() => {
+    for (const [stepId, state] of Object.entries(states)) {
+      if (state === 'done' && prevStates.current[stepId] !== 'done') {
+        setAnnouncement(`Step done: ${stepLabel(steps, stepId)}`)
+      }
+    }
+    prevStates.current = states
+  }, [states, steps])
+
+  useEffect(() => {
+    if (errors.length > prevErrorCount.current) {
+      setAnnouncement(`Flag raised: ${errorText(steps, errors[errors.length - 1])}`)
+    }
+    prevErrorCount.current = errors.length
+  }, [errors, steps])
+
+  useEffect(() => {
+    if (source !== prevSource.current) {
+      setAnnouncement(
+        source === 'mock' ? 'Connection lost. Showing offline demo data.' : 'Connected to live session.',
+      )
+    }
+    prevSource.current = source
+  }, [source])
+
+  return announcement
+}
+
 export type LiveSessionProps = {
   scenario: string
   speed?: number
@@ -55,6 +99,7 @@ export type LiveSessionProps = {
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
   const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
+  const announcement = useAnnouncement(steps, states, errors, source)
 
   return (
     <section className="live-session">
@@ -65,7 +110,12 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
         .live-session__banner--flagged { background: var(--status-flagged-bg); color: var(--status-flagged-text); }
         .live-session__banner--clear { background: var(--status-normal-bg); color: var(--status-normal-text); }
         .live-session__error-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+        .live-session__announcer { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
       `}</style>
+
+      <p className="live-session__announcer" aria-live="polite">
+        {announcement}
+      </p>
 
       <SectionHeader
         title="Live session"

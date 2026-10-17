@@ -71,4 +71,13 @@ describe('SkeletonView', () => {
     expect(container.querySelector('video')).toBeNull()
     expect(container.querySelector('img')).toBeNull()
   })
+
+  it('has an accessible name describing who and what is tracked', () => {
+    render(<SkeletonView frame={makeFrame()} />)
+
+    const image = screen.getByRole('img')
+    expect(image.getAttribute('aria-label')).toBe(
+      'Skeleton view: 1 person tracked; 1 hand tracked; objects in view: kettle, cup',
+    )
+  })
 })
