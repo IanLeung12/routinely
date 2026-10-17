@@ -465,7 +465,7 @@ Acceptance:
 - expected.yaml has a header comment explaining the scenario, like the existing ones.
 
 ### T057 — Task map legend component
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -473,7 +473,7 @@ Acceptance:
 - area: web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:32Z
-- pr: —
+- pr: #48
 
 What: Judges and nurses see red/amber squares on the live task map with no key. Add a small legend explaining each state in plain words (never "diagnose"). Not wired into a screen yet (T043 owns the live screen).
 Interface: `export function TaskMapLegend(): JSX.Element` listing the five states of `StepState` in `web/src/live/TaskMap.tsx` (pending "not yet", done "done", omission "missed step", repeat "repeated step", sequence "out of order"), each with a swatch using the same classes/colours as TaskMap.tsx. Read only `web/src/live/TaskMap.tsx`, `web/src/index.css` (design tokens) and `web/src/ui/README.md`. Swatches are decorative (`aria-hidden`); text carries the meaning; rendered as a `<dl>` or `<ul>` with an accessible name "Task map legend".
