@@ -207,7 +207,7 @@ Acceptance:
 - `cd web && npx vitest run src/overview` and `scripts/ci.sh` pass.
 
 ### T161 — Live screen: choose the tea or the medication session
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -390,7 +390,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T171 — Sparkline: nurse-readable screen-reader label
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: improvement
@@ -497,7 +497,7 @@ Acceptance:
 - `scripts/ci.sh` passes (incl. `pipeline/tests/test_scenarios_readme.py`)
 
 ### T177 — Test: handoff summary and Mrs. K's alert name the same errors
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
