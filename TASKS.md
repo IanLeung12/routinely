@@ -622,14 +622,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T174 — Test: demo top_pattern is set only for watch/flagged residents
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_demo_top_pattern.py (new)
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T08:54Z
 - pr: —
 
 What: Pin the new `top_pattern` behaviour of `demo_residents()`: `None` for every `normal` resident; for each non-normal resident either `None` or a dict with exactly `pattern_id`, `name`, `urgency`, where `pattern_id` exists in the pattern library and `urgency` is a valid urgency value; and Mrs. K (`mrs-k`) has a non-None top pattern.
