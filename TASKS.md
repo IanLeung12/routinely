@@ -25,7 +25,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain_claude.py -q` and `scripts/ci.sh` pass.
 
 ### T037 — Skeleton replay API for evidence
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -33,7 +33,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_evidence.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T05:54Z
-- pr: —
+- pr: #65
 
 What: Back the alert's "open evidence" with skeleton frames, never video (SPEC §8). Demo sessions have no recorded frames, so map the flagged resident's latest session to the `tea_skip_teabag_pour_twice`-style frames scenario (or `tea_no_kettle` until it exists) and a normal session for the ghost layer.
 Interface: `evidence.replay_frames(session_id, t_start, t_end, fps=10) -> list[CaptureFrame]` (downsampled, padded ±2 s, clipped to session); `GET /sessions/{session_id}/replay?t_start&t_end&fps` → `{session_id, frames}`, 404 unknown session; `GET /residents/{id}/normal_replay?t_start&t_end` → frames from a normal session for the ghost overlay.
