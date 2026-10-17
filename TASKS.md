@@ -456,3 +456,26 @@ Acceptance:
 - `docker compose -f deploy/docker-compose.yml up -d --build` then `DASHBOARD_URL=http://localhost:<web port> API_URL=http://localhost:8000 scripts/smoke.sh` passes (paste the output in the PR); `docker compose ... down` cleans up.
 - No secrets in images (`.env` not copied); `scripts/ci.sh` passes.
 - If you add a module or script, add a CODEMAP note in this PR.
+
+### T416 — Local camera preview: real video + skeleton overlay, this device only
+- status: todo
+- class: heavy
+- priority: 1
+- kind: feature
+- source: ian
+- deps: —
+- area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/, docs/DEMO.md, SPEC.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants to see the actual camera picture during a live session, not just the skeleton. Keep the privacy promise: video never leaves the capture machine, is never stored, never reaches the API or a remote supervisor.
+Why: the demo is far more convincing with the real kitchen and the skeleton tracking on top, and it helps frame the camera for Roboflow training clips.
+Interface:
+- `preview.py`: an MJPEG endpoint served by the **capture process itself**, bound to `127.0.0.1` only (`PREVIEW_PORT`, default 8765), off unless `CAMERA_PREVIEW=1` / `scripts/camera.sh --preview`. Frames come from the same capture loop (one camera handle; Windows can't open the webcam twice), downscaled (≤640 px, ~10 fps), held in memory for the current frame only, never written to disk. Refuses non-loopback clients.
+- Web (`web/src/live/`): "Show camera preview (this device only)" toggle on the Live screen, shown only when the page is on localhost and the preview responds. Video underneath, the existing skeleton + boxes canvas on top, aligned to the same coordinates; a visible "Preview · not recorded · this device only" badge. Falls back to skeleton-only everywhere else, quietly.
+- `scripts/camera.sh --preview` turns it on and prints the URL; `docs/DEMO.md` explains it; SPEC §12/§16 gets one line: optional local preview, loopback only, never stored or transmitted.
+Acceptance:
+- Tests: preview rejects a non-loopback client; nothing under the repo or `REPLAY_DIR`/`CAMERA_RECORD` contains image data after a session with preview on (privacy test); capture still writes the same JSONL with preview on or off.
+- Web test: toggle hidden when not on localhost or preview unreachable; badge shown when on.
+- `scripts/ci.sh` passes without opencv/mediapipe installed (lazy imports).
