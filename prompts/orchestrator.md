@@ -8,7 +8,7 @@ Each run, in order. Be quick; skip steps with nothing to do.
 
 2. **Main health.** `gh run list --branch main -L 3`. If the latest run on `main` failed, that's the top priority: if one recent merge clearly caused it, revert via PR (`git revert`, branch `orch/revert-<sha>`, auto-merge). Otherwise add a `priority: 0` fix task.
 
-3. **Reconcile.**
+3. **Reconcile.** Start with `python3 scripts/tasks.py reconcile` (merged PRs → done).
    - `in-review` tasks whose PR merged → `status=done`. PR closed unmerged → back to `todo`. CI failing with no new commits for 20 min → back to `todo` (keep `pr:`) with note `fix CI on PR #N`, so the next worker repairs that branch instead of starting over.
    - `python3 scripts/tasks.py stale --minutes 90` → set each back to `todo`, clear `owner`, add a note.
    - `blocked` tasks: read the note; rewrite the task, split it, or raise its class.

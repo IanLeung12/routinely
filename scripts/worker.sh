@@ -30,6 +30,7 @@ while true; do
   git fetch -q origin && git switch -q --detach origin/main
   # Pick up a newer worker.sh from main automatically (between tasks only).
   if [ "$(cksum < scripts/worker.sh)" != "$SELF_SUM" ]; then echo "$(date -u +%H:%M) worker.sh updated; restarting"; exec bash scripts/worker.sh; fi
+  python3 scripts/tasks.py reconcile >/dev/null 2>&1 || true   # merged PRs -> done (cheap, no LLM)
   TASK=$(python3 scripts/tasks.py auto --class "$CLASS" --agent "$AGENT")
   if [ "$TASK" = NO_TASK ]; then
     [ -n "${ONCE:-}" ] && { echo "no task"; exit 0; }

@@ -14,6 +14,7 @@ That makes claims atomic: only one agent can flip a task from todo to claimed.
   tasks.py stale [--minutes 90]             claimed tasks with no PR for too long
   tasks.py sync                             refresh ./.tasks from origin
   tasks.py commit -m "msg"                  commit+push manual edits in ./.tasks (orchestrator)
+  tasks.py reconcile                        mark in-review tasks whose PR merged as done (uses gh)
   tasks.py archive [--keep 10]              move done tasks (except the newest N) to ARCHIVE.md
 """
 import argparse, datetime as dt, os, re, subprocess, sys, time
@@ -165,6 +166,7 @@ def main():
     s = sub.add_parser("list"); s.add_argument("--status")
     s = sub.add_parser("stale"); s.add_argument("--minutes", type=int, default=90)
     sub.add_parser("sync")
+    sub.add_parser("reconcile")
     s = sub.add_parser("archive"); s.add_argument("--keep", type=int, default=10)
     s = sub.add_parser("commit"); s.add_argument("-m", required=True)
     a = p.parse_args()
@@ -224,6 +226,25 @@ def main():
                 lines, tasks = load()
                 return print(block(lines, tasks[c[0]]))
         return print("NO_TASK")
+    if a.cmd == "reconcile":
+        import json
+        r = subprocess.run(["gh", "pr", "list", "--state", "merged", "-L", "200", "--json", "number"],
+                           cwd=ROOT, capture_output=True, text=True)
+        if r.returncode:
+            sys.exit("gh pr list failed: " + r.stderr.strip())
+        merged = {f"#{p['number']}" for p in json.loads(r.stdout or "[]")}
+        fixed = []
+
+        def mut(lines, tasks):
+            fixed.clear()
+            for tid, t in tasks.items():
+                v = t["vals"]
+                if v.get("status") == "in-review" and v.get("pr", "").strip() in merged:
+                    lines = set_fields(lines, t, {"status": "done"})
+                    fixed.append(tid)
+            return lines
+        write_txn(mut, "reconcile: merged PRs -> done")
+        return print("done: " + " ".join(fixed) if fixed else "nothing to reconcile")
     if a.cmd == "archive":
         moved = []
 
