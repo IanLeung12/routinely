@@ -15,7 +15,7 @@ import { fetchResident } from '../resident/api.ts'
 import type { CareRecord } from '../resident/types.ts'
 import { fetchAlert, postFeedback } from './api.ts'
 import { AlertContext } from './AlertContext.tsx'
-import { alertText, residentDisplayName } from './alertText.ts'
+import { alertText } from './alertText.ts'
 import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
@@ -66,7 +66,7 @@ export function AlertView({
   const [loaded, setLoaded] = useState<{ alertId: string; alert: Alert | null } | null>(null)
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [replay, setReplay] = useState<{ alertId: string; replay: EvidenceReplay | null } | null>(null)
-  const [careRecords, setCareRecords] = useState<{ alertId: string; records: CareRecord[] | null } | null>(null)
+  const [resident, setResident] = useState<{ alertId: string; name: string | null; records: CareRecord[] | null } | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   /** Which alert focus has already landed on, so re-rendering after feedback is saved
@@ -104,9 +104,9 @@ export function AlertView({
     if (loaded === null || loaded.alertId !== alertId || loaded.alert === null) {
       return
     }
-    fetchResident(loaded.alert.resident_id).then((resident) => {
+    fetchResident(loaded.alert.resident_id).then((fetched) => {
       if (!cancelled) {
-        setCareRecords({ alertId, records: resident?.care_records ?? null })
+        setResident({ alertId, name: fetched?.name ?? null, records: fetched?.care_records ?? null })
       }
     })
     return () => {
@@ -145,7 +145,8 @@ export function AlertView({
         setCopyStatus('Copy not available')
         return
       }
-      await navigator.clipboard.writeText(alertText(alert))
+      const residentName = resident !== null && resident.alertId === alertId ? resident.name : null
+      await navigator.clipboard.writeText(alertText(alert, residentName ?? undefined))
       setCopyStatus('Copied')
     } catch {
       setCopyStatus('Copy not available')
@@ -174,9 +175,10 @@ export function AlertView({
     body = <EmptyState message="No change flagged for review." />
   } else {
     const alert = loaded.alert
+    const residentName = resident !== null && resident.alertId === alertId ? resident.name : null
     heading = (
       <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>
-        {residentDisplayName(alert.resident_id)} flagged for review
+        {residentName ?? alert.resident_id} flagged for review
       </h1>
     )
     body = (
@@ -192,10 +194,10 @@ export function AlertView({
         </Button>
         {copyStatus && <p role="status">{copyStatus}</p>}
 
-        {careRecords !== null && careRecords.alertId === alertId && careRecords.records !== null && (
+        {resident !== null && resident.alertId === alertId && resident.records !== null && (
           <Card>
             <SectionHeader title="Recent care records" />
-            <AlertContext records={careRecords.records} alertTs={alert.created_at} />
+            <AlertContext records={resident.records} alertTs={alert.created_at} />
           </Card>
         )}
 

@@ -45,13 +45,14 @@ describe('AlertView', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText } })
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
     await screen.findByText(MRS_K.summary)
+    await screen.findByRole('heading', { level: 1, name: /mrs\. k/i })
     vi.useFakeTimers()
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
     })
 
-    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K))
+    expect(writeText).toHaveBeenCalledWith(alertText(MRS_K, 'Mrs. K'))
     expect(screen.getByText('Copied').getAttribute('role')).toBe('status')
     act(() => { vi.advanceTimersByTime(2000) })
     expect(screen.queryByText('Copied')).toBeNull()
@@ -218,11 +219,11 @@ describe('AlertView', () => {
 
     render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
     await screen.findByText(MRS_K.summary)
+    await screen.findByRole('heading', { level: 1, name: /mrs\. k.*flagged for review/i })
 
     const headings = screen.getAllByRole('heading')
     const h1s = headings.filter((h) => h.tagName === 'H1')
     expect(h1s).toHaveLength(1)
-    expect(h1s[0].textContent).toMatch(/mrs\. k.*flagged for review/i)
 
     const h2Titles = headings.filter((h) => h.tagName === 'H2').map((h) => h.textContent)
     expect(h2Titles).toEqual([
