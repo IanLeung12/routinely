@@ -5,6 +5,7 @@ import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
+import { MonitoringToggle } from '../about/MonitoringToggle.tsx'
 import { fetchDrift, fetchResident } from './api.ts'
 import type { ResidentDrift } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
@@ -34,6 +35,7 @@ export function ResidentDetail({
 }) {
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const [monitoring, setMonitoring] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -75,6 +77,7 @@ export function ResidentDetail({
         <header className="resident-detail__header">
           <h2>{resident.name}</h2>
           <span className="resident-room">Room {resident.room}</span>
+          <MonitoringToggle room={resident.room} on={monitoring} onChange={setMonitoring} />
           <StatusChip status={resident.status} />
         </header>
 
