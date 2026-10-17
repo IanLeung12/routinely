@@ -124,6 +124,8 @@ carry the per-step history needed to exercise it.
 | `meds_pill_before_water` | steps | Taking the pill before filling the glass is fine, but drinking before filling is a sequence error; does not flag. |
 | `meds_unclear_not_error` | steps | An unclear, low-confidence pill observation must not produce an error. |
 | `meds_bad_sessions_far_apart` | steps | Two bad meds sessions more than 48 hours apart must not flag; guards the 48h window. |
+| `meds_single_bad_no_flag` | steps | The meds counterpart of `tea_single_bad_no_flag`: one bad session after quiet history produces errors without flagging a change. |
+| `meds_pill_three_times` | steps | The meds counterpart of `tea_teabag_three_times`: the pill comes out of the organiser three times, two perseveration errors on the once-only step. |
 | `tea_bad_sessions_far_apart` | steps | Two bad sessions more than 48 hours apart must not flag; guards the 48h window. |
 | `tea_kettle_twice` | steps | Boiling the kettle again after getting a cup is perseveration on a once-only step; flags with another recent bad session. |
 | `tea_milk_sugar` | steps | A clean tea routine with both optional steps, milk and sugar, taken; never flags. |

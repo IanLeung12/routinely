@@ -1,0 +1,5 @@
+{"event_id": "meds-single-bad-no-flag:s0", "session_id": "meds-single-bad-no-flag", "step_id": "get_glass", "objects": ["glass"], "t_start": 2.0, "t_end": 6.0, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-single-bad-no-flag:s1", "session_id": "meds-single-bad-no-flag", "step_id": "open_organiser", "objects": ["pill_organiser"], "t_start": 8.0, "t_end": 13.0, "confidence": 0.91, "source": "rule"}
+{"event_id": "meds-single-bad-no-flag:s2", "session_id": "meds-single-bad-no-flag", "step_id": "take_pill", "objects": ["pill_organiser"], "t_start": 14.5, "t_end": 19.0, "confidence": 0.9, "source": "rule"}
+{"event_id": "meds-single-bad-no-flag:s3", "session_id": "meds-single-bad-no-flag", "step_id": "fill_glass", "objects": ["water_jug", "glass"], "t_start": 21.0, "t_end": 28.5, "confidence": 0.92, "source": "rule"}
+{"event_id": "meds-single-bad-no-flag:s4", "session_id": "meds-single-bad-no-flag", "step_id": "take_pill", "objects": ["pill_organiser"], "t_start": 40.0, "t_end": 45.0, "confidence": 0.9, "source": "rule"}
