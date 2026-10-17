@@ -94,7 +94,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T052 — Demo-data banner component
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
