@@ -314,7 +314,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
 
 ### T148 — monitoring.py: in-memory per-room monitoring on/paused store
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -323,7 +323,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:29Z
-- pr: —
+- pr: #143
+- rating: 5/5 clear
 
 What: Backend half of the per-room pause switch (SPEC §12 "monitoring can be turned off per room"; UI component landed in T103). Pure module, no API wiring yet. Read only `pipeline/src/routine_watch/feedback.py` (style of an in-memory store).
 Interface: `class MonitoringStore` with `is_on(room: str) -> bool` (default True for unknown rooms), `set(room: str, on: bool) -> None`, `paused_rooms() -> list[str]` (sorted), `reset() -> None`. Module-level `get_monitoring_store() -> MonitoringStore` returning one shared instance.
