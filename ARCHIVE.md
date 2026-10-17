@@ -3877,3 +3877,39 @@ Acceptance:
 - no `<style>` element left in `SessionSummary.tsx`; rendered text unchanged
 - existing SessionSummary tests pass unchanged (only add, don't loosen)
 - `cd web && npx vitest run src/live/SessionSummary.test.tsx` and `scripts/ci.sh` pass
+
+### T192 — /demo/reset also resumes paused room monitoring
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T149
+- area: pipeline/src/routine_watch/api.py (demo_reset only), pipeline/tests/test_api_demo_reset.py
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:34Z
+- pr: #229
+- rating: 5/5 clear
+
+What: After T149 a rehearsal can pause a room, and `/demo/reset` leaves it paused. Make reset also call the monitoring store's `reset()`.
+Interface: read `pipeline/src/routine_watch/api.py` (`demo_reset`), `pipeline/src/routine_watch/monitoring.py` (`get_monitoring_store`, `MonitoringStore.reset`), `pipeline/tests/test_api_demo_reset.py`.
+Acceptance:
+- Test: PUT a room to paused, POST /demo/reset, GET /monitoring shows no paused rooms.
+- `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
+
+### T224 — LiveScreen: CSS file instead of inline <style>
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/LiveScreen.tsx, web/src/live/liveScreen.css
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:40Z
+- pr: #216
+- rating: 5/5 clear
+
+What: `web/src/live/LiveScreen.tsx` (line ~31) injects a `<style>` block; move it to a CSS file like `web/src/resident/driftCard.css` (T215).
+Interface: new `web/src/live/liveScreen.css` imported by `LiveScreen.tsx`; same class names, same rules.
+Acceptance:
+- no `<style>` element left in `LiveScreen.tsx`; no visual or text change
+- `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
