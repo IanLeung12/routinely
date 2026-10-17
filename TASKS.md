@@ -518,16 +518,17 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
-- status: claimed
+- status: todo
 - class: light
 - priority: 0
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/routines/types.ts, web/src/routines/RoutinesScreen.tsx, web/src/routines/RoutinesScreen.test.tsx, web/src/mock/routines.ts
-- owner: ian-laptop-standard
-- claimed: 2026-10-17T22:56Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-laptop-standard: run ended without progress
 
 What: `GET /routines` returns `Routine.summary()` (pipeline/src/routine_watch/routine_builder.py ~line 979): `id, title, task_id, built_in, source, step_count, needs_training` and NO `task_graph`. `web/src/routines/RoutinesScreen.tsx:77` reads `routine.task_graph.steps.length`, so with the API up the screen throws a TypeError (it only works on the offline mock, which includes `task_graph`).
 Interface: in `types.ts` add a `RoutineSummary` type matching `summary()`; `fetchRoutines()` in api.ts returns `RoutineSummary[]` (change only its type annotation; its fallback logic is T444). `RoutinesScreen.tsx` renders `${routine.step_count} steps`. Make `mockBuiltInRoutines` and the localStorage fallback rows in `mock/routines.ts` carry `step_count` and the other summary fields. Do not change the pipeline.
