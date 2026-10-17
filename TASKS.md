@@ -393,7 +393,7 @@ Acceptance:
 - `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass
 
 ### T217 — Resident detail: heading order, landmark, focus on open
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -401,7 +401,8 @@ Acceptance:
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T10:17Z
-- pr: —
+- pr: #208
+- rating: 5/5 clear
 
 What: same accessibility pass as T213 does for the alert view, on the resident detail screen: one `h1` (the resident's display name), section headings as `h2` in visual order, the screen wrapped in `<main>` or a labelled region, and focus moved to the `h1` when the screen opens so a screen-reader user hears whose page it is.
 Interface: ResidentDetail only; don't touch child components (BaselineChart, HeatCalendar, DriftCard, SessionList, ContextTimeline) beyond what ResidentDetail renders around them.
