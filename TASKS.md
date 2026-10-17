@@ -131,7 +131,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T301 — Review: contract schema + smoke check for GET /residents/{id}/feedback
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: improvement
