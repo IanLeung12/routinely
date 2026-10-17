@@ -427,7 +427,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T277 — Bug: copied shift handoff says "Room unavailable" for every resident
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - kind: bug
