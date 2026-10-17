@@ -114,15 +114,16 @@ Acceptance:
 - `cd web && npx vitest run src/live` and `scripts/ci.sh` pass
 
 ### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/PatternList.test.tsx
-- owner: ian-claude-light-2
-- claimed: 2026-10-17T12:07Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T229-wip-1210: start from it (git switch task/T229-wip-1210 && git merge origin/main)
 
 What: `PatternList.test.tsx > never uses diagnostic wording` renders two `pattern()` fixtures that both have `pattern_id: 'delirium'`, so React logs "Encountered two children with the same key" in every CI run, hiding real warnings.
 Interface: read `web/src/alert/PatternList.test.tsx` only. Give the second fixture a different `pattern_id` (e.g. `pattern({ pattern_id: 'infection', urgency: 'urgent' })`); fix any other test in the file that renders duplicate ids the same way.
