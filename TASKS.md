@@ -565,5 +565,5 @@ Acceptance:
 What: Failed main CI run 39073146552 (@24033f5, unrelated .gitattributes commit). `frames_in_thread` drops the newest record once `max_pending` (default `MAX_PENDING_FRAMES = 30`, pipeline/src/routine_watch/live_camera.py:94) are waiting, and FakeCamera's clip has ~43 frames, so when the capture thread outruns the event loop on a loaded runner, frames get dropped and `drain(camera) == camera.frames` fails. That's a timing race in the test, not a product bug.
 Interface: test-only change. In `test_frames_in_thread_hands_over_every_record_in_order` (line ~298), call `drain(camera, max_pending=len(camera.frames) + 1)` so nothing can be dropped. Check the other tests in the file that compare a full list (not `stop_after`/`max_pending=0`) for the same race and fix them the same way. Do not change live_camera.py.
 Acceptance:
-- `cd pipeline && python -m pytest tests/test_api_live_camera.py -q --count 1` passes; run the file 20 times in a loop (`for i in $(seq 20); do python -m pytest tests/test_api_live_camera.py -q -x || break; done`) with no failure.
+- `cd pipeline && python -m pytest tests/test_api_live_camera.py -q` passes; run the file 20 times in a loop (`for i in $(seq 20); do python -m pytest tests/test_api_live_camera.py -q -x || break; done`) with no failure.
 - `scripts/ci.sh` passes.
