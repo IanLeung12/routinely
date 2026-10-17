@@ -262,7 +262,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T051 — Feedback buttons announce the recorded choice
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
