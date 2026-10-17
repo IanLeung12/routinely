@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
 - Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
 - App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - To look at a role-gated screen in headless chrome, serve web/dist and visit a throwaway same-origin page that seeds localStorage then location.replace('/'): chrome-headless-shell --screenshot cannot c (ian-claude-heavy-3)
 - Sparkline has separate a11y tests pinning its exact accessible label; when adapting to MicroBars, preserve the original label and hide the inner chart summary because scores contain no status metadata (max_API_standard-2)
 - On Windows scripts/ci.sh can fail test_preview.py::test_a_port_already_taken_leaves_the_capture_without_a_preview because a second preview server binds the taken port; report this unrelated platform f (max_API_light)
+- check:bundle budget (92,200 B) is already ~336 bytes over on clean origin/main (T442 tracks it): a new PR's CI will show 'first-load JS over budget' even for unrelated changes -- don't spend fix attem (ian-claude-standard-3)
