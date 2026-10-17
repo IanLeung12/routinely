@@ -18,7 +18,7 @@ describe('HandoffDelta', () => {
     render(<HandoffDelta flags={2} previousFlags={0} />)
 
     expect(screen.getByText('2 more than last shift')).toBeTruthy()
-    expect(tone()).toContain('handoff-delta--more')
+    expect(tone()).toContain('pill--negative')
   })
 
   it('counts one more as one, not "1 more sessions"', () => {
@@ -31,21 +31,24 @@ describe('HandoffDelta', () => {
     render(<HandoffDelta flags={1} previousFlags={4} />)
 
     expect(screen.getByText('3 fewer than last shift')).toBeTruthy()
-    expect(tone()).toContain('handoff-delta--fewer')
+    expect(tone()).toContain('pill--positive')
+    expect(document.querySelector('.pill__arrow')?.textContent).toBe('\u2193')
   })
 
   it('says the same when the count has not moved', () => {
     render(<HandoffDelta flags={2} previousFlags={2} />)
 
     expect(screen.getByText('Same as last shift')).toBeTruthy()
-    expect(tone()).toContain('handoff-delta--same')
+    expect(tone()).toContain('pill--neutral')
+    expect(document.querySelector('.pill__arrow')).toBeNull()
   })
 
   it('says nothing was flagged either shift rather than "same" over two zeros', () => {
     render(<HandoffDelta flags={0} previousFlags={0} />)
 
     expect(screen.getByText('Nothing flagged either shift')).toBeTruthy()
-    expect(tone()).toContain('handoff-delta--same')
+    expect(tone()).toContain('pill--neutral')
+    expect(document.querySelector('.pill__arrow')).toBeNull()
   })
 
   it('reads a drop to zero as fewer, not as a quiet shift', () => {
@@ -75,7 +78,7 @@ describe('HandoffDelta', () => {
     // The direction is in the words; the arrow is decorative and hidden from
     // assistive tech, so nothing is lost without it (web guide, SPEC section 9).
     expect(phrase()).toBe('3 more than last shift')
-    const glyph = document.querySelector('.handoff-delta__glyph')
+    const glyph = document.querySelector('.pill__arrow')
     expect(glyph?.getAttribute('aria-hidden')).toBe('true')
     expect(glyph?.textContent).toBe('↑')
   })
