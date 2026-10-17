@@ -62,4 +62,39 @@ describe('ReplayPlayer', () => {
     unmount()
     expect(vi.getTimerCount()).toBe(0)
   })
+
+  it('toggles play with Space when the player is focused', () => {
+    render(<ReplayPlayer frames={frames} />)
+    const player = screen.getByRole('group')
+    fireEvent.keyDown(player, { key: ' ' })
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy()
+    fireEvent.keyDown(player, { key: ' ' })
+    expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
+  })
+
+  it('ignores Space when it bubbles from a control that already handled it', () => {
+    render(<ReplayPlayer frames={frames} />)
+    fireEvent.keyDown(screen.getByRole('slider'), { key: ' ' })
+    expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
+  })
+
+  it('exposes accessible names and state on the controls', () => {
+    render(<ReplayPlayer frames={frames} />)
+    const playButton = screen.getByRole('button', { name: 'Play' })
+    expect(playButton.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(playButton)
+    expect(screen.getByRole('button', { name: 'Pause' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toBe('60.0 s of 62.0 s')
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '1' } })
+    expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toBe('61.0 s of 62.0 s')
+    expect(screen.getByRole('img').getAttribute('aria-label')).toBeTruthy()
+  })
+
+  it('does not autoplay when the user prefers reduced motion', () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+    render(<ReplayPlayer frames={frames} autoPlay />)
+    expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
+    expect(vi.getTimerCount()).toBe(0)
+    delete (window as { matchMedia?: typeof window.matchMedia }).matchMedia
+  })
 })

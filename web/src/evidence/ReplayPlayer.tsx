@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CaptureFrame } from '../contracts.ts'
 import SkeletonView from '../live/SkeletonView.tsx'
+import Button from '../ui/Button.tsx'
 
 type ReplayPlayerProps = {
   frames: CaptureFrame[]
@@ -8,8 +9,12 @@ type ReplayPlayerProps = {
   fps?: number
 }
 
+function prefersReducedMotion() {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function ReplayPlayer({ frames, autoPlay = false, fps = 10 }: ReplayPlayerProps) {
-  const [playback, setPlayback] = useState({ position: 0, playing: autoPlay })
+  const [playback, setPlayback] = useState(() => ({ position: 0, playing: autoPlay && !prefersReducedMotion() }))
   const last = Math.max(0, frames.length - 1)
   const current = Math.min(playback.position, last)
   const playing = playback.playing && current < last
@@ -28,18 +33,34 @@ export function ReplayPlayer({ frames, autoPlay = false, fps = 10 }: ReplayPlaye
 
   const seconds = Math.max(0, Math.floor(frames[current].t))
   const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+  const valueText = `${frames[current].t.toFixed(1)} s of ${frames[last].t.toFixed(1)} s`
+
+  const togglePlay = () => {
+    setPlayback({ position: !playing && current === last ? 0 : current, playing: !playing })
+  }
 
   return (
-    <div className="replay-player">
+    <div
+      className="replay-player"
+      role="group"
+      aria-label="Skeleton replay. Press space to play or pause."
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return
+        if (event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault()
+          togglePlay()
+        }
+      }}
+    >
       <SkeletonView frame={frames[current]} />
-      <button type="button" onClick={() => {
-        setPlayback({ position: !playing && current === last ? 0 : current, playing: !playing })
-      }}>
+      <Button onClick={togglePlay} aria-pressed={playing}>
         {playing ? 'Pause' : 'Play'}
-      </button>
+      </Button>
       <input
         type="range"
         aria-label="Replay position"
+        aria-valuetext={valueText}
         min={0}
         max={last}
         step={1}
