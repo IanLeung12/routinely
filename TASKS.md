@@ -594,14 +594,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T366 — Test: unit overview error and empty states use the shared ui components
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/overview/UnitOverview.states.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:08Z
 - pr: —
 
 What: Guard the overview's failure paths: when the residents API rejects, the screen shows the shared ErrorState with a retry button; when it returns no residents, it shows the shared EmptyState with nurse-readable copy.
