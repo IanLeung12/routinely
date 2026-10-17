@@ -248,7 +248,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T444 — Review: routine builder shows a canned draft / fake save when the API refuses
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
