@@ -8,6 +8,7 @@ import { ResidentDetail } from './resident/ResidentDetail.tsx'
 import { Button } from './ui/Button.tsx'
 import { DemoBanner } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
+import { useDocumentTitle } from './ui/useDocumentTitle.ts'
 
 /** Off the main demo path (SPEC demo beat is overview → live → alert), so these
  * screens load on demand instead of growing the first-paint bundle. */
@@ -69,6 +70,22 @@ export default function App() {
   function closeAlert() {
     setOpenAlert(null)
     setOpenHandoff(alertOrigin === 'handoff')
+  }
+
+  useDocumentTitle(documentTitle())
+
+  /** So a nurse with several tabs open (or a screen reader) can tell the
+   * overview from Mrs. K's alert. */
+  function documentTitle(): string {
+    if (openAlert !== null) {
+      const resident = alerts.find(alert => alert.alert_id === openAlert)?.resident_id
+      const name = resident ? residentName(resident) : null
+      return name ? `Alert · ${name} — Routine Watch` : 'Alert — Routine Watch'
+    }
+    if (openHandoff) return 'Shift handoff — Routine Watch'
+    if (openPatternLibrary) return 'Pattern library — Routine Watch'
+    if (openResident !== null) return `${residentName(openResident)} — Routine Watch`
+    return 'Unit overview — Routine Watch'
   }
 
   return (
