@@ -23,6 +23,11 @@ capture = [
     "onnxruntime>=1.19",
     "opencv-python>=4.10",
 ]
+# TimescaleStore only (store.py); MemoryStore is the default and needs no database.
+# Installed by scripts/ci.sh via `uv sync --all-extras`.
+db = [
+    "psycopg[binary]>=3.1",
+]
 # Installed by scripts/ci.sh via `uv sync --all-extras`.
 dev = [
     "jsonschema>=4.23",  # validates payloads against contracts/*.schema.json
