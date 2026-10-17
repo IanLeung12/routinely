@@ -203,7 +203,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents.py -q` and `scripts/ci.sh` pass.
 
 ### T013 — Dashboard unit overview screen
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - deps: T001
