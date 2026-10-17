@@ -390,7 +390,7 @@ Acceptance:
 - `cd web && npm test -- --run` passes.
 
 ### T146 — Docs: CODEMAP notes for live push alerts and placeholder alert errors
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: docs
@@ -398,7 +398,8 @@ Acceptance:
 - area: docs/CODEMAP.md
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:26Z
-- pr: —
+- pr: #138
+- rating: 5/5 clear
 
 What: T131 made a live session send one push alert when it flips a resident to flagged (`live.py` `_resident_flagged`, `notify.get_notifier`), and T121 made `alerts.py` invent plausible step/time placeholders from error counts (`_task_errors`, `_distinct_clauses`). Neither is in docs/CODEMAP.md's notes. Also add notes for T062's shift handoff (`handoff.py` `build_handoff`, `GET /handoff`, `web/src/handoff/`) and T103's `web/src/about/MonitoringToggle.tsx` (component only, not wired yet).
 Interface: read `pipeline/src/routine_watch/live.py` (session_messages docstring, `_resident_flagged`), `notify.py` (`get_notifier`), `alerts.py` (`_task_errors`, `_distinct_clauses`) and add 2-4 lines of notes each under the existing pipeline section. Notes only; the file list is generated.
