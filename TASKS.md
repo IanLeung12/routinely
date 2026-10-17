@@ -8,15 +8,15 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: T148
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py (new)
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T10:46Z
 - pr: —
 
 What: Expose the T148 store so the dashboard's pause switch is real. While a room is paused, `/ws/live` for a scenario whose resident is in that room sends one `{"type": "paused", "room": ...}` message and closes instead of streaming frames (no camera data processed).
