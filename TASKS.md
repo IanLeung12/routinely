@@ -121,7 +121,7 @@ What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (o
 Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
 
 ### T427 — Replays data layer: API client + mock fixture for the replays library
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: feature
@@ -129,7 +129,8 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 - area: web/src/replays/api.ts, web/src/replays/api.test.ts, web/src/mock/replays.ts
 - owner: max_API_light
 - claimed: 2026-10-17T21:11Z
-- pr: —
+- pr: #403
+- rating: 4/5 Repeat marker wording differs from contract perseveration; otherwise clear
 
 What: The fetch layer T413's Replays screen will consume, carved out of T413 so the screen task only builds UI. Backend routes landed in T412.
 Interface: in `web/src/replays/api.ts` export `fetchPersonReplays(personId): Promise<PersonReplays>`, `fetchReplay(replayId): Promise<Replay>`, `deleteReplay(replayId): Promise<void>`, calling `GET /people/{id}/replays`, `GET /replays/{id}`, `DELETE /replays/{id}`. Follow the base-URL/offline-fallback pattern in `web/src/evidence/api.ts` exactly (fall back to the mock when the API is unreachable or in offline mode). Types `PersonReplays`, `ReplaySummary`, `Replay`, `ReplayMarker` already exist in `web/src/contracts.ts` (~lines 431–510); do not change contracts. `web/src/mock/replays.ts`: 3 replays for Mrs. K (omission, sequence, repeat markers), 1 for Mr. D, 0 for Sam, plus one `normal` summary; skeleton frames only, no images.
