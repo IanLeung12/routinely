@@ -8,15 +8,15 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T149 — API: GET /monitoring and PUT /rooms/{room}/monitoring
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - deps: T148
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_monitoring.py (new)
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T11:25Z
 - pr: —
 - note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T149-wip-1051: start from it (git switch task/T149-wip-1051 && git merge origin/main)
 
