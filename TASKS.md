@@ -476,7 +476,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T297 — Web: page title names the screen and resident
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: improvement
@@ -484,7 +484,8 @@ Acceptance:
 - area: web/src/ui/useDocumentTitle.ts, web/src/ui/useDocumentTitle.test.ts, web/src/App.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T14:45Z
-- pr: —
+- pr: #286
+- rating: 5/5 clear
 
 What: Every tab reads "Routine Watch", so a nurse with several tabs open (or a screen reader announcing the page) can't tell the overview from Mrs. K's alert. Add a small `useDocumentTitle(title)` hook and set it once per route in `App.tsx`: "Unit overview — Routine Watch", "<resident> — Routine Watch", "Alert · <resident> — Routine Watch", "Shift handoff — Routine Watch", etc. (use names already available at the route level; fall back to the screen name).
 Interface: `export function useDocumentTitle(title: string): void` in `web/src/ui/useDocumentTitle.ts` (sets `document.title`, restores the previous title on unmount).
