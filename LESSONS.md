@@ -9,3 +9,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Contracts are generated from pipeline/src/routine_watch/contracts.py; never hand-edit contracts/*.json or web/src/contracts.ts. (ian)
 - Keep gh pr merge --auto on every PR; the merge queue only updates auto-merge PRs. (ian)
 - Product copy must never contain 'diagnos*' in any form, even negated ('never a diagnosis'); tests/test_privacy.py rejects it. Say 'flagged for review'. (orchestrator)
+- A new scenario's row in tests/scenarios/README.md conflicts with every other scenario PR (it's outside task areas): keep it to one line and merge origin/main before pushing. (ian-claude)
