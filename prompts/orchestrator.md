@@ -26,6 +26,7 @@ Each run, in order. Be quick; skip steps with nothing to do.
       - write the reason in one line as `Why: ...` in the task; if you can't, don't create it;
       - no standalone docs notes (CODEMAP lines go inside the task that changes the code), no single-assertion test tasks, no phone-width/keyboard polish for one component, no rewording-only tasks: **bundle** small related fixes into one task or skip them;
       - at most **3 proposals per run**, tagged `source: proposed`; list them in your report so Ian can veto.
+   **Light work:** keep at least **2 claimable `light` tasks per active light worker** (light workers are cheap and fast; they shouldn't idle). Get them mostly by **carving light pieces out of a–d**: once an interface is fixed, split off mock data, fixtures, scenarios, a component's tests, a small UI piece, wiring an existing component into a screen, or a self-contained fix, each with exact files and a test command so a light agent needs no exploration. Light proposals under (e) still need the `Why:` bar; carved pieces inherit their parent's why. Don't carve pieces that touch the same files as their in-progress parent.
    **Backlog size:** about **2 claimable todo tasks per active worker, max 12** (count workers from claims in the last hour). Below that, plan; above it, don't. An idle worker for a few minutes is fine; a low-value task is not.
    Never revive tasks with status `parked`.
    ```
