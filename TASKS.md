@@ -345,13 +345,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
 
 ### T039 — Capture process: MediaPipe + local detector → JSONL
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/detector.py, pipeline/tests/test_capture.py, pipeline/pyproject.toml (optional extra `capture`), .env.example
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T05:21Z
 - pr: —
 
 What: SPEC MVP 1–2 and §16: the privacy boundary. Webcam or video file → MediaPipe pose + hands + local object detector → one `CaptureFrame` JSONL record per frame; frames dropped after processing, never written. Roboflow weights run locally (no hosted inference, no training runs); until weights exist, `FakeDetector` returns no boxes.
