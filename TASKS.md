@@ -265,7 +265,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_drift.py -q` and `scripts/ci.sh` pass.
 
 ### T034 — More step-level scenarios
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
