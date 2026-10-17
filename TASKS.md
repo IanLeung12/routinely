@@ -317,7 +317,7 @@ Acceptance:
 * `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T222 — Review: Copy summary says "Change flagged" for slow-trend alerts
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
