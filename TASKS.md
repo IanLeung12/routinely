@@ -112,7 +112,7 @@ Acceptance:
 - existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T290 — Alert: errors by time of day (morning / afternoon / evening)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 3
 - kind: feature
@@ -121,7 +121,8 @@ Acceptance:
 - area: web/src/alert/TimeOfDayStrip.tsx, web/src/alert/TimeOfDayStrip.test.tsx, web/src/alert/AlertView.tsx, pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py, contracts/alert_detail.schema.json, web/src/contracts.ts
 - owner: ian-claude
 - claimed: 2026-10-17T16:19Z
-- pr: —
+- pr: #319
+- rating: 4/5 clear on the interface and acceptance; the bucket cut at 17:00 differs from pattern_features.EVENING_HOUR (16:00) that the strip is evidence for, and the field had to land on the Alert record (not only AlertDetail) for web/src/contracts.ts to carry it, since AlertDetail is not in WEB_PAYLOADS
 
 What: Rationale: evening-only worsening (SPEC §7.5, already in pipeline/src/routine_watch/patterns.py) appears on the alert as text only; a nurse can't see why. Show a small strip of errors per session bucketed morning/afternoon/evening over the last 14 days, as visible evidence for that pattern.
 Interface: optional alert-detail field `errors_by_time_of_day: [{bucket: "morning"|"afternoon"|"evening", sessions: int, errors: int}]` (buckets <12:00, 12:00–17:00, ≥17:00 local); contracts change, so regenerate alert_detail.schema.json and update web/src/contracts.ts and every consumer in this PR. `<TimeOfDayStrip>` under the error list, caption "Errors by time of day, last 14 days"; hidden when the field is absent. No "diagnos" wording.
