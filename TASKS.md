@@ -335,7 +335,7 @@ Acceptance:
 - `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
 
 ### T204 — Review: demo tour misstates the flag rule ("two sessions in a row")
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: bug
