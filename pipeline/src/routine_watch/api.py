@@ -18,12 +18,13 @@ from pydantic import BaseModel, Field, field_validator
 from . import __version__, session_log
 from .alerts import build_alerts, top_pattern_for
 from .contracts import Alert, AlertFeedback, FeedbackVerdict, SuggestedCheck
-from .demo import DEMO_NOW, demo_residents, status_for
+from .demo import DEMO_NOW, DEMO_RESIDENT, demo_residents, status_for
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
 from .live import SCENARIO_NOT_FOUND, as_json, scenario_path, session_messages
+from .monitoring import get_monitoring_store
 from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .patterns_library import LIBRARY as PATTERN_LIBRARY
 from .patterns_library import Pattern, TimeProfile
@@ -352,6 +353,42 @@ def resident_normal_replay(
     }
 
 
+class RoomMonitoringIn(BaseModel):
+    """The pause switch's body (SPEC §12): on resumes a room, off pauses it."""
+
+    on: bool
+
+
+def _room_for(resident_id: str) -> str | None:
+    """`resident_id`'s room, straight from `demo.demo_residents()` (SPEC §12: a room
+    or camera is linked to a resident by configuration), or `None` if there is no
+    such resident.
+    """
+    return next(
+        (resident["room"] for resident in demo_residents() if resident["id"] == resident_id),
+        None,
+    )
+
+
+@app.get("/monitoring")
+def get_monitoring() -> dict:
+    """Every room a nurse has paused right now (SPEC §12): backs the dashboard's
+    pause switch state.
+    """
+    return {"paused_rooms": get_monitoring_store().paused_rooms()}
+
+
+@app.put("/rooms/{room}/monitoring")
+def set_room_monitoring(room: str, body: RoomMonitoringIn) -> dict:
+    """Pause or resume monitoring for one room (SPEC §12), without touching any
+    other room. 404s for a room no demo resident is in.
+    """
+    if room not in {resident["room"] for resident in demo_residents()}:
+        raise HTTPException(status_code=404, detail="room not found")
+    get_monitoring_store().set(room, body.on)
+    return {"room": room, "on": body.on}
+
+
 @app.websocket("/ws/live")
 async def live_session(
     websocket: WebSocket,
@@ -366,10 +403,20 @@ async def live_session(
     the demo's fallback for a camera that fails (SPEC section 10), and the camera
     plugs into the same generator later.
 
+    A session always lands against `demo.DEMO_RESIDENT` (`routine_watch.live`), so if
+    that resident's room is paused (SPEC §12), this sends one `paused` message naming
+    the room and closes instead - no scenario is loaded and no frames go out, the same
+    as monitoring being off for a real camera.
+
     An unknown scenario closes with 4404, and the socket closes normally when the
     session ends.
     """
     await websocket.accept()
+    room = _room_for(DEMO_RESIDENT)
+    if room is not None and not get_monitoring_store().is_on(room):
+        await websocket.send_json({"type": "paused", "room": room})
+        await websocket.close()
+        return
     try:
         async for message in session_messages(scenario_path(scenario), speed=speed):
             await websocket.send_json(as_json(message))
