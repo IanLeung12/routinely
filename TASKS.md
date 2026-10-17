@@ -22,16 +22,16 @@ What: Fey "stock detail" layout for a resident: header (name, status pill, top p
 Acceptance: same data and states (loading/empty/error) as now; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T406 — Redesign 6/6: live session + handoff
-- status: in-review
+- status: todo
 - class: standard
 - priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/live/, web/src/handoff/Handoff.tsx, web/src/handoff/handoff.css, web/src/handoff/Handoff.test.tsx, web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.defaults.test.tsx
-- owner: ian-claude-heavy-2
-- claimed: 2026-10-17T21:41Z
+- owner: —
+- claimed: —
 - pr: #416
-- note: Delta pills split out to T428 (HandoffDelta on Pill); just keep using <HandoffDelta>.
+- note: merge conflict with main on PR #416: check out its branch, merge origin/main, fix, push
 - rating: 4/5 clear on what to build and the note about T428 saved a collision; the area list didn't cover the before/after screenshots the acceptance asks for (docs/design/, docs/DESIGN.md), so that had to be taken outside the area
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
