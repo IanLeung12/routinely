@@ -465,14 +465,14 @@ Acceptance:
 - expected.yaml has a header comment explaining the scenario, like the existing ones.
 
 ### T057 — Task map legend component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: feature
 - deps: —
 - area: web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:32Z
 - pr: —
 
 What: Judges and nurses see red/amber squares on the live task map with no key. Add a small legend explaining each state in plain words (never "diagnose"). Not wired into a screen yet (T043 owns the live screen).
