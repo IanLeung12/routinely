@@ -53,4 +53,9 @@ describe('GhostReplay', () => {
     expect(screen.getByText('No skeleton data')).toBeTruthy()
     expect(screen.queryByRole('img')).toBeNull()
   })
+
+  it('names the drawing for screen readers', () => {
+    render(<GhostReplay today={[frame(0)]} normal={[frame(0)]} t={0} />)
+    expect(screen.getByRole('img', { name: 'Today and usual skeleton replay' })).toBeTruthy()
+  })
 })
