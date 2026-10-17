@@ -252,14 +252,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T072 — Live camera session messages (capture → recogniser → live messages)
-- status: claimed
+- status: todo
 - class: heavy
 - priority: 1
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/live_camera.py, pipeline/tests/test_live_camera.py, docs/CODEMAP.md (notes only)
-- owner: ian-claude
-- claimed: 2026-10-17T06:34Z
+- owner: —
+- claimed: —
 - pr: #74
 - note: merge conflict with main on PR #74: check out its branch, merge origin/main, fix, push
 
