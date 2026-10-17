@@ -445,14 +445,14 @@ Acceptance:
   * `cd web && npm test -- FeedbackButtons` and `scripts/ci.sh` pass
 
 ### T288 — Smoke: validate /monitoring, room history and the first /ws/live message against contracts/
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: scripts/smoke.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T14:21Z
 - pr: —
 
 What: T279 schema-checks four bodies in smoke.sh; the monitoring and live endpoints (pipeline/src/routine_watch/api_live.py) still get spot checks or none, so contract drift there is only caught by unit tests.
