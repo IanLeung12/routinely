@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: bug
@@ -16,8 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - deps: T368
 - area: pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py
 - rating: —
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T19:11Z
 - note: orch: local ci.sh failed only on the known undici WebSocket flake (fixed by T368, now a dep). A fix exists unpushed as c881255 on task/T351-evening-cutoff in Max's worktree; reuse it if available, else redo (tiny). Leave the contracts TimeOfDay docstring alone.
 
 What: `pattern_features.EVENING_HOUR = 16` decides the evening-only pattern, but `api_alerts.EVENING_START_HOUR = 17` buckets the strip shown as its evidence. A session at 16:xx counts as "evening" for the pattern and "afternoon" on the strip, so an alert "consistent with evening worsening" can show its errors under afternoon. The code comment admits it only holds because no demo session starts 16:00–17:00.
