@@ -97,15 +97,15 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T075 — Review: error-type labels and colours defined three times in the web app
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: T064
 - area: web/src/ui/errorTypes.ts (new), web/src/ui/errorTypes.test.ts (new), web/src/live/LiveSession.tsx, web/src/alert/ErrorList.tsx, web/src/resident/format.ts
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:59Z
 - pr: —
 
 What: `LiveSession.tsx` (`ERROR_LABELS`, `ERROR_COLOR`), `alert/ErrorList.tsx` (phrase + colour maps) and `resident/format.ts` (plain names) each map `ErrorType` separately, so the same error can read or colour differently across screens.
