@@ -431,7 +431,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T312 — Test: resident detail feedback history after reset shows the empty state
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
