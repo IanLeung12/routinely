@@ -407,15 +407,16 @@ Acceptance:
 * `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T221 — Copy summary uses the resident's real name, not one guessed from the id
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts, web/src/alert/AlertView.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T10:26Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-standard-2: run ended without progress; partial work on branch task/T221-wip-1031: start from it (git switch task/T221-wip-1031 && git merge origin/main)
 
 What: T211 (#198) added `residentDisplayName` in `alertText.ts`, which builds "Mrs. K" from the id `mrs-k`, while the rest of the app (`App.tsx` ~line 50) shows `resident.name` from the API, so the two can disagree for other residents. Pass the real name in instead.
 Interface: read `web/src/alert/alertText.ts`, `web/src/alert/alertText.test.ts`, `web/src/alert/AlertView.tsx` (it already calls `fetchResident(alert.resident_id)`). Change to `alertText(alert: Alert, residentName?: string)` using `residentName ?? alert.resident_id`; delete `residentDisplayName` and `TITLES`. In `AlertView.tsx`, keep the fetched resident's `name` in state next to the care records and pass it to `alertText`.
