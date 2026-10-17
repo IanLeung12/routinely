@@ -553,3 +553,40 @@ Acceptance:
 - Returned dict has exactly the keys `pattern_id`, `name`, `urgency`, and `urgency` is a plain string.
 - A resident whose patterns all fall below threshold (build one by copying a demo resident and clearing its errors/sessions as needed) returns `None`.
 - `cd pipeline && python -m pytest tests/test_top_pattern_for.py -q` and `scripts/ci.sh` pass.
+
+### T207 — Bug: skeleton view and evidence ghost replay show no skeleton, only object boxes
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/evidence.py, pipeline/tests/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Tester (main 355d6b1). Every stand-in frame the demo serves is built with `poses=[]` and `hands=[]` (`live._synthetic_frames`, and the recordings behind `/sessions/{id}/replay` and `/residents/{id}/normal_replay`), so the live "Skeleton view" and the alert's "Today / Usual" ghost replay draw only labelled object boxes, never a body skeleton or hands (SPEC §5 ghost replay, §10 step 3 "skeleton view").
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`; open the dashboard, wait for the live session to flag, click "Open alert", press Play under Evidence. `curl "localhost:8000/sessions/mrs-k-22/replay?t_start=40&t_end=60"` → every frame has `"poses": [], "hands": []`.
+Expected: a simple stick-figure pose (and a hand near the active object) in each synthetic frame, moving between the objects of each step; Usual replay differs visibly from Today. Actual: boxes only.
+Interface: `_synthetic_frames` (and whatever builds the replay stand-in frames) fill `poses`/`hands` with keypoints per the `contracts/` CaptureFrame schema (no contract change); see `contracts/examples/capture.jsonl` for the shape.
+Acceptance:
+- Pipeline test: synthetic live frames and `/sessions/{id}/replay` frames have ≥1 pose with keypoints in [0,1].
+- No change to step/error/flag results: `scripts/e2e.sh` still 23/23.
+- `scripts/ci.sh` passes.
+
+### T208 — Bug: ghost replay "Today" caption is dark blue on the dark card, unreadable
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/evidence/GhostReplay.tsx, web/src/evidence/
+- owner: —
+- claimed: —
+- pr: —
+
+What: Tester (main 355d6b1). `web/src/evidence/GhostReplay.tsx:44` colours the caption with inline `color: 'blue'` / `'grey'`; on the dark evidence card "Today" is near-invisible. Use the colours the replay strokes use (CSS classes, no inline styles) so both labels are readable and match the lines they name.
+Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open alert-mrs-k, scroll to Evidence: caption under the replay.
+Acceptance:
+- No inline colour in the figcaption; "Today" and "Usual" each match their replay stroke colour and pass WCAG AA contrast on the card background.
+- `cd web && npm test` and `scripts/ci.sh` pass.
