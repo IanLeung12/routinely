@@ -261,7 +261,7 @@ Acceptance:
 * `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
 
 ### T197 — Heat calendar legend: CSS classes instead of inline styles
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
