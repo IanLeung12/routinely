@@ -348,7 +348,7 @@ Acceptance:
 - `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass.
 
 ### T303 — Test: resident detail works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
