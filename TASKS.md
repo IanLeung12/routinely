@@ -430,7 +430,7 @@ Acceptance:
 - `cd web && npm test` and `scripts/ci.sh` pass.
 
 ### T209 — Refactor: move feature extraction out of patterns.py
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -438,7 +438,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/pattern_features.py (new), docs/CODEMAP.md
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:58Z
-- pr: —
+- pr: #199
+- rating: 5/5 clear
 
 What: `patterns.py` is 786 lines mixing feature extraction from session history (`_score` … `extract_features`, ~lines 578–786) with signal scoring and evidence text. Move the extraction half into `pattern_features.py` so each module has one job. Behaviour must not change.
 Interface: `pattern_features.extract_features` (+ its private helpers and `Features` if that keeps imports acyclic); `patterns` re-exports `extract_features` and `Features` so existing callers and tests keep working unchanged.
