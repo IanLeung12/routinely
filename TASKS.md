@@ -219,13 +219,13 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T014 — Hesitation detector
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/hesitation.py, pipeline/tests/test_hesitation.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:57Z
 - pr: —
 
 What: Flag steps or gaps that took much longer than this resident's own average. Read only the files in `area`, `pipeline/src/routine_watch/baseline.py` (import `HESITATION_SIGMA`; do not edit it) and `pipeline/pyproject.toml`.
