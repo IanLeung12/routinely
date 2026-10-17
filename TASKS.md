@@ -467,7 +467,7 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -475,7 +475,8 @@ Acceptance:
 - area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T15:56Z
-- pr: —
+- pr: #303
+- rating: 5/5 clear task, well-specified acceptance criteria and known README conflict called out in advance
 
 What: Add a tea session with two different errors in one session, and a correct session with one unusually long gap between steps that must produce no task error (long gaps are hesitations from `hesitation.py`, not errors) and no flag.
 Interface: new dirs `tests/scenarios/<name>/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/tea_normal/` and `tests/scenarios/tea_sequence_error/`. Read pipeline/src/routine_watch/hesitation.py. Don't edit tests/scenarios/README.md (T313 owns it); list the two names in the PR body. If the README-lists-every-scenario test then fails, add a deps-free follow-up note in the PR rather than widening scope. No pipeline code changes; bugs found → known-failing + PR note.
