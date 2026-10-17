@@ -531,3 +531,58 @@ Interface: `async def camera_session_messages(frames: AsyncIterator[CaptureFrame
 Acceptance:
 - Feeding a recorded scenario's `frames.jsonl` through `camera_session_messages` yields the same step/error/end messages as `session_messages` for that scenario (test over ≥3 scenarios).
 - No real camera, network or paid API in tests; `scripts/ci.sh` passes.
+
+### T073 — Review: live screen hard-codes the tea steps instead of the session's task graph
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: T064
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live.py, web/src/live/useLiveSession.ts, web/src/live/LiveSession.tsx, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `LiveSession.tsx` renders `<TaskMap steps={MOCK_STEPS}>` and `stepLabel()` looks labels up in `MOCK_STEPS` even when `source === 'live'`. The `/ws/live` protocol never tells the client which steps exist, so any non-tea task (T041 medication) or a renamed step shows the wrong map and "Session" labels.
+Interface: `live.session_messages` yields first `{"type": "session_start", "session_id", "task_id", "steps": [{"id", "label", "optional"}]}` from `scenario.graph`. Add it to the `LiveMessage` union; `useLiveSession` stores `steps` in state (mock stream sends the same message built from `MOCK_STEPS`); `LiveSession.tsx` uses `state.steps` for the map and labels, never `MOCK_STEPS` directly.
+Acceptance:
+- pytest: first message of `session_messages` for `tea_abandoned` is `session_start` with the graph's step ids in order.
+- vitest: a live stream with a custom 2-step `session_start` renders those 2 labels in the task map.
+- `scripts/ci.sh` passes.
+
+### T074 — Review: one stray second skeleton marks the whole session "assisted"
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `replay.score_session` sets `assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)`. Now that real capture runs MediaPipe with `num_poses=2` (T039), a single false-positive pose or someone walking past for one frame scores the session 0 and drops it from the baseline, which hides real changes from the nurse.
+Interface: add `assisted_of(frames: Sequence[CaptureFrame], min_seconds: float = ASSISTED_MIN_S) -> bool` in `replay.py` with `ASSISTED_MIN_S = 2.0`: true only when ≥2 poses appear in consecutive frames spanning at least `min_seconds` (by `frame.t`). `score_session` uses it.
+Acceptance:
+- Tests: one isolated 2-pose frame → not assisted; 2 poses held for ≥2 s → assisted; existing scenario expected outputs unchanged (add a frames fixture if no scenario covers it).
+- `scripts/ci.sh` passes.
+
+### T075 — Review: error-type labels and colours defined three times in the web app
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T064
+- area: web/src/ui/errorTypes.ts (new), web/src/ui/errorTypes.test.ts (new), web/src/live/LiveSession.tsx, web/src/alert/ErrorList.tsx, web/src/resident/format.ts
+- source: reviewer
+- owner: —
+- claimed: —
+- pr: —
+
+What: `LiveSession.tsx` (`ERROR_LABELS`, `ERROR_COLOR`), `alert/ErrorList.tsx` (phrase + colour maps) and `resident/format.ts` (plain names) each map `ErrorType` separately, so the same error can read or colour differently across screens.
+Interface: `web/src/ui/errorTypes.ts` exports `ERROR_TYPE_LABEL: Record<ErrorType, string>`, `ERROR_TYPE_TONE: Record<ErrorType, 'red' | 'amber' | 'grey'>` (SPEC §9 colours) and `describeError(type, stepLabel): string`. The three files import from it; delete their local maps. Visible text may only change where screens disagreed today; note any such change in the PR.
+Acceptance:
+- Unit test covers every `ErrorType` in all three exports.
+- `scripts/ci.sh` passes.
