@@ -8,15 +8,15 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T411 — Wording pass: people, not just residents and nurses
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: ian
 - deps: T408, T409, T410
 - area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T23:28Z
 - pr: —
 - note: released by max_API_light: run ended without progress
 
