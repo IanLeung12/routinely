@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T001 — Monorepo scaffold
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - deps: —
 - area: repo root, pipeline/, web/, contracts/, scripts/ci.sh
 - owner: ian-claude
 - claimed: 2026-10-17T03:11Z
-- pr: —
+- pr: #2
 
 What: Create the project skeleton every later task builds on.
 Interface: `pipeline/` Python 3.11 package managed by uv (capture, recogniser, task graph, errors, baseline, FastAPI api); `web/` Vite + React + TypeScript nurse dashboard; `contracts/` shared schemas (empty placeholder + README); `.env.example`. Each has a trivial passing test.
