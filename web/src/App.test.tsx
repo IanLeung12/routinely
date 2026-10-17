@@ -37,4 +37,19 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'mrs-k: Change flagged for review' })).toBeTruthy()
   })
+
+  it('opens the shift handoff from the header and returns to the overview', async () => {
+    await act(async () => { render(<App />) })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Shift handoff' }))
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Shift handoff' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Unit overview' })).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Back/ }))
+    })
+    expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
+  })
 })

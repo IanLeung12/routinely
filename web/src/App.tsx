@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import { fetchAlerts } from './alert/api.ts'
 import { AlertView } from './alert/AlertView.tsx'
+import { Handoff } from './handoff/Handoff.tsx'
 import { LiveSession } from './live/LiveSession.tsx'
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
+import { Button } from './ui/Button.tsx'
 
 export default function App() {
   /** Which resident's detail is open, if any. Two screens don't need a router. */
   const [openResident, setOpenResident] = useState<string | null>(null)
   const [openAlert, setOpenAlert] = useState<string | null>(null)
+  /** The shift handoff sits off the main demo path, behind one button. */
+  const [openHandoff, setOpenHandoff] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
 
   useEffect(() => {
@@ -27,9 +31,14 @@ export default function App() {
           Watches a resident make a cup of tea and flags a change in their routine for a
           nurse to review.
         </p>
+        {!openHandoff && (
+          <Button onClick={() => setOpenHandoff(true)}>Shift handoff</Button>
+        )}
       </header>
 
-      {openAlert !== null ? (
+      {openHandoff ? (
+        <Handoff onBack={() => setOpenHandoff(false)} />
+      ) : openAlert !== null ? (
         <AlertView alertId={openAlert} onBack={() => setOpenAlert(null)} />
       ) : openResident === null ? (
         <>
