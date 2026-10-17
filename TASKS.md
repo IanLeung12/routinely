@@ -443,7 +443,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T101 — Evidence players: keyboard and screen-reader pass
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
