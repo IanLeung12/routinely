@@ -83,6 +83,23 @@ def test_get_resident_404s_for_unknown_id() -> None:
     assert response.status_code == 404
 
 
+def test_resident_scoped_routes_404_for_unknown_id() -> None:
+    """``_resident_or_404`` backs every resident-scoped route the same way."""
+    with TestClient(app) as client:
+        responses = [
+            client.get("/residents/does-not-exist"),
+            client.get("/residents/does-not-exist/drift"),
+            client.get(
+                "/residents/does-not-exist/normal_replay",
+                params={"t_start": 0.0, "t_end": 1.0},
+            ),
+        ]
+
+    for response in responses:
+        assert response.status_code == 404
+        assert response.json() == {"detail": "resident not found"}
+
+
 def test_no_resident_is_flagged_by_default() -> None:
     """A live session is what flags mrs-k (SPEC section 10 beats 2-4, T124)."""
     statuses = [resident["status"] for resident in demo_residents()]
