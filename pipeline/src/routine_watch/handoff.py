@@ -12,7 +12,8 @@ functions the dashboard already uses - offline, deterministic, no DB::
     # {"window_hours": 12,
     #  "residents": [{"resident_id": "mrs-k", "name": "Mrs. K", "room": "204",
     #                 "flags": 1, "previous_flags": 0, "pending_review": 1,
-    #                 "trending": False, "monitoring_paused": False}, ...],
+    #                 "trending": False, "monitoring_paused": False,
+    #                 "unclear_sessions": 0}, ...],
     #  "paused": [],
     #  "summary": "..."}
 
@@ -27,6 +28,13 @@ now - hours)` - against the same resident's same bar, so a row can say whether t
 shift is worse than the last one rather than only how it was. The two windows never
 share a session: the current one owns its own lower edge, so a session exactly at
 `now - hours` counts once, in this shift.
+
+`unclear_sessions` is the other half of a window: the sessions in that resident's
+room the capture was too unclear to score (`routine_watch.session_log`, SPEC section
+12). Those never become anybody's history - too little of them can be trusted to
+count toward a flag (T342) - so a camera that is blocked, knocked askew or left in
+the dark produces a row with nothing on it. The count says the capture could not be
+read and to go and look at the camera; it says nothing about the resident.
 
 `now` is where the window ends and must be timezone-aware. Pass `demo.DEMO_NOW`: the
 synthetic history and a live session played on stage (`routine_watch.live`) are both
@@ -44,6 +52,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import NamedTuple
 
+from . import session_log
 from .alerts import (
     build_alerts,
     distinct_clauses,
@@ -93,6 +102,12 @@ def build_handoff(
     logged so far: it tunes the threshold each session is measured against and takes
     reviewed alerts out of `pending_review`.
 
+    Each row also carries `unclear_sessions`: how many sessions in that resident's
+    room the capture was too unclear to score in the window. Those sessions are in
+    nobody's history by design (SPEC section 12), so a camera that cannot see is
+    invisible here without it - the count is what turns that silence into "check the
+    camera view".
+
     A paused room produces no flags at all (SPEC section 12), which would otherwise
     read as "all quiet" for a resident nobody was watching. `paused` lists every room
     the monitoring store (`monitoring.get_monitoring_store`) currently has paused, and
@@ -138,6 +153,7 @@ def build_handoff(
                 "flags": len(flagged),
                 "previous_flags": _previous_flags(resident, now, hours, threshold),
                 "pending_review": pending.get(resident["id"], 0),
+                "unclear_sessions": _unclear_sessions(resident["room"], now, hours),
                 "trending": _trending(resident),
                 "monitoring_paused": room_paused,
             }
@@ -204,6 +220,21 @@ def _sessions_between(
 
 def _inside(ts: datetime, start: datetime, end: datetime, include_end: bool) -> bool:
     return start <= ts <= end if include_end else start <= ts < end
+
+
+def _unclear_sessions(room: str, now: datetime, hours: int) -> int:
+    """Sessions in `room` the capture was too unclear to score inside the window.
+
+    Read from `routine_watch.session_log`, where a live session that ends unclear
+    leaves a timestamp and nothing else (SPEC section 12). Both edges count, the same
+    window `_window_sessions` reads the resident's own sessions over, so a session
+    that has just ended unclear is this shift's to hand over.
+
+    It is the room's count, not the resident's: what could not be read is the camera
+    view of that room, so every resident in it gets the same line, and the line is
+    about the camera.
+    """
+    return session_log.unclear_in(room, now - timedelta(hours=hours), now)
 
 
 def _threshold(resident: dict, feedback: FeedbackStore | None) -> float:

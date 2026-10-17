@@ -124,6 +124,7 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
             "flags",
             "previous_flags",
             "pending_review",
+            "unclear_sessions",
             "trending",
             "monitoring_paused",
         }
@@ -132,6 +133,9 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
         # `tests/test_handoff_previous.py`).
         assert isinstance(entry["previous_flags"], int)
         assert isinstance(entry["pending_review"], int)
+        # What the window could not read, per room (T355,
+        # `tests/test_handoff_unclear.py`): nothing is unclear in the seeded demo.
+        assert entry["unclear_sessions"] == 0
         assert isinstance(entry["trending"], bool)
         assert entry["monitoring_paused"] is False
 

@@ -28,13 +28,28 @@ type Chip = {
   key: string
   label: string
   /** `handoff__chip--` modifier: carries the colour, never the meaning. */
-  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused'
+  tone: 'flagged' | 'pending' | 'trending' | 'quiet' | 'paused' | 'unclear'
   /** Decorative, so the row is scannable without reading; the label says it in words. */
   glyph: string
 }
 
 function plural(n: number, noun: string): string {
   return n === 1 ? `${n} ${noun}` : `${n} ${noun}s`
+}
+
+/** "2 sessions too unclear to score - check the camera view", or null when the window
+ * read every session in that room (and when an older or trimmed `/handoff` sent no
+ * count at all, which is not the same as none).
+ *
+ * The room's camera, never the resident: a session too unclear to score is left out
+ * of the resident's history entirely (`pipeline/src/routine_watch/live.py`, SPEC
+ * section 12), so without this line a blocked or badly lit camera makes that room
+ * read as a quiet one. One source for the wording, so the row and a note pasted from
+ * it can't drift apart. Local to this screen: the row's chip and the copied line are
+ * both built here. */
+function unclearLabel(unclearSessions?: number | null): string | null {
+  if (!unclearSessions || unclearSessions <= 0) return null
+  return `${plural(unclearSessions, 'session')} too unclear to score — check the camera view`
 }
 
 function needsReview(resident: HandoffResident): boolean {
@@ -66,6 +81,13 @@ function chipsFor(resident: HandoffResident): Chip[] {
   }
   if (resident.monitoring_paused) {
     chips.push({ key: 'paused', label: 'Monitoring paused', tone: 'paused', glyph: '⏸' })
+  }
+  // Grey, the way "unclear" reads everywhere else in the dashboard (SPEC section 7:
+  // never counted as an error), and before the quiet chip: a room whose camera could
+  // not be read is not a room with nothing to say.
+  const unclear = unclearLabel(resident.unclear_sessions)
+  if (unclear) {
+    chips.push({ key: 'unclear', label: unclear, tone: 'unclear', glyph: '◌' })
   }
   if (chips.length === 0) {
     chips.push({ key: 'quiet', label: 'No change flagged', tone: 'quiet', glyph: '✓' })
@@ -149,10 +171,15 @@ export function handoffText(
       // "better or worse than last shift" the screen showed (T324/T350). Nothing is
       // appended when the payload sent no comparison, so the line stays as it was.
       const delta = handoffDeltaLabel(resident.flags, resident.previous_flags)
+      // Last, after the counts and the comparison: what the camera could not read is
+      // about the room, so it reads as the note on the end of the line rather than
+      // as one more thing the resident did.
+      const unclear = unclearLabel(resident.unclear_sessions)
       return `${resident.name}, Room ${resident.room}: ${plural(resident.flags, 'flagged session')}, `
         + `${plural(resident.pending_review, 'unreviewed alert')}, `
         + (resident.trending ? 'Error score trending up' : 'No upward trend')
         + (delta ? `, ${delta}` : '')
+        + (unclear ? `, ${unclear}` : '')
     }),
   ].join('\n')
 }
