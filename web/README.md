@@ -26,4 +26,9 @@ chunks. Raise it only alongside a PR that explains the growth (a new eager
 dependency, a new always-on screen); don't raise it just to make the check
 pass.
 
-The current budget is 96,000 bytes gzipped for the redesign shell, person view and replays added as always-on screens on 2026-10-17 (measured 92,536 bytes).
+It is currently 96,000 bytes gzipped (T442): the redesign shell, the person
+view and the replays added on 2026-10-17 are always-on screens and measured
+92,536 bytes together, over the old budget; T421's eager resident-detail
+charts took that to 94,908, and `main` measures 95,204 today. That leaves
+under 800 bytes of headroom, so a new always-on screen still has to be
+`lazy()`.
