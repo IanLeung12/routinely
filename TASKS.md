@@ -251,7 +251,7 @@ Acceptance:
 - If you add a module or script, add a CODEMAP note in this PR.
 
 ### T416 — Local camera preview: real video + skeleton overlay, this device only
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
