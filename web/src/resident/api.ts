@@ -1,13 +1,11 @@
 import { apiUrl } from '../config.ts'
+import type { ResidentDrift } from '../contracts.ts'
 import { mockResidentDetail, mockResidentDrift } from '../mock/residentDetail.ts'
 import type { Resident, ResidentFeedback } from './types.ts'
 
-export type ResidentDrift = {
-  resident_id: string
-  slope_per_day: number
-  days: number
-  trending: boolean
-}
+/** `GET /residents/{id}/drift`'s payload, generated from the pipeline's contracts and
+ * re-exported here so the drift card still reads it from the client that fetches it. */
+export type { ResidentDrift }
 
 export async function fetchDrift(residentId: string): Promise<ResidentDrift | null> {
   try {
