@@ -1,53 +1,53 @@
-# METRICS (last 6 h, generated 2026-10-17 19:00 UTC)
+# METRICS (last 6 h, generated 2026-10-17 20:01 UTC)
 
-- **Throughput:** 97/105 claimed tasks merged · 7 active workers · first-try success 83%
-- **Friction:** 2 PR CI failures · 16 releases (11 sessions ended early, 0 stale, 2 conflicts) · 7 blocked
-- **Main:** 0/105 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.8/5 · 60 bug/review tasks filed (all time)
-- **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m, w5 0m
+- **Throughput:** 102/108 claimed tasks merged · 9 active workers · first-try success 83%
+- **Friction:** 2 PR CI failures · 15 releases (9 sessions ended early, 0 stale, 2 conflicts) · 7 blocked
+- **Main:** 0/109 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.8/5 · 62 bug/review tasks filed (all time)
+- **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m, w5 0m, w6 0m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| light | 53 | 48 | 77 | 1 | 9 | 15 | 18k |
-| standard | 43 | 41 | 91 | 1 | 3 | 12 | 55k |
-| heavy | 9 | 8 | 78 | 0 | 4 | 18 | 130k |
+| light | 56 | 53 | 82 | 1 | 7 | 16 | 15k |
+| standard | 42 | 40 | 88 | 1 | 4 | 13 | 55k |
+| heavy | 10 | 9 | 70 | 0 | 4 | 21 | 130k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| test | 53 | 51 | 87 | 2 | 6 | 13 | 42k |
-| improvement | 32 | 28 | 78 | 0 | 4 | 17 | 58k |
-| feature | 13 | 12 | 77 | 0 | 6 | 16 | 60k |
-| bug | 4 | 3 | 75 | 0 | 0 | 14 | 105k |
-| docs | 3 | 3 | 100 | 0 | 0 | 7 | 10k |
+| test | 54 | 52 | 83 | 2 | 7 | 14 | 35k |
+| improvement | 33 | 31 | 85 | 0 | 4 | 17 | 55k |
+| feature | 12 | 11 | 75 | 0 | 4 | 20 | 125k |
+| bug | 5 | 4 | 80 | 0 | 0 | 18 | 45k |
+| docs | 4 | 4 | 100 | 0 | 0 | 9 | 15k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-light-2 | 25 | 24 | 88 | 0 | 3 | 11 | 25k |
-| ian-claude-standard | 24 | 23 | 92 | 0 | 1 | 10 | 50k |
-| ian-claude-standard-2 | 24 | 23 | 92 | 1 | 2 | 13 | 55k |
-| ian-claude | 15 | 14 | 73 | 1 | 6 | 19 | 110k |
-| Max_codex_light | 9 | 7 | 67 | 0 | 2 | 17 | 4k |
-| max_API_light | 7 | 6 | 57 | 0 | 2 | 30 | 5k |
-| ian-claude-heavy-2 | 1 | 0 | 0 | 0 | 0 | – | 80k |
+| ian-claude-light-2 | 25 | 25 | 96 | 0 | 1 | 11 | 25k |
+| ian-claude-standard-2 | 23 | 23 | 91 | 1 | 2 | 14 | 55k |
+| ian-claude-standard | 20 | 19 | 95 | 0 | 1 | 11 | 45k |
+| ian-claude | 14 | 13 | 64 | 1 | 6 | 24 | 105k |
+| Max_codex_light | 9 | 8 | 67 | 0 | 2 | 18 | 4k |
+| max_API_light | 9 | 8 | 67 | 0 | 2 | 24 | 5k |
+| ian-claude-heavy-2 | 5 | 4 | 80 | 0 | 0 | 19 | 85k |
+| ian-claude-heavy-3 | 2 | 1 | 50 | 0 | 0 | 21 | 105k |
+| max_API_standard | 1 | 1 | 0 | 0 | 1 | 30 | 9k |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| web/src/overview | 11 | 10 | 82 | 0 | 2 | 11 | 40k |
-| pipeline/src/routine_watch | 11 | 9 | 73 | 0 | 4 | 17 | 95k |
+| pipeline/src/routine_watch | 13 | 12 | 77 | 0 | 4 | 21 | 95k |
+| web/src/resident | 10 | 9 | 80 | 0 | 1 | 10 | 40k |
 | tests/scenarios | 9 | 9 | 89 | 1 | 1 | 13 | 45k |
-| web/src/resident | 9 | 9 | 89 | 0 | 1 | 10 | 40k |
-| web/src/handoff | 7 | 7 | 71 | 1 | 2 | 20 | 60k |
-| web/src/alert | 7 | 5 | 71 | 0 | 0 | 21 | 55k |
-| web/src/about | 5 | 5 | 80 | 0 | 1 | 16 | 25k |
-| web/src/live | 5 | 4 | 80 | 0 | 0 | 18 | 80k |
+| web/src/overview | 9 | 9 | 100 | 0 | 0 | 12 | 40k |
+| web/src/alert | 7 | 7 | 100 | 0 | 0 | 21 | 45k |
+| web/src/handoff | 6 | 6 | 67 | 1 | 2 | 22 | 38k |
+| web/src/live | 6 | 5 | 83 | 0 | 1 | 18 | 58k |
+| web/src/about | 4 | 4 | 100 | 0 | 0 | 14 | 20k |
 
 ## Problem tasks
-- T255 (light/feature, ian-claude-light-2): released×2 — Resident detail: show who consented to monitoring
-- T275 (standard/improvement, ian-claude-standard): released×1 — Live screen: notice a pause/resume made while the panel is open
 - T294 (light/test, ian-claude): CI×1 released×1 — Test: shift handoff works keyboard-only
 - T187 (light/test, Max_codex_light): released×1 — Test: App shows the live routine picker with tea selected
 - T307 (light/test, max_API_light): released×1 — Test: replay player works keyboard-only
@@ -61,6 +61,8 @@
 - T341 (light/test, max_API_light): blocked — Test: pattern library urgency filter works keyboard-only
 - T356 (heavy/feature, ian-claude): released×3 — Live camera on the dashboard: one command, laptop webcam → /ws/live
 - T346 (light/test, ian-claude-light-2): blocked — Test: alert time-of-day strip has accessible names
+- T351 (light/bug, ian-claude-light-2): blocked — Review: time-of-day strip and evening pattern use different "evening" 
+- T203 (light/feature, ian-claude): released×1 — Shift handoff: print-friendly layout
 
 ## Low task ratings (≤3/5)
 - T366 3/5: 3/5 task assumed ErrorState is wired into UnitOverview but it isn't; fetchResidents swallows errors and falls back to mo
