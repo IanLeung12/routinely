@@ -118,7 +118,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T129 — Feedback "what was it?" cause reaches the API (contract + API + web)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: feature
