@@ -243,14 +243,14 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
 
 ### T129 — Feedback "what was it?" cause reaches the API (contract + API + web)
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: feature
 - deps: —
 - area: contracts/alert.schema.json, contracts/examples/, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_alerts.py, web/src/contracts.ts, web/src/alert/api.ts, web/src/alert/api.test.ts, web/src/alert/FeedbackButtons.tsx, web/src/alert/FeedbackButtons.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T08:17Z
 - pr: —
 
 What: SPEC §5 MVP 8. The "what was it?" picker (T090) and the per-resident cause store (T100) exist, but the contract and `POST /alerts/{id}/feedback` have no `cause`, so the nurse's answer is dropped. Wire it end to end.
