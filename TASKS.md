@@ -453,14 +453,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T415 — Deploy: Docker images + compose for API and dashboard (Vultr-ready)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: feature
 - deps: —
 - area: deploy/, docs/DEPLOY.md, .dockerignore
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-17T20:35Z
 - pr: —
 
 What: SPEC §5/§16-C says the backend (FastAPI + dashboard) is hosted on Vultr, but the repo has no container or deploy setup, so the judges' demo URL can't be stood up quickly. Add a reproducible container build that a human can run on any Docker host (Vultr VM) with one command. Don't provision cloud resources or buy domains; humans do that.
