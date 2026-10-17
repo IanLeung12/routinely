@@ -27,7 +27,7 @@ Each run, in order. Be quick; skip steps with nothing to do.
    - class: light|standard|heavy   (rubric in MODELS.md; apply LOG.md lessons)
    - priority: 0-3                  (0 = urgent)
    - deps: T0xx, T0yy | —
-   - area: exact dirs/files it may touch
+   - area: exact dirs/files it may touch (use real path prefixes like web/, pipeline/, scripts/: worker.sh attaches the matching guide from prompts/areas/)
    - owner: —
    - claimed: —
    - pr: —

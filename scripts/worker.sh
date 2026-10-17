@@ -35,10 +35,17 @@ while true; do
   ID=$(printf '%s\n' "$TASK" | sed -n '1s/^### \(T[0-9]*\).*/\1/p')
   echo "$(date -u +%H:%M) $AGENT took $ID ($MODEL)"
   PROMPT=$(TASK="$TASK" ID="$ID" AGENT="$AGENT" CLASS="$CLASS" MODEL="$MODEL" python3 - "$PROMPT_FILE" <<'PY'
-import os, sys
+import os, re, sys
 s = open(sys.argv[1]).read()
 for k in ("TASK", "ID", "AGENT", "CLASS", "MODEL"):
     s = s.replace("{{%s}}" % k, os.environ[k])
+# Attach the area guide(s) matching the task's `area:` line (prompts/areas/*.md).
+m = re.search(r"^- area: (.*)$", os.environ["TASK"], re.M)
+area = m.group(1) if m else ""
+rules = [("web", r"\bweb/"), ("pipeline", r"\bpipeline/|tests/scenarios"), ("infra", r"\bscripts/|\.github/|deploy")]
+guides = [g for g, pat in rules if re.search(pat, area) and os.path.exists(f"prompts/areas/{g}.md")]
+for g in guides:
+    s += "\n\n---\n" + open(f"prompts/areas/{g}.md").read()
 print(s)
 PY
 )
