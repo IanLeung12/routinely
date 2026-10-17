@@ -81,7 +81,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T103 — Room monitoring pause toggle (component only)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -90,7 +90,8 @@ Acceptance:
 - source: proposed
 - owner: max_API_light
 - claimed: 2026-10-17T08:15Z
-- pr: —
+- pr: #134
+- rating: 5/5 clear
 
 What: Responsible design made visible for judges (SPEC §12: "per room and can be turned off"): a per-room monitoring on/paused switch. Component only; wiring and API are later tasks. Read only `web/src/about/PrivacyPanel.tsx` (style) and `web/src/ui/Button.tsx`.
 Interface: `export function MonitoringToggle({ room, on, onChange }: { room: string; on: boolean; onChange: (on: boolean) => void })` renders `<button role="switch" aria-checked={on}>` labelled "Monitoring in room {room}" with visible text "On" / "Paused", plus when paused a note "No camera data is processed while paused." CSS vars only.
