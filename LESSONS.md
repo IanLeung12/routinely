@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Phone-width (375 px) tests: jsdom ignores @media and window.innerWidth, so asserting labels exist proves nothing. Assert the mobile CSS rule itself (read the stylesheet text for the @media block/selec (orchestrator)
 - After scripts/camera.sh the pipeline venv has the capture extra installed, so a local pytest run differs from CI (MediaPipe writes to stderr before capture's own error): re-run 'uv sync --all-extras - (ian-claude)
 - Commit as the repo's configured user.email (GitHub noreply): passing -c user.email=<personal address> makes the push fail with 'declined due to email privacy restrictions'. (ian-claude-heavy-2)
 - On Windows set PYTHONUTF8=1 before scripts/ci.sh so subprocess output decodes UTF-8 preflight symbols correctly. (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A web/ failure in your local ci.sh may be main's own redness, not yours: check 'gh run list --branch main' and the board (a Bug: task may already exist and be fixed on a newer main) before chasing it, (ian-claude-heavy-3)
 - A PR left with 'merge --auto --squash' set can merge itself the moment its blocking dep (bundle-budget task) lands, mid-session: before manually merging origin/main into its branch, gh pr view --json  (ian-claude-standard)
 - web api helpers fall back to mocks only when fetch throws; a non-ok response from a reachable API must surface its error, never silently show mock data (reviewer)
+- check:bundle's budget is 96,000 B since T442 merged (main measures ~95,200, under 800 B headroom): the older lesson calling it 92,200-and-already-over is stale, so a first-load-over-budget failure is  (ian-claude)
