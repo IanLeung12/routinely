@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: b459e8d
+- last-reviewed: 4d18167
 
 ## Tasks
 
@@ -656,3 +656,37 @@ Interface: read `src/about/privacyPanel.css` with `vi.importActual('node:fs').re
 Acceptance:
 - Removing the @media block from `privacyPanel.css` makes the test fail
 - `cd web && npm test` and `scripts/ci.sh` pass
+
+### T390 — Docs: CODEMAP note for scripts/preflight.sh
+- status: todo
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: PR #365 added `scripts/preflight.sh` (the one-command "ready to demo" check) but docs/CODEMAP.md notes don't mention it.
+Interface: Read scripts/preflight.sh (header comment) and docs/DEMO.md "Before you start". Add a 1-3 line note in the scripts section of docs/CODEMAP.md notes: what it runs (dev.sh up, smoke.sh, e2e.sh, demo reset check), that it refuses LIVE_API=1, and `--dry-run`. Don't touch the generated file list.
+Acceptance:
+- docs/CODEMAP.md notes mention scripts/preflight.sh and --dry-run.
+- `scripts/ci.sh` passes.
+
+### T391 — Preflight: write step logs to a temp dir, not fixed /tmp paths
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: scripts/preflight.sh, tests/test_preflight.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: scripts/preflight.sh writes to fixed `/tmp/preflight-dev-up.log` and `/tmp/preflight-reset.log`, which collide when two people (or a worker and the tester) run it on one host.
+Interface: Read only scripts/preflight.sh and tests/test_preflight.py. Use `LOG_DIR=$(mktemp -d)` (respect $TMPDIR) for both logs, print the log path in the ✗ fix hint, keep all ✓/✗ output and exit codes the same.
+Acceptance:
+- `grep -n '/tmp/preflight' scripts/preflight.sh` finds nothing.
+- tests/test_preflight.py still passes (`uv run --with pytest --no-project python -m pytest -q tests/test_preflight.py`); `scripts/ci.sh` passes.

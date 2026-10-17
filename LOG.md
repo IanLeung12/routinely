@@ -337,3 +337,4 @@ T372 | standard | claude-sonnet | merged first try | ~?k tok
 T375 | standard | claude-sonnet | merged first try | ~?k tok
 T371 | light | codex | merged first try | ~4k tok
 T370 | light | claude-sonnet | merged first try | ~?k tok
+T381 | standard | claude-sonnet | merged first try | ~95k tok
