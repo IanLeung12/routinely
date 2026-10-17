@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 56f927e
-- next-area: pipeline
+- last-reviewed: b5196c5
+- next-area: contracts+api
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -21,3 +21,6 @@
 - T125 drift/evening/motor residents never watch (baseline absorbs drift)
 - T126 session_log leaks across tests; need conftest reset
 - T138 AlertContext unused/unstyled, dup of ContextTimeline
+- T166 handoff summary: stale placeholder errors, unit-wide baseline
+- T167 feedback threshold not applied to /residents, /alerts
+- T168 push text uses resident id

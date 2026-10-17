@@ -579,3 +579,57 @@ What: Since T129 a feedback `cause` is any pattern id or "other". Guard against 
 Interface: Read only `pipeline/src/routine_watch/patterns_library.py` and `pipeline/src/routine_watch/api.py` lines 50-90. Assert ids in `BY_ID` are unique and match `^[a-z][a-z0-9_]*$`, none equals `api.OTHER_CAUSE`, and `api.KNOWN_CAUSES == set(BY_ID) | {"other"}`.
 Acceptance:
 - `cd pipeline && python -m pytest tests/test_feedback_cause_ids.py` and `scripts/ci.sh` pass.
+
+### T166 — Review: handoff summary uses old "the task" placeholder errors and a unit-wide baseline
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/alerts.py, pipeline/tests/test_handoff.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `handoff._explainer_errors` re-implements the placeholder-error synthesis that T121 replaced in `alerts._task_errors` (still `step_id="the task"`, t=0,10,20…), so the handoff sentence reads "… at the task, 0:00". `_summary` also compares the latest flagged session against `_unit_error_rate` (all residents mixed) instead of that resident's own baseline (SPEC §7: own history only), and doesn't say whose session it is.
+Interface: In `handoff.py` drop `_UNKNOWN_STEP`/`_ERROR_SPACING_S`/`_explainer_errors`; build errors via `alerts._task_errors(session_id, session)` + `alerts._distinct_clauses` (make them public, e.g. `task_errors`/`distinct_clauses`, no other behaviour change). Baseline = that resident's own `baseline` (mean/days); prefix the context with the resident's name. Read only `handoff.py` and `alerts.py` lines 60-170.
+Acceptance:
+- test: handoff summary contains no "the task" and names a real step id; baseline numbers equal the flagged resident's own baseline.
+- `scripts/ci.sh` passes.
+
+### T167 — Review: nurse feedback tunes the threshold in /handoff and alert payload but not /residents status or /alerts
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_feedback.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `handoff.build_handoff` and `api._alert_payload` apply `_feedback_store.threshold(...)`, but `list_residents`/`get_resident` status and `list_alerts` use the raw `baseline.threshold` from `demo_residents()`. After a nurse taps "not concerning", handoff says 0 flags while the overview still shows Flagged, which contradicts itself on stage.
+Interface: one helper in `api.py` (e.g. `_tuned(resident) -> dict`) that recomputes status against the feedback-tuned threshold, reusing `demo`'s flag rule rather than duplicating it (expose a small `demo.status_for(resident, threshold)` if needed); use it in the residents and alerts routes. Read only `api.py`, `demo.py` lines 50-80, `feedback.py`.
+Acceptance:
+- test: post `not_concerning` feedback until the tuned threshold exceeds the latest score → `/residents` status and `/handoff` flags agree.
+- `scripts/ci.sh` passes.
+
+### T168 — Review: live push alert text uses the raw resident id ("mrs-k")
+- status: todo
+- class: light
+- priority: 2
+- kind: bug
+- source: reviewer
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The push sent in `live.session_messages` says "A session just flagged a change for mrs-k to review." A nurse sees the slug, not the name. Have `_resident_flagged` look the resident up once (one `demo_residents()` call) and use `resident["name"]` in the summary.
+Interface: Read only `live.py` lines 250-290 and `tests/test_live_notify.py`. Keep `alert_id` = `f"alert-{resident_id}"` (matches `alerts.py`).
+Acceptance:
+- test asserts the summary contains the resident's display name and not the id.
+- `scripts/ci.sh` passes.
