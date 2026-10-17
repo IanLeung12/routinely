@@ -1,0 +1,65 @@
+/* Supervisor notes on a replay (T431): a plain list, oldest first, and the add
+   form below it. Tokens only (web/src/index.css), no hex. */
+
+.replay-notes__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.replay-notes__item {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--hairline);
+}
+
+.replay-notes__item:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.replay-notes__meta {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.replay-notes__text {
+  margin: var(--space-1) 0 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+}
+
+.replay-notes__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.replay-notes__label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.replay-notes__input {
+  min-height: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.replay-notes__form .btn {
+  align-self: flex-start;
+}
