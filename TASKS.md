@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 37f4b66
+- last-reviewed: b9e7a1d
 
 ## Tasks
 
@@ -620,3 +620,21 @@ What: Add a 2–3 line note to the pipeline section of `docs/CODEMAP.md` (notes 
 Interface: docs only.
 Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
+
+### T352 — Test: web mockPatterns stays in step with the pipeline pattern library
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_mock_patterns_match_web.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `web/src/patterns/mockPatterns.ts` says it mirrors `routine_watch.patterns_library.LIBRARY` (offline fallback, SPEC §13), but nothing checks it, so the offline pattern library can silently drift from the real one.
+Interface: new `pipeline/tests/test_mock_patterns_match_web.py`, modelled on `pipeline/tests/test_error_phrases_match_web.py` (regex-parse the TS file; no node). Read only those two files plus `pipeline/src/routine_watch/patterns_library.py`.
+Acceptance:
+- Asserts the set of `pattern_id`s in mockPatterns.ts equals LIBRARY's, and per pattern the `urgency` and `checks` list match.
+- If the mock has already drifted, do not edit web/; mark the failing case `xfail` with the reason and list the drift in the PR body.
+- `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
