@@ -1994,3 +1994,149 @@ Repro: `scripts/dev.sh up && scripts/smoke.sh` → `FAIL: GET /sessions/<id>/rep
 Expected: keep the alert body in its own variable; smoke passes against a fresh stack.
 Acceptance:
 - `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
+
+### T062 — Nurse shift handoff summary (separate screen)
+- status: done
+- class: heavy
+- priority: 3
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/handoff.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_handoff.py, web/src/handoff/, web/src/App.tsx (one nav entry)
+- owner: ian-claude
+- claimed: 2026-10-17T07:47Z
+- pr: #129
+- source: proposed
+
+What: Rationale: a nurse starting a shift wants one view of "who changed in the last 12 h" (Usefulness/Clarity, Use-of-AI hook). `GET /handoff?hours=12` lists residents with flags, pending-review alerts and drift trends in that window, plus a short plain-language summary from the existing `Explainer` interface (fake by default, no real call without `LIVE_API=1`). Wording: "flagged for review", never "diagnosed".
+Interface: `handoff.build_handoff(now, hours) -> {"window_hours": int, "residents": [{"resident_id", "name", "flags": int, "pending_review": int, "trending": bool}], "summary": str}`; web screen `web/src/handoff/Handoff.tsx` reachable from one button in `App.tsx`, off the main demo path.
+Acceptance:
+- pytest: Mrs. K appears with her flag in the demo window; stable resident has 0 flags; summary comes from the fake explainer and contains no "diagnos".
+- Web test renders the list and summary from mock data.
+- `scripts/ci.sh` passes.
+
+### T103 — Room monitoring pause toggle (component only)
+- status: done
+- class: light
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/about/MonitoringToggle.tsx (new), web/src/about/MonitoringToggle.test.tsx (new)
+- source: proposed
+- owner: max_API_light
+- claimed: 2026-10-17T08:15Z
+- pr: #134
+- rating: 5/5 clear
+
+What: Responsible design made visible for judges (SPEC §12: "per room and can be turned off"): a per-room monitoring on/paused switch. Component only; wiring and API are later tasks. Read only `web/src/about/PrivacyPanel.tsx` (style) and `web/src/ui/Button.tsx`.
+Interface: `export function MonitoringToggle({ room, on, onChange }: { room: string; on: boolean; onChange: (on: boolean) => void })` renders `<button role="switch" aria-checked={on}>` labelled "Monitoring in room {room}" with visible text "On" / "Paused", plus when paused a note "No camera data is processed while paused." CSS vars only.
+Acceptance:
+- Vitest: role switch with correct `aria-checked`; click calls `onChange(!on)`; paused note shows only when off.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T124 — Review: Mrs. K is already flagged before the live session, so demo beat 4 never happens
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/synth/history.py (spike scenario only), pipeline/tests/test_demo.py, pipeline/tests/test_live_flag.py
+- source: reviewer
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:37Z
+- pr: #108
+
+What: SPEC §10 beats 2–4: dashboard shows Mrs. K's normal weeks, then the live tea session is "the second qualifying session" that triggers her flag. Today `demo_residents()` with an empty `session_log` already has `mrs-k` status `flagged` (last scores `… 5.0, 5.0, 5.0`, threshold ≈4.1) and `/alerts` already lists `alert-mrs-k`, so the live session changes nothing visible.
+Interface: change the spike seed/scenario so the seeded history has exactly **one** qualifying session (score > threshold) inside `FLAG_WINDOW_H` of `DEMO_NOW` and status `watch`; playing `tests/scenarios/tea_skip_teabag_pour_twice` live as `mrs-k` then makes her `flagged` with an alert. Keep `sudden_change` her top pattern once flagged.
+Acceptance:
+- pytest: empty log → `mrs-k` status `watch`, no `alert-mrs-k` in `build_alerts`; after one live `tea_skip_teabag_pour_twice` → `flagged`, alert present, `patterns[0].pattern_id == "sudden_change"`.
+- `scripts/ci.sh` passes.
+
+### T125 — Review: drift/evening/motor demo residents never leave "normal" (no "watch" for demo beat 6)
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
+- source: reviewer
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:48Z
+- pr: #117
+
+What: `_status` only returns `watch` when the latest score beats a threshold built from the resident's *whole* history, so a slow drift raises its own bar: `mr-chen` (drift, recent scores 8–9, threshold ≈10.1), `mr-nguyen` (evening) and `mrs-patel` (motor) all show `normal`. SPEC §10 beat 6 needs Mr. D/Chen on `watch` with the slow-drift pattern, and T089's acceptance assumes it.
+Interface: in `demo.py`, build the baseline from the earliest sessions only (e.g. first 7 of `DEMO_DAYS`), and also return `watch` when `drift.drift(...)` over daily scores reports `trending` (same daily-mean helper as `api._daily_scores`; move it into `drift.py` rather than copying it). Normal residents must stay `normal`.
+Acceptance:
+- pytest: `mr-chen` status `watch`; `mrs-ahmed`, `mr-silva` stay `normal`; evening and motor residents are `watch` or `flagged` (pin which).
+- `scripts/ci.sh` passes.
+
+### T126 — Review: live-session tests leak into session_log; add a shared reset fixture
+- status: done
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: pipeline/tests/conftest.py (new), pipeline/tests/test_live_flag.py
+- source: reviewer
+- owner: max_API_light
+- claimed: 2026-10-17T07:49Z
+- pr: #114
+- rating: 4/5 conftest.py already existed with a flagged-resident fixture; otherwise clear
+
+What: `routine_watch.session_log` is process-global and `demo_residents()` reads it. Only `test_live_flag.py` resets it; `test_live.py` and `test_live_camera.py` play sessions via `session_messages` without resetting, so every later test (demo/alerts/api/patterns) sees an extra Mrs. K session and results depend on test order.
+Interface: add `pipeline/tests/conftest.py` with an `autouse` fixture calling `session_log.reset()` before and after each test; drop the now-duplicate fixture in `test_live_flag.py`.
+Acceptance:
+- `cd pipeline && uv run pytest -q -p no:cacheprovider` passes, and passes with `tests/test_live.py` run before `tests/test_demo.py` in one invocation.
+- `scripts/ci.sh` passes.
+
+### T127 — Review: CORS_ORIGINS undocumented and ignores dev.sh's DASHBOARD_PORT
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: .env.example, scripts/dev.sh
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:38Z
+- pr: #105
+
+What: T119 (PR #101) added `CORS_ORIGINS` (default `http://localhost:5173`) to `pipeline/src/routine_watch/api.py`, but `.env.example` doesn't document it and `scripts/dev.sh` doesn't set it, so `DASHBOARD_PORT=5174 scripts/dev.sh up` makes the dashboard silently fall back to mock data again.
+Interface: in `scripts/dev.sh`, next to the `VITE_API_URL` export, add `export CORS_ORIGINS=${CORS_ORIGINS:-$DASHBOARD_URL,http://127.0.0.1:${DASHBOARD_PORT}}`. In `.env.example` add `CORS_ORIGINS=http://localhost:5173` with a one-line comment (comma-separated dashboard origins the API accepts). Read only those two files and the `_CORS_ORIGINS` block in `api.py`.
+Acceptance:
+- `bash -n scripts/dev.sh` passes; `.env.example` lists `CORS_ORIGINS`.
+- `scripts/ci.sh` passes.
+
+### T128 — Bug: smoke.sh finds no alert since mrs-k is only flagged after her live session
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: scripts/smoke.sh
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:52Z
+- pr: #115
+- rating: 5/5 clear
+
+What: Since T124 (#108) a fresh stack has no flagged resident until mrs-k's live session plays, so `GET /alerts` is empty and smoke.sh fails the alert and replay checks. Make smoke.sh play that session first, the same way the demo does. Read only `scripts/smoke.sh` and the `/ws/live` handler at the bottom of `pipeline/src/routine_watch/api.py`.
+Interface: before the `/alerts` checks, open `ws://<api>/ws/live?scenario=tea_skip_teabag_pour_twice&speed=1000` with a short inline `python3 -c` using the `websockets` package (already a pipeline dependency; run it with the pipeline venv python if present, else `python3`) and read until the socket closes; report it as `PASS: live session played` / `FAIL: ...`. Keep "never POSTs feedback". Update the header comment.
+Acceptance:
+- Against `scripts/dev.sh up`, `scripts/smoke.sh` prints PASS for every check, including GET /alerts/<id> and both replay routes; run it twice in a row and it still passes.
+- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
+
+### T131 — Push alert fires once when a live session flags a resident
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live_notify.py
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:04Z
+- pr: #124
+- rating: 5/5 clear
+
+What: SPEC §5 Nice to have 3. `notify.py` (FakeNotifier default, SupabaseNotifier when LIVE_API=1) is built but nothing calls it. When a live session's end flips a resident to flagged, send that alert through `get_notifier()` exactly once.
+Interface: in `live.py`, after the session's flag is computed, if the resident was not flagged before and is now, call `get_notifier().notify(<alert dict>)`; injectable notifier for tests. Never a real network call without LIVE_API=1.
+Acceptance:
+- Test with a fake notifier: playing `tea_skip_teabag_pour_twice` for mrs-k notifies once; playing it again while already flagged does not notify again; a clean `tea_normal` session never notifies.
+- `scripts/ci.sh` passes.
