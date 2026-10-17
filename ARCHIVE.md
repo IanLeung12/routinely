@@ -4818,3 +4818,38 @@ Acceptance:
 - Test in LiveScreen.test.tsx: open panel for room 204, dispatch the event with paused=true → paused message shows; paused=false → panel re-checks. Event for another room changes nothing.
 - monitoringApi.test.ts: event fires only on a successful PUT.
 - `scripts/ci.sh` passes.
+
+### T273 — CI: run the first-load bundle budget check after the web build
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: scripts/ci.sh
+- owner: ian-claude
+- claimed: 2026-10-17T14:12Z
+- pr: #280
+- rating: 5/5 clear
+
+What: T260 (#251) added `npm run check:bundle` in web/ but nothing runs it, so the budget never fails a PR. Wire it into CI right after the build.
+Interface: in `scripts/ci.sh`, the node loop line `(cd "$d" && npm ci ... && npm run build --if-present)`: append `&& npm run check:bundle --if-present` so it only runs for packages that define it. Read only `scripts/ci.sh` and `web/package.json`. Touch nothing else.
+Acceptance:
+- `scripts/ci.sh` passes and its output includes the "First-load JS (gzipped):" and "Budget:" lines from web/scripts/check-bundle.mjs.
+
+### T276 — Unit overview: "Paused" filter
+- status: done
+- class: standard
+- priority: 3
+- kind: feature
+- deps: —
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T13:23Z
+- pr: #262
+- rating: 5/5 clear
+
+What: T246 added a "Monitoring paused" chip; add a "Paused (N)" button to the existing filter group so a nurse can list paused rooms in one tap.
+Interface: extend `UnitFilter` with `'paused'`; `applyFilter` uses the `pausedRooms` state already fetched via `fetchPausedRooms`. Hide the button (or show 0) when the fetch failed; never break the list.
+Acceptance:
+- Test: with room 204 paused, clicking "Paused" shows only that resident and the count reads 1; with fetch failure the other filters still work.
+- `scripts/ci.sh` passes.
