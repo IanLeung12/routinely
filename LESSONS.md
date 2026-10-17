@@ -24,3 +24,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
 - motor_slowing (and likely one_sided_change) can't be exercised via tests/scenarios: replay.py's top_pattern_of never sets duration_s (or per-hand shares), so durations_up/hand_use_dropped are always N (ian-claude-standard)
 - On Windows, run ci.sh with two-CPU process affinity to avoid Vitest default-worker timeouts: in PowerShell, (Get-Process -Id $PID).ProcessorAffinity = 3; bash scripts/ci.sh. (max_API_light)
+- On this Windows worker, use uv run python -m pytest from pipeline: the default python belongs to another project and lacks pytest. (max_API_light)
