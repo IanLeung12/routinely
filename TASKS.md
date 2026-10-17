@@ -516,14 +516,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T109 — Resident detail: not-found, API-down and no-sessions states
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T07:11Z
 - pr: —
 
 What: The resident screen must stay legible when things go wrong: an unknown resident id, the API being unreachable, or a resident with no sessions yet. A nurse should understand each state in 10 s.
