@@ -7,25 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T350 — Review: wire HandoffDelta into the shift handoff rows
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- source: reviewer
-- deps: —
-- area: web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
-- rating: 5/5 clear - interface named the component, the props and the exact line to append to; only unstated call was that 'same as last shift' renders as 'Nothing flagged either shift' when both counts are 0
-- owner: ian-claude
-- claimed: 2026-10-17T17:15Z
-- pr: #335
-
-What: T324 (#324) added `previous_flags` to `/handoff` and a `HandoffDelta` component, but nothing renders it: `Handoff.tsx` never imports `HandoffDelta`, so the "better or worse than last shift" signal is dead code on the demo screen.
-Interface: in `Handoff.tsx`, render `<HandoffDelta flags={resident.flags} previousFlags={resident.previous_flags} />` in each resident row (next to the flags reason), and append the same delta text to the copy/read-aloud line built around line 147 ("…, 2 more than last shift"). No new styles; reuse `HandoffDelta.css`.
-Acceptance:
-- `Handoff.test.tsx` asserts a row with flags 2 / previous_flags 0 shows "2 more than last shift" and a row with equal counts shows "same as last shift"
-- `scripts/ci.sh` passes
-
 ### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
 - status: todo
 - class: light
@@ -44,24 +25,6 @@ Interface: in `api_alerts.py`, set `EVENING_START_HOUR = pattern_features.EVENIN
 Acceptance:
 - new test in `test_time_of_day.py`: a session at 16:30 buckets as `evening`, matching `pattern_features`' late-day rule
 - `scripts/ci.sh` passes
-
-### T198 — Docs: DEMO.md mentions opening an alert from the shift handoff
-- status: done
-- class: light
-- priority: 3
-- kind: docs
-- deps: —
-- area: docs/DEMO.md
-- owner: Max_codex_light
-- claimed: 2026-10-17T18:12Z
-- pr: #352
-- rating: 5/5 clear
-
-What: Since T152 (PR #177), each handoff row with an alert pending review has an "Open alert" button. The runbook's handoff step doesn't say so.
-Interface: Read only `docs/DEMO.md` and `web/src/handoff/Handoff.tsx` (the `Open alert` button). Add 1-3 lines to the handoff step.
-Acceptance:
-* DEMO.md says the presenter can click "Open alert" on Mrs. K's handoff row to reach her alert.
-* Wording says "flags a change for review"; no "diagnose". No other file changed.
 
 ### T203 — Shift handoff: print-friendly layout
 - status: todo
