@@ -337,7 +337,7 @@ Acceptance:
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass; against `scripts/dev.sh up` all checks pass.
 
 ### T195 — Unit overview: All / Flagged / Watch filter
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
