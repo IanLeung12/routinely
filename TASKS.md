@@ -485,7 +485,7 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T320 — Test: unit overview works keyboard-only
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
