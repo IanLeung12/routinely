@@ -302,7 +302,7 @@ Acceptance:
 - `scripts/ci.sh` passes; PR body notes the viewport widths checked (e.g. Playwright screenshot at 375 and 1280).
 
 ### T239 — Resident detail: usable at phone width (375 px)
-- status: todo
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
@@ -312,7 +312,7 @@ Acceptance:
 - claimed: —
 - pr: #231
 - rating: 5/5 clear
-- note: merge conflict with main on PR #231: check out its branch, merge origin/main, fix, push
+- note: merged as #231
 
 What: The resident detail screen (baseline chart, slow-drift card, heat calendar, sessions, care records) has no responsive rules. Add `@media (max-width: 480px)` rules so it reads on a phone: chart and calendar scale to the card width (or scroll inside their own card, never the page), lists stack.
 Interface: CSS in the listed files; `resident.css` is new and imported by ResidentDetail.tsx for any rules not owned by DriftCard/HeatCalendar. Don't move rules out of `web/src/index.css` (T234 owns that pattern for the overview); add overrides instead.
