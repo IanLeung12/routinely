@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: bf6dfbb
+- last-reviewed: e6de397
 
 ## Tasks
 
@@ -546,3 +546,47 @@ What: T367 didn't fully fix it. The hourly integration check and the tester both
 Why: a red integration check the morning of the demo (due 13:00 UTC) hides real breakage.
 Interface: in `scripts/integration.sh`, warm the dev server before the render check (fetch `/`, `/src/main.tsx` and wait until a second fetch of the page is fast) and retry the DOM check up to 3 times with a longer budget; or render against `vite preview` of a built `dist/` instead of the dev server. Don't weaken the check (it must still fail if the app really doesn't render).
 Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a row from cold; breaking `web/src/main.tsx` on purpose makes it fail.
+
+### T428 — Handoff: delta chip onto the Pill primitive
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: orch (carved from T406)
+- deps: —
+- area: web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.css, web/src/handoff/HandoffDelta.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Render `<HandoffDelta>` with the redesign's `Pill` (`web/src/ui/Pill.tsx`) instead of its own CSS chip, so handoff rows get Fey-style delta pills.
+Why: inherits T406 — the handoff screen is on the demo path and should match the redesign.
+Read only: `web/src/handoff/HandoffDelta.tsx`, `web/src/handoff/HandoffDelta.test.tsx`, `web/src/ui/Pill.tsx`.
+Interface: keep `HandoffDelta({flags, previousFlags})` and `handoffDeltaLabel(...)` signatures and every label string unchanged. Mapping: more → `<Pill tone="negative" direction="up">`, fewer → `tone="positive" direction="down"`, same → `tone="neutral"` (no direction). Keep a `handoff-delta` class on the pill (via `className`) so existing selectors in `Handoff.tsx` tests still find it. Delete `HandoffDelta.css` if nothing else imports it (`grep -r HandoffDelta.css web/src`).
+Acceptance:
+- Tests updated: each tone renders the matching `pill--<tone>` class and the same label text; nothing rendered when `previousFlags` is null/undefined.
+- `cd web && npx vitest run src/handoff` and `scripts/ci.sh` pass.
+
+### T429 — Person view: privacy card (pause, what's stored, who sees it)
+- status: todo
+- class: light
+- priority: 1
+- kind: feature
+- source: orch (carved from T409)
+- deps: —
+- area: web/src/person/PrivacyCard.tsx, web/src/person/PrivacyCard.test.tsx, web/src/person/privacyCard.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: A self-contained card T409 ("My routine") will drop in. Not wired into any screen here.
+Why: inherits T409 — "skeletons only, no video" is the privacy story judges ask about.
+Read only: `web/src/ui/Card.tsx`, `web/src/ui/Button.tsx`, `web/src/ui/SectionHeader.tsx`, `web/src/person/personNotes.test.ts` (wording-check style).
+Interface: `export function PrivacyCard({ paused, onTogglePause, supervisorNames }: { paused: boolean; onTogglePause: () => void; supervisorNames: string[] })`.
+- Heading "Your privacy". Pause button: "Pause watching" / "Resume watching" (`aria-pressed={paused}`); when paused a line "Watching is paused. Nothing is recorded until you resume."
+- "What's stored": "Body outlines (skeletons) and timings only. No video or photos ever leave this device or get saved."
+- Who sees it: with names → "Lena and Sam see exactly what you see here." (join 1/2/3+ names naturally); with none → "Only you can see this."
+- Own CSS in `privacyCard.css` using tokens from `web/src/index.css`.
+Acceptance:
+- Vitest: paused/unpaused text + `aria-pressed`, click calls `onTogglePause`, 0/1/2/3 supervisor names; no "diagnos", "patient", "danger", "warning", "emergency" in rendered text.
+- `cd web && npx vitest run src/person/PrivacyCard.test.tsx` and `scripts/ci.sh` pass.
