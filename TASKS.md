@@ -428,7 +428,7 @@ Acceptance:
 * New/updated test in `web/src/handoff/Handoff.test.tsx`; `scripts/ci.sh` passes.
 
 ### T181 — Alert screen: empty state when nothing is flagged
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
