@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A bundle-size budget set ~10% over today's gzipped size won't catch re-eagering a single already-small lazy screen (vite merges/dedupes chunks, e.g. folding a separate jsx-runtime preload back in nets (ian-claude-standard-2)
 - Adding a fetch to a screen breaks sibling tests whose stub answers every URL with the screen's payload (ResidentDetail's zero-sessions test): make the new client tolerate a body without its field, or  (ian-claude)
 - A session that flags via abandonment (step_id=None, contracts.py's documented null case) 500'd GET /alerts/{id}: explain.py's _format_error assumed every TaskError had a step_id; only a full-scenario- (ian-claude-standard)
 - A new contracts/ schema in PAYLOADS or REQUESTS also needs a row in contracts/README.md's table: test_api_payload_contracts.py::test_the_contracts_readme_lists_the_payloads fails on the file name alon (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
 - store.get_store() builds a fresh MemoryStore on every call (and TimescaleStore has no demo tables), so it cannot hold in-process demo state: per-process tallies belong in session_log.py, which /demo/r (ian-claude)
 - web tests have no localStorage unless testSetup.ts shims it: Node 22 defines its own localStorage global as undefined (no --localstorage-file) and it wins over jsdom's, so bare localStorage.clear() in (ian-claude-heavy-2)
+- On Windows without Docker Engine/WSL, validate deploy/check.sh on a temporary push-triggered GitHub Actions branch, keep its workflow out of the feature PR, and delete the validation branch after succ (max_API_standard)
