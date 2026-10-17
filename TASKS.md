@@ -300,7 +300,7 @@ Acceptance:
 - summary wording no longer says "this session" for multi-session errors; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T156 — Bug: overview and Alerts list don't update when the live session flags Mrs. K
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
