@@ -488,7 +488,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T357 — Scenario: meds_long_pause_not_error (long pause under the abandonment cut-off)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -496,7 +496,8 @@ Acceptance:
 - area: tests/scenarios/meds_long_pause_not_error/
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T17:39Z
-- pr: —
+- pr: #344
+- rating: 5/5 clear
 
 What: The medication task's version of `tests/scenarios/tea_long_pause_not_error`: an otherwise-correct meds session with one ~100 s gap between two steps (under `routine_watch.errors.ABANDON_AFTER_S`), which must not surface as an error or flag.
 Interface: `tests/scenarios/meds_long_pause_not_error/{steps.jsonl,expected.yaml}`, step-level like `meds_normal`; copy the comment style of `tea_long_pause_not_error/expected.yaml`. No pipeline code changes.
