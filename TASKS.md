@@ -355,7 +355,7 @@ Acceptance:
 - `cd web && for i in 1 2 3 4 5; do npm test -- --run DemoBanner || exit 1; done` passes, and `scripts/ci.sh` passes.
 
 ### T234 — Unit overview: usable at phone width (375 px)
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
