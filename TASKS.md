@@ -413,7 +413,7 @@ Acceptance:
 - No app code changes. `scripts/ci.sh` passes.
 
 ### T316 — Test: every scenario uses real task-graph step ids
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
