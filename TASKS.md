@@ -412,14 +412,14 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T185 — demo.py: one flag rule shared by demo_residents and status_for
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: improvement
 - deps: T184
 - area: pipeline/src/routine_watch/demo.py, pipeline/tests/test_demo.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:21Z
 - pr: —
 
 What: `demo_residents()` and `status_for()` each build `timestamped`, call `flag_change` and `_watch`, then `_status` (the second copy calls `_watch(sessions, sessions, ...)` instead of `(history, sessions, ...)`, which only works because live sessions fall after the baseline cutoff). Pull this into one private helper both call, with no behaviour change.
