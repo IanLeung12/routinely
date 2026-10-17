@@ -408,14 +408,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_mock_patterns_match_web.py` and `scripts/ci.sh` pass.
 
 ### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
-- status: claimed
+- status: todo
 - class: heavy
 - priority: 0
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/api_live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/capture.py, scripts/camera.sh, pipeline/tests/test_api_live_camera.py, docs/DEMO.md
-- owner: ian-claude
-- claimed: 2026-10-17T17:50Z
+- owner: —
+- claimed: —
 - pr: —
 - note: released by ian-claude: run ended without progress
 
