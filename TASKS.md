@@ -70,3 +70,34 @@ Acceptance:
 - Deterministic for a given seed.
 - Tests check both scenarios' properties above.
 - `cd pipeline && uv run pytest tests/test_care_records.py -q` passes.
+
+### T005 — Scenario replay harness (e2e)
+- status: todo
+- class: heavy
+- priority: 1
+- deps: T002, T003
+- area: scripts/e2e.sh, tests/scenarios/, pipeline/routine_watch/replay.py, pipeline/tests/test_replay.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: The simulation layer the tester runs. A scenario is a recorded/synthetic capture stream plus the expected outcome; replaying it runs the full pipeline offline.
+Interface: `tests/scenarios/<name>/frames.jsonl` (capture records per T002 contracts), `expected.yaml` (`steps: [...]`, `errors: [{type, step}]`, `flag: true|false`, optional `history:` synthetic prior sessions). `python -m routine_watch.replay <dir>` prints a JSON result; `scripts/e2e.sh` runs all scenarios with `OFFLINE_MODE=true`, prints PASS/FAIL per scenario with a diff, exits non-zero on any failure.
+Acceptance:
+- Two hand-written step-level scenarios to start: `tea_normal` (0 errors) and `tea_skip_teabag_pour_twice` (omission + perseveration). Frame-level generation can stub steps until the recogniser lands; document the stub.
+- `scripts/e2e.sh` passes locally and is called from `scripts/ci.sh`.
+
+### T006 — Dev stack script
+- status: todo
+- class: standard
+- priority: 1
+- deps: T001
+- area: scripts/dev.sh, README.md (Run section)
+- owner: —
+- claimed: —
+- pr: —
+
+What: One command to bring the whole local stack up and down, used by humans and the tester.
+Interface: `scripts/dev.sh up` starts API + dashboard in the background (logs to `.dev/`), waits until healthy, prints `DASHBOARD_URL=...` and `API_URL=...`; `scripts/dev.sh down` stops everything; `scripts/dev.sh status`. Works with no API keys (`OFFLINE_MODE=true`, mock data).
+Acceptance:
+- `up` then `curl` both URLs return 200, `down` leaves no processes on those ports. Idempotent (`up` twice is fine).
