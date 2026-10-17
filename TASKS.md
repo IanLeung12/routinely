@@ -493,7 +493,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T252 — Web: lazy-load the secondary screens to shrink the first-load bundle
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -501,7 +501,8 @@ Acceptance:
 - area: web/src/App.tsx, web/src/App.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-17T12:04Z
-- pr: —
+- pr: #237
+- rating: 5/5 clear
 
 What: The demo opens on the unit overview, but `App.tsx` statically imports every screen (pattern library, shift handoff, tour, live screen, alert view). Load the screens not shown on first paint with `React.lazy` + `Suspense` so the overview appears faster on a phone.
 Interface: In `App.tsx` only, `lazy(() => import(...))` for `PatternLibrary`, `Handoff` and `Tour` (named exports: map to `{ default: m.X }`); wrap each in `<Suspense fallback={...}>` using an existing `web/src/ui/` loading/empty component. Keep the overview, resident detail, live and alert screens static (demo path). No behaviour or copy changes.
