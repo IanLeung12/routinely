@@ -135,7 +135,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T117 — Web mock residents include the evening and motor residents
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: feature
@@ -143,7 +143,8 @@ Acceptance:
 - area: web/src/mock/residents.ts, web/src/mock/residentDetail.ts
 - owner: max_API_light
 - claimed: 2026-10-17T08:05Z
-- pr: —
+- pr: #125
+- rating: 5/5 clear
 
 What: The offline web fallback should show the same residents as the API after T111. Add the two new residents (same ids, names, rooms, status) to the web mocks.
 Interface: mirror the ids/names from `pipeline/src/routine_watch/demo.py`; keep the existing mock shape.
