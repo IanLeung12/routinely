@@ -1,0 +1,42 @@
+# The resident takes the pill out, drinks their water, then takes a pill out of the
+# organiser a second time - the most safety-relevant meds slip: a double dose.
+#
+# `take_pill` has no `once_only: false` in meds.yaml, so it defaults to once-only like
+# most steps, and a second confident event for it with `drink_water` in between (not
+# two events back to back, which would be the recogniser seeing one action twice) is
+# perseveration (SPEC section 7), the same rule `tea_kettle_twice` exercises on `boil`.
+# Closing the organiser afterwards is optional and taken, which must not count for or
+# against anything.
+#
+# One other pill-twice session 30 hours ago after a quiet week, so this second one
+# inside 48 hours flags a change for a nurse to review.
+#
+# Written at step level, for the same reason as meds_normal. See README.md.
+
+task: meds
+
+steps:
+  - get_glass
+  - open_organiser
+  - take_pill
+  - fill_glass
+  - drink_water
+  - take_pill # again, with drink_water in between
+  - close_organiser # optional, taken
+
+errors:
+  - { type: perseveration, step: take_pill }
+score: 2.0 # perseveration 2.0
+
+# A week of quiet mornings, then one other pill-twice session 30 hours ago.
+history:
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, score: 0.0 }
+  - { hours_ago: 30, errors: { perseveration: 1 } }
+
+# Two sessions above this resident's own threshold inside 48 hours.
+flag: true
