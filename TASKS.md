@@ -302,7 +302,7 @@ Acceptance:
 - `cd web && npx vitest run src/tour/steps.test.ts` passes; `scripts/ci.sh` passes
 
 ### T360 — Guided tour: usable at phone width (375 px)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -310,7 +310,7 @@ Acceptance:
 - area: web/src/tour/
 - owner: max_API_light
 - claimed: 2026-10-17T18:04Z
-- pr: —
+- pr: #358
 
 What: The `?tour=1` guided tour card must fit a 375 px phone without horizontal scroll or clipped buttons, like the other phone-width tasks (T234, T238).
 Interface: read `web/src/tour/Tour.tsx` and `web/src/tour/Tour.test.tsx`; add `web/src/tour/tour.css` (if styles are inline, move only the layout ones) with an `@media (max-width: 480px)` block: card max-width `calc(100vw - 2rem)`, buttons wrap. Add `tour` to `css.include` only if you need `?raw` (that file is web/vite.config.ts — note it in the PR instead of editing it; read the CSS with `fs.readFileSync` in the test).
