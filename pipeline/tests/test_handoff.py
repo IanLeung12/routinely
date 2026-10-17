@@ -122,11 +122,15 @@ def test_handoff_has_the_window_every_resident_and_a_summary() -> None:
             "name",
             "room",
             "flags",
+            "previous_flags",
             "pending_review",
             "trending",
             "monitoring_paused",
         }
         assert isinstance(entry["flags"], int)
+        # Last shift's count, for the comparison the rows draw (T324,
+        # `tests/test_handoff_previous.py`).
+        assert isinstance(entry["previous_flags"], int)
         assert isinstance(entry["pending_review"], int)
         assert isinstance(entry["trending"], bool)
         assert entry["monitoring_paused"] is False

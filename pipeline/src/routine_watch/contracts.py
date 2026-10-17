@@ -861,7 +861,14 @@ class HandoffResident(_Contract):
     `flags` counts the sessions inside the window that scored above this resident's
     own threshold, which is the evidence a flag rests on rather than the flag itself:
     one bad session never alerts (SPEC section 7). `pending_review` counts the alerts
-    raised for them that nobody has given a verdict on yet.
+    raised for them that nobody has given a verdict on yet. `previous_flags` is the
+    same count for the window before this one, so a nurse coming on shift can read
+    whether this resident is getting better or worse rather than only a number.
+
+    `previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it
+    was added after the payload shipped, so an older or trimmed handoff still
+    validates (T292, T311) and a dashboard reading it knows "no comparison sent"
+    from "none last shift".
     """
 
     resident_id: Id
@@ -872,6 +879,13 @@ class HandoffResident(_Contract):
         "(SPEC section 9) and the printed or pasted handoff is usable on its own.",
     )
     flags: int = Field(ge=0, description="Sessions in the window above this resident's bar.")
+    previous_flags: int = Field(
+        default=0,
+        ge=0,
+        description="The same count for the window just before this one "
+        "(`[now - 2 x hours, now - hours)`), measured against the same bar, so a row "
+        "can say more, fewer or the same as last shift. A count, never a verdict.",
+    )
     pending_review: int = Field(ge=0, description="Alerts in the window with no verdict yet.")
     trending: bool = Field(
         description="Their error score is on a slow rise. Read over their whole history, "
