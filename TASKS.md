@@ -26,7 +26,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T143 — Pattern scenario: motor slowing after a sedating medication
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -34,8 +34,9 @@ Acceptance:
 - area: tests/scenarios/pattern_motor_slowing/
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:54Z
-- pr: —
+- pr: #162
 - note: orch: was blocked because replay.py never passes duration_s, so durations_up is unreachable in scenarios. T157 adds scenario durations; after it this is data-only (use the new duration fields).
+- rating: 5/5 clear, T157 unblocked it exactly as described
 
 What: Same as T142 for SPEC §7.5's `motor_slowing` pattern: slower steps and hesitation without new sequence errors.
 Interface: `tests/scenarios/pattern_motor_slowing/{steps.jsonl,expected.yaml}` in the format of `tests/scenarios/pattern_slow_drift/`, `top_pattern: motor_slowing`. Read the `motor_slowing` entry in `pipeline/src/routine_watch/patterns_library.py` for its signals. Don't change pipeline code; if unreachable without code changes, set blocked with the reason.
