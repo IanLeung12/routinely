@@ -388,14 +388,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T171 — Sparkline: nurse-readable screen-reader label
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: improvement
 - deps: —
 - area: web/src/overview/Sparkline.tsx, web/src/overview/Sparkline.test.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T09:03Z
 - pr: —
 
 What: The overview sparkline's label reads "error score trend, latest 2.4000001" (raw float, lowercase). Make it "Error score over the last N sessions, latest 2.4" using `formatScore` from `web/src/resident/format.ts`.
