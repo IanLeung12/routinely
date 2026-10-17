@@ -510,3 +510,21 @@ Interface: `export function TaskMapLegend(): JSX.Element` listing the five state
 Acceptance:
 - Vitest: renders all five labels; list is reachable by role with name "Task map legend"; no text contains "diagnos".
 - `scripts/ci.sh` passes.
+
+### T058 — Review: merge duplicate pipeline modules found by the code map
+- status: todo
+- class: standard
+- priority: 1
+- deps: —
+- area: pipeline/src/routine_watch/baseline.py, pipeline/src/routine_watch/change_detection.py, pipeline/src/routine_watch/task_graph.py, pipeline/src/routine_watch/tasks/, pipeline/tests/, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+- source: reviewer
+
+What: `baseline.py` and `change_detection.py` both describe per-resident baseline/change detection, and `task_graph.py` looks like the T001 placeholder next to the real `tasks/graph.py`. Two homes for one concept confuse every later worker.
+Interface: keep one module per concept. Check which one is imported (`grep -rn "baseline\|change_detection\|task_graph" pipeline/ web/ scripts/`); move any real logic into the live module, delete the placeholder, update imports and tests. No behaviour change.
+Acceptance:
+- `scripts/ci.sh` passes (incl. `scripts/e2e.sh`).
+- `python3 scripts/codemap.py pipeline` shows a single baseline/change module and a single task-graph module.
+- Remove the "Known overlaps" lines you fixed from `docs/CODEMAP.md`.
