@@ -353,14 +353,14 @@ Acceptance:
 * `cd web && npm test` and `scripts/ci.sh` pass
 
 ### T222 — Review: Copy summary says "Change flagged" for slow-trend alerts
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: T221
 - area: web/src/alert/alertText.ts, web/src/alert/alertText.test.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T10:48Z
 - pr: —
 - source: reviewer
 
