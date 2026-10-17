@@ -376,7 +376,7 @@ Acceptance:
 - `cd pipeline && pytest tests/test_api_demo_reset.py` and `scripts/ci.sh` pass.
 
 ### T193 — Scenario: medication taken twice is a repetition error
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
