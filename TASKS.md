@@ -390,15 +390,15 @@ Acceptance:
 - `cd web && npm test -- Handoff` passes; `scripts/ci.sh` passes
 
 ### T204 — Review: demo tour misstates the flag rule ("two sessions in a row")
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/tour/steps.ts, web/src/tour/Tour.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:57Z
 - pr: —
 
 What: the "Alert" step (T164, #186) says an alert appears "when two sessions in a row cross a resident's own threshold". The real rule (`pipeline/src/routine_watch/change_detection.py` `flag_change`) is at least `FLAG_MIN_SESSIONS` (2) sessions above threshold within a 48-hour window, consecutive or not. A presenter reading this card would misdescribe the product to judges. Reword to "when at least two sessions within 48 hours cross a resident's own threshold".
