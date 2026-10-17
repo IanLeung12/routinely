@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 602d205
-- next-area: contracts+api
+- last-reviewed: 92ea010
+- next-area: scripts+ci
 
 ## Known issues filed
 - T055 scoring duplicated replay.py/live.py; empty-scenario IndexError
@@ -19,7 +19,7 @@
 - T204 tour copy: "two in a row" vs 2-in-48h flag rule
 - T182 false alarm un-flags -> alert 404, cause re-post fails
 - T183 overview/handoff top_pattern unweighted vs alert patterns[0]
-- (noted) API resident/handoff payloads have no contracts/ schema; web types hand-mirrored
+- T292 web resident/handoff/monitoring types hand-mirrored (after T291)
 - T222 alertText says "Change flagged" for trend alerts
 - T230 live summary "usually" averages whole history (drift), not early baseline
 - T236 live session_end flag/alert_id from scenario verdict, not resident status (alert 404)

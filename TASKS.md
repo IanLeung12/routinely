@@ -517,3 +517,21 @@ Acceptance:
 - No hand-written duplicate of these three payload shapes left in web/src; `test_generated_files_are_up_to_date` covers the new TS output.
 - No behaviour change: existing web tests pass with only import changes.
 - `scripts/ci.sh` passes.
+
+### T292 — Review: generate web resident/handoff/monitoring types from contracts.py
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- source: reviewer
+- deps: T291
+- area: pipeline/src/routine_watch/contracts.py, web/src/contracts.ts, web/src/overview/types.ts, web/src/handoff/types.ts, web/src/about/monitoringApi.ts, pipeline/tests/test_contracts.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: T269/T280 added JSON Schemas for `ResidentSummary`/`Resident`, `Handoff` and room monitoring, but the web still hand-mirrors them (`web/src/overview/types.ts` ResidentSummary/TopPattern/consent, `web/src/handoff/types.ts` Handoff/HandoffResident/PausedRoom, `web/src/about/monitoringApi.ts` MonitoringChange). T291 only covers drift/patterns/replay. Same fix, after T291 lands: emit these models into the generated `web/src/contracts.ts` and have those files re-export the generated types.
+Acceptance:
+- The listed web files re-export (or are replaced by) generated types; no hand-written copy of these shapes left.
+- `test_generated_files_are_up_to_date` covers them; existing web tests pass with import-only changes.
+- `scripts/ci.sh` passes.
