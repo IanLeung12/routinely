@@ -489,7 +489,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T261 — Review: tests can hit paid APIs if LIVE_API=1 is exported in the shell
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
