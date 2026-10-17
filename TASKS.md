@@ -459,7 +459,7 @@ Interface: Read `web/src/overview/UnitOverview.tsx` and its test. With `@testing
 Acceptance: `cd web && npx vitest run src/overview/UnitOverview.test.tsx` passes; `scripts/ci.sh` passes.
 
 ### T296 — Scenarios: meds_unclear_not_error and meds_bad_sessions_far_apart
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
