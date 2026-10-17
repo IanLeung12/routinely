@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { PatternUrgency, SuggestedCheck } from '../contracts.ts'
 import { SUGGESTED_CHECK_LABELS } from '../alert/SuggestedChecks.tsx'
+import { Card } from '../ui/Card.tsx'
+import { SectionHeader } from '../ui/SectionHeader.tsx'
+import { Row } from '../ui/Row.tsx'
+import { Pill } from '../ui/Pill.tsx'
+import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import { Button } from '../ui/Button.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
@@ -65,19 +70,13 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
     body = <ErrorState message="No patterns in the library." />
   } else {
     filterBar = (
-      <div className="urgency-filter" role="group" aria-label="Filter by urgency">
-        {URGENCY_FILTERS.map(({ id, label }) => (
-          <Button
-            key={id}
-            variant="secondary"
-            className="urgency-filter__button"
-            aria-pressed={filter === id}
-            onClick={() => setFilter(id)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
+      <SegmentedControl
+        className="urgency-filter"
+        label="Filter by urgency"
+        options={URGENCY_FILTERS.map(({ id, label }) => ({ value: id, label }))}
+        value={filter}
+        onChange={setFilter}
+      />
     )
 
     const filtered = filter === 'all' ? patterns : patterns.filter((entry) => entry.urgency === filter)
@@ -93,14 +92,14 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
               key={entry.pattern_id}
               className={`pattern-library__entry${urgent ? ' pattern-library__entry--urgent' : ''}`}
             >
-              <div className="pattern-library__header">
-                <h3 className="pattern-library__name">{entry.name}</h3>
-                <span
-                  className={`pattern-library__urgency pattern-library__urgency--${entry.urgency}`}
-                >
-                  {URGENCY_LABELS[entry.urgency]}
-                </span>
-              </div>
+              <SectionHeader
+                title={entry.name}
+                action={
+                  <Pill tone={urgent ? 'negative' : entry.urgency === 'same_shift' ? 'watch' : 'neutral'}>
+                    {URGENCY_LABELS[entry.urgency]}
+                  </Pill>
+                }
+              />
 
               <p className="pattern-library__time-profile">{timeProfileLabel(entry)}</p>
 
@@ -108,7 +107,7 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
               <ul className="pattern-library__signals">
                 {Object.entries(entry.signals).map(([signal, weight]) => (
                   <li key={signal}>
-                    {signalLabel(signal)} <span className="muted">(weight {weight})</span>
+                    <Row title={signalLabel(signal)} value={`(weight ${weight})`} />
                   </li>
                 ))}
               </ul>
@@ -116,7 +115,7 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
               <p className="pattern-library__section-label">Consider ruling out</p>
               <ul className="pattern-library__checks">
                 {entry.checks.map((check, index) => (
-                  <li key={index}>{checkLabel(check)}</li>
+                  <li key={index}><Row title={checkLabel(check)} /></li>
                 ))}
               </ul>
 
@@ -130,16 +129,18 @@ export function PatternLibrary({ onBack }: { onBack: () => void }) {
 
   return (
     <section className="pattern-library" aria-label="Pattern library">
-      <button type="button" className="back-button" onClick={onBack}>
+      <Button type="button" onClick={onBack}>
         ← Back
-      </button>
+      </Button>
       <h2 className="pattern-library__title">Pattern library</h2>
       <p className="pattern-library__lead">
         What each pattern a flagged change can be consistent with looks for, and where it
         comes from. Reference only - never a verdict on a specific resident.
       </p>
-      {filterBar}
-      {body}
+      <Card>
+        {filterBar}
+        {body}
+      </Card>
     </section>
   )
 }
