@@ -439,15 +439,15 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T300 — Pattern library: filter by urgency
-- status: todo
+- status: claimed
 - class: standard
 - priority: 3
 - kind: feature
 - source: proposed
 - deps: —
 - area: web/src/patterns/PatternLibrary.tsx, web/src/patterns/PatternLibrary.test.tsx, web/src/patterns/urgencyFilter.css
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T15:04Z
 - pr: —
 
 What: Rationale: the library lists every pattern in one long column; a nurse wants to see "what needs checking this shift" first. Add a row of filter buttons (All / Urgent / Check this shift / Check next round / Routine) above the list.
