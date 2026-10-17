@@ -380,7 +380,7 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T024 — Task map component
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
