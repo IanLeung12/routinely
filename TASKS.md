@@ -318,7 +318,7 @@ Acceptance:
 - `scripts/ci.sh` passes without opencv/mediapipe installed (lazy imports).
 
 ### T417 — Chart kit: LineChart + RangeSelector (Fey style)
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
