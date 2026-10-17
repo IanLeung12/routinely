@@ -317,7 +317,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T200 — Demo banner: CSS classes and an announced reset error
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -325,7 +325,8 @@ Acceptance:
 - area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/demoBanner.css
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T09:51Z
-- pr: —
+- pr: #195
+- rating: 5/5 clear
 
 What: DemoBanner (PR #182) uses inline styles and its "Couldn't reset the demo" text is not announced to screen readers. Move styles to `demoBanner.css` and give the error `role="alert"`.
 Interface: read only web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx and web/src/styles/ (design tokens). No behaviour change.
