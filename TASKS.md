@@ -129,26 +129,6 @@ Acceptance:
 - web test: SessionSummary renders the unclear copy and no score for `quality: "unclear"`; unchanged for `"ok"`; no diagnosis wording
 - `scripts/ci.sh` passes
 
-### T347 — Unit overview: show how many residents each filter holds
-- status: done
-- class: standard
-- priority: 3
-- kind: feature
-- source: proposed
-- deps: —
-- area: web/src/overview/UnitOverview.tsx, web/src/overview/overview.css, web/src/overview/UnitOverview.counts.test.tsx
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T18:30Z
-- pr: #356
-- rating: 5/5 clear
-
-What: Rationale: a charge nurse should see "Flagged (1) · Watch (4) · Paused (0)" at a glance before clicking. Add the count to each filter button label in the unit overview, computed from the loaded residents and paused rooms the component already holds.
-Interface: `UnitOverview.tsx` only (+ css). Accessible name stays clear, e.g. "Flagged, 1 resident".
-Acceptance:
-- counts match the residents each filter would show (incl. Paused) and update after a reset/refresh
-- existing overview tests (`UnitOverview*.test.tsx`) still pass unchanged or with label-matcher updates only
-- `cd web && npx vitest run src/overview` and `scripts/ci.sh` pass
-
 ### T348 — Docs: CODEMAP note that unclear sessions are never scored
 - status: todo
 - class: light
@@ -187,25 +167,6 @@ Acceptance:
 - Test with a fake capture iterator: `/ws/live?source=camera` yields session_start, frames, steps, session_end like a scenario.
 - `scripts/ci.sh` passes without mediapipe/opencv installed (lazy imports).
 - `docs/DEMO.md` has a "Live camera on your laptop" section with the exact commands.
-
-### T353 — Improvement: one shared print stylesheet for alert view and resident detail
-- status: done
-- class: standard
-- priority: 2
-- kind: improvement
-- deps: —
-- area: web/src/print.css, web/src/main.tsx, web/src/alert/alert.css, web/src/resident/residentPrint.css, web/src/resident/ResidentDetail.tsx, web/src/print.test.ts
-- owner: ian-claude-standard-2
-- claimed: 2026-10-17T17:22Z
-- pr: #338
-- rating: 5/5 clear
-
-What: `web/src/alert/alert.css` (T289) and `web/src/resident/residentPrint.css` (T333) carry the same `@media print` block (`.no-print`, black-on-white `html, body, body *`). Move the shared rules into one `web/src/print.css` imported once from `main.tsx`; keep only screen-specific print rules (e.g. hiding the app header while a resident is open) in each component's CSS, and delete `residentPrint.css` if nothing specific remains.
-Interface: `web/src/print.css` with `.no-print` utility + black-on-white rules; no TSX behaviour change beyond the import.
-Acceptance:
-- `grep -c '@media print' web/src/alert/alert.css web/src/resident/*.css` shows the shared rules exist only in `web/src/print.css`
-- existing `AlertView.test.tsx` and `ResidentDetail.print.test.tsx` still pass unchanged; add `web/src/print.test.ts` that asserts `print.css` defines `.no-print`
-- `scripts/ci.sh` passes
 
 ### T354 — Scenario: meds_session_unclear_no_flag (whole medication session too unclear to score)
 - status: done
