@@ -26,6 +26,7 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 - Contracts — source of truth is the pydantic models in `pipeline/src/routine_watch/contracts.py`; `contracts/*.schema.json` and `web/src/contracts.ts` are generated (`cd pipeline && uv run python -m routine_watch.contracts`). Never hand-edit generated files. Heavy tasks only.
 - `pipeline/src/routine_watch/` — one module per stage. `replay.py` runs the whole pipeline offline; `demo.py` and `synth/` make synthetic residents, history and care records.
 - `pipeline/src/routine_watch/api.py` — FastAPI: `/health`, `/residents[/{id}]`, `/alerts[/{id}]`, `POST /alerts/{id}/feedback`, WebSocket `/ws/live` (`live.py`). `api_cache.py` guards every paid API call (`LIVE_API`).
+- The live view has two sources of the same messages: `live.py` replays a recorded scenario (the demo's fallback), `live_camera.py` reads a live capture stream as it arrives. Same message types, same order, so the dashboard cannot tell them apart.
 - `web/src/` — one folder per screen (SPEC §9): `overview/`, `resident/`, `live/`, `alert/`, `evidence/`, `about/`. Each has its own `api.ts` with an offline mock fallback from `mock/`.
 - `web/src/ui/` + `web/src/index.css` — the design system (tokens, Card, StatusChip, Button, states). Use these; don't restyle per screen.
 - `tests/scenarios/` — end-to-end cases (`expected.yaml` + `frames.jsonl` or `steps.jsonl`), run by `scripts/e2e.sh`.
