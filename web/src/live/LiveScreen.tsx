@@ -20,7 +20,10 @@ export type LiveScreenProps = {
 /** Screen 3's task picker (SPEC section 9): the live session, with a switch above it for
  * which routine to watch. Tea is the demo path and stays the default. */
 export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
-  const [scenario, setScenario] = useState(TASKS[0].scenario)
+  const [scenario, setScenario] = useState(() => {
+    const task = new URLSearchParams(window.location.search).get('task')
+    return task === 'meds' ? TASKS[1].scenario : TASKS[0].scenario
+  })
   const labelId = useId()
 
   return (
