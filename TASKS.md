@@ -441,14 +441,14 @@ Acceptance:
 - replay.py under ~330 lines; CODEMAP note for scenario.py. `scripts/ci.sh` passes.
 
 ### T383 — Care-record context timeline: usable at phone width (375 px)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/resident/ContextTimeline.tsx, web/src/resident/contextTimeline.css, web/src/resident/ContextTimeline.mobile.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T19:36Z
 - pr: —
 
 What: Same treatment as the other phone-width tasks (e.g. T345 session list): the care-record timeline on resident detail must not overflow at 375 px.
