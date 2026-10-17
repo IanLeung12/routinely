@@ -412,14 +412,14 @@ Acceptance:
 - CODEMAP note for `api_state.py`; `scripts/ci.sh` passes.
 
 ### T285 — Docs: DEMO.md walks through pausing a room, the consent line and the audit trail
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: docs/DEMO.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:16Z
 - pr: —
 
 What: DEMO.md never mentions the monitoring switch, so presenters skip the privacy story judges ask about. Add one short demo step after the Mrs. K resident detail.
