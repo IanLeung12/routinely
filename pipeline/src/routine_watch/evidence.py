@@ -11,6 +11,11 @@ until a frames recording exists for the demo's actual bad session
     from routine_watch.evidence import replay_frames
     replay_frames("mrs-k-22", t_start=10.0, t_end=14.0, fps=10)
 
+Both recordings were written as object boxes with no landmarks, so each frame served
+from here is given a stand-in body reaching into the hand box the recording already
+tracks (`routine_watch.stick_figure`): made up like the frames around it, and the only
+way the ghost layer has a skeleton to lay over anything.
+
 A session id is a demo resident id and that resident's session index, `mrs-k-22`, the
 shape `routine_watch.alerts` builds a `TaskError.session_id` from - or, for a session
 played live this run, the id it was recorded with (`routine_watch.session_log`), which
@@ -23,9 +28,10 @@ import math
 from collections.abc import Sequence
 from functools import lru_cache
 
-from .contracts import CaptureFrame
+from .contracts import CaptureFrame, ObjectLabel
 from .demo import demo_residents
 from .replay import SCENARIOS_DIR, load_scenario
+from .stick_figure import REST, reaching_for, reaching_into
 
 #: No recorded frames are faster than this, live camera included (`routine_watch.live`).
 MAX_REPLAY_FPS = 10.0
@@ -110,7 +116,27 @@ def _parse_session_id(session_id: str) -> tuple[str, int] | None:
 
 @lru_cache
 def _scenario_frames(name: str) -> tuple[CaptureFrame, ...]:
-    return load_scenario(SCENARIOS_DIR / name).frames
+    return tuple(_with_skeleton(frame) for frame in load_scenario(SCENARIOS_DIR / name).frames)
+
+
+def _with_skeleton(frame: CaptureFrame) -> CaptureFrame:
+    """The frame with a stand-in body skeleton in it, if it has none of its own.
+
+    The frame-level scenarios were written as object boxes only - they are what the
+    recogniser is tested against, and it reads boxes - so the evidence view had no
+    skeleton to replay and the ghost layer, which draws poses and nothing else, drew
+    nothing at all (T207). The figure reaches into the frame's own `hand` box, the
+    hand the recording already tracks, so the skeleton moves with the recorded hand
+    instead of inventing a second one somewhere else, and its landmarks stay inside
+    that box: a frame read by the recogniser still says exactly what it did before.
+    """
+    if frame.poses or frame.hands:
+        return frame  # a real recording brings its own landmarks
+    hand_box = next(
+        (found.box for found in frame.objects if found.label is ObjectLabel.HAND), None
+    )
+    pose, hand = reaching_into(hand_box) if hand_box else reaching_for(REST)
+    return frame.model_copy(update={"poses": [pose], "hands": [hand]})
 
 
 def _windowed(

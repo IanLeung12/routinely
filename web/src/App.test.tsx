@@ -125,6 +125,11 @@ describe('App', () => {
     let residentCalls = 0
     let alertCalls = 0
     vi.stubGlobal('fetch', vi.fn((url: string) => {
+      // The live session's end-of-session summary also fetches its own resident
+      // (`/residents/mrs-k`), separately from the list the overview and App refetch.
+      if (url.includes('/residents/')) {
+        return Promise.resolve({ ok: true, json: async () => watchResident })
+      }
       if (url.includes('/residents')) {
         residentCalls += 1
         return Promise.resolve({ ok: true, json: async () => [flagged ? flaggedResident : watchResident] })
