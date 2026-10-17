@@ -524,7 +524,7 @@ Acceptance:
 - `cd web && npx vitest run src/tour` passes; `scripts/ci.sh` passes.
 
 ### T388 — Bug: integration.sh can't run next to a dev stack and kills it
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
