@@ -250,7 +250,7 @@ Acceptance:
 - If you add a module or script, add a CODEMAP note in this PR.
 
 ### T416 — Local camera preview: real video + skeleton overlay, this device only
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -259,7 +259,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, docs/DEMO.md, SPEC.md
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-17T21:04Z
-- pr: —
+- pr: #399
+- rating: 4/5 clear: the only gap was that the split left the T424 component's video layout cropping the picture (object-fit: cover), so 'aligned to the same coordinates' needed a 3-line CSS fix outside the listed area; also worth saying the preview server starts with the camera, so the web probe has to wait for the first frame
 
 What: Ian wants to see the actual camera picture during a live session, not just the skeleton. Keep the privacy promise: video never leaves the capture machine, is never stored, never reaches the API or a remote supervisor.
 Why: the demo is far more convincing with the real kitchen and the skeleton tracking on top, and it helps frame the camera for Roboflow training clips.
