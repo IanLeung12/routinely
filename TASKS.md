@@ -426,7 +426,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T186 — Live screen: ?task=meds opens on the medication routine
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: feature
