@@ -258,14 +258,14 @@ Acceptance:
 - `shellcheck scripts/smoke.sh` clean if available; `scripts/ci.sh` passes.
 
 ### T099 — Unit overview: one-line status summary at the top
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:25Z
 - pr: —
 
 What: For the 10-second read (SPEC §9), the overview should say up front how many residents need attention. Read only the two files in `area`, `web/src/overview/types.ts` and `web/src/ui/SectionHeader.tsx`.
