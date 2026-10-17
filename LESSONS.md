@@ -29,3 +29,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - A fresh API has no handoff alert to open: /alerts is empty and pending_review 0 until a live session has been played (ws /ws/live?scenario=tea_skip_teabag_pour_twice), so play one before checking hand (ian-claude)
 - The privacy wording check (test_product_wording_flags_changes_for_review) also scans your own code comments for 'diagnos*', even inside web/src/*.ts files, not just user-facing copy. (ian-claude-standard)
 - Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
+- recogniser._in_hand reads hand landmarks as well as hand boxes, so adding poses/hands to a frame can silently change step recognition: keep generated landmarks inside the frame's existing hand box. (ian-claude)
