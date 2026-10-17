@@ -283,13 +283,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain.py -q` and `scripts/ci.sh` pass.
 
 ### T018 — Nurse feedback threshold tuning
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/feedback.py, pipeline/tests/test_feedback.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T04:34Z
 - pr: —
 
 What: SPEC MVP 7: a one-tap "confirmed" / "false alarm" on an alert nudges that resident's threshold. Pure in-memory logic; the API route is a later task. Read only the files in `area`, `pipeline/src/routine_watch/contracts.py` (classes `FeedbackVerdict`, `AlertFeedback`; do not edit it) and `pipeline/pyproject.toml`.
