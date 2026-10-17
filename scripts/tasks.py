@@ -14,12 +14,16 @@ That makes claims atomic: only one agent can flip a task from todo to claimed.
   tasks.py stale [--minutes 90]             claimed tasks with no PR for too long
   tasks.py sync                             refresh ./.tasks from origin
   tasks.py commit -m "msg"                  commit+push manual edits in ./.tasks (orchestrator)
+  tasks.py lesson "text" --agent max         add a one-line lesson to LESSONS.md (shared by all agents)
+  tasks.py reconcile                        mark in-review tasks whose PR merged as done (uses gh)
+  tasks.py archive [--keep 10]              move done tasks (except the newest N) to ARCHIVE.md
 """
 import argparse, datetime as dt, os, re, subprocess, sys, time
 
 ROOT = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
 WT = os.path.join(ROOT, ".tasks")
 FILE = os.path.join(WT, "TASKS.md")
+ARCHIVE = os.path.join(WT, "ARCHIVE.md")
 CLASSES = ["light", "standard", "heavy"]
 STATUSES = ["todo", "claimed", "in-review", "done", "blocked"]
 HEAD = re.compile(r"^### (T\d+)\b")
@@ -72,14 +76,43 @@ def load():
         return parse(fh.read())
 
 
+def archived_ids():
+    try:
+        with open(ARCHIVE) as fh:
+            return set(re.findall(r"^### (T\d+)", fh.read(), re.M))
+    except OSError:
+        return set()
+
+
 def deps_of(t):
     d = t["vals"].get("deps", "")
     return re.findall(r"T\d+", d)
 
 
+# Files many tasks touch in small, easily merged ways: never a reason to hold a task back.
+SHARED_OK = {"docs/CODEMAP.md", "README.md", ".env.example", "pipeline/pyproject.toml", "pipeline/uv.lock",
+             "web/package.json", "web/package-lock.json", "web/src/ui/README.md"}
+
+
+def area_paths(t):
+    out = []
+    for p in t["vals"].get("area", "").split(","):
+        p = p.strip().split(" ")[0].rstrip("/").replace("*", "").rstrip("/")
+        if p and ("/" in p or "." in p) and p not in SHARED_OK:
+            out.append(p)
+    return out
+
+
+def overlaps(a, b):
+    return any(x == y or x.startswith(y + "/") or y.startswith(x + "/") for x in a for y in b)
+
+
 def claimable(tasks, cls):
     """Todo tasks whose deps are done and whose class <= cls. Exact class first, then lower."""
     rank = CLASSES.index(cls)
+    archived = archived_ids()
+    # Don't hand out a task whose files overlap work already in flight (claimed / open PR).
+    busy = [area_paths(t) for t in tasks.values() if t["vals"].get("status") in ("claimed", "in-review")]
     out = []
     for tid, t in tasks.items():
         v = t["vals"]
@@ -87,10 +120,17 @@ def claimable(tasks, cls):
             continue
         if CLASSES.index(v["class"]) > rank:
             continue
-        if any(tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
+        if any(d not in archived and tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
             continue
-        prio = int(v.get("priority", "2") or 2)
-        out.append((CLASSES.index(v["class"]) != rank, prio, int(tid[1:]), tid))
+        mine = area_paths(t)
+        if mine and any(overlaps(mine, b) for b in busy):
+            continue
+        try:
+            prio = int(v.get("priority", "2") or 2)
+        except ValueError:
+            prio = 2
+        # P0 goes first for any eligible worker; otherwise exact class first, then priority.
+        out.append((prio != 0, CLASSES.index(v["class"]) != rank, prio, int(tid[1:]), tid))
     return [x[-1] for x in sorted(out)]
 
 
@@ -151,9 +191,12 @@ def main():
     s = sub.add_parser("claim"); s.add_argument("id"); s.add_argument("--agent", required=True)
     s = sub.add_parser("set"); s.add_argument("id"); s.add_argument("kv", nargs="+"); s.add_argument("--agent")
     s = sub.add_parser("show"); s.add_argument("id")
-    s = sub.add_parser("list"); s.add_argument("--status")
+    s = sub.add_parser("list"); s.add_argument("--status"); s.add_argument("--long", action="store_true")
     s = sub.add_parser("stale"); s.add_argument("--minutes", type=int, default=90)
     sub.add_parser("sync")
+    sub.add_parser("reconcile")
+    s = sub.add_parser("lesson"); s.add_argument("text"); s.add_argument("--agent", default="?")
+    s = sub.add_parser("archive"); s.add_argument("--keep", type=int, default=10)
     s = sub.add_parser("commit"); s.add_argument("-m", required=True)
     a = p.parse_args()
 
@@ -182,7 +225,11 @@ def main():
             if a.status and v.get("status") != a.status:
                 continue
             title = lines[t["start"]].split(" ", 2)[-1]
-            print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} {title}")
+            if a.long:
+                print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} "
+                      f"P{v.get('priority', '2') or '2'} {v.get('kind', '-') or '-':11} {title}")
+            else:
+                print(f"{tid:5} {v.get('status',''):9} {v.get('class',''):8} {v.get('owner','') or '-':12} {title}")
         return
     if a.cmd == "stale":
         cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=a.minutes)
@@ -212,6 +259,67 @@ def main():
                 lines, tasks = load()
                 return print(block(lines, tasks[c[0]]))
         return print("NO_TASK")
+    if a.cmd == "lesson":
+        path = os.path.join(WT, "LESSONS.md")
+        text = " ".join(a.text.split())[:200]
+        head = "# LESSONS\n\nOne line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.\n\n"
+        for n in range(8):
+            sync()
+            old = open(path).read() if os.path.exists(path) else head
+            items = [l for l in old.splitlines() if l.startswith("- ")]
+            if any(text.lower() in l.lower() for l in items):
+                return print("already known")
+            items = (items + [f"- {text} ({a.agent})"])[-40:]
+            with open(path, "w") as fh:
+                fh.write(head + "\n".join(items) + "\n")
+            git("add", "LESSONS.md")
+            git("commit", "-q", "-m", f"lesson ({a.agent})")
+            if git("push", "-q", "origin", "tasks", check=False).returncode == 0:
+                return print("lesson added")
+            time.sleep(1 + n)
+        sys.exit("could not push lesson")
+    if a.cmd == "reconcile":
+        import json
+        r = subprocess.run(["gh", "pr", "list", "--state", "merged", "-L", "200", "--json", "number"],
+                           cwd=ROOT, capture_output=True, text=True)
+        if r.returncode:
+            sys.exit("gh pr list failed: " + r.stderr.strip())
+        merged = {f"#{p['number']}" for p in json.loads(r.stdout or "[]")}
+        fixed = []
+
+        def mut(lines, tasks):
+            fixed.clear()
+            for tid, t in tasks.items():
+                v = t["vals"]
+                if v.get("status") == "in-review" and v.get("pr", "").strip() in merged:
+                    lines = set_fields(lines, t, {"status": "done"})
+                    fixed.append(tid)
+            return lines
+        write_txn(mut, "reconcile: merged PRs -> done")
+        return print("done: " + " ".join(fixed) if fixed else "nothing to reconcile")
+    if a.cmd == "archive":
+        moved = []
+
+        def mut(lines, tasks):
+            moved.clear()
+            done = sorted((int(t[1:]), t) for t, v in tasks.items() if v["vals"].get("status") == "done")
+            go = [t for _, t in done[:max(0, len(done) - a.keep)]]
+            if not go:
+                return lines
+            drop = set()
+            blocks = []
+            for t in go:
+                b = tasks[t]
+                blocks.append("\n".join(lines[b["start"]:b["end"]]).rstrip() + "\n")
+                drop.update(range(b["start"], b["end"]))
+            old = open(ARCHIVE).read() if os.path.exists(ARCHIVE) else "# ARCHIVE\n\nDone tasks moved off the board by `tasks.py archive`. Read only when needed.\n"
+            with open(ARCHIVE, "w") as fh:
+                fh.write(old.rstrip() + "\n\n" + "\n".join(blocks))
+            git("add", "ARCHIVE.md")
+            moved.extend(go)
+            return [ln for i, ln in enumerate(lines) if i not in drop]
+        write_txn(mut, "archive done tasks")
+        return print(f"archived {len(moved)}: {' '.join(moved)}" if moved else "nothing to archive")
     if a.cmd == "claim":
         do_claim(a.id, a.agent)
         return print(f"claimed {a.id}")

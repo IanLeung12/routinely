@@ -1,14 +1,14 @@
 # Routine Watch — Product Spec & Handoff
 
 Hackathon: **Hack the Valley 11** (36 h). Team owner: Ian Leung (Discord `thelegend12`).
-Status: idea locked, nothing built yet. This doc is the spec, not an implementation plan.
-Architecture diagram: `routine-watch-diagram.png` (same folder).
+Status: in development (multi-agent; see `AGENTS.md`). This doc is the spec, not an implementation plan.
+Diagrams: `docs/routine-watch-architecture.png`, `docs/routine-watch-flow.png`.
 
 ---
 
 ## 1. One-liner
 
-A privacy-preserving camera system that watches residents of a care home do everyday tasks (making tea, getting dressed) and alerts nurses when their **task errors suddenly spike against their own normal**, an early sign of **delirium**, which is often caused by a UTI, dehydration or a new medication. Every alert shows the evidence.
+A privacy-preserving camera system that watches residents of a care home do everyday tasks (making tea, getting dressed) and alerts nurses when **how they do those tasks changes against their own normal**. Each alert shows the evidence and names the **patterns the change is consistent with**, ranked, with what to rule out. The flagship pattern is a sudden spike in task errors, an early sign of **delirium** (often a UTI, dehydration or a new medication); others include slow cognitive drift, evening-only worsening, and motor slowing after a medication change. It points nurses at likely causes to check; it never diagnoses.
 
 ## 2. Problem
 
@@ -16,6 +16,7 @@ A privacy-preserving camera system that watches residents of a care home do ever
 - It is often the first visible sign of an infection, dehydration or a drug reaction. Catching it a day or two earlier can prevent an ER trip.
 - Staff are stretched thin and can't watch every resident do every task. Formal screens like the CAM (Confusion Assessment Method) are done occasionally, not continuously.
 - Mistakes in everyday tasks are a well-documented, measurable sign of confusion. The categories are skipping a step, doing steps out of order, repeating a step, using the wrong object, and hesitating.
+- *How* the errors change carries information too: sudden vs gradual, evening-only vs all day, sequencing errors vs plain slowness, one hand vs both. Different patterns point to different causes worth checking, and a nurse who knows which one to rule out first acts faster.
 
 ## 3. Users
 
@@ -44,10 +45,11 @@ PointClickCare judging criteria: **Usefulness, Clarity, Creativity, Execution, U
 1. **One task end to end: making tea.** Live camera → step events → task graph → error detection.
 2. **Privacy filter:** only skeleton and object-box data leave the capture device. Raw frames are never stored.
 3. **Per-resident baseline** from synthetic history (about 14 days) plus the live session.
-4. **Change detection** that produces a "possible delirium" flag.
-5. **Explained alert:** the exact errors with timestamps, a short clip or skeleton replay, a plain-language summary, and suggested checks.
-6. **Nurse dashboard** with a resident list, the alert, the live task map and the evidence view.
-7. **Nurse feedback:** a one-tap "confirmed" or "false alarm" on each alert.
+4. **Change detection** that flags a change for review (two or more sessions above baseline within 24–48 h).
+5. **Pattern matching (§7.5):** each flag lists the patterns it is consistent with, ranked with confidence and evidence, plus the checks that would rule each one out. MVP patterns: sudden change (delirium) and slow drift; the others in §7.5 are Nice to have.
+6. **Explained alert:** the exact errors with timestamps, a short clip or skeleton replay, the ranked patterns, a plain-language summary, and suggested checks.
+7. **Nurse dashboard** with a resident list, the alert, the live task map and the evidence view.
+8. **Nurse feedback:** a one-tap "confirmed" or "false alarm" on each alert, plus an optional "what was it?" (which pattern/cause it turned out to be).
 
 ### Nice to have (in priority order)
 1. **Ghost replay:** today's skeleton laid over the resident's normal routine.
@@ -56,9 +58,11 @@ PointClickCare judging criteria: **Usefulness, Clarity, Creativity, Execution, U
 4. **A second task**, such as getting dressed or taking medication with water, to show it generalises.
 5. **Care-record context** (new meds, fever, fluid intake) shown next to the alert.
 6. **"Slow drift" trend view**, separate from the sudden-change flag.
+7. **More patterns (§7.5):** evening-only worsening (sundowning), motor slowing / medication effect, executive pattern (perseveration with intact order). One-sided change (possible stroke) is designed but kept out of the live demo.
+8. **Pattern feedback loop:** nurse answers to "what was it?" adjust each pattern's weight per resident.
 
 ### Non-goals
-- Diagnosing delirium or any condition. It flags a change for a human to review; it never diagnoses.
+- Diagnosing any condition. It flags a change and lists the patterns it is *consistent with* and what to rule out; a clinician decides. It never says a resident *has* something, and it never gives treatment advice.
 - Fall detection. That's a crowded market (Teton, SafelyYou and others), so stay out of it.
 - Guiding or prompting the resident through the task. That's existing prior art (COACH, CHEF-VL, RegulAR); our product is aimed at staff.
 - Real patient data, or any integration with an electronic health record.
@@ -81,10 +85,11 @@ Five stages (see the diagram):
    - Every session, step and error is stored in **Tiger Data**.
    - A personal baseline per resident per task covers error score, step durations and gaps between steps.
    - A change detector compares each new session against that baseline.
-4. **Explain and alert.**
-   - An LLM (Claude) writes the plain-language summary **using only the detected evidence**, never adding anything of its own.
-   - It suggests checks: infection or UTI, hydration, new medication, run the CAM screen.
-   - Alerts are routed to the dashboard through **Supabase Realtime**, optionally with a phone push.
+4. **Match patterns, explain and alert.**
+   - A **pattern scorer** (rules over features, §7.5) ranks the patterns the change is consistent with, each with confidence, the evidence behind it, and rule-out checks. Care-record context (new meds, temperature, fluids) can raise or lower a pattern.
+   - An LLM (Claude) writes the plain-language summary **using only the detected evidence and the scorer's output**, never adding a pattern or cause of its own.
+   - Suggested checks come from the matched patterns (e.g. infection/UTI, hydration, new medication, CAM screen, medication review, cognitive reassessment).
+   - Alerts go to the dashboard over the API WebSocket (§16 B), optionally with a phone push.
 5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is logged in Langfuse and used to tune thresholds.
 
 **Decision: custom detector plus a vision LLM, not either alone.**
@@ -124,18 +129,40 @@ These categories come from neuropsychology research on everyday-action errors, a
 - **Every alert includes:** the errors with timestamps, evidence clips or skeleton replays, the baseline comparison (for example "3 errors vs 0.2/day normal"), any care-record context, and suggested checks.
 - **Calibration:** nurse feedback updates per-resident thresholds. For the MVP, just log it and show that it changes the threshold.
 
+### 7.5 From a flag to likely patterns
+
+A flag says *something changed*. The pattern scorer says *what kind of change*, so the nurse knows what to rule out first. It is rules over features, not an LLM guess, and it is allowed to say "no clear pattern".
+
+**Features** (all from data we already have): error counts by type; step durations and gaps vs baseline; onset (days vs weeks, from the baseline and drift detectors); time of day of the affected sessions; which hand did each step (MediaPipe handedness) and its share vs baseline; movement speed from the skeleton; self-corrected slips; care-record context.
+
+| Pattern | Signals | Time profile | Rule out / suggested checks | Urgency |
+|---|---|---|---|---|
+| **Sudden change (delirium)** | omissions, sequence errors, perseveration up across error types | within 1–3 days | infection/UTI, dehydration, new or changed medication, run CAM | same shift |
+| **Slow drift (cognitive decline)** | errors and hesitation rising steadily | weeks | cognitive reassessment, care-plan review | routine review |
+| **Evening-only worsening (sundowning)** | errors concentrated in late-day sessions, mornings normal | recurring daily | sleep, lighting, routine, pain, evening meds | routine review |
+| **Motor slowing / medication effect** | step durations and gaps up, movement slower, few sequencing errors | after a med change, or gradual | medication review (sedation, anticholinergic burden), mobility check | next round |
+| **Executive pattern** | perseveration up with order otherwise intact | days–weeks | cognitive screen, review recent changes | routine review |
+| **One-sided change (possible stroke)** | one hand stops being used for steps it normally does, sudden | hours | escalate now per facility stroke protocol | **urgent** — out of the live demo |
+
+Rules for the scorer:
+- Each pattern has a score from its signals and time profile; context can raise it (new antihistamine → medication effect) or lower it (normal temperature and fluids → infection less likely, never excluded).
+- Show the **top 1–3** patterns with confidence ≥ a threshold, each with its evidence lines ("perseveration ×3, evening sessions only, new antihistamine 2 days ago"). If none clears the threshold, say "change detected, no clear pattern" with general checks.
+- The pattern library is **data** (a YAML/py table: signals, weights, time profile, checks, urgency, source citation), so patterns can be added without code changes.
+- Wording is always "consistent with … — consider ruling out …", never "has" or "diagnosis".
+
 ## 8. Data
 
-- **Synthetic residents:** 3–5 residents with about 14 days of history each. Most are normal; one shows a sudden spike, one a slow drift.
+- **Synthetic residents:** 5–6 residents with about 14 days of history each (longer for drift). One normal; one sudden spike after a new antibiotic (Mrs. K, the demo); one slow drift; one evening-only worsening; one motor slowing after a new sedating medication. Each should make its pattern rank first.
   - Synthetic error rates should be realistic. Use the per-category rates from the HelpMeOut and neuropsychology papers.
 - **Live session:** a teammate makes tea on stage, and the result is added to the demo resident's history.
 - **Detector training data:** 10–15 clips filmed in a setup like the demo's, with about 200–400 labelled frames.
 - **Care-record context:** synthetic medication changes, temperatures and fluid intake.
+- **Pattern scenarios:** at least one replayable scenario per pattern in `tests/scenarios/`, with the expected top pattern in `expected.yaml`.
 - **Retention:** store skeleton and object-event data only, never raw video. For evidence clips, store skeleton replays, or blurred clips if absolutely needed. This is a deliberate privacy decision to state in the pitch.
 
 ## 9. Screens
 
-1. **Unit overview:** list of residents with a status chip (normal / watch / flagged) and a sparkline of their error score.
+1. **Unit overview:** list of residents with a status chip (normal / watch / flagged), the top pattern when flagged (e.g. "sudden change"), and a sparkline of their error score.
 2. **Resident detail:**
    - Baseline chart with today's point.
    - Heat calendar.
@@ -144,21 +171,23 @@ These categories come from neuropsychology research on everyday-action errors, a
 3. **Live session:** skeleton view next to the task-graph map. Steps turn green as they're completed; errors flash red (omission) or amber (repeat or sequence).
 4. **Alert / evidence view:**
    - Plain-language summary.
+   - **Possible patterns**, ranked: name, confidence, the evidence lines behind it, and its rule-out checks. Urgent patterns are visually distinct.
    - Error list with timestamps, each opening its replay.
    - Ghost replay.
    - Suggested checks.
-   - Confirm / false-alarm buttons.
+   - Confirm / false-alarm buttons, and "what was it?" (pick a pattern/cause or "other").
 
 **Design priorities:** a nurse should understand an alert **in 10 seconds**, it must be visual first, and the evidence must always be one tap away.
 
 ## 10. Demo script (≈3 min)
 
-1. **Hook (20 s):** delirium is common, often missed, and frequently signals an infection. Nurses can't watch everyone.
+1. **Hook (20 s):** changes in how residents manage everyday tasks are often the first sign something's wrong — delirium from an infection, a medication problem, a decline. Nurses can't watch everyone.
 2. **Baseline (30 s):** the dashboard shows Mrs. K's two normal weeks.
 3. **Live (60 s):** a teammate makes tea, skips the teabag and pours twice. The task map flashes red and amber in real time.
 4. **Alert (30 s):** her sparkline spikes, the second qualifying session triggers the flag, and the nurse's phone or dashboard alerts.
-5. **Why (30 s):** open the evidence: exact errors, ghost replay against her normal, and "new antibiotic started 2 days ago; check for UTI or dehydration."
-6. **Close (10 s):** privacy (no video stored), feedback loop, and what it builds on.
+5. **Why (30 s):** open the evidence: exact errors, ghost replay against her normal, and the top pattern: "consistent with a sudden change (delirium) — new antibiotic 2 days ago; rule out UTI or dehydration."
+6. **Not just delirium (15 s):** back on the overview, Mr. D is on "watch" with a different pattern: slow drift over three weeks → cognitive reassessment, not an urgent call. Same signal, different pattern, different action.
+7. **Close (10 s):** privacy (no video stored), never a diagnosis, feedback loop, and what it builds on.
 
 **Fallback:** a pre-recorded session that runs through the same pipeline, in case the camera or Wi-Fi fails. The verifier must handle being offline gracefully.
 
@@ -174,13 +203,14 @@ These categories come from neuropsychology research on everyday-action errors, a
 | **Edinburgh FEATHER**; smart-home delirium/UTI papers | Detect delirium or UTI from passive home sensors. | We use task-level errors as the signal, and give evidence per alert. |
 | Hackathon projects: AURA, Vigil, Cognuance, MemoryMesh, Buddy, Granny Guard | Nearby ideas (eye tracking, wakefulness, quiz-based trends, camera assistants). | None combines task errors, a personal baseline and a delirium alert. |
 
-**What's new is the combination:** step-level tracking of real tasks, a personal baseline, a sudden-change delirium alert for care staff, and evidence behind every flag. The detector alone is not new; say so.
+**What's new is the combination:** step-level tracking of real tasks, a personal baseline, change alerts for care staff that say which patterns the change is consistent with and what to rule out, and evidence behind every flag. The detector alone is not new; say so.
 
 ## 12. Responsible design
 
 - Skeleton-only processing, no stored video, no face identification.
 - Flags for review, **never a diagnosis**, with that wording kept consistent everywhere.
-- The LLM summary may only restate detected evidence. No speculation and no medical advice beyond standard check prompts.
+- The LLM summary may only restate detected evidence and the scorer's patterns. No speculation, no new causes, and no medical advice beyond the library's check prompts.
+- Patterns are "consistent with", ranked with confidence, and always allow "no clear pattern". Every pattern in the library cites where its signals come from; patterns without a defensible source don't ship.
 - Show uncertainty: "unclear" events, and confidence on each alert.
 - Consent: the resident or their substitute decision-maker opts in, and the system is per room and can be turned off.
 - Bias and limits: pose estimation is less accurate with walkers or wheelchairs and for unusual postures. State this, and treat low-confidence sessions as unclear rather than as errors.
@@ -193,6 +223,8 @@ These categories come from neuropsychology research on everyday-action errors, a
 | Verifier latency or network failure | Call it only on uncertain or error moments; cache results; work offline in degraded mode. |
 | False alerts in the live demo | Script the demo; hand-tune thresholds on synthetic history; require two sessions to alert. |
 | Judges see "another dementia camera" | Lead with delirium and sudden change, nurse-facing evidence, and the prior-art table. |
+| Over-claiming ("it diagnoses") | Consistent "consistent with / rule out" wording, confidence, "no clear pattern", cited library; keep stroke out of the live demo. |
+| Pattern scope creep | MVP ships two patterns (sudden change, slow drift); the rest are Nice to have and data-only additions. |
 | Scope creep | Ship the MVP list before anything from Nice to have. |
 
 ## 14. Open questions
@@ -221,3 +253,4 @@ Diagrams: `docs/routine-watch-architecture.png` (components), `docs/routine-watc
 - **C. Placement:** the whole pipeline (capture → recogniser → task graph → errors → session score) runs on the demo laptop and works offline. It uplinks events, sessions and downsampled skeletons to the backend on Vultr (FastAPI + baseline/change detection + alert builder + dashboard), which stores in Tiger Data.
 - **Roboflow:** detector runs locally from downloaded weights. No hosted inference. Humans run training (max 2–3 runs, 50 credits/month).
 - **Hands:** use MediaPipe hand landmarks as well as pose; task steps are hand–object interactions.
+- **D. Beyond delirium (pattern matching):** the product flags changes and ranks the patterns they are consistent with (§7.5), delirium first. Pattern scoring is deterministic rules over features with a data-driven library; the LLM only phrases. Never diagnostic wording. MVP patterns: sudden change and slow drift.

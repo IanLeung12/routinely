@@ -15,18 +15,12 @@ checks a change end to end before anybody trusts a demo to it::
     python -m routine_watch.replay --check                      # PASS/FAIL every one
     scripts/e2e.sh                                              # the same, from CI
 
-Scenario authoring, and what the stubs below cannot express yet:
-`tests/scenarios/README.md`.
+Scenario authoring: `tests/scenarios/README.md`.
 
-**Stubs.** Two stages of the pipeline are placeholders today, so this module stands in
-for them. Each is marked `STUB` where it is defined, and each goes away when its task
-lands; the scenarios and their expectations do not change when it does.
-
-* :func:`steps_from_frames` stands in for `routine_watch.recogniser`: it reads a step
-  off the objects a hand is on, instead of state rules plus the Gemini verifier.
-* :func:`find_errors` stands in for `routine_watch.task_graph` plus
-  `routine_watch.errors`: it finds five of the six error types in SPEC section 7
-  (everything but hesitation) by walking the step events against the task graph.
+A `frames.jsonl` scenario is recognised by the real `routine_watch.recogniser.recognise`;
+errors are the real `routine_watch.errors.classify_errors`, against SPEC section 7's
+task graph rules. Hesitation is not folded in yet: it needs a per-step duration
+baseline, and no scenario carries one.
 """
 
 from __future__ import annotations
@@ -46,18 +40,9 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from .change_detection import Baseline, build_baseline, flag_change
-from .contracts import (
-    BoundingBox,
-    CaptureFrame,
-    ErrorType,
-    EvidenceKind,
-    EvidenceRef,
-    ObjectLabel,
-    StepEvent,
-    StepSource,
-    TaskError,
-    repo_root,
-)
+from .contracts import CaptureFrame, ErrorType, StepEvent, TaskError, repo_root
+from .errors import classify_errors
+from .recogniser import recognise
 from .scoring import session_score
 from .tasks import TaskGraph, TaskGraphError, load_task
 
@@ -70,14 +55,8 @@ SCENARIOS_DIR = repo_root() / "tests" / "scenarios"
 #: fixed instant. Same scenario, same flag, whenever it runs.
 REPLAY_EPOCH = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
 
-#: Confidence the stub recogniser reports. Comfortably above
-#: `recogniser.MIN_STEP_CONFIDENCE`: a scenario that wants a low-confidence or
-#: `unclear` moment writes the step event itself, in `steps.jsonl`.
-STUB_CONFIDENCE = 0.9
-
-#: No events for this long, with required steps still to do, is abandonment
-#: (SPEC section 7, "no events for N minutes"). Hand-set for the MVP.
-ABANDON_GAP_S = 300.0
+#: Brief passers-by or stray pose detections must not suppress a session's score.
+ASSISTED_MIN_S = 2.0
 
 
 #: Any contract read out of a scenario file.
@@ -193,7 +172,7 @@ def load_scenario(path: Path | str) -> Scenario:
         raise ReplayError(f"{path}: needs exactly one of frames.jsonl or steps.jsonl")
     if frames_path.is_file():
         frames = tuple(_load_jsonl(frames_path, CaptureFrame))
-        events = tuple(steps_from_frames(frames, graph))
+        events = tuple(recognise(frames, graph, session_id=frames[0].session_id))
     else:
         frames, events = (), tuple(_load_jsonl(steps_path, StepEvent))
 
@@ -217,210 +196,6 @@ def _load_jsonl(path: Path, model: type[_Record]) -> list[_Record]:
     return records
 
 
-# ------------------------------------------------------------- STUB: the recogniser
-
-
-def touched_objects(frame: CaptureFrame) -> frozenset[str]:
-    """The objects a hand is on in this frame (SPEC section 16: steps are hand-object
-    interactions).
-
-    A hand is either MediaPipe hand landmarks or a box from the detector's `hand`
-    class, so a synthetic scenario can use whichever is less tedious to write.
-    """
-    hand_boxes = [d.box for d in frame.objects if d.label is ObjectLabel.HAND]
-    points = [(mark.x, mark.y) for hand in frame.hands for mark in hand.landmarks]
-    return frozenset(
-        str(detection.label)
-        for detection in frame.objects
-        if detection.label is not ObjectLabel.HAND
-        and (
-            any(_overlaps(detection.box, box) for box in hand_boxes)
-            or any(_holds(detection.box, point) for point in points)
-        )
-    )
-
-
-def _overlaps(one: BoundingBox, other: BoundingBox) -> bool:
-    """True if the two boxes share any area. Touching edges do not count."""
-    return (
-        one.x1 < other.x2 and other.x1 < one.x2 and one.y1 < other.y2 and other.y1 < one.y2
-    )
-
-
-def _holds(box: BoundingBox, point: tuple[float, float]) -> bool:
-    x, y = point
-    return box.x1 <= x <= box.x2 and box.y1 <= y <= box.y2
-
-
-def steps_from_frames(frames: Sequence[CaptureFrame], graph: TaskGraph) -> list[StepEvent]:
-    """STUB. Capture frames -> step events, standing in for `routine_watch.recogniser`.
-
-    The rule: a frame shows a step when the objects a hand is on are exactly that
-    step's objects, and a run of consecutive frames showing the same step is one step
-    event. A frame that touches nothing, or nothing the task knows about, ends the run.
-
-    That is a crude version of what the recogniser will do with state rules and the
-    verifier, and it is deliberately literal: it never consults the task's dependencies,
-    so a scenario can still show a step happening in the wrong order. Two limits follow
-    from reading objects alone, and both are why a scenario may prefer `steps.jsonl`:
-
-    * Two steps done with the same objects cannot be told apart (in the tea graph,
-      `fill_kettle` and `boil` are both done with the kettle). A frame that matches
-      more than one step raises :class:`ReplayError` rather than guessing.
-    * Confidence, `unclear` and the verifier have no frame-level meaning here: every
-      event it makes is a confident rule event.
-    """
-    by_objects: dict[frozenset[str], list[str]] = {}
-    for step in graph.steps:
-        by_objects.setdefault(frozenset(str(label) for label in step.objects), []).append(step.id)
-
-    events: list[StepEvent] = []
-    #: The run of consecutive frames showing the step we are in the middle of.
-    step_id: str | None = None
-    run: list[CaptureFrame] = []
-
-    def close() -> None:
-        """Turn the run of frames we have been collecting into one step event."""
-        nonlocal step_id, run
-        if step_id is not None:
-            events.append(
-                StepEvent(
-                    event_id=f"{run[0].session_id}:s{len(events)}",
-                    session_id=run[0].session_id,
-                    step_id=step_id,
-                    objects=list(graph.step(step_id).objects),
-                    t_start=run[0].t,
-                    t_end=run[-1].t,
-                    confidence=STUB_CONFIDENCE,
-                    source=StepSource.RULE,
-                )
-            )
-        step_id, run = None, []
-
-    for frame in sorted(frames, key=lambda f: (f.seq, f.t)):
-        touched = touched_objects(frame)
-        matches = by_objects.get(touched, [])
-        if len(matches) > 1:
-            raise ReplayError(
-                f"frame {frame.seq}: {sorted(touched)} is {' and '.join(matches)}; "
-                "the stub recogniser cannot tell them apart, write this one as steps.jsonl"
-            )
-        showing = matches[0] if matches else None
-        if showing != step_id:
-            close()
-        if showing is not None:
-            step_id = showing
-            run.append(frame)
-    close()
-    return events
-
-
-# ------------------------------------------------- STUB: task graph and error types
-
-
-def find_errors(
-    graph: TaskGraph,
-    events: Sequence[StepEvent],
-    *,
-    session_id: str,
-    session_end: float,
-    abandon_gap_s: float = ABANDON_GAP_S,
-) -> list[TaskError]:
-    """STUB. Step events against the task graph, standing in for
-    `routine_watch.task_graph` plus `routine_watch.errors` (SPEC section 7).
-
-    Five of the six error types, by the rules in the spec's table:
-
-    * **omission** - a required step never happens at all.
-    * **sequence** - a step happens before a dependency that is then done later.
-    * **perseveration** - a once-only step happens again, with other steps in between.
-    * **substitution** - a step is done with an object not on its allowed list.
-    * **abandonment** - no events for `abandon_gap_s`, with required steps still to do.
-
-    Not here: **hesitation**, which is a step or gap more than 2.5 standard deviations
-    above this resident's own average, so it needs per-step baselines that no scenario
-    carries yet. A scenario cannot expect one until the baseline stage lands.
-
-    Also from the spec: events marked `unclear` are never errors, and an unclear step
-    still counts as having happened, so it cannot be reported as an omission either.
-    """
-    errors: list[TaskError] = []
-
-    def add(
-        error_type: ErrorType,
-        step_id: str | None,
-        t_start: float,
-        t_end: float,
-        evidence: list[EvidenceRef],
-    ) -> None:
-        errors.append(
-            TaskError(
-                error_id=f"{session_id}:x{len(errors)}",
-                session_id=session_id,
-                type=error_type,
-                step_id=step_id,
-                t_start=t_start,
-                t_end=t_end,
-                evidence=evidence,
-            )
-        )
-
-    counted = [event for event in events if not event.unclear]
-    done: list[str] = []
-    for index, event in enumerate(counted):
-        try:
-            step = graph.step(event.step_id)
-        except KeyError as exc:
-            raise ReplayError(f"{event.event_id}: {exc}") from exc
-        here = [
-            EvidenceRef(
-                kind=EvidenceKind.STEP_EVENT,
-                t_start=event.t_start,
-                t_end=event.t_end,
-                event_id=event.event_id,
-            )
-        ]
-
-        previous = counted[index - 1] if index else None
-        if (
-            previous is not None
-            and event.t_start - previous.t_end > abandon_gap_s
-            and not set(done).issuperset(graph.required_steps)
-        ):
-            add(
-                ErrorType.ABANDONMENT,
-                None,
-                previous.t_end,
-                event.t_start,
-                [_replay_ref(previous.t_end, event.t_start)],
-            )
-
-        if any(str(label) not in step.allowed_objects for label in event.objects):
-            add(ErrorType.SUBSTITUTION, step.id, event.t_start, event.t_end, here)
-
-        undone = step.deps - set(done)
-        if undone & {later.step_id for later in counted[index + 1 :]}:
-            add(ErrorType.SEQUENCE, step.id, event.t_start, event.t_end, here)
-
-        if step.once_only and step.id in done and done[-1] != step.id:
-            add(ErrorType.PERSEVERATION, step.id, event.t_start, event.t_end, here)
-
-        done.append(step.id)
-
-    happened = {event.step_id for event in events}
-    for step_id in graph.required_steps:
-        if step_id not in happened:
-            add(ErrorType.OMISSION, step_id, 0.0, session_end, [_replay_ref(0.0, session_end)])
-
-    return errors
-
-
-def _replay_ref(t_start: float, t_end: float) -> EvidenceRef:
-    """The skeleton replay over a span: what a nurse sees when there is no event to
-    point at (SPEC section 8: never a video clip)."""
-    return EvidenceRef(kind=EvidenceKind.SKELETON_REPLAY, t_start=t_start, t_end=t_end)
-
-
 # ----------------------------------------------------------------------- the replay
 
 
@@ -442,27 +217,48 @@ def change_flag(
     return flag_change(sessions, baseline, now), baseline
 
 
-def run(scenario: Scenario) -> dict[str, Any]:
-    """Run one loaded scenario through the pipeline and return the result as JSON data."""
-    events = scenario.events
+def session_id_of(scenario: Scenario) -> str:
+    """Read a session id from either input level, rejecting an empty scenario."""
     if scenario.frames:
-        session_id = scenario.frames[0].session_id
-        session_end = max(frame.t for frame in scenario.frames)
-    else:
-        session_id = events[0].session_id
-        session_end = max(event.t_end for event in events)
+        return scenario.frames[0].session_id
+    if scenario.events:
+        return scenario.events[0].session_id
+    raise ReplayError(f"{scenario.path}: no frames or events")
 
-    # Two people in frame means somebody is helping: the session is excluded from the
-    # baseline and scores zero (SPEC section 7).
-    assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)
 
-    errors = find_errors(
-        scenario.graph, events, session_id=session_id, session_end=session_end
-    )
+def assisted_of(frames: Sequence[CaptureFrame], min_seconds: float = ASSISTED_MIN_S) -> bool:
+    """Whether consecutive multi-person frames show sustained assistance."""
+    started: float | None = None
+    for frame in sorted(frames, key=lambda frame: frame.t):
+        if len(frame.poses) < 2:
+            started = None
+            continue
+        if started is None:
+            started = frame.t
+        if frame.t - started >= min_seconds:
+            return True
+    return False
+
+
+def score_session(scenario: Scenario, errors: Sequence[TaskError]) -> tuple[float, bool, bool]:
+    """The same finished-session verdict for offline replay and live playback."""
+    # Read every frame, including ones the live stream downsamples away.
+    assisted = assisted_of(scenario.frames)
     counts = Counter(str(error.type) for error in errors if not error.self_corrected)
     self_corrected = sum(1 for error in errors if error.self_corrected)
     score = session_score(counts, self_corrected, assisted)
-    flag, baseline = change_flag(score, scenario.expected.history)
+    flag, _ = change_flag(score, scenario.expected.history)
+    return score, assisted, flag
+
+
+def run(scenario: Scenario) -> dict[str, Any]:
+    """Run one loaded scenario through the pipeline and return the result as JSON data."""
+    events = scenario.events
+    session_id = session_id_of(scenario)
+    errors = classify_errors(events, scenario.graph, session_id=session_id, ended=True)
+    score, assisted, flag = score_session(scenario, errors)
+    # Offline output also includes the baseline's display statistics.
+    _, baseline = change_flag(score, scenario.expected.history)
 
     return {
         "scenario": scenario.name,

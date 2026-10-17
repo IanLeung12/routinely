@@ -17,6 +17,17 @@ docs/       architecture and process-flow diagrams
 
 Whole-repo checks: `scripts/ci.sh` (ruff + pytest for `pipeline/`, lint + test + build for `web/`).
 
+## Run the stack
+One command, no API keys needed (`OFFLINE_MODE=true`, mock data):
+
+```bash
+scripts/dev.sh up      # starts API (:8000) + dashboard (:5173) in the background, prints URLs
+scripts/dev.sh status  # check what's running
+scripts/dev.sh down    # stop both, free the ports
+```
+
+Logs: `.dev/api.log`, `.dev/web.log`. Override ports with `API_PORT` / `DASHBOARD_PORT`. `up` is idempotent — running it twice is fine.
+
 ## Run a worker (teammates)
 Needs `git`, `gh` (logged in), `python3`, and `claude` or `codex`.
 
@@ -31,9 +42,10 @@ AGENT=max TOOL=claude CLASS=light scripts/worker.sh  # loop: claim → PR → au
 - `TOOL=codex` for Codex. `ONCE=1` does one task and exits.
 - Model flags per class come from `MODELS.md`; override with `FLAGS="--model haiku"`.
 - Two workers on one machine? Give each its own clone.
+- On a usage-capped plan (e.g. ChatGPT Plus + Codex): `AGENT=you TOOL=codex CLASS=light BACKOFF=1800 scripts/worker.sh`. If a run hits the limit, the task is released and the worker waits instead of hogging it.
 
 ## How it works
 - `TASKS.md` lives on the `tasks` branch. `scripts/tasks.py` claims tasks atomically (push races lose cleanly).
 - Workers open PRs that auto-merge when CI (`scripts/ci.sh`) passes.
-- An orchestrator on Ian's VPS runs every ~20 min: writes new tasks, reviews merges, frees stuck claims, keeps `main` green.
+- An orchestrator on Ian's VPS runs every ~10 min: writes new tasks, reviews merges, frees stuck claims, keeps `main` green.
 - A tester on Ian's VPS runs when `main` changes: CI, scenario replays (`scripts/e2e.sh`), a browser walkthrough of the demo, and files `Bug:` tasks. Report: `TESTREPORT.md` on the `tasks` branch.

@@ -4,16 +4,32 @@ version = "0.1.0"
 description = "Routine Watch: capture, step recogniser, task graph, errors, baseline and API."
 requires-python = ">=3.11,<3.13"
 dependencies = [
+    "anthropic>=0.40",  # alert summaries (SPEC section 6.4); real calls only via api_cache
     "fastapi>=0.115",
+    "httpx2>=2.13",  # fastapi.testclient, and verifier.py's Gemini REST calls
     "pydantic>=2.9",
     "pyyaml>=6.0",  # the task graphs in src/routine_watch/tasks/*.yaml
     "uvicorn>=0.32",
+    "websockets>=13",  # uvicorn serves /ws/live only if a websocket library is there
 ]
 
 [project.optional-dependencies]
+# The capture process only: MediaPipe pose/hands, OpenCV frame grabbing and the local
+# detector runtime. Big, platform-specific and needed only when a camera or a video
+# file is involved, so they are imported lazily and left out of CI
+# (`scripts/ci.sh` syncs every extra but this one).
+capture = [
+    "mediapipe>=0.10.18",
+    "onnxruntime>=1.19",
+    "opencv-python>=4.10",
+]
+# TimescaleStore only (store.py); MemoryStore is the default and needs no database.
+# Installed by scripts/ci.sh via `uv sync --all-extras`.
+db = [
+    "psycopg[binary]>=3.1",
+]
 # Installed by scripts/ci.sh via `uv sync --all-extras`.
 dev = [
-    "httpx2>=2.13",  # fastapi.testclient needs an http client
     "jsonschema>=4.23",  # validates payloads against contracts/*.schema.json
     "pytest>=8.3",
     "ruff>=0.7",

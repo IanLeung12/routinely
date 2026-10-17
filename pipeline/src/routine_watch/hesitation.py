@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from routine_watch.baseline import HESITATION_SIGMA
+from routine_watch.change_detection import HESITATION_SIGMA
 
 
 def hesitations(

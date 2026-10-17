@@ -3,22 +3,28 @@ from routine_watch.explain import TemplateExplainer
 
 def test_mentions_every_error_with_timestamp():
     errors = [
-        {"type": "skipped_teabag_in_cup", "step_id": "add_teabag", "t_start": 42},
-        {"type": "repeated_pour", "step_id": "pour_water", "t_start": 75},
+        {"type": "omission", "step_id": "teabag_in_cup", "t_start": 42},
+        {"type": "perseveration", "step_id": "pour", "t_start": 75},
     ]
     baseline = {"observed": 2, "baseline_mean": 0.2, "baseline_days": 14}
     result = TemplateExplainer().summarise(errors, baseline, [])
 
-    assert "skipped teabag in cup" in result
-    assert "0:42" in result
-    assert "repeated pour" in result
-    assert "1:15" in result
+    assert "skipped teabag in cup at 0:42" in result
+    assert "repeated pour at 1:15" in result
     assert "0.2" in result
     assert "14" in result
 
 
+def test_unknown_error_type_falls_back_to_type_and_step():
+    errors = [{"type": "mystery", "step_id": "pour_water", "t_start": 5}]
+    baseline = {"observed": 1, "baseline_mean": 0.2, "baseline_days": 14}
+    result = TemplateExplainer().summarise(errors, baseline, [])
+
+    assert "mystery at pour water at 0:05" in result
+
+
 def test_includes_context_only_when_given():
-    errors = [{"type": "skipped_teabag_in_cup", "step_id": "add_teabag", "t_start": 42}]
+    errors = [{"type": "omission", "step_id": "teabag_in_cup", "t_start": 42}]
     baseline = {"observed": 1, "baseline_mean": 0.2, "baseline_days": 14}
 
     with_context = TemplateExplainer().summarise(
@@ -31,7 +37,7 @@ def test_includes_context_only_when_given():
 
 
 def test_never_mentions_diagnosis_or_unstated_facts():
-    errors = [{"type": "skipped_teabag_in_cup", "step_id": "add_teabag", "t_start": 42}]
+    errors = [{"type": "omission", "step_id": "teabag_in_cup", "t_start": 42}]
     baseline = {"observed": 1, "baseline_mean": 0.2, "baseline_days": 14}
     result = TemplateExplainer().summarise(errors, baseline, [])
 

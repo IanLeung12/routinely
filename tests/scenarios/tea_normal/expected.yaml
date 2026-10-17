@@ -5,8 +5,10 @@
 # is skipped because it is optional. Neither may ever show up as an error, so this is
 # the scenario that catches a classifier that has become too eager.
 #
-# Written at step level: the recogniser is not here yet, and these steps are what it
-# will be asked to produce. See README.md.
+# Written at frame level (like tea_no_kettle) so routine_watch.evidence has a real,
+# distinct normal session to replay as the alert screen's ghost overlay: the alert
+# evidence replays tea_no_kettle, and the overlay must not be the same frames with a
+# new session_id. See README.md.
 
 task: tea
 

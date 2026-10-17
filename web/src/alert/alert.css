@@ -1,0 +1,64 @@
+/* Alert / evidence view (SPEC section 9, screen 4): a nurse should understand a
+   flagged alert in about 10 seconds, so the plain-language summary and the
+   baseline comparison come first, before the error-by-error detail. */
+
+.alert-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.alert-view__summary {
+  font-size: var(--text-lg);
+  margin: 0;
+}
+
+.alert-view__baseline,
+.alert-view__threshold {
+  color: var(--muted);
+  margin: 0;
+}
+
+.error-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.error-list__open {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.error-list__open:hover {
+  border-color: var(--accent);
+}
+
+.error-list__phrase {
+  flex: 1;
+}
+
+.error-list__time {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.alert-view__evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}

@@ -1,0 +1,42 @@
+# The dry swallow: the resident pours a glass of water, takes the pill out of the
+# bottle, caps it again - and walks away without drinking any of it.
+#
+# One sentence of difference from meds_normal has to produce exactly one error. The
+# glass of water is poured and left standing, so nothing on that branch is missing;
+# `drink_water` is required and never happens, so the task ending without it is an
+# omission (SPEC section 7). Closing the bottle is optional and taken here, which
+# must not count for or against anything.
+#
+# This is the second task's version of the demo's bad session, and it is what shows
+# the whole chain - graph, errors, score, baseline, flag - runs off the task file
+# alone. The resident's own history is quiet apart from one bad session 30 hours ago,
+# so this second one inside 48 hours flags a change for a nurse to review.
+#
+# Written at step level, for the same reason as meds_normal. See README.md.
+
+task: meds
+
+steps:
+  - get_glass
+  - fill_glass
+  - open_organiser
+  - take_pill
+  - close_organiser # optional, taken
+  # drink_water never happens: the pill went down dry
+
+errors:
+  - { type: omission, step: drink_water }
+score: 3.0 # omission 3.0
+
+# A week of quiet mornings, then one bad session 30 hours ago.
+history:
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, score: 0.0 }
+  - { hours_ago: 30, errors: { omission: 1 } }
+
+# Two sessions above this resident's own threshold inside 48 hours.
+flag: true

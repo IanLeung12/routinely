@@ -13,8 +13,8 @@ be read and reviewed without reading any code::
     graph.allowed_objects("stir")   # {'spoon', 'teaspoon', 'cup'}
     graph.is_optional("milk")       # True
 
-The task-graph tracker (`routine_watch.task_graph`) and the error classifier
-(`routine_watch.errors`) read a graph; nothing here looks at step events itself.
+The error classifier (`routine_watch.errors`) reads a graph; nothing here looks at
+step events itself.
 """
 
 from __future__ import annotations
