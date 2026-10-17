@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 0c0a667
+- last-reviewed: 70cc2d7
 
 ## Tasks
 
@@ -629,4 +629,21 @@ What: `routine_watch.session_log` is process-global and `demo_residents()` reads
 Interface: add `pipeline/tests/conftest.py` with an `autouse` fixture calling `session_log.reset()` before and after each test; drop the now-duplicate fixture in `test_live_flag.py`.
 Acceptance:
 - `cd pipeline && uv run pytest -q -p no:cacheprovider` passes, and passes with `tests/test_live.py` run before `tests/test_demo.py` in one invocation.
+- `scripts/ci.sh` passes.
+
+### T127 — Review: CORS_ORIGINS undocumented and ignores dev.sh's DASHBOARD_PORT
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: .env.example, scripts/dev.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: T119 (PR #101) added `CORS_ORIGINS` (default `http://localhost:5173`) to `pipeline/src/routine_watch/api.py`, but `.env.example` doesn't document it and `scripts/dev.sh` doesn't set it, so `DASHBOARD_PORT=5174 scripts/dev.sh up` makes the dashboard silently fall back to mock data again.
+Interface: in `scripts/dev.sh`, next to the `VITE_API_URL` export, add `export CORS_ORIGINS=${CORS_ORIGINS:-$DASHBOARD_URL,http://127.0.0.1:${DASHBOARD_PORT}}`. In `.env.example` add `CORS_ORIGINS=http://localhost:5173` with a one-line comment (comma-separated dashboard origins the API accepts). Read only those two files and the `_CORS_ORIGINS` block in `api.py`.
+Acceptance:
+- `bash -n scripts/dev.sh` passes; `.env.example` lists `CORS_ORIGINS`.
 - `scripts/ci.sh` passes.
