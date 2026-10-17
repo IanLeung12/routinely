@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 13032a4
+- last-reviewed: 60dce5a
 
 ## Tasks
 
@@ -475,20 +475,20 @@ Acceptance:
 - `LiveSession.test.tsx` shows the "usually" values from the mocked `baseline`, not from `sessions`
 - `scripts/ci.sh` passes
 
-### T231 — Bug: integration check failing on main
+### T231 — Test: integration.sh dashboard check retries instead of failing on a cold Vite start
 - status: todo
-- class: standard
-- priority: 0
-- kind: bug
+- class: light
+- priority: 2
+- kind: test
 - deps: —
-- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- area: scripts/integration.sh
 - owner: —
 - claimed: —
 - pr: —
 - source: integration
 
-What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 60dce5a:
-  FAIL dashboard did not render (no 'Routine Watch' in DOM)
-Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+What: The integration run on main @ 60dce5a failed with "dashboard did not render (no 'Routine Watch' in DOM)", but the orchestrator reran `scripts/integration.sh` on the same sha at 10:52 UTC and it passed, so it is a flake (likely the headless-Chrome DOM dump racing Vite's first compile). Make the check robust, not looser.
+Interface: in `scripts/integration.sh`, the "Rendered dashboard" block (around line 45): retry the `--dump-dom` up to 3 times with a 3 s sleep between attempts before calling `fail`; keep both existing grep checks unchanged.
 Acceptance:
-- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+- a slow first render no longer fails the run; a dashboard that never renders still fails with the same message
+- `scripts/integration.sh` prints OK and `scripts/ci.sh` passes
