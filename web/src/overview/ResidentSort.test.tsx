@@ -9,6 +9,7 @@ import { sortResidents } from './ResidentSort.tsx'
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  sessionStorage.clear()
 })
 
 function resident(overrides: Partial<ResidentSummary> & { id: string }): ResidentSummary {

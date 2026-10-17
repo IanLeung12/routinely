@@ -6,11 +6,10 @@ import { Loading } from '../ui/Loading.tsx'
 import { StatusChip } from '../ui/StatusChip.tsx'
 import { fetchResidents } from './api.ts'
 import './overview.css'
+import { loadOverviewPrefs, saveOverviewPrefs, type UnitFilter } from './overviewPrefs.ts'
 import { ResidentSort, sortResidents, type SortMode } from './ResidentSort.tsx'
 import { Sparkline } from './Sparkline.tsx'
 import type { ResidentSummary } from './types.ts'
-
-type UnitFilter = 'all' | 'flagged' | 'watch' | 'paused'
 
 const FILTERS: { id: UnitFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -56,9 +55,13 @@ export function UnitOverview({
   refreshKey?: number | string
 }) {
   const [residents, setResidents] = useState<ResidentSummary[] | null>(null)
-  const [filter, setFilter] = useState<UnitFilter>('all')
-  const [sortMode, setSortMode] = useState<SortMode>('default')
+  const [filter, setFilter] = useState<UnitFilter>(() => loadOverviewPrefs().filter)
+  const [sortMode, setSortMode] = useState<SortMode>(() => loadOverviewPrefs().sort)
   const [pausedRooms, setPausedRooms] = useState<string[]>([])
+
+  useEffect(() => {
+    saveOverviewPrefs({ filter, sort: sortMode })
+  }, [filter, sortMode])
 
   useEffect(() => {
     let cancelled = false
