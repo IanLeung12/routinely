@@ -140,10 +140,11 @@ Acceptance: readable in 10 s (one glance: what changed, how sure, what to check)
 - priority: 0
 - kind: improvement
 - deps: T401
-- area: web/src/live/, web/src/handoff/
+- area: web/src/live/, web/src/handoff/Handoff.tsx, web/src/handoff/handoff.css, web/src/handoff/Handoff.test.tsx, web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/Handoff.defaults.test.tsx
 - owner: —
 - claimed: —
 - pr: —
+- note: Delta pills split out to T428 (HandoffDelta on Pill); just keep using <HandoffDelta>.
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
