@@ -170,7 +170,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_errors.py -q` and `scripts/ci.sh` pass. Once T005 is merged, the `tea_skip_teabag_pour_twice` scenario must be driven by this classifier in a follow-up (note it in the PR).
 
 ### T011 — Step recogniser state rules
-- status: in-review
+- status: done
 - class: heavy
 - priority: 1
 - deps: T002, T003
