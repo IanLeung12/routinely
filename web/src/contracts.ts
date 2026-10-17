@@ -2,7 +2,9 @@
 // `uv run python -m routine_watch.contracts`. Do not edit by hand.
 //
 // What flows between the pipeline stages and into the dashboard (SPEC sections 6, 7
-// and 16). Skeletons, boxes and timestamps only: no raw frames anywhere.
+// and 16), plus the route payloads the dashboard reads through these types rather
+// than a copy of its own. Skeletons, boxes and timestamps only: no raw frames
+// anywhere.
 //
 // Times inside a session (t, t_start, t_end) are seconds since the session started.
 // Wall-clock times (started_at, created_at) are ISO 8601 strings.
@@ -158,6 +160,23 @@ export type Landmark = {
 }
 
 /**
+ * The ghost layer beside `SessionReplay` (`GET /residents/{id}/normal_replay`). The same window
+ * from one of this resident's normal sessions, for the evidence view to lay their usual routine
+ * under the session being reviewed (SPEC section 9, screen 4). Asked about the resident rather
+ * than a session, because the point is what they normally do and not one attempt; the frames
+ * come back under a normal session's own id (`routine_watch.evidence`), never the reviewed
+ * session's.
+ */
+export type NormalReplay = {
+  resident_id: string
+  /**
+   * The window's frames from a normal session, oldest first. Skeletons, boxes and timestamps
+   * only, like `SessionReplay.frames`.
+   */
+  frames: CaptureFrame[]
+}
+
+/**
  * One object box in one frame, from the local detector (SPEC section 6.1). The detector always
  * runs locally from downloaded weights, never hosted inference.
  */
@@ -194,6 +213,41 @@ export const OBJECT_LABEL_VALUES = [
 export type ObjectLabel = (typeof OBJECT_LABEL_VALUES)[number]
 
 /**
+ * One entry of the pattern library (`GET /patterns`, SPEC section 7.5). The library held as
+ * data (`routine_watch.patterns_library.LIBRARY`) as the route reads it out: what the rule
+ * looks for and how much each signal counts, the time profile it follows, what to rule out, how
+ * soon somebody should look, and where the pattern comes from. A cited rules library anybody
+ * can audit, and nothing about a resident - the scored answer for one change is `PatternMatch`.
+ * The scoring machinery stays behind the route: which signals a pattern is defined by, the
+ * care-record context that raises or lowers it, its confidence ceiling.
+ * `routine_watch.patterns` owns all of that, so a reader gets the rule rather than the
+ * arithmetic.
+ */
+export type PatternLibraryEntry = {
+  /** The pattern in the library, e.g. 'sudden_change'. */
+  pattern_id: string
+  /** How the pattern is shown to a nurse. */
+  name: string
+  /**
+   * Signal name -> weight: what the rule looks for and how much each signal counts. The names
+   * are `routine_watch.patterns.SIGNALS`.
+   */
+  signals: Record<string, number>
+  time_profile: PatternTimeProfile
+  /**
+   * What to rule out: a shared SuggestedCheck where one fits, otherwise the pattern's own
+   * wording, exactly as `PatternMatch.checks` carries it.
+   */
+  checks: (SuggestedCheck | string)[]
+  urgency: PatternUrgency
+  /**
+   * Where the pattern comes from: a SPEC section, a clinical screen, a citation. Never empty -
+   * an uncited rule is not a pattern (SPEC section 7.5).
+   */
+  source: string
+}
+
+/**
  * One pattern a flagged change is consistent with (SPEC section 7.5). A flag says *something*
  * changed; these say what kind of change it looks like, so the care team knows what to rule out
  * first. Scored by deterministic rules over features the pipeline already has
@@ -220,6 +274,27 @@ export type PatternMatch = {
   checks: (SuggestedCheck | string)[]
 }
 
+/**
+ * How long a change of this kind takes to show up (SPEC section 7.5).
+ * `routine_watch.patterns_library.TimeProfile` as `GET /patterns` serves it: a step change over
+ * days and a drift over weeks are different patterns, so the window a change has been building
+ * for is part of what the library says to look for.
+ */
+export type PatternTimeProfile = {
+  /**
+   * The onset window in days, earliest first: how long a change of this kind is expected to
+   * have been building.
+   */
+  onset_days: [number, number]
+  /** How far outside the onset window still counts for anything. */
+  tolerance_days: number
+  /**
+   * The phrase a nurse reads, kept next to the numbers it describes, e.g. 'a step change within
+   * 1-3 days'.
+   */
+  note: string
+}
+
 /** How soon a pattern wants a human to look (SPEC section 7.5). */
 export const PATTERN_URGENCY_VALUES = ['routine', 'next_round', 'same_shift', 'urgent'] as const
 export type PatternUrgency = (typeof PATTERN_URGENCY_VALUES)[number]
@@ -229,6 +304,30 @@ export type Pose = {
   /** The 33 MediaPipe pose landmarks, in MediaPipe's own order. */
   landmarks: Landmark[]
   score?: number | null
+}
+
+/**
+ * One resident's slow trend (`GET /residents/{id}/drift`, SPEC section 8). What the drift card
+ * on the resident screen draws: how fast this resident's daily error score is rising, over how
+ * many days of their own history, read with a robust slope so one bad day cannot tilt it
+ * (`routine_watch.drift`). A slow drift is flagged for review on its own terms, separately from
+ * a sudden change (SPEC section 7.5); `trending` is the whole judgement, and it is about the
+ * trend, never about the resident.
+ */
+export type ResidentDrift = {
+  resident_id: string
+  /** Daily error score gained per day. Negative means improving. */
+  slope_per_day: number
+  /**
+   * Days this resident has sessions on. Counted, not spanned: a gap cannot satisfy the minimum
+   * history a trend needs.
+   */
+  days: number
+  /**
+   * A rise worth a look: enough days of history and a slope above `routine_watch.drift.drift`'s
+   * minimum. False is a real answer, not 'unknown'.
+   */
+  trending: boolean
 }
 
 /** One attempt at one task by one resident (SPEC section 6.3). */
@@ -244,6 +343,27 @@ export type Session = {
   assisted?: boolean
   /** Weighted sum of this session's errors. Null until the session ends. */
   score?: number | null
+}
+
+/**
+ * One window of one session's skeleton replay (`GET /sessions/{id}/replay`). What "open
+ * evidence" plays beside an alert (SPEC section 8): the capture frames around the moment an
+ * error happened - poses, hand landmarks, object boxes and their timestamps, never video. The
+ * window asked for is padded, clipped to the session and thinned to the requested frame rate
+ * (`routine_watch.evidence`), so what comes back is whatever frames fall inside it rather than
+ * the window itself.
+ */
+export type SessionReplay = {
+  /**
+   * The session asked about. Every frame carries it too, so a player holding frames alone still
+   * knows what it is showing.
+   */
+  session_id: string
+  /**
+   * The window's frames, oldest first. Skeletons, boxes and timestamps only: the image each was
+   * read from was dropped when it was processed.
+   */
+  frames: CaptureFrame[]
 }
 
 /** A step of the task, seen happening between two times (SPEC section 6.2). */

@@ -16,7 +16,8 @@ into the dashboard. `PROTOCOLS` are the messages a socket carries - the live vie
 with: a resident, the overview's row for one, their slow trend, a shift handoff, an
 alert in full, an entry of the pattern library, a window of skeleton replay, the
 rooms whose monitoring is paused. `REQUESTS` are what the dashboard sends back: a
-nurse's feedback on an alert. The last three get a schema but no TypeScript, because
+nurse's feedback on an alert. Every one of them gets a schema; `CONTRACTS` and the
+payloads in `WEB_PAYLOADS` also get a TypeScript type, and the rest do not, because
 the dashboard reads the socket and those routes through its own types.
 
 Privacy (SPEC section 8): nothing here has a field for an image, a video frame or a
@@ -1040,15 +1041,13 @@ CONTRACTS: tuple[type[_Contract], ...] = (
 #: to - `pipeline/tests/test_live_contract.py` validates a real session against it.
 PROTOCOLS: tuple[type[BaseModel], ...] = (LiveMessage,)
 
-#: What the dashboard's HTTP routes answer with: a schema file each, no TypeScript,
-#: for the same reason as the protocols above - the dashboard mirrors these by hand
-#: in `web/src/overview/types.ts`, `web/src/handoff/types.ts`,
-#: `web/src/resident/api.ts`, `web/src/patterns/types.ts`,
-#: `web/src/evidence/api.ts` and `web/src/about/monitoringApi.ts`, or reads them
-#: through a record's own type (`AlertDetail` through `Alert`, a replay's frames
-#: through `CaptureFrame`), so the schema is what the two sides are held to.
-#: `pipeline/tests/test_api_payload_contracts.py` validates the real routes against
-#: them.
+#: What the dashboard's HTTP routes answer with: a schema file each, and a
+#: TypeScript type for the ones in `WEB_PAYLOADS` below. The rest the dashboard
+#: still mirrors by hand (`web/src/overview/types.ts`, `web/src/handoff/types.ts`,
+#: `web/src/about/monitoringApi.ts`) or reads through a record's own type
+#: (`AlertDetail` through `Alert`), so for those the schema is what the two sides are
+#: held to. `pipeline/tests/test_api_payload_contracts.py` validates the real routes
+#: against them all.
 PAYLOADS: tuple[type[BaseModel], ...] = (
     ResidentSummary,
     Resident,
@@ -1061,6 +1060,20 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
     Monitoring,
     RoomMonitoring,
     RoomMonitoringHistory,
+)
+
+#: The payloads the dashboard reads through a generated type instead of a copy of
+#: its own: the drift card's, the pattern library's entry and both replay windows'.
+#: They are payloads like the rest above - this is only which of them
+#: `web/src/contracts.ts` holds a type for as well, so a field changed here breaks
+#: the dashboard's build (`web/src/resident/api.ts`, `web/src/patterns/types.ts`,
+#: `web/src/evidence/api.ts` import them) instead of a test matching field names in
+#: its source.
+WEB_PAYLOADS: tuple[type[BaseModel], ...] = (
+    ResidentDrift,
+    PatternLibraryEntry,
+    SessionReplay,
+    NormalReplay,
 )
 
 #: What the dashboard sends the other way: a schema file each, no TypeScript. A
@@ -1092,7 +1105,9 @@ _TS_HEADER = """// Generated from pipeline/src/routine_watch/contracts.py by
 // `uv run python -m routine_watch.contracts`. Do not edit by hand.
 //
 // What flows between the pipeline stages and into the dashboard (SPEC sections 6, 7
-// and 16). Skeletons, boxes and timestamps only: no raw frames anywhere.
+// and 16), plus the route payloads the dashboard reads through these types rather
+// than a copy of its own. Skeletons, boxes and timestamps only: no raw frames
+// anywhere.
 //
 // Times inside a session (t, t_start, t_end) are seconds since the session started.
 // Wall-clock times (started_at, created_at) are ISO 8601 strings.
@@ -1230,8 +1245,14 @@ def _ts_type(node: dict[str, Any]) -> str:
     if "enum" in node:
         return " | ".join(_ts_literal(value) for value in node["enum"])
     if node.get("type") == "array":
+        if "prefixItems" in node:
+            return "[" + ", ".join(_ts_type(item) for item in node["prefixItems"]) + "]"
         item = _ts_type(node.get("items", {}))
         return f"({item})[]" if " | " in item else f"{item}[]"
+    if node.get("type") == "object":
+        values = node.get("additionalProperties")
+        if isinstance(values, dict):
+            return f"Record<string, {_ts_type(values)}>"
     return _TS_SCALARS.get(node.get("type"), "unknown")
 
 
@@ -1272,7 +1293,7 @@ def _ts_block(name: str, node: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def typescript(models: tuple[type[BaseModel], ...] = CONTRACTS) -> str:
+def typescript(models: tuple[type[BaseModel], ...]) -> str:
     """The dashboard's types, emitted from the same schemas the pipeline validates."""
     named: dict[str, dict[str, Any]] = {}
 
@@ -1307,7 +1328,7 @@ def generated_files(root: Path | None = None) -> dict[Path, str]:
     files[base / "contracts" / "examples" / "capture.jsonl"] = "".join(
         json.dumps(frame.model_dump(mode="json")) + "\n" for frame in example_capture_frames()
     )
-    files[base / "web" / "src" / "contracts.ts"] = typescript()
+    files[base / "web" / "src" / "contracts.ts"] = typescript((*CONTRACTS, *WEB_PAYLOADS))
     return files
 
 

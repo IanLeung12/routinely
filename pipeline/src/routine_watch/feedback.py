@@ -11,11 +11,13 @@ calls this lives in `routine_watch.api`.
     store.record(alert_id, resident_id, AlertFeedback(...), cause="slow_drift")
     store.threshold(resident_id, base=0.5)
     store.pattern_weights(resident_id)      # {"slow_drift": 1.1}
+    store.history(resident_id)              # what was answered, newest first
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from .contracts import AlertFeedback, FeedbackVerdict
 from .patterns_library import BY_ID as PATTERNS_BY_ID
@@ -58,6 +60,16 @@ class _Answer:
     top_pattern: str | None = None
 
 
+def _as_utc(at: datetime) -> datetime:
+    """`at` as an aware UTC time, reading a naive timestamp as UTC.
+
+    The API always logs an aware `datetime.now(UTC)`, but a caller that built an
+    `AlertFeedback` by hand may not have, and sorting the two kinds against each
+    other raises rather than ordering them.
+    """
+    return at if at.tzinfo is not None else at.replace(tzinfo=UTC)
+
+
 class FeedbackStore:
     """Logged nurse feedback, and the per-resident tuning it implies."""
 
@@ -92,6 +104,29 @@ class FeedbackStore:
         """The stored cause for an alert, or None if it has none."""
         answer = self._by_alert.get(alert_id)
         return answer.cause if answer else None
+
+    def history(self, resident_id: str) -> list[dict]:
+        """What this resident's nurses have answered, newest first.
+
+        One row per alert - re-answering an alert replaces its row rather than
+        piling a second one on top - as ``{alert_id, verdict, cause, at}``: the
+        record behind `pattern_weights`, so a nurse can see which answers moved
+        this resident's ranking (SPEC Nice to have 8) instead of it changing
+        silently. Answers made at the same moment keep the order they came in.
+        """
+        rows = [
+            {
+                "alert_id": alert_id,
+                "verdict": answer.feedback.verdict.value,
+                "cause": answer.cause,
+                "at": answer.feedback.at,
+            }
+            for alert_id, answer in self._by_alert.items()
+            if answer.resident_id == resident_id
+        ]
+        rows.reverse()
+        rows.sort(key=lambda row: _as_utc(row["at"]), reverse=True)
+        return rows
 
     def _answers_for(self, resident_id: str) -> list[_Answer]:
         """Every alert's current answer for one resident.
