@@ -45,6 +45,14 @@ describe('DemoBanner', () => {
     await screen.findByText("Couldn't reset the demo")
     expect((screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement).disabled).toBe(false)
   })
+
+  it('announces the reset error to screen readers', async () => {
+    const onReset = vi.fn().mockRejectedValue(new Error('demo reset failed: 404'))
+    render(<DemoBanner onReset={onReset} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain("Couldn't reset the demo")
+  })
 })
 
 describe('default onReset', () => {
