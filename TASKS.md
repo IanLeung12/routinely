@@ -425,15 +425,15 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_scenarios_cover_library.py` passes; `scripts/ci.sh` passes.
 
 ### T148 — monitoring.py: in-memory per-room monitoring on/paused store
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/monitoring.py (new), pipeline/tests/test_monitoring.py (new)
 - source: proposed
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T08:29Z
 - pr: —
 
 What: Backend half of the per-room pause switch (SPEC §12 "monitoring can be turned off per room"; UI component landed in T103). Pure module, no API wiring yet. Read only `pipeline/src/routine_watch/feedback.py` (style of an in-memory store).
