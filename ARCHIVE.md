@@ -3687,3 +3687,41 @@ Acceptance:
 - `grep -c "style={{" web/src/resident/DriftCard.tsx` is 0
 - test asserts the trending summary has the `drift-card__summary` class and the card keeps `data-state="trending"`
 - `cd web && npm test -- DriftCard` and `scripts/ci.sh` pass
+
+### T216 — HeatCalendar grid and cells: CSS classes instead of inline styles
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:17Z
+- pr: #206
+- rating: 5/5 clear
+
+What: after T197 moved the legend to `heatCalendar.css`, the grid (line ~24) and day cells (~30, ~52) still use inline styles. Move static layout to classes (`heat-grid`, `heat-cell`). A per-cell colour that depends on the score may stay inline only as a single CSS custom property (e.g. `style={{ '--heat': ... }}`). No visual change.
+Interface: read only the area files.
+Acceptance:
+- HeatCalendar.tsx has at most one inline style, and it only sets a CSS custom property
+- existing HeatCalendar tests pass; one new test asserts cells have the `heat-cell` class
+- `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass
+
+### T217 — Resident detail: heading order, landmark, focus on open
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ResidentDetail.tsx, web/src/resident/ResidentDetail.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T10:17Z
+- pr: #208
+- rating: 5/5 clear
+
+What: same accessibility pass as T213 does for the alert view, on the resident detail screen: one `h1` (the resident's display name), section headings as `h2` in visual order, the screen wrapped in `<main>` or a labelled region, and focus moved to the `h1` when the screen opens so a screen-reader user hears whose page it is.
+Interface: ResidentDetail only; don't touch child components (BaselineChart, HeatCalendar, DriftCard, SessionList, ContextTimeline) beyond what ResidentDetail renders around them.
+Acceptance:
+- test: exactly one `heading` of level 1 with the resident's name; it has focus after render
+- test: no heading level is skipped (h1 → h2)
+- `cd web && npm test -- ResidentDetail` and `scripts/ci.sh` pass
