@@ -167,7 +167,7 @@ Acceptance:
 - `shellcheck scripts/smoke.sh` clean if available; `scripts/ci.sh` passes.
 
 ### T099 — Unit overview: one-line status summary at the top
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
