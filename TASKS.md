@@ -321,7 +321,7 @@ Acceptance: Vitest for many/one/zero supported people and the add-by-code flow; 
 ### T411 — Wording pass: people, not just residents and nurses
 - status: todo
 - class: light
-- priority: 2
+- priority: 1
 - kind: improvement
 - source: ian
 - deps: T408, T409, T410
