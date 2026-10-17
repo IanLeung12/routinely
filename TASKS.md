@@ -511,3 +511,21 @@ Acceptance:
 - pytest: mrs-k's `baseline.usual_errors` equals the mean over her first `BASELINE_DAYS` own sessions, and is lower than the whole-history mean
 - `LiveSession.test.tsx` shows the "usually" values from the mocked `baseline`, not from `sessions`
 - `scripts/ci.sh` passes
+
+### T231 — Bug: integration check failing on main
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- owner: —
+- claimed: —
+- pr: —
+- source: integration
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 60dce5a:
+  FAIL dashboard did not render (no 'Routine Watch' in DOM)
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
