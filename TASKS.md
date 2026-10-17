@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f12dfd8
+- last-reviewed: cdff38c
 
 ## Tasks
 
@@ -313,7 +313,7 @@ Interface (`web/src/person/MyRoutine.tsx` + pieces):
 - Status in plain words ("Your routine looks like your usual this week" / "A few things looked different today").
 - One chart: my usual vs today/this week (reuse existing chart components or the chart kit if merged).
 - Recent sessions (task, time, what went smoothly / what was different).
-- **Notes** when a change is flagged: the same patterns, rephrased for the person ("Some steps took longer than usual for you, mostly in the evening. Worth mentioning to Lena or your doctor."), with a "tell my supervisor" button (mock).
+- **Notes** when a change is flagged: the same patterns, rephrased for the person ("Some steps took longer than usual for you, mostly in the evening. Worth mentioning to Lena or your doctor."), with a "tell my supervisor" button (mock). Use `personNote`/`personStatus` from `web/src/person/personNotes.ts` (T423) if merged.
 - **Who can see this**: supervisors list with remove; "Invite someone" (shows the invite code + copy link from T408's API); self-monitoring state when there's nobody.
 - Privacy: pause monitoring, "what's stored" (skeletons only, no video), and "your supervisors see exactly this".
 Acceptance:
@@ -442,8 +442,8 @@ Acceptance:
 - priority: 1
 - kind: feature
 - source: ian
-- deps: —
-- area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/, docs/DEMO.md, SPEC.md
+- deps: T424
+- area: pipeline/src/routine_watch/capture.py, pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py, scripts/camera.sh, web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx, docs/DEMO.md, SPEC.md
 - owner: —
 - claimed: —
 - pr: —
@@ -454,6 +454,7 @@ Interface:
 - `preview.py`: an MJPEG endpoint served by the **capture process itself**, bound to `127.0.0.1` only (`PREVIEW_PORT`, default 8765), off unless `CAMERA_PREVIEW=1` / `scripts/camera.sh --preview`. Frames come from the same capture loop (one camera handle; Windows can't open the webcam twice), downscaled (≤640 px, ~10 fps), held in memory for the current frame only, never written to disk. Refuses non-loopback clients.
 - Web (`web/src/live/`): "Show camera preview (this device only)" toggle on the Live screen, shown only when the page is on localhost and the preview responds. Video underneath, the existing skeleton + boxes canvas on top, aligned to the same coordinates; a visible "Preview · not recorded · this device only" badge. Falls back to skeleton-only everywhere else, quietly.
 - `scripts/camera.sh --preview` turns it on and prints the URL; `docs/DEMO.md` explains it; SPEC §12/§16 gets one line: optional local preview, loopback only, never stored or transmitted.
+Split (orch): the web toggle/overlay component is T424 (`web/src/live/CameraPreview.tsx`). This task serves `GET /preview.mjpg` and `GET /health` → `{"ok": true}` with `Access-Control-Allow-Origin: *` on the loopback server, and wires `<CameraPreview>` around the existing `<SkeletonView>` in `LiveSession.tsx`.
 Acceptance:
 - Tests: preview rejects a non-loopback client; nothing under the repo or `REPLAY_DIR`/`CAMERA_RECORD` contains image data after a session with preview on (privacy test); capture still writes the same JSONL with preview on or off.
 - Web test: toggle hidden when not on localhost or preview unreachable; badge shown when on.
@@ -548,3 +549,49 @@ Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs
 
 What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the HeatCalendar files. Muted Fey palette: tinted cells from the status tokens, hairline gaps, small rounded cells, muted weekday labels, legend as small pills. No hex in the component; behaviour unchanged.
 Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.
+
+### T423 — Person view: person-facing wording for status and pattern notes
+- status: todo
+- class: light
+- priority: 1
+- kind: feature
+- source: orch (carved from T409)
+- deps: —
+- area: web/src/person/personNotes.ts, web/src/person/personNotes.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Pure functions that turn existing nurse-facing data into calm, personal copy for someone watching themselves (SPEC §17 "Person view"). T409 ("My routine") will consume them.
+Why: inherits T409 — the person view is half of the roles pivot judges will see.
+Read only: `web/src/contracts.ts` (type `PatternMatch`, ~line 374), `web/src/wording.test.ts` (style of the existing wording checks).
+Interface (`web/src/person/personNotes.ts`):
+- `personStatus(state: 'normal' | 'watch' | 'flagged'): string` — e.g. normal "Your routine looks like your usual this week", watch "A few things looked a little different lately", flagged "A few things looked different today".
+- `personNote(match: PatternMatch, supervisorName?: string): { title: string; body: string }` — one entry per pattern_id: `sudden_change`, `slow_drift`, `evening_worsening`, `motor_slowing`, `executive_pattern`, `one_sided_change`, plus a generic fallback for unknown ids. Describe what was different in everyday words ("Some steps took longer than usual, mostly in the evening") and end with "Worth mentioning to <supervisorName> or your doctor." (or "Worth mentioning to your doctor or someone you trust." without a name). Never reuse the nurse-facing `name` (it has clinical terms like "delirium").
+Acceptance:
+- `web/src/person/personNotes.test.ts` (Vitest): every pattern id + the fallback returns non-empty title/body; with and without supervisor name; for all outputs, case-insensitive: no "diagnos", "patient", "delirium", "dementia", "stroke", "danger", "warning", "emergency", "urgent".
+- `cd web && npx vitest run src/person/personNotes.test.ts` and `scripts/ci.sh` pass.
+
+### T424 — Live screen: local camera preview component (toggle, video under skeleton, badge)
+- status: todo
+- class: light
+- priority: 1
+- kind: feature
+- source: orch (carved from T416)
+- deps: —
+- area: web/src/live/CameraPreview.tsx, web/src/live/CameraPreview.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: A self-contained React component for T416's local-only camera preview. Not wired into any screen here (T416 does that).
+Why: inherits T416 — the demo is far more convincing with the real kitchen under the skeleton.
+Read only: `web/src/live/SkeletonView.tsx` (renders an `<svg>` sized `width`×`height`, default 480×360).
+Interface (`web/src/live/CameraPreview.tsx`):
+- `export function CameraPreview({ port = 8765, children, probe }: { port?: number; children: React.ReactNode; probe?: () => Promise<boolean> })`.
+- Default probe: only if `window.location.hostname` is `localhost`, `127.0.0.1` or `::1`, `fetch('http://127.0.0.1:<port>/health')` with a 1 s timeout (AbortController); true when it returns `{ ok: true }`. Any error → false, no console noise.
+- Probe false: render `children` only (no toggle, nothing else).
+- Probe true: a toggle button "Show camera preview (this device only)" (`aria-pressed`). On: an `<img src="http://127.0.0.1:<port>/preview.mjpg" alt="">` fills the box, `children` absolutely positioned on top at the same size, and a visible badge "Preview · not recorded · this device only". Off: children only.
+Acceptance:
+- `CameraPreview.test.tsx` (Vitest + Testing Library, inject `probe`): toggle hidden when probe false; hidden on a non-localhost hostname with the default probe (mock `fetch`, assert not called); toggle on shows img + badge + children; toggle off removes img; button keyboard operable.
+- `cd web && npx vitest run src/live/CameraPreview.test.tsx` and `scripts/ci.sh` pass.
