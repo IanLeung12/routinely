@@ -376,14 +376,14 @@ Acceptance:
 - `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T314 — Scenarios: tea_two_errors_one_session and tea_long_pause_not_error
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_two_errors_one_session/, tests/scenarios/tea_long_pause_not_error/, tests/scenarios/README.md
-- owner: —
-- claimed: 2026-10-17T15:56Z
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T16:19Z
 - pr: #303
 - rating: 5/5 clear task, well-specified acceptance criteria and known README conflict called out in advance
 - note: fix CI on PR #303: T313 has merged; on branch task/T314-tea-scenarios, git merge origin/main, then add rows for tea_two_errors_one_session and tea_long_pause_not_error to tests/scenarios/README.md (now in area)
