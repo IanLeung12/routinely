@@ -26,7 +26,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T144 — API: POST /demo/reset puts the demo back to its seeded history
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
@@ -45,7 +45,7 @@ Acceptance:
 - smoke.sh hits the route once; `scripts/ci.sh` passes.
 
 ### T147 — Test: every shippable pattern has a replayable scenario
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: test
