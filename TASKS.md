@@ -494,7 +494,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T426 — Bug: integration check still flaky ("dashboard did not render" on a cold start)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: bug
@@ -503,7 +503,8 @@ Acceptance:
 - area: scripts/integration.sh, scripts/dev.sh
 - owner: ian-claude-standard
 - claimed: 2026-10-17T21:00Z
-- pr: —
+- pr: #396
+- rating: 5/5 clear, found a real latent gap in the render check while verifying the acceptance criterion
 
 What: T367 didn't fully fix it. The hourly integration check and the tester both see `FAIL dashboard did not render (no 'Routine Watch' in DOM)` on the first run after `dev.sh up`, then pass on a re-run: Vite's cold dependency optimisation finishes after headless Chrome's 8 s budget.
 Why: a red integration check the morning of the demo (due 13:00 UTC) hides real breakage.
