@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "ErrorType": {
+      "description": "The everyday-action error types in SPEC section 7.",
+      "enum": [
+        "omission",
+        "sequence",
+        "perseveration",
+        "substitution",
+        "hesitation",
+        "abandonment"
+      ],
+      "title": "ErrorType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One kept replay, as a row of a person's replay library (SPEC section 17).\n\nWhat `GET /people/{person_id}/replays` lists: enough to pick an attempt to look\nat - when it was, how long it took, how many errors and of which kinds - without\ncarrying a single frame. The frames and the markers come one session at a time\n(`Replay`).",
+  "properties": {
+    "session_id": {
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    },
+    "person_id": {
+      "description": "Whose session it was. `Session.resident_id` under the name SPEC section 17 gives it: a person watches their own routine, supervisors look with them.",
+      "minLength": 1,
+      "title": "Person Id",
+      "type": "string"
+    },
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "duration_s": {
+      "description": "How long the attempt took, in seconds.",
+      "minimum": 0.0,
+      "title": "Duration S",
+      "type": "number"
+    },
+    "error_count": {
+      "description": "Errors found in the session, self-corrected ones included.",
+      "minimum": 0,
+      "title": "Error Count",
+      "type": "integer"
+    },
+    "error_types": {
+      "description": "Which kinds of error it had, each named once, in the order they happened.",
+      "items": {
+        "$ref": "#/$defs/ErrorType"
+      },
+      "title": "Error Types",
+      "type": "array"
+    },
+    "normal": {
+      "default": false,
+      "description": "This is the person's most recent session with no errors at all, kept as the comparison to look at the others against rather than because anything went wrong.",
+      "title": "Normal",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "session_id",
+    "person_id",
+    "task_id",
+    "started_at",
+    "duration_s",
+    "error_count",
+    "error_types"
+  ],
+  "title": "ReplaySummary",
+  "type": "object"
+}

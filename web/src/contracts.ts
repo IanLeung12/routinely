@@ -421,11 +421,114 @@ export type PausedRoom = {
   name: string
 }
 
+/**
+ * A person's replay library (`GET /people/{person_id}/replays`, SPEC section 17). Every attempt
+ * of theirs that had an error and is still inside the retention window, newest first, plus the
+ * one normal session kept beside them: SPEC section 17's "compare with the person's normal"
+ * needs something to compare against, and a clean session is kept for that and not listed as
+ * one of the attempts to review.
+ */
+export type PersonReplays = {
+  person_id: string
+  /**
+   * Their sessions that had at least one error, newest first, after any `type` and `since`
+   * filter.
+   */
+  replays: ReplaySummary[]
+  /**
+   * Their most recent session with no errors, to compare the others against. Null until they
+   * have had one.
+   */
+  normal: ReplaySummary | null
+}
+
 /** One person's body skeleton. */
 export type Pose = {
   /** The 33 MediaPipe pose landmarks, in MediaPipe's own order. */
   landmarks: Landmark[]
   score?: number | null
+}
+
+/**
+ * One kept replay in full (`GET /replays/{session_id}`, SPEC sections 17 and 8). The skeleton
+ * of an attempt that went wrong, kept so a person and their supervisors can look back and judge
+ * for themselves: poses, hand landmarks, object boxes and timestamps, thinned to about ten a
+ * second, and never video. `markers` are its errors, so the viewer can jump between them.
+ */
+export type Replay = {
+  session_id: string
+  /**
+   * Whose session it was. `Session.resident_id` under the name SPEC section 17 gives it: a
+   * person watches their own routine, supervisors look with them.
+   */
+  person_id: string
+  task_id: string
+  started_at: string
+  /** How long the attempt took, in seconds. */
+  duration_s: number
+  /** Errors found in the session, self-corrected ones included. */
+  error_count: number
+  /** Which kinds of error it had, each named once, in the order they happened. */
+  error_types: ErrorType[]
+  /**
+   * This is the person's most recent session with no errors at all, kept as the comparison to
+   * look at the others against rather than because anything went wrong.
+   */
+  normal?: boolean
+  /** The session's errors, oldest first: where to jump to in `frames`. */
+  markers: ReplayMarker[]
+  /**
+   * The session's frames, oldest first. Skeletons, boxes and timestamps only: the image each
+   * was read from was dropped when it was processed.
+   */
+  frames: CaptureFrame[]
+}
+
+/**
+ * One error inside a stored replay: what a viewer jumps to (SPEC section 17). The error's own
+ * window in session time, so whoever is looking back at the attempt goes straight to the moment
+ * rather than watching the whole thing. It carries the `error_id`, type, step and times of the
+ * `TaskError` it was made from, so the marker and the alert's error list name the same moment;
+ * the frames it points into are the replay's own.
+ */
+export type ReplayMarker = {
+  error_id: string
+  type: ErrorType
+  /** The step the error is about. Null only when no single step applies. */
+  step_id?: string | null
+  /** Seconds since the session started. */
+  t_start: number
+  t_end: number
+  /** The person put it right themselves: still worth seeing, not a full error. */
+  self_corrected?: boolean
+}
+
+/**
+ * One kept replay, as a row of a person's replay library (SPEC section 17). What `GET
+ * /people/{person_id}/replays` lists: enough to pick an attempt to look at - when it was, how
+ * long it took, how many errors and of which kinds - without carrying a single frame. The
+ * frames and the markers come one session at a time (`Replay`).
+ */
+export type ReplaySummary = {
+  session_id: string
+  /**
+   * Whose session it was. `Session.resident_id` under the name SPEC section 17 gives it: a
+   * person watches their own routine, supervisors look with them.
+   */
+  person_id: string
+  task_id: string
+  started_at: string
+  /** How long the attempt took, in seconds. */
+  duration_s: number
+  /** Errors found in the session, self-corrected ones included. */
+  error_count: number
+  /** Which kinds of error it had, each named once, in the order they happened. */
+  error_types: ErrorType[]
+  /**
+   * This is the person's most recent session with no errors at all, kept as the comparison to
+   * look at the others against rather than because anything went wrong.
+   */
+  normal?: boolean
 }
 
 /**

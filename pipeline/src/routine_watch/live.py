@@ -84,6 +84,15 @@ Two things follow from classifying an unfinished session, and both are deliberat
   the session itself is kept: not its errors, not its score, not whose it would have
   been.
 
+* **And its skeleton is kept.** A session anybody could want to look back at keeps a
+  replay of itself (`routine_watch.replays`, SPEC section 17): the frames it just
+  streamed, thinned to ten a second, with a marker on each error, so the person and
+  their supervisors can watch the attempt and judge it rather than take the summary's
+  word for it. One with errors is kept as an attempt to review; a clean one becomes
+  that person's comparison, replacing the one before it. Landmarks, boxes and
+  timestamps, never video (SPEC section 8), and nothing is kept for an unclear
+  session, which has no trustworthy errors to mark up in the first place.
+
 **The `flag` is the resident's, not the recording's.** A session only flags against
 prior sessions of the same resident (SPEC section 7: a single bad session never
 alerts), and there are two histories it could be read over. A scenario carries its own
@@ -105,6 +114,7 @@ session's `flag` is false until one is attached.
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from collections.abc import AsyncIterator, Iterable, Sequence
 from dataclasses import dataclass
@@ -131,8 +141,11 @@ from .errors import classify_errors
 from .notify import Notifier, get_notifier
 from .quality import session_quality
 from .replay import SCENARIOS_DIR, ReplayError, load_scenario, score_session, session_id_of
+from .replays import get_replay_store
 from .stick_figure import HAND_SPAN, REST, Point, centre_of, reaching_for
 from .tasks import TaskGraph
+
+logger = logging.getLogger(__name__)
 
 STAGE = "live"
 
@@ -311,9 +324,14 @@ async def session_messages(
     # flag is read over and bad lighting alone could flag a change for review.
     quality = session_quality(events)
     if quality == "ok":
-        _record(
+        recorded = _record(
             resident_id, session_id, graph, final, score=score, assisted=assisted, seconds=clock.t
         )
+        # ... and its skeleton is kept, so this attempt can be looked back at rather
+        # than only read about (SPEC section 17). An unclear session keeps none: what
+        # it has instead of errors is capture nobody can trust (SPEC section 12), so
+        # there is nothing in it to look back at and nothing to mark up.
+        save_replay(recorded, frames, final)
     else:
         _record_unclear(resident_id)
     # One reading of the resident, taken once this session is one of theirs: it is both
@@ -395,27 +413,44 @@ def _record(
     score: float,
     assisted: bool,
     seconds: float,
-) -> None:
+) -> Session:
     """Make the finished session one of this resident's (SPEC section 10, step 4).
 
     A recording has no date of its own, only seconds since it started, and the
     dashboard's clock is the demo's fixed today until a real store lands, so the
     session is placed where it belongs on that clock: ending now, having taken as long
     as it took. That is what puts it inside the 24-48 h window the flag is read over.
+
+    The session as it was recorded comes back, because the replay kept beside it is
+    of the same session and has to agree with it about whose it was and when.
     """
-    session_log.record(
-        resident_id,
-        Session(
-            session_id=session_id,
-            resident_id=resident_id,
-            task_id=graph.id,
-            started_at=DEMO_NOW - timedelta(seconds=seconds),
-            ended_at=DEMO_NOW,
-            assisted=assisted,
-            score=score,
-        ),
-        errors,
+    session = Session(
+        session_id=session_id,
+        resident_id=resident_id,
+        task_id=graph.id,
+        started_at=DEMO_NOW - timedelta(seconds=seconds),
+        ended_at=DEMO_NOW,
+        assisted=assisted,
+        score=score,
     )
+    session_log.record(resident_id, session, errors)
+    return session
+
+
+def save_replay(
+    session: Session, frames: Sequence[CaptureFrame], errors: Sequence[TaskError]
+) -> None:
+    """Keep this session's skeleton for the person and their supervisors to look back
+    at (SPEC section 17), thinned and marked up by `routine_watch.replays`.
+
+    A session with errors is kept as one of theirs to review; a clean one replaces
+    their comparison. Nothing here is worth dropping a live session for, so a store
+    that cannot write says so in the log and the session ends as it would have.
+    """
+    try:
+        get_replay_store().save(session, frames, errors)
+    except OSError as exc:  # a REPLAY_DIR that is full, missing or not writable
+        logger.warning("no replay kept for session %s: %s", session.session_id, exc)
 
 
 @dataclass
