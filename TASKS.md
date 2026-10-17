@@ -351,7 +351,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T150 — Resident detail: show the room monitoring switch
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: feature
