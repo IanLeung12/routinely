@@ -1608,3 +1608,92 @@ Interface: `FeedbackStore.record(alert_id, resident_id, feedback, cause: str | N
 Acceptance:
 - pytest: cause stored and replaced; false alarms don't count; counts are per resident; existing threshold tests unchanged and passing.
 - `scripts/ci.sh` passes.
+
+### T076 — Tests for ContextTimeline and BaselineChart
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
+- owner: max_API_light
+- claimed: 2026-10-17T07:44Z
+- pr: #110
+
+What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
+Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/types.ts, and web/src/resident/format.test.ts (for test style). Use vitest + @testing-library/react like the existing tests.
+Acceptance:
+- ContextTimeline: empty list shows "No care records for this resident."; records render newest first; temperature/fluid_intake/med_change get their readable labels ("Temperature 37.9 °C", "Fluid intake 800 ml", "Medication change: ...").
+- BaselineChart: renders without crashing for typical props and for an empty series (no NaN in rendered attributes).
+- note: released by orchestrator: stale claim (>90 min, no PR)
+- `cd web && npm test -- --run` and `scripts/ci.sh` pass.
+
+### T101 — Evidence players: keyboard and screen-reader pass
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/ReplayPlayer.tsx, web/src/evidence/ReplayPlayer.test.tsx, web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:52Z
+- pr: #86
+
+What: The skeleton replay and ghost replay are the evidence a nurse opens "one tap away" (SPEC §9); make them usable without a mouse and honest to screen readers. Read only the files in `area` and `web/src/ui/Button.tsx`.
+Interface: play/pause is a real `<button>` with `aria-pressed` or a changing label; the scrubber (if any) has `aria-valuetext` like "12.0 s of 40.0 s"; Space toggles play when the player is focused; the drawing has `role="img"` with an `aria-label` saying what is shown (e.g. "Skeleton replay, today vs usual routine"); respect `prefers-reduced-motion` by not auto-playing. No prop changes that break current callers.
+Acceptance:
+- Vitest: keyboard toggle works; accessible names present; no autoplay when `matchMedia('(prefers-reduced-motion: reduce)')` matches (stub it).
+- note: released by ian-claude-standard-2: run ended without progress
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T102 — Docs: README quickstart for teammates and judges
+- status: done
+- class: light
+- priority: 2
+- kind: docs
+- deps: —
+- area: README.md
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:40Z
+- pr: #106
+
+What: Make the top-level README a 1-minute quickstart. Read only `README.md`, `scripts/dev.sh`, `scripts/e2e.sh`, `scripts/ci.sh` (headers only) and SPEC.md §1 and §12.
+Interface: sections: what it is (2 lines, "flags a change for review"; never any form of "diagnos*"), run it (`scripts/dev.sh up|down`, ports), test it (`scripts/ci.sh`, `scripts/e2e.sh`), offline by default (`OFFLINE_MODE`, `LIVE_API` unset = fakes, no paid calls), privacy (skeletons and boxes only, no video stored), where things are (pointers to `docs/CODEMAP.md`, `tests/scenarios/README.md`). Under ~80 lines.
+Acceptance:
+- Every command in it works from a fresh clone (say which you ran in the PR).
+- `scripts/ci.sh` passes (test_privacy.py scans wording).
+
+### T104 — Session quality: mostly-unclear sessions are unclear, not scored
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/quality.py (new), pipeline/tests/test_quality.py (new)
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:33Z
+- pr: #82
+
+What: SPEC §12/§13: pose and detection are less reliable with walkers, wheelchairs or bad lighting; low-confidence sessions must be treated as unclear rather than as errors, so they never push a resident toward a flag. Add the pure rule now; wiring it into replay/live is a later task (those files are busy).
+Interface: `session_quality(events: list[StepEvent], *, unclear_fraction: float = 0.4, min_events: int = 3) -> Literal["ok", "unclear"]`: `unclear` when there are fewer than `min_events` events or more than `unclear_fraction` of them are unclear / below confidence 0.6 (import an existing threshold constant from `recogniser.py` or `verifier.py` if one exists; don't copy it). Module docstring cites SPEC §12. Read `contracts.py` (`StepEvent` only) and `recogniser.py` / `verifier.py` for the constant. Add a one-line note for `docs/CODEMAP.md` in the PR description (don't edit it; it's busy).
+Acceptance:
+- pytest: clean session → ok; half unclear → unclear; too few events → unclear; exactly at the fraction → ok.
+- `scripts/ci.sh` passes.
+
+### T105 — Review: Claude summary guard lets spelled-out numbers through
+- status: done
+- class: light
+- priority: 2
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/explain_claude.py, pipeline/tests/test_explain_claude.py
+- source: reviewer
+
+What: `_passes_guard` only checks digit tokens (`_NUMBER_RE`), so a reply like "Mrs. K made three errors" when she made 2 passes and a nurse sees a wrong count (SPEC §6.4: never state a number not in the facts).
+Interface: in `explain_claude.py`, map number words `one`..`twenty` (whole-word, case-insensitive) to digits before the allowed-number check, so they must also be in `_allowed_numbers`. Nothing else changes.
+Acceptance:
+- tests: fake client replying "three errors" with observed=2 → template fallback; "two errors" with observed=2 → Claude reply kept; "someone" / "once" are not treated as numbers.
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:43Z
+- pr: #109
+- `cd pipeline && uv run pytest -q` passes.
