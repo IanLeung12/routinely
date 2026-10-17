@@ -17,7 +17,7 @@ const TITLES = new Set(['mr', 'mrs', 'ms', 'dr'])
 
 /** Turns a resident id like `mrs-k` into the display name a nurse recognises
  * (`Mrs. K`), so a copied summary never shows the raw id. */
-function residentDisplayName(residentId: string): string {
+export function residentDisplayName(residentId: string): string {
   return residentId
     .split('-')
     .map((word) => {

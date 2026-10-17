@@ -213,6 +213,46 @@ describe('AlertView', () => {
     ])
   })
 
+  it('has one h1 naming the resident, with h2 sections in reading order', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    await screen.findByText(MRS_K.summary)
+
+    const headings = screen.getAllByRole('heading')
+    const h1s = headings.filter((h) => h.tagName === 'H1')
+    expect(h1s).toHaveLength(1)
+    expect(h1s[0].textContent).toMatch(/mrs\. k.*flagged for review/i)
+
+    const h2Titles = headings.filter((h) => h.tagName === 'H2').map((h) => h.textContent)
+    expect(h2Titles).toEqual([
+      'What changed',
+      'Errors',
+      'Evidence',
+      'Possible patterns',
+      'Suggested checks',
+      'Feedback',
+    ])
+  })
+
+  it('moves focus to the h1 once the alert loads', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+
+    const heading = await screen.findByRole('heading', { level: 1 })
+    expect(document.activeElement).toBe(heading)
+  })
+
+  it('wraps the view in a landmark labelled by the h1', async () => {
+    offline()
+
+    render(<AlertView alertId={MRS_K.alert_id} onBack={() => {}} />)
+    const heading = await screen.findByRole('heading', { level: 1 })
+
+    expect(screen.getByRole('region', { name: heading.textContent ?? '' })).toBeTruthy()
+  })
+
   it('shows loading until an empty alert result resolves, then the shared empty state', async () => {
     let resolveFetch!: (response: { ok: boolean; status: number }) => void
     vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => {

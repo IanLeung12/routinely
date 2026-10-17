@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
@@ -15,15 +15,29 @@ import { fetchResident } from '../resident/api.ts'
 import type { CareRecord } from '../resident/types.ts'
 import { fetchAlert, postFeedback } from './api.ts'
 import { AlertContext } from './AlertContext.tsx'
-import { alertText } from './alertText.ts'
+import { alertText, residentDisplayName } from './alertText.ts'
 import { ErrorList } from './ErrorList.tsx'
 import { FeedbackButtons } from './FeedbackButtons.tsx'
 import { PatternList } from './PatternList.tsx'
 import { SuggestedChecks } from './SuggestedChecks.tsx'
 import './alert.css'
 
+const HEADING_ID = 'alert-view-heading'
+
 function formatBaseline(baseline: BaselineComparison): string {
   return `${baseline.observed.toFixed(1)} vs ${baseline.baseline_mean.toFixed(1)} normal over ${baseline.baseline_days} days`
+}
+
+/** A card section's title, at `h2` so the alert reads as one heading outline (SPEC
+ * section 9): `h1` resident + "Flagged for review", then each section in reading order.
+ * Same look as the shared `SectionHeader`, which is fixed at `h3` for use inside screens
+ * that already have their own `h2`. */
+function AlertSectionHeading({ title }: { title: string }) {
+  return (
+    <div className="section-header">
+      <h2 className="section-header__title">{title}</h2>
+    </div>
+  )
 }
 
 /** What "what was it?" offers a nurse: the patterns this change was flagged as being
@@ -54,6 +68,24 @@ export function AlertView({
   const [replay, setReplay] = useState<{ alertId: string; replay: EvidenceReplay | null } | null>(null)
   const [careRecords, setCareRecords] = useState<{ alertId: string; records: CareRecord[] | null } | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  /** Which alert focus has already landed on, so re-rendering after feedback is saved
+   * (same alert, new data) doesn't steal focus back from whatever the nurse is doing. */
+  const focusedAlertIdRef = useRef<string | null>(null)
+
+  /** Moves focus to the `h1` as soon as an alert finishes loading, so a screen reader
+   * announces which resident this is for right when the view opens (SPEC section 9). */
+  useEffect(() => {
+    if (
+      loaded !== null &&
+      loaded.alertId === alertId &&
+      loaded.alert !== null &&
+      focusedAlertIdRef.current !== alertId
+    ) {
+      headingRef.current?.focus()
+      focusedAlertIdRef.current = alertId
+    }
+  }, [alertId, loaded])
 
   useEffect(() => {
     let cancelled = false
@@ -134,6 +166,7 @@ export function AlertView({
     }
   }
 
+  let heading: ReactNode = null
   let body: ReactNode
   if (loaded === null || loaded.alertId !== alertId) {
     body = <Loading label="Loading alert…" />
@@ -141,8 +174,14 @@ export function AlertView({
     body = <EmptyState message="No change flagged for review." />
   } else {
     const alert = loaded.alert
+    heading = (
+      <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>
+        {residentDisplayName(alert.resident_id)} flagged for review
+      </h1>
+    )
     body = (
       <>
+        <AlertSectionHeading title="What changed" />
         <p className="alert-view__summary">{alert.summary}</p>
         <p className="alert-view__baseline">{formatBaseline(alert.baseline)}</p>
         <p className="alert-view__threshold">
@@ -161,17 +200,12 @@ export function AlertView({
         )}
 
         <Card>
-          <SectionHeader title="Possible patterns" />
-          <PatternList patterns={alert.patterns ?? []} />
-        </Card>
-
-        <Card>
-          <SectionHeader title="Errors" />
+          <AlertSectionHeading title="Errors" />
           <ErrorList errors={alert.errors} onOpen={(error) => onOpenEvidence?.(error)} />
         </Card>
 
         <Card>
-          <SectionHeader title="Evidence" />
+          <AlertSectionHeading title="Evidence" />
           {replay === null || replay.alertId !== alertId ? (
             <Loading label="Loading replay…" />
           ) : replay.replay === null ? (
@@ -185,12 +219,17 @@ export function AlertView({
         </Card>
 
         <Card>
-          <SectionHeader title="Suggested checks" />
+          <AlertSectionHeading title="Possible patterns" />
+          <PatternList patterns={alert.patterns ?? []} />
+        </Card>
+
+        <Card>
+          <AlertSectionHeading title="Suggested checks" />
           <SuggestedChecks checks={alert.suggested_checks} />
         </Card>
 
         <Card>
-          <SectionHeader title="Feedback" />
+          <AlertSectionHeading title="Feedback" />
           <FeedbackButtons
             value={alert.feedback?.verdict ?? null}
             onChange={(verdict) => saveFeedback(verdict, null)}
@@ -205,10 +244,11 @@ export function AlertView({
   }
 
   return (
-    <section className="alert-view">
+    <section className="alert-view" aria-labelledby={heading ? HEADING_ID : undefined}>
       <button type="button" className="back-button" onClick={onBack}>
         ← Back
       </button>
+      {heading}
       {body}
     </section>
   )
