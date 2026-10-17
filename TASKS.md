@@ -27,14 +27,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T114 — api.py: one resident lookup helper instead of copy-pasted loops
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:45Z
 - pr: —
 
 What: `get_resident`, `resident_drift` and the replay routes each loop over `demo_residents()` and raise the same 404. Extract `_resident_or_404(resident_id) -> dict` and use it everywhere. No behaviour change.
