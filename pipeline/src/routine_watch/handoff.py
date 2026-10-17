@@ -267,7 +267,10 @@ def _context(
     lines.append(f"last {hours} h, {_count(len(rows), 'resident')}")
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
     lines.extend(_paused_line(room) for room in paused)
-    quiet = len(rows) - len(review)
+    paused_ids = {room["resident_id"] for room in paused}
+    quiet = len(
+        [row for row in rows if row not in review and row["resident_id"] not in paused_ids]
+    )
     if quiet:
         lines.append(f"{_count(quiet, 'resident')} with nothing to review")
     return lines
