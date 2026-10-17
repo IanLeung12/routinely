@@ -606,3 +606,98 @@ Interface: `GET /patterns` → the library as JSON (id, name, signals, time prof
 Acceptance:
 - pytest: route returns every library entry with a non-empty source; vitest: renders each pattern, urgent one visually distinct, no "diagnos" text.
 - `scripts/ci.sh` passes.
+
+### T119 — Bug: API sends no CORS headers, so the dashboard silently shows mock data
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/api.py (middleware only), pipeline/tests/test_api_cors.py (new)
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: With `scripts/dev.sh up` (dashboard :5173, API :8000), every `fetch` from the dashboard to the API fails in the browser with `TypeError: NetworkError` because API responses have no `access-control-allow-origin` header. The web clients catch that and fall back to `web/src/mock/*`, so overview, Mrs. K detail and the alert screen show mock data (e.g. Mr. Chen "watch" vs API "normal"; alert threshold 1.2 vs API 4.09), and "Confirmed" only updates the local mock, so the threshold never visibly changes (SPEC §10 last step). The WebSocket works (not subject to CORS), so the live session is real while everything else is fake.
+Repro: `scripts/dev.sh up`; `curl -si -H "Origin: http://localhost:5173" localhost:8000/residents | head -5` → no `access-control-allow-origin`. In the browser on :5173: `fetch('http://localhost:8000/alerts/alert-mrs-k')` → NetworkError while api.log shows 200.
+Expected: API answers with CORS headers for the dashboard origin; dashboard shows API data; "Confirmed" lowers the shown threshold (the API already does: 4.09 → 3.88).
+Interface: FastAPI `CORSMiddleware`; allowed origins from env `CORS_ORIGINS` (comma-separated, default `http://localhost:5173`); note in the PR that `.env.example` needs the var if outside area.
+Acceptance:
+- pytest: a GET with `Origin: http://localhost:5173` returns `access-control-allow-origin`; a preflight OPTIONS for `POST /alerts/{id}/feedback` succeeds.
+- `scripts/ci.sh` passes.
+
+### T120 — Bug: live task map overflows; the red/amber steps are hidden off to the right
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: web/src/live/TaskMap.tsx, web/src/live/*.css
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: In a 1920×984 window the task map card is 406 px wide but its content is 1502 px (`overflow-x: auto`), so only "Fill the kettle", "Boil the kettle" and half of "Get a cup" are visible. The steps that turn red/amber in the demo scenario (`tea_skip_teabag_pour_twice`: teabag missed, pour repeated) are off-screen, so "errors flash" (SPEC §10 step 3) can't be seen without scrolling.
+Repro: `scripts/dev.sh up`, open http://localhost:5173, wait for the live session to finish, look at the Task map card.
+Expected: all 9 tea steps visible in the card at 1920 px without scrolling (wrap into rows or a vertical list), error colours visible.
+Acceptance:
+- vitest: steps render in a wrapping/vertical layout; existing TaskMap tests still pass.
+- `scripts/ci.sh` passes.
+
+### T121 — Bug: demo alert lists placeholder errors ("skipped the task at 0:00" ×4) and grows on every page load
+- status: todo
+- class: standard
+- priority: 1
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts*.py
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: `GET /alerts/alert-mrs-k` builds errors via `_task_errors` with `step_id=None` and fake times 0:00/0:10 in every session, so the summary reads "Flagged for review: 8 errors this session (skipped the task at 0:00, repeated the task at 0:10, skipped the task at 0:00, ...)", and says "this session" while counting across 3–4 sessions. Each dashboard load runs the live session (T081), which appends another `mrs-k-NN` session, so the alert keeps growing during a demo. Currently hidden only because the dashboard is on mock data (T119).
+Repro: `scripts/dev.sh up`; load http://localhost:5173 twice; `curl -s localhost:8000/alerts/alert-mrs-k | python3 -m json.tool`.
+Expected: alert errors name real steps with plausible timestamps, the summary counts correctly with no repeated clauses, and reloading the page doesn't keep adding sessions to the alert.
+Acceptance:
+- pytest: demo alert errors all have a non-null `step_id`; summary has no duplicate clauses; running the live session twice leaves at most one live session on the alert.
+- `scripts/ci.sh` passes.
+
+### T122 — Bug: live skeleton view stays "Waiting for camera" for the whole demo replay
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: tests/scenarios/tea_skip_teabag_pour_twice/ (add frames.jsonl)
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: The dashboard's live session uses scenario `tea_skip_teabag_pour_twice`, which has only `steps.jsonl` (no `frames.jsonl`), so `/ws/live` sends 0 `frame` messages (probe: session_start 1, step 7, step_state 8, error 2, frame 0) and the skeleton panel next to the task map stays empty. SPEC §10 step 3 shows the skeleton next to the task map.
+Repro: `scripts/dev.sh up`, open http://localhost:5173, watch the "Skeleton view" card for the whole session.
+Expected: a synthetic skeleton/object-box `frames.jsonl` aligned with the step timestamps so the skeleton animates (no raw video). Note in the PR that `tests/scenarios/README.md` needs updating.
+Acceptance:
+- `scripts/e2e.sh` still passes; a check that `/ws/live?scenario=tea_skip_teabag_pour_twice` emits at least one `frame` message.
+- `scripts/ci.sh` passes.
+
+### T123 — Bug: smoke.sh always fails the evidence replay check (alert body is overwritten)
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: scripts/smoke.sh
+- owner: —
+- claimed: —
+- pr: —
+- source: tester
+
+What: `scripts/smoke.sh` stores the alert JSON in `body` (~line 83), then the dashboard check (~line 92) reuses `body` for the HTML, so the replay block parses HTML and reports "no alert error to derive session/resident/time window from". The routes themselves work (`/sessions/mrs-k-20/replay?t_start=0&t_end=5` and `/residents/mrs-k/normal_replay` return frames).
+Repro: `scripts/dev.sh up && scripts/smoke.sh` → `FAIL: GET /sessions/<id>/replay ...`, exit 1.
+Expected: keep the alert body in its own variable; smoke passes against a fresh stack.
+Acceptance:
+- `scripts/smoke.sh` exits 0 against `scripts/dev.sh up`; `scripts/ci.sh` passes.
