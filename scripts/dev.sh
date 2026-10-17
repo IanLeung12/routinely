@@ -27,6 +27,7 @@ WEB_LOG="$DEV_DIR/web.log"
 export OFFLINE_MODE=${OFFLINE_MODE:-true}
 export LIVE_API=${LIVE_API:-0}
 export VITE_API_URL=${VITE_API_URL:-$API_URL}
+export CORS_ORIGINS=${CORS_ORIGINS:-$DASHBOARD_URL,http://127.0.0.1:${DASHBOARD_PORT}}
 
 mkdir -p "$DEV_DIR"
 
