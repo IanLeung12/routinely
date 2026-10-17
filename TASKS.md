@@ -485,7 +485,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_session_log.py` and `scripts/ci.sh` pass
 
 ### T327 — Test: unit tests for pattern_features.extract_features
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: test
@@ -493,7 +493,8 @@ Acceptance:
 - area: pipeline/tests/test_pattern_features.py
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T16:26Z
-- pr: —
+- pr: #314
+- rating: 5/5 clear
 
 What: `pipeline/src/routine_watch/pattern_features.py` (378 lines; turns sessions + care records into the features the pattern library ranks on) is only tested indirectly through alerts; direct tests make a regression point at the right file.
 Interface: read `pattern_features.py`, `patterns_library.py`, and the `pattern_*` scenarios under `tests/scenarios/` for realistic inputs. New test file only; no source changes (bugs found: `pytest.mark.xfail(strict=True)` + PR note).
