@@ -8,9 +8,7 @@ so far; later tasks add the event and session routes backed by a real database.
 """
 
 import os
-from collections import defaultdict
-from datetime import UTC, date, datetime
-from statistics import mean
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
@@ -21,7 +19,7 @@ from . import __version__
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import DEMO_NOW, demo_residents
-from .drift import drift
+from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
 from .feedback import FeedbackStore
 from .handoff import DEFAULT_WINDOW_H, build_handoff
@@ -60,15 +58,6 @@ class AlertFeedbackIn(BaseModel):
 
     verdict: FeedbackVerdict
     note: str | None = None
-
-
-def _daily_scores(scores: list[dict]) -> list[tuple[date, float]]:
-    """Mean score per calendar date, for `drift.drift` (one point per day)."""
-    by_day: dict[date, list[float]] = defaultdict(list)
-    for entry in scores:
-        day = datetime.fromisoformat(entry["ts"]).date()
-        by_day[day].append(entry["score"])
-    return sorted((day, mean(values)) for day, values in by_day.items())
 
 
 def _alerts_by_id() -> dict[str, Alert]:
@@ -112,7 +101,7 @@ def resident_drift(resident_id: str) -> dict:
     """Daily score trend (SPEC section 8): backs the drift card with one point per day."""
     for resident in demo_residents():
         if resident["id"] == resident_id:
-            result = drift(_daily_scores(resident["scores"]))
+            result = drift(daily_scores(resident["scores"]))
             return {
                 "resident_id": resident_id,
                 "slope_per_day": result.slope_per_day,

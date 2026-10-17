@@ -1,10 +1,11 @@
 """Robust daily score trends flagged for review separately from sudden changes."""
 
+from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from itertools import combinations
-from statistics import median
+from statistics import mean, median
 
 
 @dataclass(frozen=True)
@@ -12,6 +13,15 @@ class Drift:
     slope_per_day: float
     days: int
     trending: bool
+
+
+def daily_scores(scores: list[dict]) -> list[tuple[date, float]]:
+    """Mean score per calendar date, for `drift` (one point per day)."""
+    by_day: dict[date, list[float]] = defaultdict(list)
+    for entry in scores:
+        day = datetime.fromisoformat(entry["ts"]).date()
+        by_day[day].append(entry["score"])
+    return sorted((day, mean(values)) for day, values in by_day.items())
 
 
 def drift(

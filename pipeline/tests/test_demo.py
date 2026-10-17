@@ -28,13 +28,17 @@ def test_statuses_are_known_tiers() -> None:
     assert {resident["status"] for resident in demo_residents()} <= STATUSES
 
 
-def test_spike_resident_is_flagged() -> None:
-    assert _by_id()["mrs-k"]["status"] == "flagged"
+def test_spike_resident_is_on_watch_before_the_live_session() -> None:
+    """SPEC section 10 beats 2-3: her normal weeks leave one qualifying session,
+    not yet the two a flag needs - the live session on stage is the second."""
+    assert _by_id()["mrs-k"]["status"] == "watch"
 
 
-def test_only_the_spike_resident_is_flagged() -> None:
+def test_no_resident_is_flagged_before_a_live_session() -> None:
+    """Flagging mrs-k purely from the seed would make beat 4 - the live session
+    that is "the second qualifying session" - a no-op (SPEC section 10)."""
     statuses = [resident["status"] for resident in demo_residents()]
-    assert statuses.count("flagged") == 1
+    assert statuses.count("flagged") == 0
 
 
 @pytest.mark.parametrize("resident_id", ["mrs-ahmed", "mr-silva"])
@@ -52,12 +56,12 @@ def test_drift_resident_errors_trend_upward() -> None:
     assert late > early
 
 
-@pytest.mark.xfail(
-    reason="seed 0 leaves mr-chen's drift under its own rising threshold, so the "
-    "slow-drift resident shows as normal; needs a seed change in demo.py",
-)
-def test_drift_resident_is_not_normal() -> None:
-    assert _by_id()["mr-chen"]["status"] != "normal"
+def test_drift_resident_is_on_watch() -> None:
+    """SPEC section 8 beat 6: a baseline built from the whole history rises right
+    along with a slow drift, so the resident never crosses their own threshold and
+    the slow-drift pattern never gets a demo. Measuring against the resident's
+    earliest sessions instead catches it."""
+    assert _by_id()["mr-chen"]["status"] == "watch"
 
 
 def test_every_resident_has_the_full_score_window() -> None:
@@ -105,6 +109,18 @@ def test_motor_resident_sessions_slow_down() -> None:
     early = sum(durations[:half]) / half
     late = sum(durations[half:]) / (len(durations) - half)
     assert late > early
+
+
+def test_evening_resident_is_on_watch() -> None:
+    """SPEC section 8 beat 6: the sundowning resident's own evenings worsen enough
+    to break their earliest-days threshold."""
+    assert _by_id()["mr-nguyen"]["status"] == "watch"
+
+
+def test_motor_resident_is_on_watch() -> None:
+    """SPEC section 8 beat 6: the motor-slowing resident barely touches error
+    counts (SPEC §7.5), so it is their sessions running long that must catch it."""
+    assert _by_id()["mrs-patel"]["status"] == "watch"
 
 
 def test_every_resident_is_presentable() -> None:

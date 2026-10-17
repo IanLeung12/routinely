@@ -48,7 +48,7 @@ describe('Handoff', () => {
 
     render(<Handoff onBack={() => {}} />)
 
-    expect(await screen.findByText('2 changes flagged for review')).toBeTruthy()
+    expect(await screen.findByText('2 sessions above baseline')).toBeTruthy()
     expect(screen.getByText('1 alert not reviewed yet')).toBeTruthy()
     expect(screen.getByText('Error score trending up')).toBeTruthy()
     expect(screen.getByText('No change flagged')).toBeTruthy()

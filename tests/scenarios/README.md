@@ -37,15 +37,19 @@ flag: false          # does this session flag a change for a nurse to review?
 
 score: 6.0           # optional: assert the session score too
 assisted: false      # optional: assert whether somebody was helping
+top_pattern: sudden_change   # optional: the pattern (SPEC §7.5) the flag should score
+                              # highest, or "none" if it should match no pattern
 
 history:             # optional: prior sessions of this resident
   - { hours_ago: 48, score: 0.0 }
   - { hours_ago: 30, errors: { omission: 1 } }   # or spell out the errors
 ```
 
-`steps`, `errors` and `flag` are always checked; `score` and `assisted` only when the
-file sets them. An unknown key is an error, so a typo fails the scenario rather than
-being quietly ignored.
+`steps`, `errors` and `flag` are always checked; `score`, `assisted` and `top_pattern`
+only when the file sets them. An unknown key is an error, so a typo fails the scenario
+rather than being quietly ignored. `top_pattern` needs error-breakdown `history:`
+entries (not just a bare `score:`) to score anything: the pattern scorer reads a
+session's own error types, not an opaque score.
 
 **History and the flag.** A resident needs at least three prior sessions before they
 have a baseline, and two sessions above their own threshold within 48 hours before
@@ -95,6 +99,9 @@ carry the per-step history needed to exercise it.
 | `tea_unclear_not_error` | steps | An unclear, low-confidence teabag observation must not produce an error. |
 | `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
 | `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
+| `pattern_sudden_change` | steps | The demo's bad session on a resident whose own history has only scattered single-type slips: `top_pattern` checks the flag is consistent with `sudden_change` (SPEC §7.5). |
+| `pattern_slow_drift` | steps | Cold water, no stir, after three weeks of hesitation climbing night after night: `top_pattern` checks `slow_drift` (SPEC §7.5). |
+| `pattern_none` | steps | A substitution error against a resident with one earlier substitution: flags a change, but `top_pattern` checks it matches no pattern in the library. |
 
 ## Adding one
 

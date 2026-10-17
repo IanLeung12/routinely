@@ -1,0 +1,42 @@
+# T113: a flag that matches no pattern in the library (SPEC §7.5). Stirring with
+# milk instead of a spoon - the same single substitution error as tea_substitution -
+# on top of a resident whose history holds one earlier substitution 30 hours ago.
+# Two sessions above threshold inside 48 hours still flags a change, but a lone
+# substitution error is not what any pattern in the library is defined by, so no
+# pattern clears the threshold and the honest answer is "no clear pattern".
+
+task: tea
+
+steps:
+  - fill_kettle
+  - get_cup
+  - boil
+  - teabag_in_cup
+  - pour
+  - milk
+  - stir
+  - remove_teabag
+
+errors:
+  - { type: substitution, step: stir }
+score: 3.0
+
+# Eleven quiet sessions, then one earlier substitution 30 hours ago.
+history:
+  - { hours_ago: 312, errors: {} }
+  - { hours_ago: 288, errors: {} }
+  - { hours_ago: 264, errors: {} }
+  - { hours_ago: 240, errors: {} }
+  - { hours_ago: 216, errors: {} }
+  - { hours_ago: 192, errors: {} }
+  - { hours_ago: 168, errors: {} }
+  - { hours_ago: 144, errors: {} }
+  - { hours_ago: 120, errors: {} }
+  - { hours_ago: 96, errors: {} }
+  - { hours_ago: 72, errors: {} }
+  - { hours_ago: 30, errors: { substitution: 1 } }
+
+# Two sessions above this resident's own threshold inside 48 hours flags a change,
+# but it is consistent with no pattern in the library.
+flag: true
+top_pattern: none

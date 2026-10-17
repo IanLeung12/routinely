@@ -14,6 +14,12 @@ functions the dashboard already uses - offline, deterministic, no DB::
     #                 "pending_review": 1, "trending": False}, ...],
     #  "summary": "..."}
 
+`flags` counts the resident's sessions in the window that scored above their own
+baseline threshold, which is the evidence a flag rests on rather than the flag itself:
+one bad session never alerts (SPEC section 7), so a resident can have a session above
+baseline and no alert at all. `pending_review` counts the alerts that were raised and
+that nobody has given a verdict on yet.
+
 `now` is where the window ends and must be timezone-aware. Pass `demo.DEMO_NOW`: the
 synthetic history and a live session played on stage (`routine_watch.live`) are both
 anchored there, so that is the clock the demo's data lives on.
@@ -27,13 +33,12 @@ review - here as everywhere, it never diagnoses anything.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
-from statistics import mean
+from datetime import datetime, timedelta
 
 from .alerts import build_alerts
 from .contracts import Alert
 from .demo import demo_residents
-from .drift import drift
+from .drift import daily_scores, drift
 from .explain import Explainer
 from .explain_claude import get_explainer
 from .feedback import FeedbackStore
@@ -64,8 +69,9 @@ def build_handoff(
 
     Every resident is listed, quiet ones included with `flags: 0`, so a nurse can see
     that the unit was looked at rather than guess why someone is missing. Rows needing
-    attention come first. `feedback` is the nurse feedback logged so far: it tunes each
-    resident's threshold and takes reviewed alerts out of `pending_review`.
+    attention come first. `feedback` is the nurse feedback logged so far: it tunes the
+    threshold each session is measured against and takes reviewed alerts out of
+    `pending_review`.
     """
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware: pass demo.DEMO_NOW")
@@ -143,22 +149,10 @@ def _trending(resident: dict) -> bool:
 
     A slow drift takes weeks to show, not one shift (SPEC section 7.5), so it is read
     over the resident's whole history and shown beside the window's flags rather than
-    measured inside it: it is the thing a nurse would otherwise miss entirely.
+    measured inside it: it is the thing a nurse would otherwise miss entirely. Same
+    daily grouping as the resident's drift card, so both read the same trend.
     """
-    return drift(_daily_scores(resident["scores"])).trending
-
-
-def _daily_scores(scores: list[dict]) -> list[tuple[date, float]]:
-    """Mean score per calendar date, the one-point-per-day shape `drift` wants.
-
-    Same grouping as the `/residents/{id}/drift` route, kept here so the trend a nurse
-    reads on the handoff is the one they read on the resident's drift card, and so this
-    module stays independent of the API layer that imports it.
-    """
-    by_day: dict[date, list[float]] = defaultdict(list)
-    for entry in scores:
-        by_day[datetime.fromisoformat(entry["ts"]).date()].append(entry["score"])
-    return sorted((day, mean(values)) for day, values in by_day.items())
+    return drift(daily_scores(resident["scores"])).trending
 
 
 def _review_first(row: dict) -> tuple[int, int, bool, str]:
@@ -238,14 +232,14 @@ def _context(rows: list[dict], hours: int) -> list[str]:
     lines.extend(f"{row['name']}: " + ", ".join(_reasons(row)) for row in review)
     quiet = len(rows) - len(review)
     if quiet:
-        lines.append(f"{_count(quiet, 'resident')} with no change flagged for review")
+        lines.append(f"{_count(quiet, 'resident')} with nothing to review")
     return lines
 
 
 def _reasons(row: dict) -> list[str]:
     reasons = []
     if row["flags"]:
-        reasons.append(f"{_count(row['flags'], 'session')} flagged for review")
+        reasons.append(f"{_count(row['flags'], 'session')} above baseline")
     if row["pending_review"]:
         reasons.append(f"{_count(row['pending_review'], 'alert')} pending review")
     if row["trending"]:

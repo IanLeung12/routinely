@@ -4,10 +4,15 @@ import App from '../App.tsx'
 import { apiUrl } from '../config.ts'
 import { mockResidentDetail } from '../mock/residentDetail.ts'
 import { ResidentDetail } from './ResidentDetail.tsx'
-import { fetchDrift } from './api.ts'
+import { fetchDrift, fetchResident } from './api.ts'
 import { dailyScores } from './days.ts'
 import { formatDuration, formatErrors } from './format.ts'
 import type { Resident } from './types.ts'
+
+vi.mock('./api.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./api.ts')>()
+  return { ...actual, fetchResident: vi.fn(actual.fetchResident) }
+})
 
 const MRS_K = mockResidentDetail('mrs-k') as Resident
 
@@ -18,6 +23,7 @@ function offline() {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.mocked(fetchResident).mockClear()
 })
 
 describe('ResidentDetail', () => {
@@ -161,12 +167,52 @@ describe('ResidentDetail', () => {
     expect(screen.getByText('skipped step ×1')).toBeTruthy()
   })
 
-  it('says so when neither the API nor the mocks know the resident', async () => {
+  it('says so when neither the API nor the mocks know the resident (404)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }))
 
     render(<ResidentDetail residentId="nobody" onBack={() => {}} />)
 
-    expect(await screen.findByText(/No data for resident nobody/)).toBeTruthy()
+    expect(await screen.findByText('Resident not found.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /unit overview/i })).toBeTruthy()
+  })
+
+  it('shows an error with a retry button when the resident fetch fails, and recovers on retry', async () => {
+    offline()
+    vi.mocked(fetchResident).mockRejectedValueOnce(new Error('down'))
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    expect(await screen.findByText(/Could not reach the server/)).toBeTruthy()
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mrs. K' })).toBeTruthy()
+  })
+
+  it('shows empty-state copy instead of blank charts for a resident with zero sessions', async () => {
+    const empty: Resident = {
+      id: 'mr-new',
+      name: 'Mr. New',
+      room: '101',
+      status: 'normal',
+      scores: [],
+      sessions: [],
+      care_records: [],
+      baseline: { mean: 0, std: 0, threshold: 0 },
+    }
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true, json: async () => url.endsWith('/drift') ? null : empty,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ResidentDetail residentId="mr-new" onBack={() => {}} />)
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mr. New' })).toBeTruthy()
+    expect(screen.getAllByText('No scored sessions yet.').length).toBeGreaterThan(0)
+    expect(screen.getByText('No sessions recorded yet.')).toBeTruthy()
+    expect(screen.queryByRole('img', { name: /baseline chart/i })).toBeNull()
+    expect(screen.queryByRole('grid', { name: /daily error scores/i })).toBeNull()
   })
 
   it('calls onBack when the back button is clicked', async () => {

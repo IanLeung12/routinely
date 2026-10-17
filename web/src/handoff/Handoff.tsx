@@ -40,7 +40,7 @@ function chipsFor(resident: HandoffResident): Chip[] {
   if (resident.flags > 0) {
     chips.push({
       key: 'flags',
-      label: `${plural(resident.flags, 'change')} flagged for review`,
+      label: `${plural(resident.flags, 'session')} above baseline`,
       tone: 'flagged',
       glyph: '!',
     })

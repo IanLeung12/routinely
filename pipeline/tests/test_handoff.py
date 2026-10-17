@@ -11,7 +11,6 @@ from fastapi.testclient import TestClient
 
 from routine_watch import api as api_module
 from routine_watch import handoff as handoff_module
-from routine_watch import session_log
 from routine_watch.api import app
 from routine_watch.contracts import AlertFeedback, FeedbackVerdict
 from routine_watch.demo import DEMO_NOW
@@ -26,18 +25,20 @@ STABLE_RESIDENT = "mrs-ahmed"
 #: The alert `build_alerts` raises for the flagged resident.
 FLAGGED_ALERT = "alert-mrs-k"
 
-#: Enough false alarms to push a threshold to its ceiling (`feedback.MAX_FACTOR`).
-MANY_FALSE_ALARMS = 6
+#: The demo resident on a slow drift, and a session of theirs that sits just under
+#: their own threshold until a nurse's feedback lowers it.
+DRIFT_RESIDENT = "mr-chen"
+
+#: Enough confirmed alerts to pull a threshold down to its floor (`feedback.MIN_FACTOR`).
+MANY_CONFIRMED = 6
 
 
 @pytest.fixture(autouse=True)
-def _seeded_demo():
-    """The seeded demo, nothing recorded and nothing reviewed: both are global state,
-    so every test here puts them back (`session_log`, `api._feedback_store`)."""
-    session_log.reset()
+def _nothing_reviewed():
+    """Each test starts with a clean feedback store: the API module keeps it global.
+    (`conftest._empty_log` already puts the session log back.)"""
     api_module._feedback_store = FeedbackStore()
     yield
-    session_log.reset()
     api_module._feedback_store = FeedbackStore()
 
 
@@ -51,14 +52,14 @@ def row(result: dict, resident_id: str) -> dict:
     return rows[0]
 
 
-def false_alarms(resident_id: str, n: int) -> FeedbackStore:
-    """A feedback store with `n` false alarms logged against `resident_id`."""
+def confirmed(resident_id: str, n: int) -> FeedbackStore:
+    """A feedback store with `n` confirmed alerts logged against `resident_id`."""
     store = FeedbackStore()
     for i in range(n):
         store.record(
             f"alert-{i}",
             resident_id,
-            AlertFeedback(verdict=FeedbackVerdict.FALSE_ALARM, by="nurse", at=DEMO_NOW),
+            AlertFeedback(verdict=FeedbackVerdict.CONFIRMED, by="nurse", at=DEMO_NOW),
         )
     return store
 
@@ -85,7 +86,16 @@ def test_flagged_resident_appears_with_her_flag_in_the_demo_window() -> None:
     entry = row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)
 
     assert entry["name"] == "Mrs. K"
-    assert entry["flags"] == 1
+    assert entry["flags"] == 1, "her bad session is in the window"
+    assert entry["pending_review"] == 0, "one session above baseline is not yet an alert"
+
+
+def test_the_live_session_shows_up_as_a_flag_and_an_alert_to_review(mrs_k_flagged) -> None:
+    """The demo's fourth beat (SPEC section 10): the session a teammate just made tea
+    for is Mrs. K's, and the nurse coming on shift sees it and its alert."""
+    entry = row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)
+
+    assert entry["flags"] == 2
     assert entry["pending_review"] == 1
 
 
@@ -97,11 +107,11 @@ def test_stable_resident_is_listed_with_no_flags() -> None:
     assert entry["trending"] is False
 
 
-def test_a_wider_window_catches_more_of_the_same_resident_s_sessions() -> None:
-    twelve = row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)["flags"]
-    two_days = row(build_handoff(DEMO_NOW, 48), FLAGGED_RESIDENT)["flags"]
-
-    assert two_days > twelve
+def test_a_window_only_counts_what_happened_inside_it() -> None:
+    """Mrs. K's bad session is about six hours before the demo's clock, so a four-hour
+    window has not seen it yet and a shift-long one has."""
+    assert row(build_handoff(DEMO_NOW, 4), FLAGGED_RESIDENT)["flags"] == 0
+    assert row(build_handoff(DEMO_NOW, 12), FLAGGED_RESIDENT)["flags"] == 1
 
 
 def test_a_window_with_no_sessions_in_it_flags_nothing() -> None:
@@ -109,9 +119,8 @@ def test_a_window_with_no_sessions_in_it_flags_nothing() -> None:
 
     assert all(entry["flags"] == 0 for entry in result["residents"])
     assert all(entry["pending_review"] == 0 for entry in result["residents"])
-    assert "flagged for review" not in result["summary"].replace(
-        "with no change flagged for review", ""
-    )
+    assert "above baseline" not in result["summary"]
+    assert "pending review" not in result["summary"]
 
 
 def test_residents_to_review_come_first() -> None:
@@ -131,7 +140,7 @@ def test_drift_resident_is_trending_without_a_flag_this_shift() -> None:
     assert entry["flags"] == 0, "a slow drift is not a flagged session"
 
 
-def test_reviewed_alerts_stop_being_pending() -> None:
+def test_reviewed_alerts_stop_being_pending(mrs_k_flagged) -> None:
     store = FeedbackStore()
     store.record(
         FLAGGED_ALERT,
@@ -142,15 +151,17 @@ def test_reviewed_alerts_stop_being_pending() -> None:
     entry = row(build_handoff(DEMO_NOW, 12, feedback=store), FLAGGED_RESIDENT)
 
     assert entry["pending_review"] == 0
-    assert entry["flags"] == 1, "reviewing the alert does not unflag the session"
+    assert entry["flags"] == 2, "reviewing the alert does not unflag the sessions"
 
 
-def test_false_alarms_raise_the_threshold_a_session_is_measured_against() -> None:
-    store = false_alarms(FLAGGED_RESIDENT, MANY_FALSE_ALARMS)
+def test_confirmed_alerts_lower_the_bar_a_session_is_measured_against() -> None:
+    """Feedback tunes the threshold (MVP 7), so the handoff counts against the bar the
+    nurse's own answers have moved, not the untouched one."""
+    assert row(build_handoff(DEMO_NOW, 12), DRIFT_RESIDENT)["flags"] == 0
 
-    entry = row(build_handoff(DEMO_NOW, 12, feedback=store), FLAGGED_RESIDENT)
+    store = confirmed(DRIFT_RESIDENT, MANY_CONFIRMED)
 
-    assert entry["flags"] == 0, "a nurse who keeps saying 'false alarm' gets fewer flags"
+    assert row(build_handoff(DEMO_NOW, 12, feedback=store), DRIFT_RESIDENT)["flags"] == 1
 
 
 def test_summary_comes_from_the_explainer() -> None:
@@ -183,9 +194,9 @@ def test_summary_names_who_to_look_at_and_counts_the_quiet_rest() -> None:
     summary = build_handoff(DEMO_NOW, 12)["summary"]
 
     assert "last 12 h, 6 residents" in summary
-    assert "Mrs. K: 1 session flagged for review, 1 alert pending review" in summary
+    assert "Mrs. K: 1 session above baseline" in summary
     assert "Mr. Chen: error score trending up" in summary
-    assert "3 residents with no change flagged for review" in summary
+    assert "3 residents with nothing to review" in summary
 
 
 def test_the_explainer_only_sees_the_errors_the_pipeline_found() -> None:
@@ -240,7 +251,7 @@ def test_route_rejects_a_window_it_cannot_serve(hours: object) -> None:
     assert response.status_code == 422
 
 
-def test_route_applies_the_feedback_a_nurse_has_already_given() -> None:
+def test_route_applies_the_feedback_a_nurse_has_already_given(mrs_k_flagged) -> None:
     """Confirming the alert through the API takes it out of `pending_review`."""
     with TestClient(app) as client:
         before = client.get("/handoff", params={"hours": 12}).json()
