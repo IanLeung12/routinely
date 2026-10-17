@@ -189,7 +189,7 @@ Acceptance:
 ### T403 — Redesign 3/6: unit overview + app shell
 - status: claimed
 - class: standard
-- priority: 1
+- priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
@@ -203,7 +203,7 @@ Acceptance: keyboard nav and existing behaviour unchanged (tests updated for str
 ### T404 — Redesign 4/6: resident detail
 - status: todo
 - class: standard
-- priority: 1
+- priority: 0
 - kind: improvement
 - deps: T401, T421, T422
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/SessionList.tsx, web/src/resident/ContextTimeline.tsx, web/src/resident/*.css, web/src/resident/ResidentDetail.test.tsx
@@ -217,7 +217,7 @@ Acceptance: same data and states (loading/empty/error) as now; before/after scre
 ### T405 — Redesign 5/6: alert / evidence view
 - status: claimed
 - class: standard
-- priority: 1
+- priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/alert/, web/src/evidence/, web/src/patterns/
@@ -231,7 +231,7 @@ Acceptance: readable in 10 s (one glance: what changed, how sure, what to check)
 ### T406 — Redesign 6/6: live session + handoff
 - status: todo
 - class: standard
-- priority: 2
+- priority: 0
 - kind: improvement
 - deps: T401
 - area: web/src/live/, web/src/handoff/
@@ -245,7 +245,7 @@ Acceptance: live updates still animate; tests updated for structure only; before
 ### T407 — Redesign: landing page onto the Fey-inspired system
 - status: todo
 - class: standard
-- priority: 2
+- priority: 0
 - kind: improvement
 - deps: T401, T417
 - area: web/src/landing/, web/landing.html
@@ -259,7 +259,7 @@ Acceptance: mobile + desktop screenshots (before/after) in the PR; landing tests
 ### T408 — Roles: role chooser, role-aware shell, mock people/linking API
 - status: todo
 - class: heavy
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: —
@@ -282,7 +282,7 @@ Acceptance:
 ### T409 — Person view: "My routine"
 - status: todo
 - class: heavy
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: T408
@@ -306,7 +306,7 @@ Acceptance:
 ### T410 — Supervisor side: "People I support" + add a person
 - status: todo
 - class: standard
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: T408
@@ -336,7 +336,7 @@ Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurs
 ### T412 — Replay store: keep skeleton replays of every session with errors
 - status: in-review
 - class: heavy
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: —
@@ -358,7 +358,7 @@ Acceptance:
 ### T413 — Replays library for supervisors and the person
 - status: todo
 - class: standard
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: T412
@@ -424,7 +424,7 @@ Acceptance:
 ### T416 — Local camera preview: real video + skeleton overlay, this device only
 - status: todo
 - class: heavy
-- priority: 1
+- priority: 0
 - kind: feature
 - source: ian
 - deps: T424
@@ -448,7 +448,7 @@ Acceptance:
 ### T417 — Chart kit: LineChart + RangeSelector (Fey style)
 - status: claimed
 - class: standard
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
@@ -463,7 +463,7 @@ Acceptance: accessible name + text alternative (summary line); tests for ticks, 
 ### T418 — Chart kit: BarChart (paired bars + callout)
 - status: claimed
 - class: light
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
@@ -478,7 +478,7 @@ Acceptance: renders N bars; compare series only when present; callout shows its 
 ### T419 — Chart kit: MicroBars (14-day tick strip)
 - status: todo
 - class: light
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
@@ -493,7 +493,7 @@ Acceptance: one tick per day; null days render as hairlines; status colours via 
 ### T420 — Restyle: overview Sparkline → MicroBars
 - status: todo
 - class: light
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T419
@@ -508,7 +508,7 @@ Acceptance: existing Sparkline tests pass (update selectors only); `cd web && np
 ### T421 — Restyle: BaselineChart + drift card on LineChart
 - status: todo
 - class: standard
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T417
@@ -523,7 +523,7 @@ Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs
 ### T422 — Restyle: HeatCalendar in the Fey palette
 - status: todo
 - class: light
-- priority: 1
+- priority: 0
 - kind: improvement
 - source: ian
 - deps: T401
