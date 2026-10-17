@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T089 — Unit overview shows the top pattern for flagged/watch residents
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -16,7 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py, web/src/overview/, web/src/mock/residents.ts
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T08:33Z
-- pr: —
+- pr: #149
+- rating: 5/5 clear
 
 What: SPEC §9 screen 1 and demo step 6 ("Mr. D on watch, slow drift"): each flagged or watch resident row shows its top pattern name next to the status chip.
 Interface: `GET /residents` items gain `top_pattern: {pattern_id, name, urgency} | null` from T084's scorer; `web/src/overview/types.ts` `ResidentSummary.top_pattern`; `UnitOverview` renders it as text (not colour alone); normal residents show nothing.
