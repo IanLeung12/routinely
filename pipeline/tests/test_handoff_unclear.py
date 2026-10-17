@@ -23,6 +23,7 @@ around every test, the unclear tally included.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -124,6 +125,24 @@ def test_a_quiet_unit_hands_over_no_camera_to_check() -> None:
     assert all(
         entry["unclear_sessions"] == 0 for entry in build_handoff(DEMO_NOW, SHIFT_H)["residents"]
     )
+
+
+def test_unclear_sessions_are_not_counted_as_nothing_to_review(tmp_path: Path) -> None:
+    """T355 added the count to the row; this is the summary's own copy of the same
+    bug (T425) - a room the capture could not read must read as "check the camera",
+    never as "quiet", or a nurse skips the exact room that needs a look."""
+    before = build_handoff(DEMO_NOW, SHIFT_H)["summary"]
+
+    play_unclear(tmp_path, "unclear-1")
+    after = build_handoff(DEMO_NOW, SHIFT_H)["summary"]
+
+    before_quiet = int(re.search(r"(\d+) residents? with nothing to review", before).group(1))
+    after_match = re.search(r"(\d+) residents? with nothing to review", after)
+    after_quiet = int(after_match.group(1)) if after_match else 0
+
+    name = resident(QUIET_RESIDENT)["name"]
+    assert after_quiet == before_quiet - 1
+    assert f"{name}: 1 session too unclear to score, check the camera view" in after
 
 
 # ---------------------------------------------------------- as the route sends it
