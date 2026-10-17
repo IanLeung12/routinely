@@ -504,14 +504,14 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T325 — Test: monitoring toggle works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/about/MonitoringToggle.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T16:23Z
 - pr: —
 
 What: The privacy monitoring switch is a key trust control; prove a nurse can pause and resume it with the keyboard alone.
