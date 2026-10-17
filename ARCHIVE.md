@@ -6501,3 +6501,41 @@ Interface: read `web/src/live/SessionSummary.tsx` and `web/src/live/SessionSumma
 Acceptance:
 - new test passes; `cd web && npx vitest run src/live/SessionSummary` green.
 - `scripts/ci.sh` passes.
+
+### T351 — Review: time-of-day strip and evening pattern use different "evening" cut-offs
+- status: done
+- class: light
+- priority: 2
+- kind: bug
+- source: reviewer
+- deps: T368
+- area: pipeline/src/routine_watch/api_alerts.py, pipeline/tests/test_time_of_day.py
+- rating: 4/5 clear, prior worker's unpushed-commit note couldn't be reused since the commit wasn't findable in git history
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T19:11Z
+- note: orch: local ci.sh failed only on the known undici WebSocket flake (fixed by T368, now a dep). A fix exists unpushed as c881255 on task/T351-evening-cutoff in Max's worktree; reuse it if available, else redo (tiny). Leave the contracts TimeOfDay docstring alone.
+- pr: #368
+
+What: `pattern_features.EVENING_HOUR = 16` decides the evening-only pattern, but `api_alerts.EVENING_START_HOUR = 17` buckets the strip shown as its evidence. A session at 16:xx counts as "evening" for the pattern and "afternoon" on the strip, so an alert "consistent with evening worsening" can show its errors under afternoon. The code comment admits it only holds because no demo session starts 16:00–17:00.
+Interface: in `api_alerts.py`, set `EVENING_START_HOUR = pattern_features.EVENING_HOUR` (import it, drop the hard-coded 17) and update the comment. The `TimeOfDay` docstring in `contracts.py`/schemas says "until 17:00": contracts are heavy-only, so don't touch them; note the stale docstring in the PR for a follow-up.
+Acceptance:
+- new test in `test_time_of_day.py`: a session at 16:30 buckets as `evening`, matching `pattern_features`' late-day rule
+- `scripts/ci.sh` passes
+
+### T366 — Test: unit overview error and empty states use the shared ui components
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/UnitOverview.states.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T18:08Z
+- pr: #349
+- rating: 3/5 task assumed ErrorState is wired into UnitOverview but it isn't; fetchResidents swallows errors and falls back to mock data
+
+What: Guard the overview's failure paths: when the residents API rejects, the screen shows the shared ErrorState with a retry button; when it returns no residents, it shows the shared EmptyState with nurse-readable copy.
+Interface: read `web/src/overview/UnitOverview.tsx`, `web/src/overview/api.ts`, `web/src/ui/ErrorState.tsx`, `web/src/ui/EmptyState.tsx` and the mocking style in `web/src/overview/UnitOverview.test.tsx`. Test only; if a state is missing, note it in the PR instead of changing the component.
+Acceptance:
+- `cd web && npx vitest run src/overview/UnitOverview.states` green.
+- `scripts/ci.sh` passes.
