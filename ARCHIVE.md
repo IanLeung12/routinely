@@ -4403,3 +4403,22 @@ Interface: `api_live.router` included with `app.include_router(...)`; keep any n
 Acceptance:
 - No test file changes needed except imports; all of `pipeline/tests/test_api_monitoring.py`, `test_live*.py` pass unchanged.
 - `api.py` shrinks by ≥80 lines; `scripts/ci.sh` and `scripts/e2e.sh` pass.
+
+### T257 — Contracts: JSON Schemas for /residents and /handoff payloads
+- status: done
+- class: heavy
+- priority: 2
+- kind: improvement
+- source: reviewer
+- deps: T250, T251
+- area: contracts/resident.schema.json, contracts/handoff.schema.json, contracts/README.md, pipeline/tests/test_api_payload_contracts.py
+- owner: ian-claude
+- claimed: 2026-10-17T12:18Z
+- pr: #246
+- rating: 4/5 the area listed only contracts/*.schema.json + a test, but those files are generated from pipeline/src/routine_watch/contracts.py, so the source model had to change too; and GET /residents returns a projection (api._SUMMARY_FIELDS), not the detail, so it needs its own schema - three files, not two
+
+What: REVIEW.md noted the resident and handoff payloads have no `contracts/` schema and web types are hand-mirrored (`web/src/overview/types.ts`, `web/src/handoff/types.ts`), which is how fields drift. Add schemas describing today's shapes (incl. `top_pattern`, `monitoring_paused`/`paused` from T251).
+Interface: Read `api.py` `list_residents`/`get_resident`/`shift_handoff`, `handoff.py`, `demo.py`, and the two web type files. Schemas only plus a test; don't change payload shapes. If a web type disagrees with the API, note it in the PR and file nothing else in this PR.
+Acceptance:
+- pytest validates `GET /residents`, `GET /residents/{id}` for every demo resident, and `GET /handoff` against the schemas (fakes only).
+- `contracts/README.md` lists both; `scripts/ci.sh` passes.
