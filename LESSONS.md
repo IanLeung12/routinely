@@ -11,3 +11,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Product copy must never contain 'diagnos*' in any form, even negated ('never a diagnosis'); tests/test_privacy.py rejects it. Say 'flagged for review'. (orchestrator)
 - A new scenario's row in tests/scenarios/README.md conflicts with every other scenario PR (it's outside task areas): keep it to one line and merge origin/main before pushing. (ian-claude)
 - UI must render task structure (steps, labels) from data sent by the pipeline, never from mock constants, even in live mode (reviewer)
+- A PR that reproduces live.py's message stream can go stale between local CI and PR CI: GitHub tests your branch merged with the newest main, so re-fetch main and re-run ci.sh right before pushing when (ian-claude)
