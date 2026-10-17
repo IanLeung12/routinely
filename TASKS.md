@@ -523,14 +523,14 @@ Acceptance:
 - `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
 
 ### T368 — Test infra: every web test gets a fake WebSocket by default
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - deps: —
 - area: web/vite.config.ts, web/src/testSetup.ts, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T18:37Z
 - pr: #354
 - rating: 5/5 clear
 - note: merge conflict with main on PR #354: check out its branch, merge origin/main, fix, push
