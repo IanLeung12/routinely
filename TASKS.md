@@ -63,14 +63,14 @@ Acceptance:
 - `cd web && npm run lint && npm test && npm run build` passes, run twice with no flakes.
 
 ### T076 — Tests for ContextTimeline and BaselineChart
-- status: claimed
+- status: todo
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/ContextTimeline.test.tsx, web/src/resident/BaselineChart.test.tsx
-- owner: max-codex-light-2
-- claimed: 2026-10-17T06:07Z
+- owner: —
+- claimed: —
 - pr: —
 
 What: Both resident-detail components have no tests. Add focused render tests; do not change the components.
@@ -78,6 +78,7 @@ Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/Base
 Acceptance:
 - ContextTimeline: empty list shows "No care records for this resident."; records render newest first; temperature/fluid_intake/med_change get their readable labels ("Temperature 37.9 °C", "Fluid intake 800 ml", "Medication change: ...").
 - BaselineChart: renders without crashing for typical props and for an empty series (no NaN in rendered attributes).
+- note: released by orchestrator: stale claim (>90 min, no PR)
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T089 — Unit overview shows the top pattern for flagged/watch residents
