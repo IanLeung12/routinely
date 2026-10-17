@@ -203,14 +203,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_residents.py -q` and `scripts/ci.sh` pass.
 
 ### T013 — Dashboard unit overview screen
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - deps: T001
 - area: web/src/ (new files under web/src/overview/ and web/src/mock/, plus App.tsx wiring)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:28Z
-- pr: —
+- pr: #16
 
 What: SPEC §9 screen 1: resident list with a status chip (normal / watch / flagged) and a sparkline of each resident's error score. Visual first; a nurse should read it in 10 s.
 Interface: `type ResidentSummary = {id: string; name: string; room: string; status: "normal"|"watch"|"flagged"; scores: {ts: string; score: number}[]}` (same shape as T012's `GET /residents`). `fetchResidents()` calls `${API_URL}/residents` and falls back to `web/src/mock/residents.ts` when the API is unreachable. Sparkline in plain SVG (no chart library). Flagged residents sort first.
