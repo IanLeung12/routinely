@@ -67,3 +67,9 @@ T052 | light | codex | merged first try | ~3k tok
 T083 | light | claude-sonnet | merged first try | ~?k tok
 T098 | standard | claude-sonnet | merged first try | ~?k tok
 T100 | standard | claude-sonnet | merged first try | ~?k tok
+T074 | light | codex | merged first try | ~4k tok
+T037 | standard | claude-sonnet | merged first try | ~?k tok
+T092 | light | claude-opus | merged first try | ~?k tok
+T104 | standard | claude-sonnet | merged first try | ~?k tok
+T073 | standard | claude-sonnet | merged first try | ~?k tok
+T038 | standard | claude-sonnet | merged first try | ~?k tok
