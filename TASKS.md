@@ -206,7 +206,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T095 — Tests: hesitation edge cases
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
