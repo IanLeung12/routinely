@@ -44,15 +44,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T155 — Bug: alert opened after the live session shows other errors than the live session made
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 0
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/demo.py, pipeline/src/routine_watch/alerts.py, pipeline/src/routine_watch/session_log.py, pipeline/tests/
 - source: tester
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T09:36Z
 - pr: —
 
 What: On stage the live session (default demo scenario) flags "skipped Put the teabag in the cup · 1:10" and "repeated Pour the water · 1:30". Clicking "Open alert" then shows `alert-mrs-k` with errors "skipped fill kettle 0:51, repeated boil 1:42, skipped fill kettle 0:33, repeated boil 1:06" (sessions mrs-k-22, mrs-k-23): the recorded live session's score is merged into Mrs. K's history, but its actual errors are not; the alert's errors for that session are synthetic. The summary also says "4 errors this session" for errors spread over two sessions.
