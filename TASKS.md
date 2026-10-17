@@ -192,7 +192,7 @@ Acceptance:
 - `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass.
 
 ### T173 — Docs: CODEMAP note for the overview's top pattern
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
