@@ -401,7 +401,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T262 — Monitoring audit trail: who paused/resumed a room and when
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: feature
