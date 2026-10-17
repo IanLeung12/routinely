@@ -319,7 +319,7 @@ Acceptance:
 - `cd web && npx vitest run` and `scripts/ci.sh` pass.
 
 ### T157 — replay.py: scenarios can give sessions a duration so motor_slowing is reachable
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: test
@@ -327,7 +327,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay_durations.py (new)
 - owner: ian-claude-standard
 - claimed: 2026-10-17T08:43Z
-- pr: —
+- pr: #154
+- rating: 5/5 clear
 
 What: `motor_slowing` needs `durations_up`, but `HistorySession` has no duration and `top_pattern_of` never sets `duration_s` on the history or current-session dicts, so `duration_ratio` is always None in scenario replay (found by T143). Add an optional duration so a scenario can express "slower than usual".
 Interface: `HistorySession.duration_s: float | None = Field(default=None, gt=0)`; `Expected.duration_s: float | None = None` for the replayed session (or derive it from the last step timestamp in steps.jsonl if simpler; document which). `top_pattern_of` passes `duration_s` into the session dicts `patterns.py` already reads (around patterns.py:695). Unset durations behave exactly as today.
