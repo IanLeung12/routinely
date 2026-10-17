@@ -1,16 +1,19 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveMessage } from './useLiveSession.ts'
+import type { CaptureFrame } from '../contracts.ts'
+import type { LiveCamera, LiveMessage } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = []
+  url: string
   closed = false
   onmessage: ((event: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
   onclose: (() => void) | null = null
 
-  constructor() {
+  constructor(url = '') {
+    this.url = url
     FakeWebSocket.instances.push(this)
   }
 
@@ -217,4 +220,67 @@ describe('useLiveSession', () => {
 
     expect(socket.closed).toBe(true)
   })
+
+  // ------------------------------------------------------- the camera (T356)
+
+  function frame(objects: CaptureFrame['objects'] = []): LiveMessage {
+    return {
+      type: 'frame',
+      frame: { session_id: 's', seq: 0, t: 0, source: 'camera', poses: [], hands: [], objects },
+    }
+  }
+
+  it('plays the recorded scenario by default', () => {
+    renderHook(() => useLiveSession('tea_normal', 2))
+
+    expect(FakeWebSocket.latest().url).toContain('/ws/live?scenario=tea_normal&speed=2')
+  })
+
+  it('asks for the camera and the task graph when pointed at one', () => {
+    renderHook(() => useLiveSession('tea_normal', 1, { index: 2, task: 'meds' }))
+
+    expect(FakeWebSocket.latest().url).toContain('/ws/live?source=camera&camera=2&task=meds')
+  })
+
+  it('opens a fresh socket when the screen switches from a recording to the camera', () => {
+    const { rerender } = renderHook(
+      ({ camera }: { camera: LiveCamera | null }) => useLiveSession('tea_normal', 1, camera),
+      { initialProps: { camera: null as LiveCamera | null } },
+    )
+
+    rerender({ camera: { index: 0, task: 'tea' } })
+
+    expect(FakeWebSocket.instances).toHaveLength(2)
+    expect(FakeWebSocket.latest().url).toContain('source=camera')
+  })
+
+  it('keeps one socket while the camera it was given stays the same', () => {
+    const { rerender } = renderHook(() => useLiveSession('tea_normal', 1, { index: 0, task: 'tea' }))
+
+    rerender()
+
+    expect(FakeWebSocket.instances).toHaveLength(1)
+  })
+
+  it('remembers whether any frame has carried an object box', () => {
+    const { result } = renderHook(() => useLiveSession('tea_normal', 1, { index: 0, task: 'tea' }))
+    const socket = FakeWebSocket.latest()
+
+    act(() => {
+      socket.emit(frame())
+    })
+    expect(result.current.objectsSeen).toBe(false)
+
+    act(() => {
+      socket.emit(frame([{ label: 'cup', confidence: 0.9, box: { x1: 0, y1: 0, x2: 0.1, y2: 0.1 } }]))
+    })
+    expect(result.current.objectsSeen).toBe(true)
+
+    // The detector losing sight of the cup is not the detector being missing.
+    act(() => {
+      socket.emit(frame())
+    })
+    expect(result.current.objectsSeen).toBe(true)
+  })
 })
+

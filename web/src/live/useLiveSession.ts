@@ -26,6 +26,14 @@ export type LiveMessage =
 
 export type LiveSessionEnded = { score: number; flag: boolean; alert_id: string | null }
 
+/** This machine's camera, as `/ws/live?source=camera` takes it: which device (`index`,
+ * 0 being the laptop's own) and which task graph to read it against (`task`, a
+ * `pipeline/src/routine_watch/tasks/<task>.yaml`). `scripts/camera.sh` starts the stack
+ * and prints the dashboard URL that turns this on; without it the screen plays a
+ * recorded scenario, which is the demo's own path and the fallback for a camera that
+ * fails (SPEC section 10). */
+export type LiveCamera = { index: number; task: string }
+
 export type LiveSessionState = {
   steps: LiveStep[]
   frame: CaptureFrame | null
@@ -39,18 +47,37 @@ export type LiveSessionState = {
    * of a session. Nothing was watched, so the screen explains the pause rather than
    * showing an empty task map. */
   paused: { room: string } | null
+  /** Whether any frame so far carried an object box. The recogniser reads steps from
+   * hands on objects, so a camera running without the local detector's weights
+   * (`DETECTOR_WEIGHTS`) streams skeletons and hands and never a step: the screen says
+   * it is waiting for the detector rather than looking stuck (T356). */
+  objectsSeen: boolean
   source: 'live' | 'mock'
 }
 
 function initialState(source: 'live' | 'mock'): LiveSessionState {
-  return { steps: [], frame: null, states: {}, errors: [], stepSpan: null, ended: null, paused: null, source }
+  return {
+    steps: [],
+    frame: null,
+    states: {},
+    errors: [],
+    stepSpan: null,
+    ended: null,
+    paused: null,
+    objectsSeen: false,
+    source,
+  }
 }
 
-function liveSessionUrl(scenario: string, speed: number): string {
+/** The socket for what the screen is watching, which is also the session's identity: a
+ * recorded scenario at `speed`, or a camera and the task graph to read it against. */
+function liveSessionUrl(scenario: string, speed: number, camera: LiveCamera | null): string {
   const url = new URL(apiUrl)
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
   url.pathname = '/ws/live'
-  url.search = `?scenario=${encodeURIComponent(scenario)}&speed=${speed}`
+  url.search = camera
+    ? `?source=camera&camera=${camera.index}&task=${encodeURIComponent(camera.task)}`
+    : `?scenario=${encodeURIComponent(scenario)}&speed=${speed}`
   return url.toString()
 }
 
@@ -59,7 +86,12 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
     case 'session_start':
       return { ...state, steps: message.steps, source }
     case 'frame':
-      return { ...state, frame: message.frame, source }
+      return {
+        ...state,
+        frame: message.frame,
+        objectsSeen: state.objectsSeen || message.frame.objects.length > 0,
+        source,
+      }
     case 'step':
       return {
         ...state,
@@ -90,23 +122,31 @@ function applyMessage(state: LiveSessionState, message: LiveMessage, source: 'li
 }
 
 /** Live session screen data (SPEC section 9, screen 3; section 10, demo step 3). Opens the
- * T029 WebSocket for `scenario`; a connect error or a close before any message arrives
- * replays `mockLiveStream` instead, so the screen works before T029 lands and when the
- * API is down. A `paused` message is an answer, not a failure: monitoring is off for the
- * room, so the state keeps `paused` and never falls back to mock data, which would show a
- * session nobody is watching. `retry` lets the paused screen reconnect once a nurse turns
- * the room's monitoring back on, instead of needing a full page reload (T266). */
-export function useLiveSession(scenario: string, speed = 1): LiveSessionState & { retry: () => void } {
-  const sessionKey = `${scenario}:${speed}`
-  const [renderedFor, setRenderedFor] = useState(sessionKey)
+ * T029 WebSocket for `scenario`, or for `camera` when the screen is pointed at this
+ * machine's camera instead (T356) - the API sends the same messages either way, so
+ * nothing below this line knows which it is watching. A connect error or a close before
+ * any message arrives replays `mockLiveStream` instead, so the screen works before T029
+ * lands, when the API is down, and when there is no camera to open. A `paused` message is
+ * an answer, not a failure: monitoring is off for the room, so the state keeps `paused`
+ * and never falls back to mock data, which would show a session nobody is watching.
+ * `retry` lets the paused screen reconnect once a nurse turns the room's monitoring back
+ * on, instead of needing a full page reload (T266). */
+export function useLiveSession(
+  scenario: string,
+  speed = 1,
+  camera: LiveCamera | null = null,
+): LiveSessionState & { retry: () => void } {
+  const url = liveSessionUrl(scenario, speed, camera)
+  const [renderedFor, setRenderedFor] = useState(url)
   const [state, setState] = useState<LiveSessionState>(() => initialState('live'))
   const [attempt, setAttempt] = useState(0)
 
-  /** `scenario`/`speed` changing means a different session: reset during render rather
-   * than in the effect below, so switching sessions doesn't flash the old one's last
-   * frame for an extra commit. See react.dev, "Adjusting state when a prop changes". */
-  if (sessionKey !== renderedFor) {
-    setRenderedFor(sessionKey)
+  /** A different socket means a different session - another scenario, another speed, the
+   * camera instead of a recording - so reset during render rather than in the effect
+   * below, so switching sessions doesn't flash the old one's last frame for an extra
+   * commit. See react.dev, "Adjusting state when a prop changes". */
+  if (url !== renderedFor) {
+    setRenderedFor(url)
     setState(initialState('live'))
   }
 
@@ -133,7 +173,7 @@ export function useLiveSession(scenario: string, speed = 1): LiveSessionState & 
       })
     }
 
-    const socket = new WebSocket(liveSessionUrl(scenario, speed))
+    const socket = new WebSocket(url)
 
     socket.onmessage = (event) => {
       receivedData = true
@@ -163,7 +203,7 @@ export function useLiveSession(scenario: string, speed = 1): LiveSessionState & 
       socket.close()
       stopMock?.()
     }
-  }, [scenario, speed, attempt])
+  }, [url, speed, attempt])
 
   return { ...state, retry }
 }

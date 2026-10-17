@@ -600,11 +600,16 @@ def test_the_cli_needs_a_source_and_an_out_file():
 
 
 def test_the_cli_fails_politely_when_it_cannot_capture(tmp_path):
-    """No mediapipe, no bundles or no video: one line on stderr, never a traceback."""
+    """No mediapipe, no bundles or no video: one line on stderr, never a traceback.
+
+    The last line, not the first: with the `capture` extra actually installed - a laptop
+    that has run `scripts/camera.sh` - MediaPipe writes its own start-up chatter to
+    stderr before we get to say anything.
+    """
     done = run_module("--video", str(tmp_path / "absent.mp4"), "--out", str(tmp_path / "o.jsonl"))
 
     assert done.returncode == 1
-    assert done.stderr.startswith("capture:")
+    assert done.stderr.strip().splitlines()[-1].startswith("capture:")
     assert "Traceback" not in done.stderr
 
 

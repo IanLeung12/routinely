@@ -1,7 +1,8 @@
 # Demo runbook
 
 One page for whoever drives the ≈3-minute demo (SPEC.md §10). Everything here runs
-offline, with no API keys and no camera.
+offline, with no API keys and no camera — the one exception is the optional
+["Live camera on your laptop"](#live-camera-on-your-laptop) section at the end.
 
 ## Before you start
 
@@ -120,3 +121,82 @@ refuses to run against a real deployment.
 The live screen defaults to the tea scenario. To open it on the medication routine
 instead, add `?task=meds` to the dashboard URL, e.g.
 `http://localhost:5173/?task=meds`.
+
+## Live camera on your laptop
+
+Everything above plays recordings. To point the **Live session** card at your own
+webcam instead — one command, laptop camera → `/ws/live?source=camera`:
+
+```sh
+scripts/camera.sh
+```
+
+It installs the capture extra (MediaPipe + OpenCV), downloads the two MediaPipe task
+bundles into `models/` if they aren't there yet (free, no key, not in git), opens the
+camera once to check it answers, restarts the local stack and prints:
+
+```
+DASHBOARD_URL=http://localhost:5173
+API_URL=http://localhost:8000
+LIVE_URL=http://localhost:5173/?source=camera&camera=0
+```
+
+Open `LIVE_URL`. The **Live session** card is now your camera, with a **Live camera**
+badge where the **Mock data** one goes: the skeleton view on the left, the task map
+filling in on the right, errors as they are classified. The **Routine to watch**
+buttons above it pick which task graph the camera is read against (tea or medication),
+and the session ends when you stop the stack:
+
+```sh
+scripts/dev.sh down
+```
+
+Two options:
+
+```sh
+scripts/camera.sh --camera 1           # a second or external device
+scripts/camera.sh --record out.jsonl   # keep the capture records as well
+```
+
+Windows and Linux: index `0` is the built-in camera, and nothing asks for permission.
+**macOS** asks the program that opens the camera — your *terminal*, not the browser —
+so the first `scripts/camera.sh` pops a permission prompt; if it was denied earlier,
+tick the terminal under System Settings → Privacy & Security → Camera and run it again.
+
+`--record` writes the same JSONL a scenario holds — landmarks, boxes and timestamps,
+never video (SPEC §8) — so a session you filmed can be replayed offline afterwards:
+
+```sh
+mkdir -p .dev/my_session && cp out.jsonl .dev/my_session/frames.jsonl
+printf 'task: tea\nsteps: []\nerrors: []\nflag: false\n' > .dev/my_session/expected.yaml
+cd pipeline && uv run python -m routine_watch.replay ../.dev/my_session
+```
+
+(Keep it out of `tests/scenarios/`, which is CI's own set.)
+
+### What you'll see without detector weights
+
+Without `DETECTOR_WEIGHTS` the local object detector doesn't run, and that is the
+normal first run: the skeleton and hands stream live, the task map stays pending, and
+it says **Waiting for object detector** under the map. Steps are hands on objects, so
+they need the detector's boxes. To get steps too, export weights exported from
+Roboflow — run locally, never hosted inference — before starting:
+
+```sh
+export DETECTOR_WEIGHTS=models/detector.onnx
+scripts/camera.sh
+```
+
+### If the camera doesn't come up
+
+`scripts/camera.sh` says why before it starts anything (`capture: no camera at index
+0`). If it fails later, the Live session card falls back to the recorded demo and
+shows the **Mock data** badge, and `.dev/api.log` has the reason:
+
+```
+no camera session on camera 0: no camera at index 0
+```
+
+Pausing the room from the resident's page stops the camera the same way it stops a
+replay (SPEC §12): the card says monitoring is paused, and nothing is filmed until
+it's back on.
