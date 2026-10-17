@@ -353,7 +353,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T281 — Shift handoff: paused rooms say who paused them and since when
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: feature
@@ -362,7 +362,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude-standard
 - claimed: 2026-10-17T13:46Z
-- pr: —
+- pr: #274
+- rating: 5/5 clear
 
 What: Rationale: an incoming nurse reading "Monitoring paused: Mrs. K (room 204)" can't tell if that was a deliberate 5-minute pause or one forgotten since yesterday (SPEC §12). For each paused room on the handoff screen, show the latest pause entry from the audit trail ("paused by nurse at 13:40") on screen and in the copied text.
 Interface: consume `fetchMonitoringHistory(room)` from `web/src/about/monitoringApi.ts` (read only; don't edit it) for each room in `Handoff.paused`; use the newest entry with `on: false`. If the history call fails or is empty, keep today's line unchanged (no error banner).
