@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: e3868d9
-- next-area: pipeline
+- last-reviewed: b459e8d
+- next-area: contracts+api
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
@@ -32,3 +32,4 @@
 - (noted) LiveSession room ownership hard-coded to mrs-k; Paused(n) counts rooms not residents
 - T376 live Open alert raw <button> inside role=status
 - T377 DEMO.md handoff beat after Close
+- T389 PrivacyPanel mobile test asserts nothing about phone CSS

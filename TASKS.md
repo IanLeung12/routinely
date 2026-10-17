@@ -708,3 +708,21 @@ Interface: make dev.sh's pid/log files port-scoped (or let integration.sh set a 
 Acceptance:
 - With `scripts/dev.sh up` running, `scripts/integration.sh` prints OK and the :8000/:5173 stack still answers afterwards.
 - `scripts/integration.sh` alone still prints OK; `scripts/dev.sh down` still stops the default stack; `scripts/ci.sh` passes.
+
+### T389 — Review: PrivacyPanel phone-width test checks nothing about phone layout
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- source: reviewer
+- deps: —
+- area: web/src/about/PrivacyPanel.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: the T369 test sets `window.innerWidth = 375` and only asserts class names exist; jsdom ignores innerWidth and `privacyPanel.css` is stubbed in Vitest, so deleting the whole `@media (max-width: 480px)` block still passes.
+Interface: read `src/about/privacyPanel.css` with `vi.importActual('node:fs').readFileSync` (same as `web/src/tour/Tour.test.tsx`) and assert the `@media (max-width: 480px)` block contains `.privacy-panel__list` with `word-break: break-word`; drop the innerWidth line (and don't leave it mutated for other tests). Only this test file.
+Acceptance:
+- Removing the @media block from `privacyPanel.css` makes the test fail
+- `cd web && npm test` and `scripts/ci.sh` pass
