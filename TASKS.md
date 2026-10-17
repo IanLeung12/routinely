@@ -517,7 +517,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T119 — Bug: API sends no CORS headers, so the dashboard silently shows mock data
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
