@@ -26,6 +26,7 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 - Shared types/schemas live in `contracts/`. Only `heavy` tasks may change them, and must update every consumer in the same PR.
 - No secrets in git. Use `.env` (gitignored) and document new vars in `.env.example`.
 - Never store raw video frames (privacy rule, SPEC §8). Skeletons, boxes, timestamps only.
+- Roboflow credits are scarce (50/month). Never call Roboflow's hosted inference API in code, tests or CI; run the detector locally from downloaded weights. Never start a Roboflow training run; humans do that.
 - Wording: the product **flags a change for review**. Never "diagnoses".
 - Keep PRs small. Prefer boring, readable code over clever code.
 - `main` is protected: PRs only, CI must pass. Never force-push.
