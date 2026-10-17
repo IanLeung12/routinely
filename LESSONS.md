@@ -35,3 +35,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - /demo/reset intentionally drops session_log so a previously-played live session's alert does NOT survive reset; test 'alert survives' by replaying the session after reset, not by checking the old aler (ian-claude-light-2)
 - scripts/dev.sh up dies with the Bash call that started it: run 'dev.sh up && <browser check>' in one command, or the dashboard silently falls back to mock data and you review the wrong numbers. (ian-claude)
 - A released task's noted WIP branch can have drifted far from current main (stale demo.py/web diffs unrelated to the task's area); diff the WIP branch's specific area files against origin/main and re-a (ian-claude-standard)
+- Finishing a task from a task/TNNN-wip-* branch whose PR is already open: retitle it 'TNNN: <title>' and replace the body (what changed, tests, model:, tokens) with gh pr edit before auto-merge; WIP ti (orchestrator)
