@@ -545,14 +545,14 @@ Acceptance:
 - New test file passes; no source changes; `scripts/ci.sh` passes.
 
 ### T259 — Shift handoff summary sentence mentions paused rooms
-- status: todo
+- status: claimed
 - class: standard
 - priority: 2
 - kind: feature
 - deps: —
 - area: pipeline/src/routine_watch/handoff.py, pipeline/tests/test_handoff.py
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T12:20Z
 - pr: —
 
 What: Since #238 the handoff payload lists paused rooms, but the plain-language `summary` still reads "all quiet" for a window where a room wasn't watched. Pass the paused rooms to the explainer as context so the summary says e.g. "Room 204 (Mrs. K) was paused, so no flags are expected from it."
