@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T350 — Review: wire HandoffDelta into the shift handoff rows
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
