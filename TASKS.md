@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T114 — api.py: one resident lookup helper instead of copy-pasted loops
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: improvement
@@ -16,7 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: pipeline/src/routine_watch/api.py, pipeline/tests/test_api_residents.py
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:45Z
-- pr: —
+- pr: #153
+- rating: 5/5 clear
 
 What: `get_resident`, `resident_drift` and the replay routes each loop over `demo_residents()` and raise the same 404. Extract `_resident_or_404(resident_id) -> dict` and use it everywhere. No behaviour change.
 Interface: private helper in `api.py`; routes and responses unchanged. Read only `api.py` and `pipeline/tests/test_api*.py`.
