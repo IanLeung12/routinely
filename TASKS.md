@@ -500,15 +500,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T074 — Review: one stray second skeleton marks the whole session "assisted"
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:55Z
 - pr: —
 
 What: `replay.score_session` sets `assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)`. Now that real capture runs MediaPipe with `num_poses=2` (T039), a single false-positive pose or someone walking past for one frame scores the session 0 and drops it from the baseline, which hides real changes from the nurse.
