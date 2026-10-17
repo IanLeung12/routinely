@@ -454,7 +454,7 @@ Acceptance:
 - `cd pipeline && pytest tests/test_demo_top_pattern.py` and `scripts/ci.sh` pass.
 
 ### T175 — Test: LiveSession calls onSessionEnd once per session_end
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
