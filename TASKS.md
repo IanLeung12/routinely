@@ -455,3 +455,20 @@ Interface: `load_task("meds")` works; existing tea graph and scenarios untouched
 Acceptance:
 - Graph tests (deps, optional step, aliases); `meds_skip_water` yields an omission of `drink_water`; contracts check in CI passes.
 - `scripts/e2e.sh` and `scripts/ci.sh` pass.
+
+### T042 — Design system: tokens + shared UI primitives
+- status: todo
+- class: standard
+- priority: 0
+- deps: —
+- area: web/src/index.css, web/src/ui/, web/src/ui/*.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: One visual language for every screen so parallel web tasks don't drift. Keep the current calm dark theme; extend it, don't restyle.
+Interface: tokens in `web/src/index.css` (colour incl. status normal/watch/flagged and error red/amber/unclear grey, spacing scale, radii, type scale, focus ring); shared components in `web/src/ui/`: `Card`, `StatusChip` (move/replace `overview/StatusChip.tsx`), `Button` (primary/secondary/danger), `SectionHeader`, `EmptyState`, `ErrorState`, `Loading`; `web/src/ui/README.md` with one-line usage each.
+Acceptance:
+- Existing screens switched to the tokens/components with no visual regressions beyond consistency; no hard-coded hex in components.
+- Contrast ≥ 4.5:1 for text tokens; Vitest tests for each component.
+- `cd web && npm run lint && npm test && npm run build` passes.
