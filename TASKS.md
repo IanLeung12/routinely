@@ -597,14 +597,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T361 — Test: overview sparklines have a text alternative
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/overview/Sparkline.a11y.test.tsx, web/src/overview/Sparkline.tsx
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-17T17:47Z
 - pr: —
 
 What: Screen-reader users must get the trend a sparkline shows. Test that each sparkline exposes an accessible name describing the trend (e.g. "Error rate over last 14 sessions, rising"); if it doesn't, add `role="img"` + `aria-label` in `Sparkline.tsx`.
