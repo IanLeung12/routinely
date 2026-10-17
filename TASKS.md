@@ -380,13 +380,13 @@ Acceptance:
 - `cd web && npm test && npm run build` and `scripts/ci.sh` pass.
 
 ### T024 — Task map component
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T04:46Z
 - pr: —
 
 What: Presentational task-graph map for the live session screen: steps turn green when done, flash red for omission, amber for repeat or sequence. Read only the files in `area`, `web/src/App.test.tsx` (test style) and `web/package.json`. Do not edit any other file.
