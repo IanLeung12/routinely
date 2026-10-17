@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: eef354f
-- next-area: scripts+ci
+- last-reviewed: 369fc9b
+- next-area: tests/scenarios
 
 ## Known issues filed
 - T047 flaky web CI (App.test.tsx async)
@@ -29,3 +29,4 @@
 - T236 live session_end flag/alert_id from scenario verdict, not resident status (alert 404)
 - T249 pause mid-session not enforced on /ws/live
 - T250 /ws/live messages have no contracts/ schema
+- T261 ci.sh/pytest don't force LIVE_API=0

@@ -578,3 +578,21 @@ Interface: `web/scripts/check-bundle.mjs` (Node built-ins only: `fs`, `zlib`, `p
 Acceptance:
 - `cd web && npm run build && npm run check:bundle` passes on main and prints sizes; temporarily importing `Handoff` eagerly in `App.tsx` makes it fail (describe this check in the PR, don't commit it).
 - `scripts/ci.sh` passes.
+
+### T261 — Review: tests can hit paid APIs if LIVE_API=1 is exported in the shell
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- source: reviewer
+- deps: —
+- area: scripts/ci.sh, pipeline/tests/conftest.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: `scripts/ci.sh` and pytest never force `LIVE_API` off (only e2e.sh/integration.sh do), and `.env.example` documents `LIVE_API`. An agent or teammate with `LIVE_API=1` exported who runs `scripts/ci.sh` makes real Claude/Gemini calls from unit tests (AGENTS.md: tests never make real calls).
+Interface: in `scripts/ci.sh` add `export LIVE_API=0` right after the `cd` line. In `pipeline/tests/conftest.py` add an autouse fixture doing `monkeypatch.setenv("LIVE_API", "0")` so plain `pytest` is safe too; a test that checks the live path can still override it with its own monkeypatch.
+Acceptance:
+- `LIVE_API=1 bash scripts/ci.sh` passes and makes no network calls.
+- `scripts/ci.sh` passes.
