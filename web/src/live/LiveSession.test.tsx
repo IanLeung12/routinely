@@ -52,6 +52,17 @@ afterEach(() => {
 })
 
 describe('LiveSession', () => {
+  it('shows the five-state legend directly below the task map', () => {
+    render(<LiveSession scenario="tea_normal" />)
+
+    const map = screen.getByRole('list', { name: 'Task steps' })
+    const legend = screen.getByRole('list', { name: 'Task map legend' })
+    expect(map.nextElementSibling).toBe(legend)
+    expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'not yet', 'done', 'missed step', 'repeated step', 'out of order',
+    ])
+  })
+
   it('opens a WebSocket at the live session route for the scenario', () => {
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" speed={2} />)
 
