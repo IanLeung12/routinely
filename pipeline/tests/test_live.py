@@ -38,7 +38,7 @@ from routine_watch.live import (
     session_messages,
     step_states,
 )
-from routine_watch.replay import ReplayError, load_scenario, run, scenario_dirs
+from routine_watch.replay import ReplayError, load_scenario, run, scenario_dirs, session_id_of
 from routine_watch.tasks import load_task
 
 #: The demo's bad session, the good one, and the one written as capture frames.
@@ -139,10 +139,28 @@ def test_errors_arrive_while_the_session_is_still_running() -> None:
     assert kinds.index("error") < last_step
 
 
-def test_the_map_starts_out_all_pending() -> None:
-    first = live_session(BAD)[0]
+def test_session_starts_with_the_task_graph() -> None:
+    """The first message tells the client what task is being watched and what its
+    steps are, so the dashboard draws the map the session actually ran, not tea by
+    default (SPEC section 10)."""
+    scenario = load_scenario(scenario_path("tea_abandoned"))
+    messages = played(scenario_path("tea_abandoned"))
 
-    assert first["type"] == "step_state"
+    assert messages[0] == {
+        "type": "session_start",
+        "session_id": session_id_of(scenario),
+        "task_id": scenario.graph.id,
+        "steps": [
+            {"id": step.id, "label": step.label, "optional": step.optional}
+            for step in scenario.graph.steps
+        ],
+    }
+    assert [step["id"] for step in messages[0]["steps"]] == list(scenario.graph.step_ids)
+
+
+def test_the_map_starts_out_all_pending() -> None:
+    first = of_type(live_session(BAD), "step_state")[0]
+
     assert set(first["states"]) == set(load_task("tea").step_ids)
     assert set(first["states"].values()) == {"pending"}
 
@@ -220,7 +238,7 @@ def test_every_message_is_a_contract() -> None:
     for message in of_type(messages, "error"):
         TaskError.model_validate(message["error"])
     assert {m["type"] for m in messages} <= {
-        "frame", "step", "step_state", "error", "session_end"
+        "session_start", "frame", "step", "step_state", "error", "session_end"
     }
 
 

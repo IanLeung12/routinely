@@ -2,10 +2,10 @@ import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { ErrorType, TaskError } from '../contracts.ts'
-import { MOCK_STEPS } from './mockLiveStream.ts'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
+import type { LiveStep } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
 
 /** Plain-language names for the error types in SPEC section 7. */
@@ -36,12 +36,12 @@ function formatClock(seconds: number): string {
   return `${minutes}:${secs}`
 }
 
-function stepLabel(stepId: string | null | undefined): string {
-  return MOCK_STEPS.find((step) => step.id === stepId)?.label ?? 'Session'
+function stepLabel(steps: LiveStep[], stepId: string | null | undefined): string {
+  return steps.find((step) => step.id === stepId)?.label ?? 'Session'
 }
 
-function errorText(error: TaskError): string {
-  return `${ERROR_LABELS[error.type]} · ${stepLabel(error.step_id)} · ${formatClock(error.t_start)}`
+function errorText(steps: LiveStep[], error: TaskError): string {
+  return `${ERROR_LABELS[error.type]} · ${stepLabel(steps, error.step_id)} · ${formatClock(error.t_start)}`
 }
 
 export type LiveSessionProps = {
@@ -54,7 +54,7 @@ export type LiveSessionProps = {
  * happen; a flagged `session_end` opens a "flagged for review" banner. The product flags
  * a change for review; it never diagnoses. */
 export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
-  const { frame, states, errors, ended, source } = useLiveSession(scenario, speed)
+  const { steps, frame, states, errors, ended, source } = useLiveSession(scenario, speed)
 
   return (
     <section className="live-session">
@@ -88,7 +88,7 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
         </Card>
         <Card>
           <SectionHeader title="Task map" />
-          <TaskMap steps={MOCK_STEPS} states={states} />
+          <TaskMap steps={steps} states={states} />
           <TaskMapLegend />
         </Card>
       </div>
@@ -101,7 +101,7 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
           <ul className="live-session__error-list">
             {errors.map((error) => (
               <li key={error.error_id} className={`error-chip error-chip--${ERROR_COLOR[error.type]}`}>
-                {errorText(error)}
+                {errorText(steps, error)}
               </li>
             ))}
           </ul>

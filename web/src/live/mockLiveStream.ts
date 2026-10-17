@@ -5,15 +5,15 @@ import type { LiveMessage } from './useLiveSession.ts'
  * task-map layout. Fetching this from the API is a later task; for now the dashboard
  * only ever shows this one task. */
 export const MOCK_STEPS = [
-  { id: 'fill_kettle', label: 'Fill the kettle' },
-  { id: 'boil', label: 'Boil the kettle' },
-  { id: 'get_cup', label: 'Get a cup' },
-  { id: 'teabag_in_cup', label: 'Put the teabag in the cup' },
-  { id: 'pour', label: 'Pour the water' },
-  { id: 'milk', label: 'Add milk' },
-  { id: 'sugar', label: 'Add sugar' },
-  { id: 'stir', label: 'Stir' },
-  { id: 'remove_teabag', label: 'Take the teabag out' },
+  { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
+  { id: 'boil', label: 'Boil the kettle', optional: false },
+  { id: 'get_cup', label: 'Get a cup', optional: false },
+  { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
+  { id: 'pour', label: 'Pour the water', optional: false },
+  { id: 'milk', label: 'Add milk', optional: true },
+  { id: 'sugar', label: 'Add sugar', optional: true },
+  { id: 'stir', label: 'Stir', optional: false },
+  { id: 'remove_teabag', label: 'Take the teabag out', optional: false },
 ]
 
 const MOCK_SESSION_ID = 'mock-session'
@@ -26,6 +26,10 @@ function frame(seq: number, t: number): CaptureFrame {
  * teabag never goes in the cup (omission) and the water gets poured twice (perseveration,
  * shown on the task map as a repeat). Played by `mockLiveStream` on timers. */
 const SCRIPT: { delayMs: number; message: LiveMessage }[] = [
+  {
+    delayMs: 0,
+    message: { type: 'session_start', session_id: MOCK_SESSION_ID, task_id: 'tea', steps: MOCK_STEPS },
+  },
   { delayMs: 200, message: { type: 'frame', frame: frame(0, 2) } },
   {
     delayMs: 200,
