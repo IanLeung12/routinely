@@ -455,7 +455,7 @@ Interface: in `scripts/integration.sh`, warm the dev server before the render ch
 Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a row from cold; breaking `web/src/main.tsx` on purpose makes it fail.
 
 ### T428 — Handoff: delta chip onto the Pill primitive
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -464,7 +464,8 @@ Acceptance: `scripts/dev.sh down && scripts/integration.sh` passes 5 times in a 
 - area: web/src/handoff/HandoffDelta.tsx, web/src/handoff/HandoffDelta.css, web/src/handoff/HandoffDelta.test.tsx
 - owner: Max_codex_light
 - claimed: 2026-10-17T21:17Z
-- pr: —
+- pr: #400
+- rating: 5/5 clear
 
 What: Render `<HandoffDelta>` with the redesign's `Pill` (`web/src/ui/Pill.tsx`) instead of its own CSS chip, so handoff rows get Fey-style delta pills.
 Why: inherits T406 — the handoff screen is on the demo path and should match the redesign.
