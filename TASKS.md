@@ -47,7 +47,7 @@ Acceptance: live updates still animate; tests updated for structure only; before
 - owner: ian-claude-standard-3
 - claimed: 2026-10-17T22:02Z
 - pr: #412
-- note: T408 already shipped PeopleISupport (list + add by code) in web/src/people/; extend it there; Person.context already holds the context line; new CSS under web/src/supporting/, not people.css.
+- note: PR #412 CI red on check:bundle, same pre-existing failure as T442 (358B over, 336 of which predate this PR on clean origin/main). Not fixing here per web/README.md (don't raise budget without a PR explaining growth). Will clear once T442 merges and main re-triggers or on next push.
 - rating: 4/5 clear, but T408 (merged before this task existed) had already implemented most of SPEC §17's supervisor routing in App.tsx outside this task's listed area, so the real gap was narrower (and less obvious) than the task text implied -- the note helped but didn't flag that
 
 What: Generalise the nurse overview into "People I support" (SPEC §17). Care-home supervisor sees the unit list as today; a family supervisor with one person goes straight to that person; anyone can **add a person** by entering an invite code (T408's mock API), with a clear "linked" confirmation. Each row/detail shows the person's context ("care home · Room 12" vs "lives alone").
