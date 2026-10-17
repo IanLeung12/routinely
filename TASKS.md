@@ -392,7 +392,7 @@ Acceptance:
 - `cd web && npm test -- --run` passes.
 
 ### T146 — Docs: CODEMAP notes for live push alerts and placeholder alert errors
-- status: in-review
+- status: done
 - class: light
 - priority: 3
 - kind: docs
