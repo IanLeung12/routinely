@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f40d269
+- last-reviewed: c332a28
 
 ## Tasks
 
@@ -94,7 +94,6 @@ Acceptance:
 - owner: max_API_light
 - claimed: 2026-10-17T17:31Z
 - pr: #342
-- note: PR #340 open; CI running on GitHub (local CI failure was env-only)
 
 What: Add a keyboard-only test for the pattern library, like `web/src/overview/UnitOverview.keyboard.test.tsx` (read it first as the template). Read `web/src/patterns/PatternLibrary.tsx` and `web/src/patterns/PatternLibrary.filters.test.tsx` for how it is rendered with mock data.
 Interface: new file only; uses @testing-library/user-event `tab()` and `keyboard('{Enter}')` / `keyboard(' ')`.
@@ -656,6 +655,7 @@ Acceptance:
 - claimed: —
 - pr: —
 - source: integration
+- note: tester saw this once on a cold start (TESTREPORT: likely Vite cold-start/dep-optimise timing; re-run passed). If it is timing, make scripts/integration.sh wait for Vite readiness (fixing the check is fine here); otherwise fix the render.
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ c332a28:
   FAIL dashboard did not render (no 'Routine Watch' in DOM)
