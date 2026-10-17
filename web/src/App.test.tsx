@@ -198,6 +198,15 @@ describe('App', () => {
     expect(await screen.findByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeTruthy()
   })
 
+  it('shows the live routine picker with tea selected', async () => {
+    await act(async () => { render(<App />) })
+
+    const group = screen.getByRole('group', { name: 'Routine to watch' })
+    expect(group).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Making tea' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Medication with water' }).getAttribute('aria-pressed')).toBe('false')
+  })
+
   it('hides the guided tour without ?tour=1 and shows it with the param', async () => {
     await act(async () => { render(<App />) })
     expect(screen.queryByRole('dialog', { name: 'Guided demo tour' })).toBeNull()
