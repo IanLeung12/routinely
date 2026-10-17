@@ -258,14 +258,14 @@ Interface: Read `pipeline/src/routine_watch/api_state.py` and `pipeline/tests/te
 Acceptance: `cd pipeline && python -m pytest tests/test_api_state.py -q` passes; `scripts/ci.sh` passes.
 
 ### T294 — Test: shift handoff works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/handoff/Handoff.test.tsx
-- owner: —
-- claimed: 2026-10-17T14:45Z
+- owner: ian-claude
+- claimed: 2026-10-17T15:14Z
 - pr: #285
 - rating: 5/5 clear
 - note: fix CI on PR #285
