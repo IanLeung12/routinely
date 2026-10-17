@@ -371,3 +371,7 @@ T417 | standard | codex | merged first try | ~10k tok
 T419 | light | claude-opus | merged first try | ~95k tok
 T428 | light | codex | merged first try | ~?k tok
 T422 | light | claude-sonnet | merged after release (WIP branch) | ~45k tok
+T429 | light | codex | merged first try | ~?k tok
+T427 | light | codex | merged first try | ~5k tok
+T403 | standard | claude-sonnet | merged first try | ~?k tok
+T407 | standard | claude-opus | merged first try | ~190k tok
