@@ -476,7 +476,7 @@ Acceptance:
 - area: web/src/overview/Sparkline.a11y.test.tsx, web/src/overview/Sparkline.tsx
 - owner: max_API_light
 - claimed: 2026-10-17T17:47Z
-- pr: —
+- pr: #346
 
 What: Screen-reader users must get the trend a sparkline shows. Test that each sparkline exposes an accessible name describing the trend (e.g. "Error rate over last 14 sessions, rising"); if it doesn't, add `role="img"` + `aria-label` in `Sparkline.tsx`.
 Interface: read `web/src/overview/Sparkline.tsx` and `web/src/overview/Sparkline.test.tsx` first; new test file uses `getByRole('img', { name: /.../ })`.
