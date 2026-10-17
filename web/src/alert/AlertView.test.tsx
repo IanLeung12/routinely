@@ -193,11 +193,21 @@ describe('AlertView', () => {
     ])
   })
 
-  it('shows an empty state when the alert is unknown', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
+  it('shows loading until an empty alert result resolves, then the shared empty state', async () => {
+    let resolveFetch!: (response: { ok: boolean; status: number }) => void
+    vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => {
+      resolveFetch = resolve
+    })))
 
     render(<AlertView alertId="nobody" onBack={() => {}} />)
 
-    expect(await screen.findByText(/No alert found for nobody/)).toBeTruthy()
+    expect(screen.getByText('Loading alert…')).toBeTruthy()
+    expect(screen.queryByText('No change flagged for review.')).toBeNull()
+
+    resolveFetch({ ok: false, status: 404 })
+
+    const emptyState = await screen.findByText('No change flagged for review.')
+    expect(emptyState.className).toBe('empty-state')
+    expect(screen.queryByText('Loading alert…')).toBeNull()
   })
 })
