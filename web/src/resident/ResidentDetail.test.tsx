@@ -63,17 +63,16 @@ describe('ResidentDetail', () => {
 
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    const chart = await screen.findByRole('img', { name: /baseline chart/i })
-    const label = chart.getAttribute('aria-label') ?? ''
-    expect(label).toContain(`${MRS_K.scores.length} sessions`)
-    expect(label).toContain('latest score 5.0')
-    expect(label).toContain('flag threshold 4.5')
-    expect(label).toContain('2 sessions above it')
-    expect(screen.getByText('Latest session 5.0')).toBeTruthy()
-    // The newest point is drawn large and in the alarm colour.
-    const latest = chart.querySelector('.chart-point--latest')
-    expect(latest?.getAttribute('r')).toBe('6')
-    expect(latest?.getAttribute('class')).toContain('chart-point--above')
+    const chart = await screen.findByRole('figure', { name: 'Baseline' })
+    const summary = chart.querySelector('figcaption')?.textContent ?? ''
+    expect(summary).toContain(`${MRS_K.scores.length} sessions`)
+    expect(summary).toContain('Latest score 5.0')
+    expect(summary).toContain('flag threshold 4.5')
+    expect(summary).toContain('2 sessions above it')
+    expect(chart.querySelector('foreignObject .pill')?.textContent).toBe('5.0')
+    // The newest point is above the flag threshold, so it's drawn in the flagged colour.
+    const markers = chart.querySelectorAll('.line-chart__marker')
+    expect(markers[markers.length - 1]?.getAttribute('class')).toContain('line-chart__marker--flagged')
   })
 
   it('renders the sessions newest first with scores, errors and duration', async () => {
@@ -216,7 +215,7 @@ describe('ResidentDetail', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Mr. New' })).toBeTruthy()
     expect(screen.getAllByText('No scored sessions yet.').length).toBeGreaterThan(0)
     expect(screen.getByText('No sessions recorded yet.')).toBeTruthy()
-    expect(screen.queryByRole('img', { name: /baseline chart/i })).toBeNull()
+    expect(screen.queryByRole('figure', { name: 'Baseline' })).toBeNull()
     expect(screen.queryByRole('grid', { name: /daily error scores/i })).toBeNull()
   })
 

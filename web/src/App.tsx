@@ -12,6 +12,7 @@ import { RoleChooser } from './people/RoleChooser.tsx'
 import { RoleSwitch } from './people/RoleSwitch.tsx'
 import type { RoleId } from './people/types.ts'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
+import { Button } from './ui/Button.tsx'
 import { DemoBanner, resetDemoData } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
 import { Pill } from './ui/Pill.tsx'
@@ -22,6 +23,9 @@ import { useDocumentTitle } from './ui/useDocumentTitle.ts'
 const Handoff = lazy(() => import('./handoff/Handoff.tsx').then(m => ({ default: m.Handoff })))
 const PatternLibrary = lazy(() =>
   import('./patterns/PatternLibrary.tsx').then(m => ({ default: m.PatternLibrary })),
+)
+const RoutinesScreen = lazy(() =>
+  import('./routines/RoutinesScreen.tsx').then(m => ({ default: m.RoutinesScreen })),
 )
 const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour })))
 
@@ -73,6 +77,9 @@ export default function App() {
   const [openHandoff, setOpenHandoff] = useState(false)
   /** The pattern library is a read-only reference screen, off the main demo path. */
   const [openPatternLibrary, setOpenPatternLibrary] = useState(false)
+  /** "New routine" (T438): building or saving one sits off the main demo path, behind
+   * one button in the top bar that both roles get. */
+  const [openRoutines, setOpenRoutines] = useState(false)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
   const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidentsWithSource>>['residents']>([])
   /** Whether the last residents fetch reached the real API or fell back to demo
@@ -134,6 +141,7 @@ export default function App() {
     setOpenAlert(null)
     setOpenHandoff(false)
     setOpenPatternLibrary(false)
+    setOpenRoutines(false)
   }
 
   /** Re-reads who I support after a link is added or removed. */
@@ -180,6 +188,7 @@ export default function App() {
     setShowingPeople(false)
     setOpenHandoff(screen === 'handoff')
     setOpenPatternLibrary(screen === 'patterns')
+    setOpenRoutines(false)
   }
 
   useDocumentTitle(documentTitle())
@@ -194,6 +203,7 @@ export default function App() {
       const name = resident ? residentName(resident) : null
       return name ? `Alert · ${name} — Routine Watch` : 'Alert — Routine Watch'
     }
+    if (openRoutines) return 'Routines — Routine Watch'
     if (openHandoff) return 'Shift handoff — Routine Watch'
     if (openPatternLibrary) return 'Pattern library — Routine Watch'
     if (shownResident !== null) return `${residentName(shownResident)} — Routine Watch`
@@ -285,12 +295,19 @@ export default function App() {
                 </Pill>
               </>
             )}
+            {role !== null && (
+              <Button onClick={() => setOpenRoutines(true)}>New routine</Button>
+            )}
             {role !== null && <RoleSwitch role={role} onChange={chooseRole} />}
           </div>
         </header>
 
         {role === null ? (
           <RoleChooser onChoose={chooseRole} />
+        ) : openRoutines ? (
+          <Suspense fallback={<Loading label="Loading routines…" />}>
+            <RoutinesScreen onBack={() => setOpenRoutines(false)} />
+          </Suspense>
         ) : role === 'person' ? (
           <MyRoutine onChange={refreshPeople} />
         ) : openAlert !== null ? (

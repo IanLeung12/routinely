@@ -33,7 +33,7 @@ scripts/e2e.sh   # replays every recorded scenario in tests/scenarios/ through t
 
 `OFFLINE_MODE` defaults to `true` and `LIVE_API` defaults to `0`: the pipeline
 uses mock data and fakes for every paid API client (Gemini, Anthropic,
-Roboflow, Supabase, Langfuse). No real calls, no cost, no network needed to
+Roboflow, Supabase). No real calls, no cost, no network needed to
 run, test, or replay scenarios. Real calls only happen when a human explicitly
 sets `LIVE_API=1`, and go through an on-disk cache.
 
