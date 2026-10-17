@@ -294,3 +294,5 @@ T327 | standard | claude-sonnet | merged first try | ~55k tok
 T325 | light | codex | merged first try | ~5k tok
 T326 | light | claude-sonnet | merged first try | ~25k tok
 T323 | light | codex | merged first try | ~6k tok
+T332 | standard | claude-sonnet | merged first try | ~40k tok
+T290 | heavy | claude-opus | merged first try | ~230k tok
