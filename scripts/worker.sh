@@ -9,11 +9,13 @@
 # CLASS  light | standard | heavy: the most expensive tasks you'll take (default light)
 # FLAGS  override the model flags from MODELS.md (optional)
 # ONCE=1 do a single task then exit. IDLE=300 seconds to wait when the board is empty.
+# MAX_TASKS=n stop after n tasks. BACKOFF=900 seconds to pause after a run that made no progress
+# (e.g. usage/rate limit hit); the task is released back to todo so nobody waits on it.
 #
 # Run each worker in its own clone (or `git worktree add ../htv-w1`) so branches don't collide.
 set -euo pipefail
 : "${AGENT:?set AGENT=yourname}"
-TOOL=${TOOL:-claude}; CLASS=${CLASS:-light}; IDLE=${IDLE:-300}
+TOOL=${TOOL:-claude}; CLASS=${CLASS:-light}; IDLE=${IDLE:-300}; BACKOFF=${BACKOFF:-900}; DONE_COUNT=0
 cd "$(git rev-parse --show-toplevel)"
 
 FLAGS=${FLAGS:-$(sed -n "s|^- $TOOL/$CLASS: ||p" MODELS.md)}
@@ -49,5 +51,15 @@ PY
     claude -p --dangerously-skip-permissions $FLAGS "$PROMPT" 2>&1 | tee "$LOG" || true
   fi
   git switch -q --detach origin/main 2>/dev/null || true
+  # No progress (still 'claimed', no PR)? Release the task and back off: usually a usage limit.
+  ST=$(python3 scripts/tasks.py show "$ID" | sed -n 's/^- status: //p')
+  PR=$(python3 scripts/tasks.py show "$ID" | sed -n 's/^- pr: //p')
+  if [ "$ST" = claimed ] && { [ -z "$PR" ] || [ "$PR" = "—" ] || [ "$PR" = "-" ]; }; then
+    python3 scripts/tasks.py set "$ID" status=todo owner=— claimed=— note="released by $AGENT: run ended without progress" --agent "$AGENT" >/dev/null
+    echo "$(date -u +%H:%M) $ID released (no progress; limit hit?); backing off ${BACKOFF}s"
+    sleep "$BACKOFF"
+  fi
+  DONE_COUNT=$((DONE_COUNT+1))
   [ -n "${ONCE:-}" ] && exit 0
+  [ -n "${MAX_TASKS:-}" ] && [ "$DONE_COUNT" -ge "$MAX_TASKS" ] && { echo "reached MAX_TASKS=$MAX_TASKS"; exit 0; }
 done

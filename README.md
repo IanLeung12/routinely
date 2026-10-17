@@ -31,6 +31,7 @@ AGENT=max TOOL=claude CLASS=light scripts/worker.sh  # loop: claim → PR → au
 - `TOOL=codex` for Codex. `ONCE=1` does one task and exits.
 - Model flags per class come from `MODELS.md`; override with `FLAGS="--model haiku"`.
 - Two workers on one machine? Give each its own clone.
+- On a usage-capped plan (e.g. ChatGPT Plus + Codex): `AGENT=you TOOL=codex CLASS=light BACKOFF=1800 scripts/worker.sh`. If a run hits the limit, the task is released and the worker waits instead of hogging it.
 
 ## How it works
 - `TASKS.md` lives on the `tasks` branch. `scripts/tasks.py` claims tasks atomically (push races lose cleanly).
