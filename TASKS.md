@@ -223,14 +223,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T096 — Scenario: stirring three times is perseveration
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: tests/scenarios/tea_stir_three_times/
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:15Z
 - pr: —
 
 What: Repeating a step is the signal behind the executive pattern (SPEC §7.5, perseveration with intact order). Add a steps-level scenario: a complete, correctly ordered tea session where `stir` happens three times in a row. Read only `tests/scenarios/README.md` and `tests/scenarios/tea_substitution/` (copy its shape). Do not edit `tests/scenarios/README.md` (a later docs task adds the rows).
