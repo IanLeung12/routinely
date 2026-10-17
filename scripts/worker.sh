@@ -22,11 +22,14 @@ FLAGS=${FLAGS:-$(sed -n "s|^- $TOOL/$CLASS: ||p" MODELS.md)}
 MODEL="$TOOL $FLAGS"
 PROMPT_FILE=prompts/worker.md; [ "$CLASS" = light ] && PROMPT_FILE=prompts/light-worker.md
 
+SELF_SUM=$(cksum < scripts/worker.sh)
 while true; do
   if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     echo "working tree dirty; commit or stash first"; exit 1
   fi
   git fetch -q origin && git switch -q --detach origin/main
+  # Pick up a newer worker.sh from main automatically (between tasks only).
+  if [ "$(cksum < scripts/worker.sh)" != "$SELF_SUM" ]; then echo "$(date -u +%H:%M) worker.sh updated; restarting"; exec bash scripts/worker.sh; fi
   TASK=$(python3 scripts/tasks.py auto --class "$CLASS" --agent "$AGENT")
   if [ "$TASK" = NO_TASK ]; then
     [ -n "${ONCE:-}" ] && { echo "no task"; exit 0; }
