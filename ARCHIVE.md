@@ -7387,3 +7387,48 @@ Acceptance:
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
 Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
+
+### T408 — Roles: role chooser, role-aware shell, mock people/linking API
+- status: done
+- class: heavy
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: web/src/people/, web/src/App.tsx, web/src/App.test.tsx, web/src/mock/people.ts
+- owner: —
+- claimed: —
+- pr: #388
+- rating: 4/5 clear on the API and routing; didn't say who the supervisor 'I' am (Nurse Ana with the whole unit, or Lena with one) - that choice decides whether the existing nurse flow stays the default, and Mr. D/Sam have no pipeline data so their detail screen is empty
+- note: merge conflict with main on PR #388: check out its branch, merge origin/main, fix, push
+
+What: Ian's pivot (SPEC §3, §17): the app is for anyone, not just nurses. Two roles: **person** (watches themselves) and **supervisor** (family, carer or nurse). Frontend only; no pairing backend.
+Interface:
+- `web/src/people/api.ts`: `getRole()/setRole('person'|'supervisor')`, `currentPerson()`, `supervisorsOf(personId)`, `peopleISupport()`, `createInvite(personId) -> {code, link}`, `acceptInvite(code)`, `unlink(personId, supervisorId)`. Backed by localStorage + `web/src/mock/people.ts` (Mrs. K ← Nurse Ana; Mr. D ← his daughter Lena; Sam self-monitoring, no supervisor). Keep it an interface so a real API can replace it.
+- First-open **role chooser** ("I'm setting this up for myself" / "I'm supporting someone"), remembered; a role switcher in the shell; "Reset demo" clears it.
+- Routing in `App.tsx`: person → `MyRoutine` placeholder (T409 fills it); supervisor → existing overview, but with exactly one supported person it opens straight into their detail.
+Acceptance:
+- Vitest: chooser shows on first open and not after; switching roles changes the home screen; invite create/accept/unlink round-trips through the mock.
+- Existing nurse/care-home flow still works as the supervisor-with-many case; `scripts/ci.sh` passes.
+
+### T412 — Replay store: keep skeleton replays of every session with errors
+- status: done
+- class: heavy
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: pipeline/src/routine_watch/replays.py, pipeline/src/routine_watch/session_log.py, pipeline/src/routine_watch/live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_residents.py, pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/demo.py, pipeline/tests/test_replays.py
+- owner: ian-claude
+- claimed: 2026-10-17T20:18Z
+- pr: #392
+- rating: 4/5 clear on what to build and the privacy rules; it didn't say which clock retention is measured against (demo sessions sit on DEMO_NOW, in the past, so a wall clock prunes the whole library), nor where the 'most recent normal' comparison is reachable from once list() excludes it - the route needed an envelope contract the interface didn't name
+
+What: Ian wants supervisors (and the person) to look back at failed attempts and judge for themselves (SPEC §17). Today replays exist only inside an alert and come from two canned recordings; live sessions keep steps and errors but not frames. Store a replay for every session that had at least one error (and keep the person's most recent normal session as the comparison). Skeletons, hand landmarks, object boxes and timestamps only, downsampled (~10 fps); never video (SPEC §8).
+Interface:
+- `replays.py`: `ReplayStore` interface with in-memory default and an on-disk JSONL.gz implementation (`REPLAY_DIR`, default `.data/replays/`); `save(session, frames, errors)`, `list(person_id, since=None, error_type=None) -> [ReplaySummary]`, `get(session_id) -> Replay` (frames + error markers with t_start/t_end/type/step), `delete(session_id)`, retention `REPLAY_RETENTION_DAYS` (default 30) pruned on save. Shape as contracts (`ReplaySummary`, `Replay`, `ReplayMarker`) and regenerate TS.
+- Live and camera sessions save on `session_end` when errors > 0; demo/synthetic people get generated replays for their bad sessions (reuse `stick_figure` where no landmarks), so the library isn't empty in the demo.
+- API: `GET /people/{person_id}/replays?type=&since=`, `GET /replays/{session_id}` (frames + markers, supersedes the alert-only path; keep `/sessions/{id}/replay` working), `DELETE /replays/{session_id}`.
+Acceptance:
+- Tests: a session with errors is saved and listed, a clean session is not; markers line up with the error timestamps; retention prunes; delete works; no image/video fields can be stored (privacy test).
+- `scripts/ci.sh` + `scripts/e2e.sh` pass.
