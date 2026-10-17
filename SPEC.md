@@ -93,7 +93,7 @@ Five stages (see the diagram):
    - An LLM (Claude) writes the plain-language summary **using only the detected evidence and the scorer's output**, never adding a pattern or cause of its own.
    - Suggested checks come from the matched patterns (e.g. infection/UTI, hydration, new medication, CAM screen, medication review, cognitive reassessment).
    - Alerts go to the dashboard over the API WebSocket (§16 B), optionally with a phone push.
-5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is logged in Langfuse and used to tune thresholds.
+5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is stored with the alert and used to tune that person's threshold (`feedback.py`). Decision: no Langfuse.
 
 **Decision: custom detector plus a vision LLM, not either alone.**
 - The detector gives fast, consistent, offline-capable results. That makes the demo safe, and it counts as a model we trained.

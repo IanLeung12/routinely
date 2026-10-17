@@ -1,0 +1,30 @@
+.replay-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.replay-list__filter {
+  flex-wrap: wrap;
+  justify-self: start;
+}
+
+.replay-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.replay-list__row .row__main,
+.replay-list__details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.replay-list__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}

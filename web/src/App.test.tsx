@@ -192,6 +192,31 @@ describe('App', () => {
     expect(await screen.findByRole('button', { name: 'Mrs. K: Change flagged for review' })).toBeTruthy()
   })
 
+  it('shows the nav dock and jumps straight back to the overview from another screen', async () => {
+    await act(async () => { render(<App />) })
+
+    const dock = within(screen.getByRole('navigation', { name: 'Main screens' }))
+    expect(dock.getByRole('button', { name: 'Overview' }).getAttribute('aria-current')).toBe('page')
+
+    await act(async () => {
+      fireEvent.click(dock.getByRole('button', { name: 'Shift handoff' }))
+    })
+    expect(await screen.findByRole('heading', { name: 'Shift handoff' })).toBeTruthy()
+    expect(dock.getByRole('button', { name: 'Shift handoff' }).getAttribute('aria-current')).toBe('page')
+
+    await act(async () => {
+      fireEvent.click(dock.getByRole('button', { name: 'Overview' }))
+    })
+    expect(screen.getByRole('heading', { name: 'Unit overview' })).toBeTruthy()
+    expect(dock.getByRole('button', { name: 'Overview' }).getAttribute('aria-current')).toBe('page')
+  })
+
+  it('shows an offline indicator in the top bar when the residents API is unreachable', async () => {
+    await act(async () => { render(<App />) })
+
+    expect(await screen.findByText('Offline — demo data')).toBeTruthy()
+  })
+
   it('hides the guided tour without ?tour=1 and shows it with the param', async () => {
     await act(async () => { render(<App />) })
     expect(screen.queryByRole('dialog', { name: 'Guided demo tour' })).toBeNull()

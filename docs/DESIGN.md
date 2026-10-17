@@ -13,6 +13,11 @@ The unit overview on the tokens alone, before any screen was redesigned:
 The alert / evidence view, the first screen rebuilt on the system (same alert, same
 data, half the scroll): `design/alert-before.png` → `design/alert-after.png`.
 
+The public landing page, same copy, with one chart from the kit as its hero instead of
+a gradient: `design/landing-before-desktop.png` → `design/landing-after-desktop.png`,
+and at phone width `design/landing-before-mobile.png` →
+`design/landing-after-mobile.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so
