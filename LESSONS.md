@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Vitest stubs CSS imports (even ?raw), so a stylesheet is untestable until vite.config.ts enables test.css for that path; then getComputedStyle works in jsdom. (ian-claude)
 - Adding web mock residents also requires updating UnitOverview.test.tsx fixed names, status counts, and singular Watch queries. (max_API_light)
 - A feature whose numbers come from demo_residents() can go stale mid-task: main's T124 left mrs-k on watch (use the conftest mrs_k_flagged fixture) and moved daily_scores into drift.py - re-derive expe (ian-claude)
 - Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - For Windows CI, set VITEST_MAX_WORKERS=2 before scripts/ci.sh to limit Vitest workers without editing package scripts; this avoids default-parallelism replay timeouts. (max_API_light)
 - Adding a field to the Alert contract: it must go on the Alert record (AlertDetail is not in WEB_PAYLOADS, so a detail-only field never reaches web/src/contracts.ts), and test_contracts.py pins Alert's (ian-claude)
 - Wiring quality.session_quality into score_session reveals test_live_camera.py fixtures (test_a_session_with_two_people_in_frame_is_not_scored, test_someone_passing_through_still_leaves_a_session_score (ian-claude-standard)
+- On Windows, scripts/dev.sh down may leave the Vite node child running; verify and stop that exact workspace Vite PID before ci.sh, or npm ci fails EPERM on the rolldown binding. (max_API_light)
