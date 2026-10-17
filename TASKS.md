@@ -104,13 +104,13 @@ Acceptance:
 - `up` then `curl` both URLs return 200, `down` leaves no processes on those ports. Idempotent (`up` twice is fine).
 
 ### T007 — Session score weights
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/scoring.py, pipeline/tests/test_scoring.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T03:35Z
 - pr: —
 
 What: Turn per-session error counts into one session score (weighted sum, hand-set weights). Read only the files in `area`, `pipeline/src/routine_watch/errors.py` (for `ERROR_TYPES`) and `pipeline/pyproject.toml`. Do not edit errors.py.
