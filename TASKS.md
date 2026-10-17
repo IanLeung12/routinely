@@ -278,14 +278,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T115 — Docs: CODEMAP notes for drift endpoint, evidence sources, smoke.sh, feedback causes
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: docs
 - deps: —
 - area: docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:58Z
 - pr: —
 
 What: Recent merges (T050 drift endpoint, T107 evidence replays `tea_no_kettle` with a `tea_normal` ghost, T098/T108 `scripts/smoke.sh`, T100 feedback causes) aren't in the CODEMAP notes. Add 1–3 lines each.
