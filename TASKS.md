@@ -407,7 +407,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T242 — Web: monitoring API client (GET /monitoring, PUT /rooms/{room}/monitoring)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: feature
