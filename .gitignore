@@ -19,3 +19,4 @@ models/
 .dev/
 .dev-integration/
 .mergeq-state.json
+.env.bak*
