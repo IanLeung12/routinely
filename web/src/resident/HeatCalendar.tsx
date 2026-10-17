@@ -1,9 +1,13 @@
+import { EmptyState } from '../ui/EmptyState.tsx'
+
 type Day = { date: string; score: number | null }
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export default function HeatCalendar({ days }: { days: Day[] }) {
-  if (days.length === 0) return null
+  if (days.length === 0) {
+    return <EmptyState message="No sessions yet, so nothing to show on the calendar." />
+  }
 
   const orderedDays = [...days].sort((a, b) => a.date.localeCompare(b.date))
   const maximum = Math.max(1, ...days.map(({ score }) => score ?? 0))

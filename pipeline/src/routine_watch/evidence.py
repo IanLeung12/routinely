@@ -17,6 +17,7 @@ the same shape `routine_watch.alerts` builds a `TaskError.session_id` from.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from functools import lru_cache
 
@@ -109,11 +110,44 @@ def _windowed(
     if not frames:
         return []
     capped_fps = min(fps, MAX_REPLAY_FPS) if fps > 0 else MAX_REPLAY_FPS
-    lo = max(frames[0].t, t_start - PAD_S)
-    hi = min(frames[-1].t, t_end + PAD_S)
-    in_window = [frame for frame in frames if lo <= frame.t <= hi]
+    session_lo, session_hi = frames[0].t, frames[-1].t
+    padded_lo, padded_hi = t_start - PAD_S, t_end + PAD_S
+    if padded_lo <= session_hi and padded_hi >= session_lo:
+        lo = max(session_lo, padded_lo)
+        hi = min(session_hi, padded_hi)
+        in_window = [frame for frame in frames if lo <= frame.t <= hi]
+    else:
+        # The requested window (e.g. an alert's real error window) sits entirely
+        # outside the stand-in recording's own timestamps: tile the recording,
+        # one copy every `session_hi - session_lo`, so the window still gets
+        # frames, with `t` landing inside the requested window rather than the
+        # recording's native range.
+        in_window = _tiled(frames, session_lo, session_hi, padded_lo, padded_hi)
     sampled = _downsample(in_window, capped_fps)
     return [frame.model_copy(update={"session_id": session_id}) for frame in sampled]
+
+
+def _tiled(
+    frames: Sequence[CaptureFrame],
+    session_lo: float,
+    session_hi: float,
+    lo: float,
+    hi: float,
+) -> list[CaptureFrame]:
+    period = session_hi - session_lo
+    if period <= 0:
+        return []
+    first_cycle = math.floor((lo - session_lo) / period)
+    last_cycle = math.floor((hi - session_lo) / period)
+    tiled: list[CaptureFrame] = []
+    for cycle in range(first_cycle, last_cycle + 1):
+        shift = cycle * period
+        for frame in frames:
+            t = frame.t + shift
+            if lo <= t <= hi:
+                tiled.append(frame.model_copy(update={"t": t}))
+    tiled.sort(key=lambda frame: frame.t)
+    return tiled
 
 
 def _downsample(frames: Sequence[CaptureFrame], fps: float) -> list[CaptureFrame]:

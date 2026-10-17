@@ -1,5 +1,6 @@
 import { formatDayTime, formatDuration, formatErrors, formatScore } from './format.ts'
 import type { ResidentSession, ScorePoint } from './types.ts'
+import { EmptyState } from '../ui/EmptyState.tsx'
 
 function time(ts: string): number {
   const parsed = Date.parse(ts)
@@ -18,7 +19,7 @@ export function SessionList({
   threshold: number
 }) {
   if (sessions.length === 0) {
-    return <p className="muted">No sessions recorded yet.</p>
+    return <EmptyState message="No sessions recorded yet." />
   }
 
   const scoreByTs = new Map(scores.map((point) => [point.ts, point.score]))

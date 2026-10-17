@@ -71,8 +71,8 @@ describe('HeatCalendar', () => {
     expect(screen.getByRole('grid').style.backgroundColor).toBe('')
   })
 
-  it('renders nothing for an empty list', () => {
-    const { container } = render(<HeatCalendar days={[]} />)
-    expect(container.innerHTML).toBe('')
+  it('shows the empty state for an empty list', () => {
+    render(<HeatCalendar days={[]} />)
+    expect(screen.getByText('No sessions yet, so nothing to show on the calendar.')).toBeTruthy()
   })
 })

@@ -12,6 +12,7 @@ from routine_watch.contracts import repo_root
 from routine_watch.demo import demo_residents
 from routine_watch.evidence import (
     MAX_REPLAY_FPS,
+    PAD_S,
     EvidenceError,
     known_resident,
     known_session,
@@ -127,6 +128,24 @@ def test_normal_replay_frames_are_not_just_the_alert_replay_with_a_new_id() -> N
         ]
 
     assert landmarks(alert_frames) != landmarks(normal_frames)
+
+
+def test_replay_frames_window_past_the_stand_in_length_is_not_empty() -> None:
+    """Regression for T154: real alert error windows (e.g. 33-107s, since T121) sit
+    well past tea_no_kettle's 0-12s recording; the window must still get frames."""
+    frames = replay_frames(LATEST_SESSION, t_start=102.1, t_end=107.1)
+
+    assert frames
+    for frame in frames:
+        assert 102.1 - PAD_S <= frame.t <= 107.1 + PAD_S
+
+
+def test_normal_replay_frames_window_past_the_stand_in_length_is_not_empty() -> None:
+    frames = normal_replay_frames(MRS_K, t_start=102.1, t_end=107.1)
+
+    assert frames
+    for frame in frames:
+        assert 102.1 - PAD_S <= frame.t <= 107.1 + PAD_S
 
 
 def test_every_demo_resident_has_a_known_latest_session() -> None:

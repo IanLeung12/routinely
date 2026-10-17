@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
@@ -7,7 +8,7 @@ import { Loading } from '../ui/Loading.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { fetchHandoff } from './api.ts'
 import type { HandoffResult } from './api.ts'
-import type { HandoffResident } from './types.ts'
+import type { Handoff as HandoffData, HandoffResident } from './types.ts'
 import './handoff.css'
 
 /** Windows a nurse picks between: an eight or twelve hour shift, a day, a weekend. */
@@ -70,10 +71,22 @@ function headline(residents: HandoffResident[], hours: number): string {
   return `${review} of ${plural(residents.length, 'resident')} to review in the last ${hours} hours`
 }
 
+export function handoffText(h: HandoffData): string {
+  return [
+    h.summary,
+    ...h.residents.map((resident) =>
+      `${resident.name}, Room unavailable: ${plural(resident.flags, 'flagged session')}, `
+      + `${plural(resident.pending_review, 'unreviewed alert')}, `
+      + (resident.trending ? 'Error score trending up' : 'No upward trend'),
+    ),
+  ].join('\n')
+}
+
 /** Shift handoff: one view of who changed in the hours this nurse was away, off the
  * main demo path. Rows needing attention come first (the pipeline sorts them), each
  * labelled in words as well as colour, with the plain-language summary above them. */
 export function Handoff({ onBack }: { onBack: () => void }) {
+  const [copyStatus, setCopyStatus] = useState('')
   const [hours, setHours] = useState(DEFAULT_WINDOW_H)
   /** Tagged with the window it was fetched for, so switching windows shows the new
    * one loading rather than the last one's rows. */
@@ -88,6 +101,25 @@ export function Handoff({ onBack }: { onBack: () => void }) {
       cancelled = true
     }
   }, [hours])
+
+  useEffect(() => {
+    if (copyStatus !== 'Copied') return
+    const timeout = window.setTimeout(() => setCopyStatus(''), 2000)
+    return () => window.clearTimeout(timeout)
+  }, [copyStatus])
+
+  async function copySummary(handoff: HandoffData) {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        setCopyStatus('Copy not available')
+        return
+      }
+      await navigator.clipboard.writeText(handoffText(handoff))
+      setCopyStatus('Copied')
+    } catch {
+      setCopyStatus('Copy not available')
+    }
+  }
 
   let body: ReactNode
   if (loaded === null || loaded.hours !== hours) {
@@ -105,6 +137,10 @@ export function Handoff({ onBack }: { onBack: () => void }) {
         <Card>
           <SectionHeader title={`Last ${handoff.window_hours} hours`} />
           <p className="handoff__summary">{handoff.summary}</p>
+          <Button variant="secondary" onClick={() => { void copySummary(handoff) }}>
+            Copy summary
+          </Button>
+          {copyStatus && <p role="status">{copyStatus}</p>}
         </Card>
         {handoff.residents.length === 0 ? (
           <EmptyState message="No residents on this unit yet." />
