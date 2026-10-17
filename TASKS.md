@@ -474,14 +474,14 @@ Acceptance:
 - No "diagnos"/"patient" in copy. `cd web && npx vitest run src/replays/ReplayList` and `scripts/ci.sh` pass.
 
 ### T431 — Replays: supervisor notes on a replay (component, local only)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: feature
 - deps: —
 - area: web/src/replays/ReplayNotes.tsx, web/src/replays/ReplayNotes.test.tsx, web/src/replays/replayNotes.css
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T21:47Z
 - pr: —
 
 What: Carved from T413. Supervisors leave short notes on a replay, shown with author and time; the person sees the same notes (SPEC §17: they see exactly what supervisors see). Local state only, no API.
