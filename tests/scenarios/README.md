@@ -58,6 +58,20 @@ bad the session is. `hours_ago` is measured back from the replayed session, whic
 happens at a fixed instant (`replay.REPLAY_EPOCH`), so a scenario gives the same answer
 today and next month.
 
+### Session durations
+
+In `expected.yaml`, set the optional `duration_s` (positive seconds) on the replayed
+session and its history sessions to exercise duration-based patterns like `motor_slowing`:
+
+```yaml
+duration_s: 450       # replayed session
+history:
+  - { hours_ago: 72, score: 0.0, duration_s: 300 }
+  # Add more history sessions to establish the usual duration.
+```
+
+Leaving durations unset keeps `duration_ratio` unset.
+
 ### steps.jsonl
 
 One `StepEvent` per line (`contracts/step_event.schema.json`). This is the level to
