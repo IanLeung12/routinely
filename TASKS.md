@@ -187,14 +187,14 @@ Acceptance:
 - Before/after screenshots of the overview in the PR (dev server), labelled.
 
 ### T403 — Redesign 3/6: unit overview + app shell
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: improvement
 - deps: T401
 - area: web/src/overview/, web/src/App.tsx, web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-3
+- claimed: 2026-10-17T21:01Z
 - pr: —
 
 What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
