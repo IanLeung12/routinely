@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T179 — Docs: CODEMAP note that handoff reuses the alert's errors
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: docs
@@ -16,7 +16,8 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - area: docs/CODEMAP.md
 - owner: ian-claude-standard
 - claimed: 2026-10-17T14:57Z
-- pr: —
+- pr: #290
+- rating: 5/5 clear
 
 What: T166 (PR #159) made `alerts.session_id_for`, `task_errors`, `distinct_clauses` and `normal_error_rate` public so `handoff.py` writes its summary from the same evidence as the alert, against that resident's own baseline. CODEMAP notes don't say so.
 Interface: Read only `docs/CODEMAP.md`, `git show e4f8fe1 --stat` and the module docstrings of `pipeline/src/routine_watch/alerts.py` and `handoff.py`. Edit notes only, not the generated file list.
