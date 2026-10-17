@@ -1034,3 +1034,196 @@ Acceptance:
 - ErrorList: each error type renders its phrase (e.g. omission → "skipped <step>"), the timestamp formats as m:ss, and the chip colour matches red/amber/grey; an empty list renders without crashing.
 - SuggestedChecks: renders one item per check, and nothing (or an empty state) for an empty list.
 - `cd web && npm run lint && npm test && npm run build` passes.
+
+### T037 — Skeleton replay API for evidence
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: T029
+- area: pipeline/src/routine_watch/evidence.py, pipeline/src/routine_watch/api.py (add the route only), pipeline/tests/test_evidence.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T05:54Z
+- pr: #65
+
+What: Back the alert's "open evidence" with skeleton frames, never video (SPEC §8). Demo sessions have no recorded frames, so map the flagged resident's latest session to the `tea_skip_teabag_pour_twice`-style frames scenario (or `tea_no_kettle` until it exists) and a normal session for the ghost layer.
+Interface: `evidence.replay_frames(session_id, t_start, t_end, fps=10) -> list[CaptureFrame]` (downsampled, padded ±2 s, clipped to session); `GET /sessions/{session_id}/replay?t_start&t_end&fps` → `{session_id, frames}`, 404 unknown session; `GET /residents/{id}/normal_replay?t_start&t_end` → frames from a normal session for the ghost overlay.
+Acceptance:
+- Tests: frames within window, fps cap honoured, 404s, payload validates against `contracts/capture_frame.schema.json`, no image/bytes fields.
+- `cd pipeline && uv run pytest tests/test_evidence.py -q` and `scripts/ci.sh` pass.
+
+### T038 — Session store: in-memory default + Tiger Data (TimescaleDB)
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/store.py, pipeline/sql/schema.sql, pipeline/tests/test_store.py, pipeline/pyproject.toml, .env.example
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:01Z
+- pr: #67
+
+What: SPEC §6.3 and the Tiger Data prize: sessions, step events and errors stored as time series. In-memory is the default so tests/CI/demo need no DB; Timescale only when `DATABASE_URL` is set.
+Interface: `class Store(Protocol)`: `add_session(Session)`, `add_events(list[StepEvent])`, `add_errors(list[TaskError])`, `sessions(resident_id, task_id, since: datetime) -> list[Session]`, `errors_for(session_id) -> list[TaskError]`. `MemoryStore`; `TimescaleStore(dsn)` using psycopg 3 (optional extra `db`); `schema.sql` creates `sessions`, `step_events`, `task_errors` with hypertables on the time column; `get_store()` picks by env. Not wired into the API yet.
+Acceptance:
+- MemoryStore tests for every method; TimescaleStore tests skipped unless `DATABASE_URL` set; `schema.sql` parses (basic check) and is idempotent (`IF NOT EXISTS`).
+- `cd pipeline && uv run pytest tests/test_store.py -q` and `scripts/ci.sh` pass.
+
+### T044 — Alert notifier behind an interface (push alert)
+- status: done
+- class: standard
+- priority: 2
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/notify.py, pipeline/tests/test_notify.py, .env.example
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:03Z
+- pr: #69
+
+What: SPEC Nice-to-have 3 (push alert to a phone) and §10 step 4. A `Notifier` interface with a fake used by default and a Supabase implementation used only when `LIVE_API=1` and Supabase env vars are set. No route wiring in this task.
+Interface: `class Notifier(Protocol): def send(self, alert: dict) -> None`; `FakeNotifier` (records sent alerts in `.sent`); `SupabaseNotifier(url, key)` inserting `{alert_id, resident_id, summary, created_at}` into table `alerts_feed` via the REST endpoint with plain HTTP (httpx or urllib, no new SDK); `get_notifier() -> Notifier` returns Supabase only when `LIVE_API=1` and `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are set, else Fake. Network errors are logged and swallowed (never break the pipeline). Payload carries ids and summary text only, no frames. Document the table in the module docstring; any new env var goes in `.env.example`.
+Acceptance:
+- Tests: default env → FakeNotifier; LIVE_API=1 without keys → Fake; with keys → Supabase (HTTP mocked; assert URL, headers, body); network failure doesn't raise. No real calls.
+- `cd pipeline && uv run pytest tests/test_notify.py -q` and `scripts/ci.sh` pass.
+
+### T070 — Tests for Sparkline and SessionList
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/Sparkline.test.tsx, web/src/resident/SessionList.test.tsx
+- owner: max-codex-light-2
+- claimed: 2026-10-17T06:00Z
+- pr: #68
+
+What: Both components have no tests. Read only `web/src/overview/Sparkline.tsx`, `web/src/resident/SessionList.tsx`, `web/src/resident/types.ts`, `web/src/resident/format.ts` and `web/src/resident/DriftCard.test.tsx` (test style).
+Interface: new test files only; do not change the components.
+Acceptance:
+- Sparkline: renders an svg path for ≥2 scores, handles 0 and 1 score without NaN in any attribute.
+- SessionList: one row per session with formatted date/score/errors; empty list shows the empty state; any click/select callback fires with the right session.
+- `cd web && npm run lint && npm test && npm run build` passes.
+
+### T072 — Live camera session messages (capture → recogniser → live messages)
+- status: done
+- class: heavy
+- priority: 1
+- kind: feature
+- deps: —
+- area: pipeline/src/routine_watch/live_camera.py, pipeline/tests/test_live_camera.py, docs/CODEMAP.md (notes only)
+- owner: —
+- claimed: —
+- pr: #74
+- note: 
+
+What: `/ws/live` only replays recorded scenarios; the demo needs the camera path too (SPEC §10, §16 decision B). Build the generator that turns a live capture stream into the same messages `live.session_messages` yields, so wiring it into the route is a one-line follow-up.
+Interface: `async def camera_session_messages(frames: AsyncIterator[CaptureFrame] | Iterable[CaptureFrame], task: str = "tea") -> AsyncIterator[dict]` in `live_camera.py`, reusing `live.py`/`recogniser.py`/`replay.py` helpers (import, don't copy; don't edit `live.py` or `api.py`). Frames come from `capture.record_stream` with `FakeLandmarker`/`FakeDetector` in tests; never store frames.
+Acceptance:
+- Feeding a recorded scenario's `frames.jsonl` through `camera_session_messages` yields the same step/error/end messages as `session_messages` for that scenario (test over ≥3 scenarios).
+- No real camera, network or paid API in tests; `scripts/ci.sh` passes.
+
+### T073 — Review: live screen hard-codes the tea steps instead of the session's task graph
+- status: done
+- class: standard
+- priority: 1
+- kind: bug
+- deps: T064
+- area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live.py, web/src/live/useLiveSession.ts, web/src/live/LiveSession.tsx, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx
+- source: reviewer
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:57Z
+- pr: #66
+
+What: `LiveSession.tsx` renders `<TaskMap steps={MOCK_STEPS}>` and `stepLabel()` looks labels up in `MOCK_STEPS` even when `source === 'live'`. The `/ws/live` protocol never tells the client which steps exist, so any non-tea task (T041 medication) or a renamed step shows the wrong map and "Session" labels.
+Interface: `live.session_messages` yields first `{"type": "session_start", "session_id", "task_id", "steps": [{"id", "label", "optional"}]}` from `scenario.graph`. Add it to the `LiveMessage` union; `useLiveSession` stores `steps` in state (mock stream sends the same message built from `MOCK_STEPS`); `LiveSession.tsx` uses `state.steps` for the map and labels, never `MOCK_STEPS` directly.
+Acceptance:
+- pytest: first message of `session_messages` for `tea_abandoned` is `session_start` with the graph's step ids in order.
+- vitest: a live stream with a custom 2-step `session_start` renders those 2 labels in the task map.
+- `scripts/ci.sh` passes.
+
+### T074 — Review: one stray second skeleton marks the whole session "assisted"
+- status: done
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/tests/test_replay.py
+- source: reviewer
+- owner: max-codex-light-1
+- claimed: 2026-10-17T05:55Z
+- pr: #64
+
+What: `replay.score_session` sets `assisted = any(len(frame.poses) >= 2 for frame in scenario.frames)`. Now that real capture runs MediaPipe with `num_poses=2` (T039), a single false-positive pose or someone walking past for one frame scores the session 0 and drops it from the baseline, which hides real changes from the nurse.
+Interface: add `assisted_of(frames: Sequence[CaptureFrame], min_seconds: float = ASSISTED_MIN_S) -> bool` in `replay.py` with `ASSISTED_MIN_S = 2.0`: true only when ≥2 poses appear in consecutive frames spanning at least `min_seconds` (by `frame.t`). `score_session` uses it.
+Acceptance:
+- Tests: one isolated 2-pose frame → not assisted; 2 poses held for ≥2 s → assisted; existing scenario expected outputs unchanged (add a frames fixture if no scenario covers it).
+- `scripts/ci.sh` passes.
+
+### T077 — Tests for the offline fallbacks in overview/api.ts and resident/api.ts
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/overview/api.test.ts, web/src/resident/api.test.ts
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:11Z
+- pr: #71
+
+What: The demo relies on the web app falling back to mock data when the pipeline API is down (SPEC §10 fallback), but `fetchResidents`, `fetchResident` and `fetchDrift` are untested. Add tests with a stubbed `fetch` (`vi.stubGlobal`); do not change the source files.
+Interface: read only web/src/overview/api.ts, web/src/resident/api.ts, web/src/mock/residents.ts, web/src/mock/residentDetail.ts, and web/src/alert/api.test.ts (for the fetch-stub pattern).
+Acceptance:
+- Each function: returns the JSON body on a 200; returns the mock data on a non-OK response; returns the mock data when fetch rejects.
+- `fetchResident` returns null for an unknown id when offline; the resident id is URL-encoded in the request URL.
+- `cd web && npm test -- --run` and `scripts/ci.sh` pass.
+
+### T078 — Scenario: kettle boiled twice is a repetition flag
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/tea_kettle_twice/
+- owner: ian-claude-standard
+- claimed: 2026-10-17T06:17Z
+- pr: #75
+
+What: Add a replay scenario for the "repetition" error type (SPEC §7): the resident boils the kettle twice, then finishes the tea normally.
+Interface: copy the layout of tests/scenarios/tea_skip_teabag_pour_twice/ (frames.jsonl + expected.yaml); read tests/scenarios/README.md for the format and pipeline/src/routine_watch/tasks/tea.yaml for step ids. Do not edit README.md (separate task) or any pipeline code.
+Acceptance:
+- expected.yaml lists exactly one repetition error on the kettle step and states whether the session flags, matching what the replay produces.
+- `scripts/e2e.sh` passes with the new scenario included; `scripts/ci.sh` passes.
+
+### T079 — Alerts use get_explainer() instead of a hard-wired template
+- status: done
+- class: light
+- priority: 1
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/alerts.py, pipeline/tests/test_alerts_explainer.py
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T06:07Z
+- pr: #70
+
+What: `alerts.py` line ~40 builds `_explainer = TemplateExplainer()`, so the merged Claude summariser (T032, `explain_claude.py`) is never used. Switch to `get_explainer()` so `LIVE_API=1` + `ANTHROPIC_API_KEY` turns on Claude summaries; default stays the template. Read only `alerts.py`, `explain.py`, `explain_claude.py`.
+Interface: in `alerts.py`, replace `_explainer = TemplateExplainer()` with a lazily-created `get_explainer()` result (a module-level `_get_explainer()` helper so tests can monkeypatch it). No other behaviour change.
+Acceptance:
+- New `pipeline/tests/test_alerts_explainer.py`: with `LIVE_API` unset, `build_alerts(...)` summaries equal the current template output; monkeypatching the helper to return a fake explainer (`summarise` returns `"FAKE"`) makes every alert summary `"FAKE"`. No network.
+- `cd pipeline && uv run pytest -q` and `scripts/ci.sh` pass.
+
+### T082 — Scenario: medication taken without water is an omission
+- status: done
+- note: superseded by T041 (#59), which added tests/scenarios/meds_skip_water
+- class: light
+- priority: 2
+- kind: test
+- deps: T041
+- area: tests/scenarios/med_no_water/, tests/scenarios/README.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Second-task coverage for the tester: a recorded medication session where the resident takes the pill but never pours/drinks water. Copy the shape of the scenario T041 adds for the medication task (read its `frames.jsonl` + `expected.yaml` and `tests/scenarios/README.md` only).
+Interface: `tests/scenarios/med_no_water/{frames.jsonl,expected.yaml}` expecting one `omission` error on the water step and no flag on its own; one new README row.
+Acceptance:
+- `scripts/e2e.sh` passes including the new scenario; `scripts/ci.sh` passes.
