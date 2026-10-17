@@ -44,7 +44,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T152 — Shift handoff rows open the resident's alert
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 3
 - kind: feature
@@ -53,7 +53,8 @@ Acceptance:
 - source: proposed
 - owner: ian-claude
 - claimed: 2026-10-17T09:10Z
-- pr: —
+- pr: #177
+- rating: 4/5 clear on the interface and the fallback; it didn't say the demo API only has an unreviewed alert after the live session has been played, so a fresh /handoff shows no button at all
 
 What: From the handoff, the incoming nurse should reach the evidence in one tap. Rows with an unreviewed alert get an "Open alert" button that goes to the alert screen. Check `pipeline/src/routine_watch/handoff.py` for whether rows carry alert ids; if not, use the first matching alert from `fetchAlerts()` by resident id (don't change the API here; note it in the PR).
 Interface: `Handoff({ onBack, onOpenAlert }: { onBack: () => void; onOpenAlert?: (alertId: string) => void })`; App passes `id => { setOpenHandoff(false); setOpenAlert(id) }`.
