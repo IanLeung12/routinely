@@ -3631,3 +3631,59 @@ Interface: read only `web/src/alert/alertText.ts` and `web/src/alert/alertText.t
 Acceptance:
 - New tests: the summary says "consistent with" for patterns, contains no "diagnos" and no "has <pattern>"; includes each error's time; names the resident by display name, not the raw id (e.g. not "mrs-k"); works with zero patterns.
 - `cd web && npx vitest run src/alert/alertText.test.ts` passes.
+
+### T213 — Alert view: heading order, focus on open, landmark
+- status: done
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T10:08Z
+- pr: #202
+- rating: 5/5 clear
+
+What: The alert is the screen judges and nurses read most. Make it navigable by screen reader and keyboard: one `h1` (resident + "Flagged for review"), section `h2`s in reading order (What changed, Errors, Evidence, Patterns, Suggested checks, Feedback), the view wrapped in a labelled `main`/`section`, and focus moved to the `h1` when an alert opens.
+Interface: markup-only changes in `AlertView.tsx`; keep existing class names and copy.
+Acceptance:
+- Tests: heading levels via `getAllByRole('heading')`, `h1` has focus after render, existing tests still pass unchanged in meaning.
+- `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T214 — TaskMapLegend: CSS classes instead of inline styles
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/live/TaskMapLegend.tsx, web/src/live/taskMap.css, web/src/live/TaskMapLegend.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:08Z
+- pr: #201
+- rating: 5/5 clear
+
+What: `TaskMapLegend.tsx` has three inline `style={{...}}` objects (list, item, swatch padding). Move them to classes in the existing `web/src/live/taskMap.css`, same pattern as T197/T200 (#193, #195). No visual change.
+Interface: read only the area files plus `web/src/index.css` for the `--space-*` tokens. Class names `task-map-legend`, `task-map-legend__item`, `task-map-legend__swatch`.
+Acceptance:
+- `grep -c "style={{" web/src/live/TaskMapLegend.tsx` is 0
+- existing TaskMapLegend tests still pass unchanged
+- `cd web && npm test -- TaskMapLegend` and `scripts/ci.sh` pass
+
+### T215 — DriftCard: CSS classes instead of inline styles
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/DriftCard.tsx, web/src/resident/driftCard.css, web/src/resident/DriftCard.test.tsx
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T10:13Z
+- pr: #203
+- rating: 5/5 clear
+
+What: `DriftCard.tsx` sets text colour inline, including a `state === 'trending'` ternary. Move it to a new `web/src/resident/driftCard.css` keyed off the existing `data-state` attribute (`.drift-card[data-state="trending"] .drift-card__summary { color: var(--error-amber-text) }`). No visual change.
+Interface: read only the area files and `web/src/resident/heatCalendar.css` as the example.
+Acceptance:
+- `grep -c "style={{" web/src/resident/DriftCard.tsx` is 0
+- test asserts the trending summary has the `drift-card__summary` class and the card keeps `data-state="trending"`
+- `cd web && npm test -- DriftCard` and `scripts/ci.sh` pass
