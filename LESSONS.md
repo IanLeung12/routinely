@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
 - In Vitest jsdom, new URL(cssPath, import.meta.url) may resolve to an HTTP URL; for fs.readFileSync CSS assertions use a path relative to the web package working directory. (max_API_light)
 - Claude CLI --disallowedTools is variadic: put it before other flags, never right before the prompt, or the prompt is eaten as tool names (ian)
 - Shared worker checkout changed branch and removed T365 during CI; create an isolated worktree before any edits or checks. (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - check:bundle budget (92,200 B) is already ~336 bytes over on clean origin/main (T442 tracks it): a new PR's CI will show 'first-load JS over budget' even for unrelated changes -- don't spend fix attem (ian-claude-standard-3)
 - Chrome headless on Windows can clip a 375px screenshot while keeping a wider layout viewport; use a 375px-wide preview container or verify innerWidth with device emulation before claiming phone wrappi (max_API_standard)
 - On Windows PowerShell, set $OutputEncoding to UTF-8 or use ASCII Unicode escapes when piping Python source; the default pipe encoding replaces non-ASCII punctuation with question marks. (max_API_standard-2)
+- If Windows Application Control blocks pytest.exe in ci.sh, invoke the same pytest module with uv run --with pytest python -m pytest; keep the workaround outside tracked scripts. (max_API_standard-2)
