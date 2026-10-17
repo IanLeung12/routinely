@@ -90,11 +90,17 @@ describe('ReplayPlayer', () => {
     expect(screen.getByRole('img').getAttribute('aria-label')).toBeTruthy()
   })
 
-  it('does not autoplay when the user prefers reduced motion', () => {
+  it('does not autoplay when the user prefers reduced motion, but Play still works', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
     render(<ReplayPlayer frames={frames} autoPlay />)
-    expect(screen.getByRole('button', { name: 'Play' })).toBeTruthy()
+    const playButton = screen.getByRole('button', { name: 'Play' })
+    expect(playButton).toBeTruthy()
     expect(vi.getTimerCount()).toBe(0)
+    playButton.focus()
+    expect(document.activeElement).toBe(playButton)
+    fireEvent.click(playButton)
+    act(() => vi.advanceTimersByTime(100))
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('1')
     delete (window as { matchMedia?: typeof window.matchMedia }).matchMedia
   })
 })
