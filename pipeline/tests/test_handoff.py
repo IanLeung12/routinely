@@ -4,6 +4,7 @@ The demo's data lives on `demo.DEMO_NOW`, so that is the clock every window here
 at, the way the `/handoff` route does.
 """
 
+import re
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -11,12 +12,14 @@ from fastapi.testclient import TestClient
 
 from routine_watch import api as api_module
 from routine_watch import handoff as handoff_module
+from routine_watch.alerts import build_alerts, distinct_clauses, normal_error_rate
 from routine_watch.api import app
 from routine_watch.contracts import AlertFeedback, FeedbackVerdict
-from routine_watch.demo import DEMO_NOW
+from routine_watch.demo import DEMO_NOW, demo_residents
 from routine_watch.explain import TemplateExplainer
 from routine_watch.feedback import FeedbackStore
 from routine_watch.handoff import DEFAULT_WINDOW_H, build_handoff
+from routine_watch.tasks import load_task
 
 #: The demo resident with the sudden spike, and one the seeded demo leaves alone.
 FLAGGED_RESIDENT = "mrs-k"
@@ -32,6 +35,9 @@ DRIFT_RESIDENT = "mr-chen"
 #: Enough confirmed alerts to pull a threshold down to its floor (`feedback.MIN_FACTOR`).
 MANY_CONFIRMED = 6
 
+#: The baseline comparison both the handoff and an alert end their sentence with.
+NORMALLY = re.compile(r"vs \S+ normally over \S+ days")
+
 
 @pytest.fixture(autouse=True)
 def _nothing_reviewed():
@@ -44,6 +50,27 @@ def _nothing_reviewed():
 
 def _needs_review(entry: dict) -> bool:
     return bool(entry["flags"] or entry["pending_review"] or entry["trending"])
+
+
+def resident(resident_id: str) -> dict:
+    """One seeded demo resident, the way `build_handoff` sees them."""
+    return next(r for r in demo_residents() if r["id"] == resident_id)
+
+
+def explainer_call() -> tuple[list[dict], dict, list[str]]:
+    """The `(errors, baseline, context)` the handoff hands its explainer."""
+    seen: list[tuple[list[dict], dict, list[str]]] = []
+
+    class RecordingExplainer:
+        def summarise(self, errors, baseline, context):
+            seen.append((errors, baseline, context))
+            return "recorded"
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(handoff_module, "_get_explainer", lambda: RecordingExplainer())
+        build_handoff(DEMO_NOW, 12)
+
+    return seen[0]
 
 
 def row(result: dict, resident_id: str) -> dict:
@@ -201,22 +228,79 @@ def test_summary_names_who_to_look_at_and_counts_the_quiet_rest() -> None:
 
 def test_the_explainer_only_sees_the_errors_the_pipeline_found() -> None:
     """The summary is written from detected evidence, never from invented facts."""
-    seen: list[tuple[list[dict], dict, list[str]]] = []
+    (errors, baseline, context) = explainer_call()
+
+    assert baseline["observed"] == 2, "both errors in Mrs. K's flagged session"
+    assert len(errors) <= baseline["observed"], "repeated clauses are said once"
+    assert {error["type"] for error in errors} == {"omission", "perseveration"}
+    assert context[1] == "last 12 h, 6 residents"
+    assert context[2].startswith("Mrs. K:")
+
+
+def test_summary_names_steps_of_the_task_not_a_placeholder() -> None:
+    """T121 gave the alert screen a real step per error; the handoff reads that same
+    evidence (`alerts.task_errors`) instead of synthesising "the task" again (T166)."""
+    (errors, _, _) = explainer_call()
+    steps = set(load_task("tea").step_ids)
+    summary = build_handoff(DEMO_NOW, 12)["summary"]
+
+    assert errors, "Mrs. K's flagged session is in the window"
+    assert {error["step_id"] for error in errors} <= steps
+    assert "the task" not in summary
+    assert any(step.replace("_", " ") in summary for step in steps)
+
+
+def test_summary_measures_the_session_against_that_residents_own_baseline() -> None:
+    """SPEC section 7: a resident is compared with her own history, never with the
+    unit's mixed-together average."""
+    mrs_k = resident(FLAGGED_RESIDENT)
+    unit_sessions = [s for r in demo_residents() for s in r["sessions"]]
+    unit_rate = sum(sum(s["errors"].values()) for s in unit_sessions) / len(unit_sessions)
+
+    (_, baseline, _) = explainer_call()
+
+    assert baseline["baseline_mean"] == round(normal_error_rate(mrs_k), 2)
+    assert baseline["baseline_days"] == 14, "her own two weeks of history"
+    assert baseline["baseline_mean"] != round(unit_rate, 2), "not the unit's average"
+
+
+def test_handoff_and_the_alert_say_the_same_thing_about_the_same_session(
+    mrs_k_flagged,
+) -> None:
+    """A nurse reads the handoff line, opens the alert it points at and must find the
+    same errors at the same steps and the same normal - not a second guess at them."""
+    (errors, _, _) = explainer_call()
+    summary = build_handoff(DEMO_NOW, 12)["summary"]
+    alert = next(a for a in build_alerts(demo_residents()) if a.resident_id == FLAGGED_RESIDENT)
+
+    assert errors, "her live session is in the window"
+    assert all(clause in distinct_clauses(alert.errors) for clause in errors)
+    assert NORMALLY.search(summary)[0] == NORMALLY.search(alert.summary)[0]
+
+
+def test_summary_says_whose_session_it_is() -> None:
+    """A handoff line about an unnamed session is a line a nurse cannot act on."""
+    (_, _, context) = explainer_call()
+
+    assert context[0] == "this session is Mrs. K's"
+    assert "Mrs. K's" in build_handoff(DEMO_NOW, 12)["summary"]
+
+
+def test_a_quiet_window_compares_nobody_with_anybody() -> None:
+    """With no flagged session there is nothing to measure, so the numbers are zeros
+    rather than some other resident's average."""
+    seen: list[dict] = []
 
     class RecordingExplainer:
         def summarise(self, errors, baseline, context):
-            seen.append((errors, baseline, context))
+            seen.append(baseline)
             return "recorded"
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(handoff_module, "_get_explainer", lambda: RecordingExplainer())
-        build_handoff(DEMO_NOW, 12)
+        build_handoff(DEMO_NOW - timedelta(days=30), 12)
 
-    (errors, baseline, context) = seen[0]
-    assert baseline["observed"] == len(errors)
-    assert {error["type"] for error in errors} == {"omission", "perseveration"}
-    assert context[0] == "last 12 h, 6 residents"
-    assert context[1].startswith("Mrs. K:")
+    assert seen[0] == {"observed": 0, "baseline_mean": 0.0, "baseline_days": 0}
 
 
 def test_naive_now_is_rejected_rather_than_silently_wrong() -> None:
