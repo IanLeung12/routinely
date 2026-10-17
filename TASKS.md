@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: d00137f
+- last-reviewed: eef354f
 
 ## Tasks
 
@@ -475,3 +475,54 @@ Interface: read `scripts/smoke.sh` (copy the `curl "${CURL_OPTS[@]}"` + `pass`/`
 Acceptance:
 - `scripts/dev.sh up && scripts/smoke.sh` passes with the new checks; `scripts/dev.sh down`
 - `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass
+
+### T246 — Unit overview: "Monitoring paused" chip on residents whose room is paused
+- status: todo
+- class: light
+- priority: 2
+- kind: feature
+- deps: T242
+- area: web/src/overview/UnitOverview.tsx, web/src/overview/UnitOverview.test.tsx, web/src/overview/overview.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: A nurse scanning the unit can't tell which rooms are paused (SPEC §12 privacy pause). On load, call `fetchPausedRooms()` and show a small grey "Monitoring paused" chip on each resident card whose `resident.room` is in the list.
+Interface: read `web/src/about/monitoringApi.ts` (`fetchPausedRooms(): Promise<string[]>`) and `web/src/overview/UnitOverview.tsx` (card markup around the `resident-room` span). If the fetch fails (API down / mock mode), show no chips and no error. Add the chip text to the card's `aria-label`.
+Acceptance:
+- tests (mock `fetchPausedRooms`): paused room shows the chip; others don't; fetch rejection shows no chip and the overview still renders
+- `cd web && npm test` and `scripts/ci.sh` pass
+
+### T247 — Shift handoff: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: T203
+- area: web/src/handoff/handoff.css, web/src/handoff/Handoff.tsx, web/src/handoff/Handoff.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same treatment T234/T235 gave the overview and live screen: at 375 px the handoff page has no horizontal scroll, rows stack, and buttons are at least 44 px tall.
+Interface: read `web/src/handoff/Handoff.tsx`, `web/src/handoff/handoff.css`, and `web/src/overview/overview.css` (copy its `@media (max-width: 480px)` approach). CSS plus at most class-name changes in `Handoff.tsx`; no behaviour change.
+Acceptance:
+- a `@media (max-width: 480px)` block in `handoff.css`; no fixed widths over 375 px
+- existing Handoff tests still pass; `cd web && npm test` and `scripts/ci.sh` pass
+
+### T248 — Test: live session_end flag matches /residents for every scenario
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_live_flag_consistency.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Guard T236 across all recordings: after a live replay of each scenario in `tests/scenarios/`, `session_end.flag` must equal that resident's flagged state from `/residents`, and `alert_id` must be `None` or an id that `/alerts/{id}` returns 200 for.
+Interface: read `pipeline/tests/test_live.py` (how it drives `session_messages` / `/ws/live` with the FastAPI `TestClient`) and `pipeline/tests/test_api_demo_reset.py` (calling `/demo/reset` between cases). New file only; parametrize over scenario dirs; reset state between cases.
+Acceptance:
+- one parametrized test per scenario; fakes only, no real API calls
+- `cd pipeline && python -m pytest tests/test_live_flag_consistency.py` and `scripts/ci.sh` pass
