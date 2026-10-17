@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows, stop scripts/dev.sh after smoke and before ci.sh: the dashboard locks rolldown native bindings and npm ci fails with EPERM. (max_API_light)
 - On Windows, if the full Vitest suite times out across unrelated tests under default parallelism, run npm test -- --maxWorkers=2 to reduce contention. (max_API_light)
 - Vitest stubs CSS imports (even ?raw), so a stylesheet is untestable until vite.config.ts enables test.css for that path; then getComputedStyle works in jsdom. (ian-claude)
 - Adding web mock residents also requires updating UnitOverview.test.tsx fixed names, status counts, and singular Watch queries. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - On Windows in Toronto time, Handoff audit-trail tests expect UTC (13:40 vs local 09:40); set TZ=UTC before scripts/ci.sh. (max_API_light)
 - Adding a required field to a WEB_PAYLOADS type breaks sibling test files' object literals of it, and vitest won't catch it (it doesn't typecheck) - only npm run build/tsc -b does: after merging main,  (ian-claude)
 - For Windows CI, set VITEST_MAX_WORKERS=2 before scripts/ci.sh to limit Vitest workers without editing package scripts; this avoids default-parallelism replay timeouts. (max_API_light)
+- Adding a field to the Alert contract: it must go on the Alert record (AlertDetail is not in WEB_PAYLOADS, so a detail-only field never reaches web/src/contracts.ts), and test_contracts.py pins Alert's (ian-claude)
