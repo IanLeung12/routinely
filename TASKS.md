@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 393b66c
+- last-reviewed: e24be0b
 
 ## Tasks
 
@@ -620,3 +620,142 @@ Interface: read only web/src/handoff/Handoff.keyboard.test.tsx, web/src/handoff/
 Acceptance:
 - Tabbing from "Copy summary" reaches "Print handoff"; Enter and Space each call `window.print` once.
 - `cd web && npx vitest run src/handoff/Handoff.keyboard.test.tsx` passes; `scripts/ci.sh` passes.
+
+### T380 — Dashboard: dark theme for night shift (prefers-color-scheme)
+- status: todo
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/index.css, web/src/ui/, web/src/theme.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Nurses check the dashboard on dim night-shift units; follow the OS dark setting so it isn't a bright glare. Rationale: Usefulness + Execution polish, no behaviour change.
+Interface: a `@media (prefers-color-scheme: dark)` block in web/src/index.css overriding the existing CSS custom properties only (no per-component colours); ui/ components must use those variables (fix any hard-coded colours in web/src/ui/*.css|tsx). Print stays light (print.css untouched).
+Acceptance:
+- New web/src/theme.test.ts: every custom property set in `:root` is also set in the dark block; text/background pairs in the dark block meet contrast ≥ 4.5:1 (compute from the hex values).
+- Look at overview + alert view with dark emulation in a browser; describe what you checked in the PR.
+- `scripts/ci.sh` passes.
+
+### T381 — scripts/preflight.sh: one command that says "ready to demo"
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- deps: —
+- area: scripts/preflight.sh, docs/DEMO.md, tests/test_preflight.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Before judging, one command should confirm the demo path works offline (SPEC §10 fallback, §13 risks) instead of someone remembering five scripts.
+Interface: `scripts/preflight.sh` runs in order and prints a ✓/✗ checklist: LIVE_API unset and OFFLINE_MODE=true; `scripts/dev.sh up` (if not already up); `scripts/smoke.sh`; `scripts/e2e.sh` (scenario count); POST /demo/reset then GET /residents shows the demo resident on watch. Exits non-zero on the first ✗ with the fix hint. Never calls paid APIs.
+Acceptance:
+- tests/test_preflight.py runs `scripts/preflight.sh --dry-run` and checks it lists every step and refuses to run when `LIVE_API=1`.
+- docs/DEMO.md "Before you start" says to run it.
+- Run it for real against `scripts/dev.sh up`, paste the checklist in the PR, then `scripts/dev.sh down`. `scripts/ci.sh` passes.
+
+### T382 — Refactor: move scenario loading out of replay.py into scenario.py
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/replay.py, pipeline/src/routine_watch/scenario.py, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: replay.py (500 lines) mixes the scenario file format (pydantic models + JSONL loading) with running/comparing a replay. Split them so each is readable on its own; no behaviour change.
+Interface: new `routine_watch/scenario.py` with `ReplayError`, `_Strict`, `ExpectedError`, `HistorySession`, `Expected`, `Scenario`, `load_scenario`, `_load_jsonl`, `scenario_dirs`, `SCENARIOS_DIR`. replay.py re-exports them (`from .scenario import ...`) so every existing import and test keeps working.
+Acceptance:
+- No test file changes needed; `cd pipeline && uv run pytest -q` and `scripts/e2e.sh` pass unchanged.
+- replay.py under ~330 lines; CODEMAP note for scenario.py. `scripts/ci.sh` passes.
+
+### T383 — Care-record context timeline: usable at phone width (375 px)
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/ContextTimeline.tsx, web/src/resident/contextTimeline.css, web/src/resident/ContextTimeline.mobile.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same treatment as the other phone-width tasks (e.g. T345 session list): the care-record timeline on resident detail must not overflow at 375 px.
+Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/SessionList.mobile.test.tsx and web/src/resident/sessionList.css (copy their approach). Add a `contextTimeline.css` imported by the component; wrap long labels, stack date above text under 480 px.
+Acceptance:
+- New ContextTimeline.mobile.test.tsx in the style of SessionList.mobile.test.tsx.
+- `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
+
+### T384 — Ghost replay: aria-label says what is being compared
+- status: todo
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/evidence/GhostReplay.tsx, web/src/evidence/GhostReplay.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The ghost replay SVG's label is the fixed "Today and usual skeleton replay"; a screen-reader user gets no information. Describe the comparison in words.
+Interface: read only web/src/evidence/GhostReplay.tsx and its test. Build the label from the props already passed (e.g. "Today's routine drawn over the usual routine, frame 12 of 40"); if a prop you'd need doesn't exist, keep to what's there. No new props from other files.
+Acceptance:
+- Test asserts the label changes with the frame and never contains "diagnos".
+- `cd web && npx vitest run src/evidence/GhostReplay` passes; `scripts/ci.sh` passes.
+
+### T385 — Docs: CODEMAP notes for overview filter counts and remembered prefs
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: —
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T347 (filter buttons show counts), T337 (filter/sort remembered for the session) and T318 (sort by most recent change) aren't in CODEMAP's overview notes.
+Interface: read only docs/CODEMAP.md, web/src/overview/UnitOverview.tsx and web/src/overview/overviewPrefs.ts. Edit only the notes, not the generated file list.
+Acceptance:
+- 2–4 lines under the overview section naming `countForFilter`, `overviewPrefs.ts` (sessionStorage) and the sort modes.
+- `scripts/ci.sh` passes.
+
+### T386 — Test: demo banner reset works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/ui/DemoBanner.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The presenter resets the demo from the banner; it must work without a mouse like every other screen's keyboard test.
+Interface: read only web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx (reuse its fetch stub) and web/src/about/PrivacyPanel.keyboard.test.tsx (style). No production code changes.
+Acceptance:
+- Tab reaches the reset button; Enter and Space each trigger one reset request; focus stays visible on the button afterwards.
+- `cd web && npx vitest run src/ui/DemoBanner` passes; `scripts/ci.sh` passes.
+
+### T387 — Test: guided tour works keyboard-only
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/tour/Tour.keyboard.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The `?tour=1` presenter card (T360 just made it phone-width) has no keyboard test.
+Interface: read only web/src/tour/Tour.tsx, web/src/tour/steps.ts, web/src/tour/Tour.test.tsx and web/src/about/PrivacyPanel.keyboard.test.tsx (style). No production code changes.
+Acceptance:
+- Tab reaches Next/Back/Close in a sensible order; Enter advances a step; the last step's control closes or finishes the tour as the component defines.
+- `cd web && npx vitest run src/tour` passes; `scripts/ci.sh` passes.
