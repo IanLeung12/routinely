@@ -283,7 +283,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain.py -q` and `scripts/ci.sh` pass.
 
 ### T018 — Nurse feedback threshold tuning
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
