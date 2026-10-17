@@ -317,14 +317,14 @@ Acceptance:
 - `cd web && npx vitest run src/evidence` and `scripts/ci.sh` pass
 
 ### T227 — Test: stand-in skeleton never changes what the recogniser reads
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_stick_figure.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:22Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T227-wip-1053: start from it (git switch task/T227-wip-1053 && git merge origin/main)
 
