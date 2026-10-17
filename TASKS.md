@@ -459,7 +459,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_stick_figure.py -q` and `scripts/ci.sh` pass
 
 ### T228 — Bug: flaky "moves focus to the h1" tests turn main CI red
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
