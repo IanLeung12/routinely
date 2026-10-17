@@ -370,7 +370,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T333 — Resident detail: print-friendly layout
-- status: in-review
+- status: done
 - class: standard
 - priority: 3
 - kind: feature
