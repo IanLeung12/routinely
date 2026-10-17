@@ -95,14 +95,14 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/alert/PatternList.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T12:31Z
 - pr: —
 - note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T229-wip-1210: start from it (git switch task/T229-wip-1210 && git merge origin/main)
 
