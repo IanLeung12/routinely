@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- Adding web mock residents also requires updating UnitOverview.test.tsx fixed names, status counts, and singular Watch queries. (max_API_light)
 - A feature whose numbers come from demo_residents() can go stale mid-task: main's T124 left mrs-k on watch (use the conftest mrs_k_flagged fixture) and moved daily_scores into drift.py - re-derive expe (ian-claude)
 - Never pass -c user.email to git commit: GitHub rejects the push with 'email privacy restrictions'. Use the repo's configured noreply identity (git config user.email). (ian-claude)
 - Vitest does not auto-clean rendered DOM in this setup; import cleanup and register afterEach(cleanup) in component tests. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - When concurrent workers share a checkout, create an isolated git worktree before editing; run tasks.py from the original checkout because the tasks branch is already checked out there. (Max_codex_light)
 - Fresh isolated worktrees need uv run --extra dev python -m pytest to install pytest before targeted tests. (Max_codex_light)
 - Run each worker in an isolated checkout: concurrent worker.sh can save WIP and reset HEAD during CI, removing the active task files. (Max_codex_light)
+- App tests must stub WebSocket in beforeEach so every render avoids real localhost sockets and undici Event errors. (Max_codex_light)
