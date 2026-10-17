@@ -15,12 +15,14 @@ Two stages, both pure:
 * `score_patterns` scores every pattern in `routine_watch.patterns_library` against
   those features. Each pattern's confidence is the weighted mean of its signals,
   narrowed by how well the onset matches its time profile, nudged by care-record
-  context, and scaled by how far the resident has moved past their own threshold.
+  context, scaled by how far the resident has moved past their own threshold, and
+  finally multiplied by this resident's nurse-feedback weight for that pattern, if
+  her nurses have answered "what was it?" before (`weights`, SPEC Nice to have 8).
 
-It is rules over features, never a guess: the same features always give the same
-patterns, and the library is data, so the LLM summariser never adds a pattern. An
-empty result is a real answer - "a change was detected, with no clear pattern" - and
-the wording is always "consistent with ... - rule out ...".
+It is rules over features, never a guess: the same features and the same past nurse
+answers always give the same patterns, and the library is data, so the LLM summariser
+never adds a pattern. An empty result is a real answer - "a change was detected, with
+no clear pattern" - and the wording is always "consistent with ... - rule out ...".
 
 Features the pipeline does not record yet (gaps between steps, movement speed from
 the skeleton, per-hand step shares) are left as `None` rather than guessed. A pattern
@@ -430,7 +432,25 @@ def _time_line(profile: TimeProfile, features: Features) -> str:
     return f"came on over about {_days(features.change_days)}, consistent with {profile.note}"
 
 
-def _evidence(pattern: Pattern, features: Features, known: Mapping[str, float]) -> list[str]:
+def _weight_line(weight: float, answers: int) -> str:
+    """Why this pattern sits higher or lower than the rules alone put it.
+
+    Shown whenever nurse feedback moved the pattern for this resident, so the
+    ranking is never quietly re-ordered behind her back (SPEC Nice to have 8).
+    """
+    return (
+        f"weighted by {answers} past nurse {'answer' if answers == 1 else 'answers'} "
+        f"for this resident: confidence {'up' if weight > 1.0 else 'down'} {_pct(weight)}%"
+    )
+
+
+def _evidence(
+    pattern: Pattern,
+    features: Features,
+    known: Mapping[str, float],
+    weight: float = 1.0,
+    answers: int = 0,
+) -> list[str]:
     """The lines a nurse reads under the pattern name, strongest signal first."""
     lines = [_time_line(pattern.time_profile, features)]
 
@@ -446,6 +466,8 @@ def _evidence(pattern: Pattern, features: Features, known: Mapping[str, float]) 
         if flag in features.context and (note := features.context_notes.get(flag))
     ]
     lines += list(dict.fromkeys(notes))[:MAX_CONTEXT_LINES]
+    if weight != 1.0 and answers > 0:
+        lines.append(_weight_line(weight, answers))
     return lines
 
 
@@ -469,9 +491,19 @@ def time_fit(profile: TimeProfile, change_days: float | None) -> float:
 
 
 def _match(
-    pattern: Pattern, features: Features, values: Mapping[str, float | None]
+    pattern: Pattern,
+    features: Features,
+    values: Mapping[str, float | None],
+    weight: float = 1.0,
+    answers: int = 0,
 ) -> PatternMatch | None:
-    """Score one pattern, or `None` if too much of it is unmeasurable here."""
+    """Score one pattern, or `None` if too much of it is unmeasurable here.
+
+    `weight` is this resident's nurse-feedback multiplier for this pattern
+    (`feedback.FeedbackStore.pattern_weights`), applied to the finished confidence so
+    it moves the pattern's place in the ranking and nothing else: a pattern that does
+    not match at all still scores zero however often it was confirmed before.
+    """
     weights = pattern.signals
     total = sum(weights.values())
     known = {name: value for name in weights if (value := values.get(name)) is not None}
@@ -491,9 +523,9 @@ def _match(
     return PatternMatch(
         pattern_id=pattern.pattern_id,
         name=pattern.name,
-        confidence=round(_clamp(confidence), 3),
+        confidence=round(_clamp(_clamp(confidence) * weight), 3),
         urgency=pattern.urgency,
-        evidence=_evidence(pattern, features, known),
+        evidence=_evidence(pattern, features, known, weight, answers),
         checks=list(pattern.checks),
     )
 
@@ -503,14 +535,38 @@ def score_patterns(
     library: tuple[Pattern, ...] = LIBRARY,
     threshold: float = PATTERN_THRESHOLD,
     limit: int = MAX_PATTERNS,
+    weights: Mapping[str, float] | None = None,
+    answers: Mapping[str, int] | None = None,
 ) -> list[PatternMatch]:
     """The patterns this change is consistent with: best first, at most `limit`.
 
     An empty list is the honest answer when nothing clears the threshold, and the
     dashboard says so: "change detected, no clear pattern" (SPEC §7.5).
+
+    `weights` is one resident's nurse-feedback multiplier per pattern id
+    (`feedback.FeedbackStore.pattern_weights`), missing entries meaning 1.0: it
+    multiplies each confidence before the threshold and the sort, so what her nurses
+    confirmed before ranks higher and what they dismissed ranks lower on her next
+    alerts (SPEC Nice to have 8). `answers` is how many answers each weight is read
+    from (`pattern_answers`), for the evidence line that says so. With no weights
+    this is the pattern library against the features and nothing else.
     """
+    weights = weights or {}
+    answers = answers or {}
     values = signals(features)
-    matches = [match for pattern in library if (match := _match(pattern, features, values))]
+    matches = [
+        match
+        for pattern in library
+        if (
+            match := _match(
+                pattern,
+                features,
+                values,
+                weights.get(pattern.pattern_id, 1.0),
+                answers.get(pattern.pattern_id, 0),
+            )
+        )
+    ]
     scored = [match for match in matches if match.confidence >= threshold]
     scored.sort(key=lambda match: (-match.confidence, match.pattern_id))
     return scored[:limit]

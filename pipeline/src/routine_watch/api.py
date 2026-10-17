@@ -85,7 +85,10 @@ class AlertFeedbackIn(BaseModel):
 
 
 def _alerts_by_id() -> dict[str, Alert]:
-    return {alert.alert_id: alert for alert in build_alerts(demo_residents())}
+    return {
+        alert.alert_id: alert
+        for alert in build_alerts(demo_residents(), feedback=_feedback_store)
+    }
 
 
 def _alert_payload(alert: Alert) -> dict:
@@ -111,34 +114,40 @@ def list_residents() -> list[dict]:
     return [{field: resident[field] for field in _SUMMARY_FIELDS} for resident in demo_residents()]
 
 
-@app.get("/residents/{resident_id}")
-def get_resident(resident_id: str) -> dict:
-    """Resident detail (SPEC section 9): sessions, care records and baseline."""
+def _resident_or_404(resident_id: str) -> dict:
+    """The demo resident with this id, or a 404 (SPEC section 9)."""
     for resident in demo_residents():
         if resident["id"] == resident_id:
             return resident
     raise HTTPException(status_code=404, detail="resident not found")
 
 
+@app.get("/residents/{resident_id}")
+def get_resident(resident_id: str) -> dict:
+    """Resident detail (SPEC section 9): sessions, care records and baseline."""
+    return _resident_or_404(resident_id)
+
+
 @app.get("/residents/{resident_id}/drift")
 def resident_drift(resident_id: str) -> dict:
     """Daily score trend (SPEC section 8): backs the drift card with one point per day."""
-    for resident in demo_residents():
-        if resident["id"] == resident_id:
-            result = drift(daily_scores(resident["scores"]))
-            return {
-                "resident_id": resident_id,
-                "slope_per_day": result.slope_per_day,
-                "days": result.days,
-                "trending": result.trending,
-            }
-    raise HTTPException(status_code=404, detail="resident not found")
+    resident = _resident_or_404(resident_id)
+    result = drift(daily_scores(resident["scores"]))
+    return {
+        "resident_id": resident_id,
+        "slope_per_day": result.slope_per_day,
+        "days": result.days,
+        "trending": result.trending,
+    }
 
 
 @app.get("/alerts")
 def list_alerts() -> list[dict]:
     """Every current alert (SPEC section 5, MVP 5): one per flagged resident."""
-    return [_alert_payload(alert) for alert in build_alerts(demo_residents())]
+    return [
+        _alert_payload(alert)
+        for alert in build_alerts(demo_residents(), feedback=_feedback_store)
+    ]
 
 
 @app.get("/alerts/{alert_id}")
@@ -155,8 +164,9 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
     """One-tap nurse feedback (SPEC section 5, MVP 7): tunes this resident's threshold.
 
     An optional `cause` is the answer to "what was it?" (MVP 8): the pattern the change
-    turned out to be, or "other". It is logged against the resident, so a later task can
-    weigh that resident's patterns by what their confirmed alerts actually were.
+    turned out to be, or "other". It is logged against the resident and re-weights her
+    pattern ranking on later alerts (Nice to have 8), together with the pattern this
+    alert led with, which is what a "false alarm" is a false alarm on.
 
     Re-posting the same alert replaces its verdict and its cause rather than
     double-counting them.
@@ -172,7 +182,13 @@ def post_alert_feedback(alert_id: str, body: AlertFeedbackIn) -> dict:
         note=body.note,
         cause=body.cause,
     )
-    _feedback_store.record(alert_id, alert.resident_id, feedback, cause=feedback.cause)
+    _feedback_store.record(
+        alert_id,
+        alert.resident_id,
+        feedback,
+        cause=feedback.cause,
+        top_pattern=alert.patterns[0].pattern_id if alert.patterns else None,
+    )
     return _alert_payload(alert)
 
 
