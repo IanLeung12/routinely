@@ -11,7 +11,17 @@ asked for (`routine_watch.demo`) - so this is the smallest thing that makes one 
     session_log.record("mrs-k", session, errors)   # the live session is now hers
     session_log.sessions_for("mrs-k")              # -> [Session], oldest first
     session_log.errors_for(session.session_id)     # -> [TaskError]
+    session_log.record_unclear("204", when)        # one nobody could score, by room
+    session_log.unclear_in("204", start, end)      # -> how many of those, in a window
     session_log.reset()                            # back to the seeded demo
+
+The second pair is the sessions that did **not** become anybody's. A session too
+much of whose capture is unclear is left out of the resident's history on purpose
+(`routine_watch.live`, SPEC section 12), which makes a camera nobody can see through
+look like a quiet room; all that is kept of it is when it happened and which room's
+camera could not read it, so the shift handoff can say "check the camera view"
+(`routine_watch.handoff`). Timestamps and a room, never frames, never a resident,
+never a score.
 
 It is a dictionary in this process, gone when it exits: no database, no file, no
 network. The shape is `routine_watch.store.Store`'s on purpose (a session and its
@@ -27,6 +37,7 @@ unless it calls `reset()` - a fixture, not a line at the end of the test that an
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import datetime
 
 from .contracts import Session, TaskError
 
@@ -37,6 +48,12 @@ STAGE = "session_log"
 #: resident's history, `errors_for` is one session's evidence.
 _sessions: dict[str, dict[str, Session]] = {}
 _errors: dict[str, list[TaskError]] = {}
+
+#: When a session was too unclear to score, by room (SPEC section 12): timestamps and
+#: nothing else - no session id, no resident, no errors, no score. By room rather than
+#: by resident because what it is about is that room's camera view, and because the
+#: session it counts is deliberately nobody's: `record` never sees it.
+_unclear: dict[str, list[datetime]] = {}
 
 
 def record(resident_id: str, session: Session, errors: Iterable[TaskError] = ()) -> None:
@@ -72,7 +89,33 @@ def errors_for(session_id: str) -> list[TaskError]:
     return list(_errors.get(session_id, ()))
 
 
+def record_unclear(room: str, at: datetime) -> None:
+    """Note that one session in `room` ended too unclear to score (SPEC section 12).
+
+    `at` is when it ended, in the same timezone-aware clock the window reading this
+    back uses, and it is all that is kept: an unclear session is left out of the
+    resident's scored history entirely (`routine_watch.live`), because too little of
+    its capture can be trusted to count it as one of theirs. That silence is what
+    this answers - a blocked or badly lit camera produces no sessions at all, which
+    reads as a quiet room - so the count belongs to the room's camera view and says
+    nothing whatever about the resident in it.
+    """
+    _unclear.setdefault(room, []).append(at)
+
+
+def unclear_in(room: str, start: datetime, end: datetime) -> int:
+    """How many of `room`'s sessions were too unclear to score from `start` to `end`.
+
+    Both ends count, the way the shift handoff's window does
+    (`routine_watch.handoff`): a session that has just this moment ended unclear is
+    this shift's to hand over.
+    """
+    return len([at for at in _unclear.get(room, ()) if start <= at <= end])
+
+
 def reset() -> None:
-    """Forget every recorded session: the demo is back to its seeded history."""
+    """Forget every recorded session, scored or unclear: the demo is back to its
+    seeded history."""
     _sessions.clear()
     _errors.clear()
+    _unclear.clear()

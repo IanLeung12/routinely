@@ -3,7 +3,7 @@
   "$defs": {
     "HandoffResident": {
       "additionalProperties": false,
-      "description": "One resident's line of the shift handoff (SPEC section 9).\n\n`flags` counts the sessions inside the window that scored above this resident's\nown threshold, which is the evidence a flag rests on rather than the flag itself:\none bad session never alerts (SPEC section 7). `pending_review` counts the alerts\nraised for them that nobody has given a verdict on yet. `previous_flags` is the\nsame count for the window before this one, so a nurse coming on shift can read\nwhether this resident is getting better or worse rather than only a number.\n\n`previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it\nwas added after the payload shipped, so an older or trimmed handoff still\nvalidates (T292, T311) and a dashboard reading it knows \"no comparison sent\"\nfrom \"none last shift\".",
+      "description": "One resident's line of the shift handoff (SPEC section 9).\n\n`flags` counts the sessions inside the window that scored above this resident's\nown threshold, which is the evidence a flag rests on rather than the flag itself:\none bad session never alerts (SPEC section 7). `pending_review` counts the alerts\nraised for them that nobody has given a verdict on yet. `previous_flags` is the\nsame count for the window before this one, so a nurse coming on shift can read\nwhether this resident is getting better or worse rather than only a number.\n\n`unclear_sessions` counts what the window could *not* read: sessions in this\nresident's room the capture was too unclear to score, which are left out of the\nscored history altogether (SPEC section 12, T342) and so would otherwise make a\nblocked or badly lit camera read as a quiet room. It is about the camera's view,\nnever about the resident.\n\n`previous_flags` and `unclear_sessions` default to 0 for the same reason\n`monitoring_paused` does: they were added after the payload shipped, so an older\nor trimmed handoff still validates (T292, T311) and a dashboard reading it knows\n\"no comparison sent\" from \"none last shift\".",
       "properties": {
         "resident_id": {
           "minLength": 1,
@@ -38,6 +38,13 @@
           "description": "Alerts in the window with no verdict yet.",
           "minimum": 0,
           "title": "Pending Review",
+          "type": "integer"
+        },
+        "unclear_sessions": {
+          "default": 0,
+          "description": "Sessions in this resident's room the capture was too unclear to score in the window (SPEC section 12). They are in nobody's history, so without this a camera that cannot see reads as a quiet room. A count about the camera view, never about the resident.",
+          "minimum": 0,
+          "title": "Unclear Sessions",
           "type": "integer"
         },
         "trending": {

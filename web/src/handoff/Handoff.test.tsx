@@ -556,6 +556,81 @@ describe('Handoff', () => {
     expect(text).toContain('Mr. Chen, Room 211:')
   })
 
+  /** A room whose camera could not be read (T355): the sessions are scored by
+   * nobody and in nobody's history (SPEC section 12), so without this line the row
+   * is indistinguishable from a quiet one. */
+  it('shows the camera line on the row whose capture was too unclear to score', async () => {
+    serve({
+      ...served,
+      residents: [
+        { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 0, pending_review: 0, trending: false, unclear_sessions: 2 },
+        { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, pending_review: 0, trending: false, unclear_sessions: 0 },
+      ],
+    })
+
+    render(<Handoff onBack={() => {}} />)
+
+    const kRow = (await screen.findByText('Mrs. K')).closest('li')
+    expect(kRow?.textContent).toContain('2 sessions too unclear to score — check the camera view')
+    // About the camera, not the resident: nothing on the row says she did anything.
+    expect(kRow?.textContent).not.toMatch(/diagnos|unreliable resident/i)
+    // The count is that room's, so the room the camera read keeps its quiet row.
+    const chenRow = screen.getByText('Mr. Chen').closest('li')
+    expect(chenRow?.textContent).not.toMatch(/unclear/i)
+    expect(chenRow?.textContent).toContain('No change flagged')
+  })
+
+  it('says one session, not "1 sessions", when the camera lost only one', async () => {
+    serve({
+      ...served,
+      residents: [
+        { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 0, pending_review: 0, trending: false, unclear_sessions: 1 },
+      ],
+    })
+
+    render(<Handoff onBack={() => {}} />)
+
+    const kRow = (await screen.findByText('Mrs. K')).closest('li')
+    expect(kRow?.textContent).toContain('1 session too unclear to score — check the camera view')
+  })
+
+  it('shows no camera line when every session was scored', async () => {
+    serve({
+      ...served,
+      residents: [
+        { resident_id: 'mrs-k', name: 'Mrs. K', room: '204', flags: 2, pending_review: 1, trending: false, unclear_sessions: 0 },
+        // The older-or-trimmed payload, which counted nothing at all (T292, T311):
+        // no claim either way, so still no line.
+        { resident_id: 'mr-chen', name: 'Mr. Chen', room: '211', flags: 0, pending_review: 0, trending: true },
+      ],
+    })
+
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+
+    expect(screen.queryByText(/too unclear to score/)).toBeNull()
+    expect(screen.queryByText(/camera/i)).toBeNull()
+  })
+
+  it("carries the camera line into the copied handoff text", () => {
+    const unclear: HandoffData = {
+      ...mockHandoff,
+      residents: mockHandoff.residents.map((resident) =>
+        resident.resident_id === 'mrs-k' ? { ...resident, unclear_sessions: 2 } : resident,
+      ),
+    }
+
+    const text = handoffText(unclear)
+
+    expect(text).toContain(
+      'Mrs. K, Room 204: 2 flagged sessions, 1 unreviewed alert, No upward trend, '
+      + '2 more than last shift, 2 sessions too unclear to score — check the camera view',
+    )
+    // Every other row ends where it always did: no camera to check, nothing said.
+    expect(text.split('\n').filter((line) => line.includes('too unclear'))).toHaveLength(1)
+    expect(handoffText(mockHandoff)).not.toMatch(/too unclear/)
+  })
+
   it('keeps review wording and theme tokens, offline and online', async () => {
     offline()
 

@@ -166,6 +166,14 @@
   color: var(--error-grey-text);
 }
 
+/* Capture too unclear to score: grey everywhere in the dashboard (SPEC section 7 -
+   unclear is never an error), the same grey as a paused room because both say the
+   pipeline has nothing to report rather than something to report. */
+.handoff__chip--unclear {
+  background: var(--error-grey-bg);
+  color: var(--error-grey-text);
+}
+
 /* Nurses check the handoff on a phone on the floor (T247): below 480px, stack each
    row's identity, chips and alert button instead of squeezing them onto one line
    and forcing horizontal scroll, and give controls room to tap. */

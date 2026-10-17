@@ -204,7 +204,11 @@ export type Handoff = {
  * `pending_review` counts the alerts raised for them that nobody has given a verdict on yet.
  * `previous_flags` is the same count for the window before this one, so a nurse coming on shift
  * can read whether this resident is getting better or worse rather than only a number.
- * `previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it was added
+ * `unclear_sessions` counts what the window could *not* read: sessions in this resident's room
+ * the capture was too unclear to score, which are left out of the scored history altogether
+ * (SPEC section 12, T342) and so would otherwise make a blocked or badly lit camera read as a
+ * quiet room. It is about the camera's view, never about the resident. `previous_flags` and
+ * `unclear_sessions` default to 0 for the same reason `monitoring_paused` does: they were added
  * after the payload shipped, so an older or trimmed handoff still validates (T292, T311) and a
  * dashboard reading it knows "no comparison sent" from "none last shift".
  */
@@ -226,6 +230,12 @@ export type HandoffResident = {
   previous_flags?: number
   /** Alerts in the window with no verdict yet. */
   pending_review: number
+  /**
+   * Sessions in this resident's room the capture was too unclear to score in the window (SPEC
+   * section 12). They are in nobody's history, so without this a camera that cannot see reads
+   * as a quiet room. A count about the camera view, never about the resident.
+   */
+  unclear_sessions?: number
   /**
    * Their error score is on a slow rise. Read over their whole history, not this window: a
    * drift takes weeks to show (SPEC section 7.5).

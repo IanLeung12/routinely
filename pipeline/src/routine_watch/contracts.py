@@ -878,10 +878,16 @@ class HandoffResident(_Contract):
     same count for the window before this one, so a nurse coming on shift can read
     whether this resident is getting better or worse rather than only a number.
 
-    `previous_flags` defaults to 0 for the same reason `monitoring_paused` does: it
-    was added after the payload shipped, so an older or trimmed handoff still
-    validates (T292, T311) and a dashboard reading it knows "no comparison sent"
-    from "none last shift".
+    `unclear_sessions` counts what the window could *not* read: sessions in this
+    resident's room the capture was too unclear to score, which are left out of the
+    scored history altogether (SPEC section 12, T342) and so would otherwise make a
+    blocked or badly lit camera read as a quiet room. It is about the camera's view,
+    never about the resident.
+
+    `previous_flags` and `unclear_sessions` default to 0 for the same reason
+    `monitoring_paused` does: they were added after the payload shipped, so an older
+    or trimmed handoff still validates (T292, T311) and a dashboard reading it knows
+    "no comparison sent" from "none last shift".
     """
 
     resident_id: Id
@@ -900,6 +906,14 @@ class HandoffResident(_Contract):
         "can say more, fewer or the same as last shift. A count, never a verdict.",
     )
     pending_review: int = Field(ge=0, description="Alerts in the window with no verdict yet.")
+    unclear_sessions: int = Field(
+        default=0,
+        ge=0,
+        description="Sessions in this resident's room the capture was too unclear to "
+        "score in the window (SPEC section 12). They are in nobody's history, so "
+        "without this a camera that cannot see reads as a quiet room. A count about "
+        "the camera view, never about the resident.",
+    )
     trending: bool = Field(
         description="Their error score is on a slow rise. Read over their whole history, "
         "not this window: a drift takes weeks to show (SPEC section 7.5)."
