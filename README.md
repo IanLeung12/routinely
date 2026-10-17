@@ -7,6 +7,7 @@ Needs `git`, `gh` (logged in), `python3`, and `claude` or `codex`.
 
 ```bash
 gh repo clone IanLeung12/htv-2026 && cd htv-2026
+cp .env.example .env                               # fill in keys you need
 python3 scripts/tasks.py list                      # see the board
 AGENT=max TOOL=claude CLASS=light scripts/worker.sh  # loop: claim → PR → auto-merge
 ```
