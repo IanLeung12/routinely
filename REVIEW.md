@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: b459e8d
-- next-area: contracts+api
+- last-reviewed: 7fac25f
+- next-area: scripts+ci
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
