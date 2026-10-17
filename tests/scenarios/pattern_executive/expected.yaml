@@ -1,0 +1,45 @@
+# T141: SPEC §7.5's executive pattern. The teabag goes into the cup three times
+# (perseveration, same shape as tea_teabag_three_times) while every step still lands
+# in a valid order - no sequence errors - on top of a resident whose repeats have
+# been building for about a week rather than appearing overnight or creeping for
+# months, which is the days-to-weeks, order-intact onset the library's
+# `executive_pattern` is defined by (SPEC §7.5).
+
+task: tea
+
+steps:
+  - fill_kettle
+  - boil
+  - get_cup
+  - teabag_in_cup
+  - pour
+  - teabag_in_cup # again, perseveration
+  - stir
+  - stir # again, not an error (stir is once_only:false)
+  - teabag_in_cup # again, perseveration
+  - remove_teabag
+
+errors:
+  - { type: perseveration, step: teabag_in_cup }
+  - { type: perseveration, step: teabag_in_cup }
+score: 4.0 # perseveration 2.0 x2
+
+# A month of quiet sessions, then a repeated step seven days ago that has kept
+# recurring since - the days-to-weeks onset, with the order still right, that
+# separates this from sudden_change (hours to days) and slow_drift (steady rise).
+history:
+  - { hours_ago: 500, errors: {} }
+  - { hours_ago: 476, errors: {} }
+  - { hours_ago: 452, errors: {} }
+  - { hours_ago: 428, errors: {} }
+  - { hours_ago: 404, errors: {} }
+  - { hours_ago: 380, errors: {} }
+  - { hours_ago: 356, errors: {} }
+  - { hours_ago: 332, errors: {} }
+  - { hours_ago: 308, errors: {} }
+  - { hours_ago: 284, errors: {} }
+  - { hours_ago: 168, errors: { perseveration: 2 } }
+  - { hours_ago: 30, errors: { perseveration: 2 } }
+
+flag: true
+top_pattern: executive_pattern
