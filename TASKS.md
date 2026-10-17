@@ -372,7 +372,7 @@ Acceptance:
 - `cd web && npm test -- DemoBanner` and `scripts/ci.sh` pass
 
 ### T219 — Bug: live session's final error list differs from replay for sequence scenarios
-- status: in-review
+- status: done
 - class: standard
 - priority: 1
 - kind: bug
