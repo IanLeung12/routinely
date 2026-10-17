@@ -449,7 +449,7 @@ Acceptance:
 - `cd web && npm test -- TaskMapLegend` and `scripts/ci.sh` pass
 
 ### T215 — DriftCard: CSS classes instead of inline styles
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
