@@ -1,51 +1,49 @@
-# METRICS (last 6 h, generated 2026-10-17 14:56 UTC)
+# METRICS (last 6 h, generated 2026-10-17 15:57 UTC)
 
-- **Throughput:** 122/127 claimed tasks merged · 5 active workers · first-try success 86%
-- **Friction:** 2 PR CI failures · 13 releases (11 sessions ended early, 1 stale, 1 conflicts) · 0 blocked
-- **Main:** 2/129 main CI runs red · 0 reverts
-- **Quality signals:** avg task rating 4.8/5 · 51 bug/review tasks filed (all time)
+- **Throughput:** 101/107 claimed tasks merged · 5 active workers · first-try success 83%
+- **Friction:** 2 PR CI failures · 15 releases (13 sessions ended early, 0 stale, 1 conflicts) · 1 blocked
+- **Main:** 2/108 main CI runs red · 0 reverts
+- **Quality signals:** avg task rating 4.8/5 · 53 bug/review tasks filed (all time)
 - **Host worker idle (recent log):** w1 0m, w2 63m, w3 3m, w4 3m
 
 ## By class
 | class | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| light | 64 | 61 | 81 | 2 | 9 | 6 | 25k |
-| standard | 54 | 53 | 91 | 0 | 4 | 9 | 65k |
-| heavy | 9 | 8 | 89 | 0 | 0 | 19 | 140k |
+| light | 49 | 46 | 78 | 2 | 10 | 9 | 30k |
+| standard | 48 | 46 | 88 | 0 | 4 | 11 | 65k |
+| heavy | 10 | 9 | 90 | 0 | 1 | 19 | 140k |
 
 ## By kind
 | kind | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| test | 39 | 35 | 79 | 1 | 4 | 8 | 45k |
-| improvement | 39 | 39 | 87 | 0 | 5 | 9 | 50k |
-| feature | 26 | 25 | 85 | 0 | 4 | 9 | 58k |
-| bug | 19 | 19 | 95 | 1 | 0 | 12 | 70k |
-| docs | 4 | 4 | 100 | 0 | 0 | 5 | 15k |
+| test | 39 | 34 | 77 | 1 | 6 | 10 | 45k |
+| improvement | 36 | 35 | 86 | 0 | 5 | 10 | 65k |
+| feature | 18 | 18 | 83 | 0 | 4 | 12 | 45k |
+| bug | 12 | 12 | 92 | 1 | 0 | 13 | 48k |
+| docs | 2 | 2 | 100 | 0 | 0 | 7 | 15k |
 
 ## By worker
 | worker | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| ian-claude-light-2 | 41 | 39 | 78 | 2 | 7 | 6 | 15k |
-| ian-claude-standard | 32 | 31 | 84 | 0 | 4 | 9 | 55k |
-| ian-claude-standard-2 | 28 | 27 | 93 | 0 | 1 | 10 | 55k |
-| ian-claude | 20 | 19 | 90 | 0 | 1 | 17 | 130k |
-| max_API_light | 6 | 6 | 100 | 0 | 0 | 5 | 4k |
+| ian-claude-light-2 | 31 | 30 | 77 | 1 | 7 | 7 | 18k |
+| ian-claude-standard | 30 | 29 | 87 | 0 | 3 | 9 | 55k |
+| ian-claude-standard-2 | 26 | 24 | 88 | 0 | 1 | 11 | 60k |
+| ian-claude | 19 | 18 | 84 | 1 | 3 | 19 | 118k |
+| max_API_light | 1 | 0 | 0 | 0 | 1 | – | – |
 
 ## By area (top 8)
 | area | tasks | merged | first-try % | CI fails | releases | median min | median tokens |
 |---|---|---|---|---|---|---|---|
-| pipeline/src/routine_watch | 24 | 23 | 92 | 0 | 1 | 11 | 75k |
-| web/src/live | 13 | 13 | 85 | 1 | 1 | 9 | 20k |
-| web/src/alert | 13 | 13 | 85 | 0 | 2 | 10 | 45k |
-| web/src/overview | 7 | 6 | 71 | 0 | 2 | 7 | 35k |
-| web/src/resident | 7 | 7 | 71 | 0 | 2 | 8 | 30k |
-| tests/scenarios | 6 | 5 | 83 | 0 | 0 | 8 | 55k |
-| scripts/smoke.sh | 6 | 6 | 83 | 0 | 1 | 9 | 50k |
-| web/src/handoff | 5 | 4 | 80 | 1 | 0 | 13 | 68k |
+| pipeline/src/routine_watch | 21 | 20 | 90 | 0 | 2 | 13 | 85k |
+| web/src/alert | 12 | 12 | 83 | 0 | 2 | 10 | 48k |
+| web/src/live | 10 | 10 | 80 | 1 | 1 | 12 | 30k |
+| web/src/resident | 8 | 8 | 88 | 0 | 1 | 8 | 45k |
+| web/src/about | 4 | 4 | 75 | 0 | 1 | 10 | 22k |
+| scripts/smoke.sh | 4 | 4 | 100 | 0 | 0 | 9 | 55k |
+| web/src/overview | 4 | 4 | 75 | 0 | 2 | 8 | 42k |
+| tests/scenarios | 4 | 2 | 50 | 0 | 0 | 10 | 55k |
 
 ## Problem tasks
-- T194 (light/test, ian-claude-light-2): released×1 — smoke.sh: seeded alert survives /demo/reset
-- T197 (light/improvement, ian-claude-standard): released×1 — Heat calendar legend: CSS classes instead of inline styles
 - T221 (light/improvement, ian-claude): released×1 — Copy summary uses the resident's real name, not one guessed from the i
 - T220 (light/bug, ian-claude-light-2): CI×1 — Live screen: settle on session_end's final error list
 - T149 (standard/feature, ian-claude-standard): released×1 — API: GET /monitoring and PUT /rooms/{room}/monitoring
@@ -57,8 +55,10 @@
 - T260 (standard/test, ian-claude-standard-2): released×1 — Test: first-load JS bundle size budget for the dashboard
 - T255 (light/feature, ian-claude-light-2): released×2 — Resident detail: show who consented to monitoring
 - T275 (standard/improvement, ian-claude-standard): released×1 — Live screen: notice a pause/resume made while the panel is open
-- T294 (light/test, ian-claude-light-2): CI×1 — Test: shift handoff works keyboard-only
+- T294 (light/test, ian-claude): CI×1 released×1 — Test: shift handoff works keyboard-only
+- T187 (light/test, ian-claude-light-2): released×1 — Test: App shows the live routine picker with tea selected
+- T307 (light/test, max_API_light): released×1 — Test: replay player works keyboard-only
+- T301 (heavy/improvement, ian-claude): released×1 — Review: contract schema + smoke check for GET /residents/{id}/feedback
 
 ## Low task ratings (≤3/5)
-- T194 3/5: 3/5 ambiguous: a literal 'does the alert persist' check fails against real behavior since /demo/reset intentionally drop
 - T266 3/5: 3/5 area was stale (LiveScreen.tsx has no paused UI; it lives in LiveSession.tsx, which the listed area didn't include)
