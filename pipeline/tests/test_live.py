@@ -210,7 +210,7 @@ def test_frames_scenario_sends_skeleton_frames() -> None:
 
 def test_step_scenario_sends_no_frames() -> None:
     """A scenario written at step level has no frames to send, so it sends none."""
-    assert of_type(live_session(GOOD), "frame") == []
+    assert of_type(live_session(BAD), "frame") == []
 
 
 @pytest.mark.parametrize(

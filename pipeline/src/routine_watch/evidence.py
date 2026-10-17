@@ -3,9 +3,10 @@
 The dashboard's "open evidence" backs an alert with the skeleton frames around the
 moment an error happened, plus a ghost layer of a normal session to compare it
 against. The demo residents (`routine_watch.demo`) have no camera and so no recorded
-frames of their own, so every session replays off `tests/scenarios`' one frames-level
-scenario, `tea_no_kettle`, until a frames recording exists for the demo's actual bad
-session (`tea_skip_teabag_pour_twice`, written at step level today).
+frames of their own, so every alert replays off `tests/scenarios/tea_no_kettle` and
+every ghost layer off `tests/scenarios/tea_normal` - the two frames-level scenarios -
+until a frames recording exists for the demo's actual bad session
+(`tea_skip_teabag_pour_twice`, written at step level today).
 
     from routine_watch.evidence import replay_frames
     replay_frames("mrs-k-22", t_start=10.0, t_end=14.0, fps=10)
@@ -30,10 +31,10 @@ MAX_REPLAY_FPS = 10.0
 #: the session, so the evidence shows a moment settling in and out, not a jump cut.
 PAD_S = 2.0
 
-#: Stand-in source for every replay until a frames recording exists per scenario
-#: (see the module docstring): the one scenario written at frame level.
+#: Stand-in sources for every replay until a frames recording exists per scenario
+#: (see the module docstring): the two scenarios written at frame level.
 _ALERT_SCENARIO = "tea_no_kettle"
-_NORMAL_SCENARIO = "tea_no_kettle"
+_NORMAL_SCENARIO = "tea_normal"
 
 
 class EvidenceError(ValueError):
