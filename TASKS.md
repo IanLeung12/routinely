@@ -410,14 +410,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T280 — Contracts: JSON Schema for drift, replay and pattern-library payloads
-- status: todo
+- status: claimed
 - class: heavy
 - priority: 2
 - kind: improvement
 - deps: T269
 - area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, pipeline/tests/test_api_payload_contracts.py, web/src/contracts.ts
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-17T13:54Z
 - pr: —
 
 What: Same pattern as T250/T257/T263: GET /residents/{id}/drift, GET /sessions/{id}/replay, GET /residents/{id}/normal_replay and GET /patterns cross the pipeline/web boundary with hand-written types (`web/src/resident/api.ts` ResidentDrift, `web/src/patterns/types.ts`, the evidence replay types). Add contract models, generate schemas, and pin the routes to them.
