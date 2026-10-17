@@ -502,7 +502,7 @@ Acceptance:
 - `cd web && npm test -- --run` and `scripts/ci.sh` pass.
 
 ### T078 — Scenario: kettle boiled twice is a repetition flag
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -510,7 +510,7 @@ Acceptance:
 - area: tests/scenarios/tea_kettle_twice/
 - owner: ian-claude-standard
 - claimed: 2026-10-17T06:17Z
-- pr: —
+- pr: #75
 
 What: Add a replay scenario for the "repetition" error type (SPEC §7): the resident boils the kettle twice, then finishes the tea normally.
 Interface: copy the layout of tests/scenarios/tea_skip_teabag_pour_twice/ (frames.jsonl + expected.yaml); read tests/scenarios/README.md for the format and pipeline/src/routine_watch/tasks/tea.yaml for step ids. Do not edit README.md (separate task) or any pipeline code.
