@@ -394,7 +394,7 @@ Acceptance:
 - `cd web && npm test -- HeatCalendar` and `scripts/ci.sh` pass
 
 ### T217 — Resident detail: heading order, landmark, focus on open
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
