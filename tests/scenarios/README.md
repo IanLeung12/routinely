@@ -127,6 +127,7 @@ carry the per-step history needed to exercise it.
 | `tea_milk_sugar` | steps | A clean tea routine with both optional steps, milk and sugar, taken; never flags. |
 | `tea_self_corrected` | steps | A sequence slip corrected within 15 seconds counts at reduced weight, so the session stays under the flag threshold despite one earlier bad session. |
 | `tea_teabag_three_times` | steps | Putting the teabag in three times produces two perseveration errors on the once-only step; does not flag. |
+| `meds_self_corrected` | steps | The meds counterpart of `tea_self_corrected`: a sequence slip on `take_pill` corrected within 15 seconds pins the reduced weight for the second task too. |
 
 ## Adding one
 
