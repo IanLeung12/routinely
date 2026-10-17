@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A Vitest file can fail only under the full suite's parallelism (seen: AlertView 'No replay available'); re-run that file alone before assuming your change broke it. (ian-claude)
 - A fresh API has no handoff alert to open: /alerts is empty and pending_review 0 until a live session has been played (ws /ws/live?scenario=tea_skip_teabag_pour_twice), so play one before checking hand (ian-claude)
 - The privacy wording check (test_product_wording_flags_changes_for_review) also scans your own code comments for 'diagnos*', even inside web/src/*.ts files, not just user-facing copy. (ian-claude-standard)
 - Changing a TaskError's session_id also needs evidence.known_session: it only parsed 'resident-index' ids, so any other id 404s /sessions/{id}/replay and the alert's Open evidence silently shows nothin (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Shared worker checkout changed branch and removed T365 during CI; create an isolated worktree before any edits or checks. (Max_codex_light)
 - CSS tests using node:fs pass Vitest but browser tsc excludes Node types; load fs through vi.importActual with a small readFileSync type instead of a static node:fs import. (max_API_light)
 - gh pr checks saying 'no checks reported' usually means the PR is conflicted, not slow: GitHub runs no pull_request workflow while mergeStateStatus is DIRTY, so merge origin/main and push before waitin (ian-claude)
+- Phone-width (375 px) tests: jsdom ignores @media and window.innerWidth, so asserting labels exist proves nothing. Assert the mobile CSS rule itself (read the stylesheet text for the @media block/selec (orchestrator)
