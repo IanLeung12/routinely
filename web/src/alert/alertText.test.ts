@@ -14,4 +14,36 @@ describe('alertText', () => {
     expect(text).toContain('Check for infection / UTI')
     expect(text).not.toMatch(/diagnos/i)
   })
+
+  it('always says "consistent with" for patterns, never "has <pattern>"', () => {
+    const text = alertText(mockAlerts[0])
+
+    expect(text).toContain('Consistent with: Sudden change')
+    expect(text).not.toMatch(/has sudden change/i)
+  })
+
+  it('includes each error\'s time', () => {
+    const text = alertText(mockAlerts[0])
+
+    for (const error of mockAlerts[0].errors) {
+      const minutes = Math.floor(error.t_start / 60)
+      const seconds = Math.floor(error.t_start % 60).toString().padStart(2, '0')
+      expect(text).toContain(`${minutes}:${seconds}`)
+    }
+  })
+
+  it('names the resident by display name, not the raw id', () => {
+    const text = alertText(mockAlerts[0])
+
+    expect(text).toContain('Resident: Mrs. K')
+    expect(text).not.toMatch(/Resident: mrs-k/)
+  })
+
+  it('works with zero patterns', () => {
+    const noPatterns = { ...mockAlerts[0], patterns: [] }
+    const text = alertText(noPatterns)
+
+    expect(text).not.toContain('Consistent with:')
+    expect(text).toContain('Change flagged for review')
+  })
 })
