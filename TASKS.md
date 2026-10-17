@@ -495,14 +495,14 @@ Acceptance:
 - `scripts/ci.sh` passes (incl. `pipeline/tests/test_scenarios_readme.py`)
 
 ### T177 — Test: handoff summary and Mrs. K's alert name the same errors
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_handoff_alert_errors.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:06Z
 - pr: —
 
 What: T166 (PR #159) made the handoff build its errors with `alerts.task_errors` and `alerts.session_id_for` so a nurse reads the same steps and times in both places. Lock that in with a test.
