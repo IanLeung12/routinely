@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 5ddcfa9
+- last-reviewed: e8841d9
 
 ## Tasks
 
