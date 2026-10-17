@@ -481,15 +481,15 @@ Acceptance:
 - No real camera, network or paid API in tests; `scripts/ci.sh` passes.
 
 ### T073 — Review: live screen hard-codes the tea steps instead of the session's task graph
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: bug
 - deps: T064
 - area: pipeline/src/routine_watch/live.py, pipeline/tests/test_live.py, web/src/live/useLiveSession.ts, web/src/live/LiveSession.tsx, web/src/live/mockLiveStream.ts, web/src/live/LiveSession.test.tsx
 - source: reviewer
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:57Z
 - pr: —
 
 What: `LiveSession.tsx` renders `<TaskMap steps={MOCK_STEPS}>` and `stepLabel()` looks labels up in `MOCK_STEPS` even when `source === 'live'`. The `/ws/live` protocol never tells the client which steps exist, so any non-tea task (T041 medication) or a renamed step shows the wrong map and "Session" labels.
