@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DemoBanner } from './DemoBanner.tsx'
 
@@ -24,26 +24,27 @@ describe('DemoBanner', () => {
     const button = screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement
     fireEvent.click(button)
     expect(onReset).toHaveBeenCalledOnce()
-    await screen.findByRole('button', { name: 'Reset demo' })
-    expect(button.disabled).toBe(false)
+    await waitFor(() => expect(button.disabled).toBe(false))
     expect(screen.queryByText("Couldn't reset the demo")).toBeNull()
   })
 
-  it('disables the button while the reset is in flight', () => {
+  it('disables the button while the reset is in flight', async () => {
     let resolveReset: () => void = () => {}
     const onReset = vi.fn(() => new Promise<void>((resolve) => { resolveReset = resolve }))
     render(<DemoBanner onReset={onReset} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
-    expect((screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement).disabled).toBe(true)
-    resolveReset()
+    const button = screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement
+    fireEvent.click(button)
+    await waitFor(() => expect(button.disabled).toBe(true))
+    await act(async () => { resolveReset() })
   })
 
   it('shows inline error text and does not throw when the reset fails', async () => {
     const onReset = vi.fn().mockRejectedValue(new Error('demo reset failed: 404'))
     render(<DemoBanner onReset={onReset} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
+    const button = screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement
+    fireEvent.click(button)
     await screen.findByText("Couldn't reset the demo")
-    expect((screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement).disabled).toBe(false)
+    await waitFor(() => expect(button.disabled).toBe(false))
   })
 
   it('announces the reset error to screen readers', async () => {
@@ -60,9 +61,9 @@ describe('DemoBanner', () => {
     render(<DemoBanner onReset={onReset} />)
     const button = screen.getByRole('button', { name: 'Reset demo' }) as HTMLButtonElement
     fireEvent.click(button)
-    expect(button.disabled).toBe(true)
-    resolveReset()
-    await vi.waitFor(() => expect(button.disabled).toBe(false))
+    await waitFor(() => expect(button.disabled).toBe(true))
+    await act(async () => { resolveReset() })
+    await waitFor(() => expect(button.disabled).toBe(false))
   })
 
   it('clears a previous reset error once a later reset succeeds', async () => {
@@ -89,9 +90,8 @@ describe('default onReset', () => {
 
     render(<DemoBanner />)
     fireEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
-    await screen.findByRole('button', { name: 'Reset demo' })
+    await waitFor(() => expect(reload).toHaveBeenCalledOnce())
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/demo/reset'), { method: 'POST' })
-    expect(reload).toHaveBeenCalledOnce()
 
     cleanup()
     render(<DemoBanner />)
