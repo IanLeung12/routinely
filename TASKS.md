@@ -422,14 +422,14 @@ Acceptance:
 - `cd web && npx vitest run src/alert` and `scripts/ci.sh` pass.
 
 ### T303 — Test: resident detail works keyboard-only
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: web/src/resident/ResidentDetail.keyboard.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T15:18Z
 - pr: —
 
 What: Prove a nurse can move through Mrs. K's resident page (drift card, heat calendar, feedback history, back button) with keyboard only.
