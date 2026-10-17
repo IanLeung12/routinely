@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { LiveSession } from './LiveSession.tsx'
 import type { LiveSessionEnded } from './useLiveSession.ts'
+import './liveScreen.css'
 
 /** The two recorded tasks a judge can watch. SPEC section 5, Nice to have 4 asks for
  * "a second task, such as getting dressed or taking medication with water, to show it
@@ -28,11 +29,6 @@ export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
 
   return (
     <div className="live-screen">
-      <style>{`
-        .live-screen__tasks { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-4); }
-        .live-screen__label { margin: 0 var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); }
-      `}</style>
-
       <div className="live-screen__tasks" role="group" aria-labelledby={labelId}>
         <p className="live-screen__label" id={labelId}>
           Routine to watch
