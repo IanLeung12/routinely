@@ -317,7 +317,7 @@ Acceptance:
 * `scripts/ci.sh` passes.
 
 ### T200 — Demo banner: CSS classes and an announced reset error
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: improvement
