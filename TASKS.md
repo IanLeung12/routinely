@@ -533,14 +533,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T163 — Docs: web/src/ui/README.md lists every shared component
-- status: todo
+- status: claimed
 - class: light
 - priority: 3
 - kind: docs
 - deps: —
 - area: web/src/ui/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T08:41Z
 - pr: —
 
 What: The UI kit grew (DemoBanner, EmptyState, ErrorState, Loading, SectionHeader, StatusChip, errorTypes) and the README is where workers look before writing a new component. List each with one line on when to use it and its props.
