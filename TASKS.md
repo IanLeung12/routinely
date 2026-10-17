@@ -449,14 +449,14 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
 
 ### T328 — Test: /ws/live WebSocket routes in api_live.py
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_api_live_ws.py
-- owner: —
-- claimed: —
+- owner: Max_codex_light
+- claimed: 2026-10-17T16:41Z
 - pr: —
 
 What: `api_live.py` has no direct test file. Add WebSocket tests with FastAPI `TestClient` for the live route.
