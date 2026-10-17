@@ -7,24 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T399 — Smoke: check the landing page is served
-- status: done
-- class: standard
-- priority: 2
-- kind: test
-- deps: —
-- area: scripts/smoke.sh
-- owner: ian-claude-standard
-- claimed: 2026-10-17T20:02Z
-- pr: #383
-- rating: 5/5 clear
-
-What: `scripts/smoke.sh` checks the dashboard at `/` returns HTML but not the public landing page `/landing.html` (T378, second Vite entry in `web/vite.config.ts`), so a broken landing build would go unnoticed before the demo.
-Interface: add one check next to the existing `GET $DASHBOARD_URL -> HTML` block (~line 233): `GET $DASHBOARD_URL/landing.html` must return HTML containing `Routine Watch`; use the existing `get`/`pass`/`fail` helpers. Update the header comment listing what it checks.
-Acceptance:
-- With `scripts/dev.sh up`, `scripts/smoke.sh` passes and prints the new pass line; with the landing entry removed from the build it fails with a readable message.
-- `bash -n scripts/smoke.sh` and `scripts/ci.sh` pass.
-
 ### T401 — Redesign 1/6: Fey-inspired design system (DESIGN.md + tokens + ui primitives)
 - status: done
 - class: heavy
