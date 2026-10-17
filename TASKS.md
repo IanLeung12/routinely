@@ -104,7 +104,7 @@ Acceptance:
 - `up` then `curl` both URLs return 200, `down` leaves no processes on those ports. Idempotent (`up` twice is fine).
 
 ### T007 — Session score weights
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - deps: —
