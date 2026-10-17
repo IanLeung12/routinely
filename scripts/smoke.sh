@@ -79,8 +79,9 @@ else
   fail "GET /alerts: no response"
 fi
 
+alert_body=""
 if [ -n "$first_alert_id" ]; then
-  if body=$(get "$API_URL/alerts/$first_alert_id"); then
+  if alert_body=$(get "$API_URL/alerts/$first_alert_id"); then
     pass "GET /alerts/$first_alert_id"
   else
     fail "GET /alerts/$first_alert_id: no response"
@@ -100,7 +101,7 @@ else
 fi
 
 replay_args=""
-if [ -n "$first_alert_id" ] && [ -n "${body:-}" ]; then
+if [ -n "$first_alert_id" ] && [ -n "$alert_body" ]; then
   replay_args=$(python3 -c '
 import json, sys
 data = json.loads(sys.argv[1])
@@ -109,8 +110,8 @@ if not errors:
     print("")
 else:
     e = errors[0]
-    print(f"{data[\"resident_id\"]} {e[\"session_id\"]} {e[\"t_start\"]} {e[\"t_end\"]}")
-' "$body" 2>/dev/null) || replay_args=""
+    print(data["resident_id"], e["session_id"], e["t_start"], e["t_end"])
+' "$alert_body" 2>/dev/null) || replay_args=""
 fi
 
 if [ -n "$replay_args" ]; then
