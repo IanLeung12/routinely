@@ -3364,3 +3364,97 @@ Acceptance:
 * App test: Alerts list shows "Mrs. K" (mock residents), not "mrs-k".
 * App test: Shift handoff → Open alert → Back lands on the handoff screen; overview → alert → Back lands on the overview.
 * `cd web && npx vitest run src/App.test.tsx` and `scripts/ci.sh` pass.
+
+### T197 — Heat calendar legend: CSS classes instead of inline styles
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/heatCalendar.css, web/src/resident/HeatCalendar.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:51Z
+- pr: #193
+- note: released by ian-claude-light-2: run ended without progress; partial work on branch task/T197-wip-0932: start from it (git switch task/T197-wip-0932 && git merge origin/main)
+- rating: 5/5 clear
+
+What: T172 (PR #176) added three legend swatches with long inline `style={{...}}` objects. Move them to classes so the colours live in one place with the grid cells.
+Interface: Read only `web/src/resident/HeatCalendar.tsx` and `web/src/alert/alert.css` (example of a component stylesheet). Create `heatCalendar.css` with `.heat-swatch`, `.heat-swatch--low`, `.heat-swatch--high`, `.heat-swatch--none` using the same CSS variables; import it in `HeatCalendar.tsx`. No visible change.
+Acceptance:
+* No `style={{` left on the legend swatches; legend text unchanged ("Lighter = fewer errors", "Darker = more errors", "Grey = no session").
+* `cd web && npx vitest run src/resident/HeatCalendar.test.tsx` passes.
+
+### T199 — Alert view: "Copy summary" for the chart note
+- status: done
+- class: standard
+- priority: 3
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/alert/AlertView.tsx, web/src/alert/alertText.ts, web/src/alert/alertText.test.ts, web/src/alert/AlertView.test.tsx
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:44Z
+- pr: #189
+- rating: 5/5 clear
+
+What: Rationale: nurses chart what they saw; one tap copies the alert as plain text (like the handoff's Copy summary, T151) so the flag reaches the care record without retyping (Usefulness).
+Interface: `alertText(alert: Alert): string` in `alertText.ts`: resident, "Change flagged for review", the summary, errors with times, "Consistent with: …" pattern names, suggested checks. A `Copy summary` button in `AlertView` using `navigator.clipboard.writeText`, with a "Copied" status like `web/src/handoff/Handoff.tsx`.
+Acceptance:
+* Unit test on `alertText` for the mock alert: contains "flagged for review" and "Consistent with", never "diagnos".
+* AlertView test: clicking Copy summary calls clipboard with `alertText(alert)` and shows "Copied".
+* `scripts/ci.sh` passes.
+
+### T200 — Demo banner: CSS classes and an announced reset error
+- status: done
+- class: light
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx, web/src/ui/demoBanner.css
+- owner: ian-claude-standard-2
+- claimed: 2026-10-17T09:51Z
+- pr: #195
+- rating: 5/5 clear
+
+What: DemoBanner (PR #182) uses inline styles and its "Couldn't reset the demo" text is not announced to screen readers. Move styles to `demoBanner.css` and give the error `role="alert"`.
+Interface: read only web/src/ui/DemoBanner.tsx, web/src/ui/DemoBanner.test.tsx and web/src/styles/ (design tokens). No behaviour change.
+Acceptance:
+- no `style={{` left in DemoBanner.tsx; classes use existing `var(--...)` tokens
+- test: a failing onReset renders an element with role="alert" containing "Couldn't reset the demo"
+- `cd web && npm test -- DemoBanner` passes; `scripts/ci.sh` passes
+
+### T201 — Scenario: medication routine abandoned halfway
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_abandoned/
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T09:53Z
+- pr: #194
+- rating: 5/5 clear
+
+What: add a meds scenario where the resident stops after the first steps, mirroring tea_abandoned, so the second task's abandonment path is covered end to end.
+Interface: read tests/scenarios/README.md, tests/scenarios/tea_abandoned/, tests/scenarios/meds_normal/ and tasks/meds.yaml (or the meds task graph named in meds_normal/expected.yaml). Write steps.jsonl + expected.yaml only.
+Acceptance:
+- expected.yaml has `task:` set to the meds graph and the errors/flag the replay actually produces (run the replay and pin its output; comment on why)
+- `scripts/e2e.sh tests/scenarios/meds_abandoned` prints PASS; `scripts/ci.sh` passes
+
+### T202 — Scenario: medication slip corrected inside the window is not flagged
+- status: done
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: tests/scenarios/meds_self_corrected/
+- owner: ian-claude-standard
+- claimed: 2026-10-17T09:55Z
+- pr: #197
+- rating: 5/5 clear
+
+What: meds counterpart of tea_self_corrected: a sequence slip the resident corrects within the self-correction window, so the reduced weight is pinned for the second task too.
+Interface: read tests/scenarios/README.md, tests/scenarios/tea_self_corrected/ and tests/scenarios/meds_pill_before_water/. Write steps.jsonl + expected.yaml only.
+Acceptance:
+- expected.yaml pins `score:` and `flag: false`, with a comment saying what full weighting would score
+- `scripts/e2e.sh tests/scenarios/meds_self_corrected` prints PASS; `scripts/ci.sh` passes
