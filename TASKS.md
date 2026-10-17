@@ -121,14 +121,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_api_alerts.py -q` and `scripts/ci.sh` pass.
 
 ### T022 — Resident detail screen
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - deps: T012, T013
 - area: web/src/resident/ (except HeatCalendar.*), web/src/overview/UnitOverview.tsx, web/src/App.tsx, web/src/mock/residentDetail.ts, web/src/index.css
 - owner: ian-claude
 - claimed: 2026-10-17T04:48Z
-- pr: —
+- pr: #26
 
 What: SPEC §9 screen 2. Clicking a resident in the unit overview opens their detail: baseline chart (score per session, threshold line, today's point highlighted), session list, and context timeline of care records (meds, temperature). Leave a placeholder slot for the heat calendar (T023).
 Interface: `fetchResident(id)` → `GET ${apiUrl}/residents/{id}` with mock fallback (same pattern as `web/src/overview/api.ts`); `ResidentDetail({residentId, onBack})`. Simple state-based navigation in App.tsx, no router dependency. Plain SVG, no new deps.
