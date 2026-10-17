@@ -541,7 +541,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T122 — Bug: live skeleton view stays "Waiting for camera" for the whole demo replay
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
