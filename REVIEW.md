@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: cdff38c
-- next-area: web
+- last-reviewed: 5fb35ad
+- next-area: pipeline
 
 ## Known issues filed
 - T075 ErrorType label/colour maps x3 in web
@@ -34,3 +34,4 @@
 - T377 DEMO.md handoff beat after Close
 - T389 PrivacyPanel mobile test asserts nothing about phone CSS
 - T425 handoff summary counts unclear-camera rooms as quiet
+- (noted) REPLAY_DIR unset in compose (volume unused); demo replays reseed after restart if on disk
