@@ -174,3 +174,7 @@ T183 | light | claude-opus | merged first try | ~105k tok
 T164 | standard | claude-sonnet | merged (2 commits) | ~65k tok
 T195 | standard | claude-sonnet | merged (2 commits) | ? tok
 T180 | standard | claude-sonnet | merged first try | ~55k tok
+T199 | standard | claude-sonnet | merged first try | ~65k tok
+T196 | standard | claude-sonnet | merged first try | ~90k tok
+T208 | light | claude-sonnet | merged first try | ? tok
+T155 | heavy | claude-opus | merged first try | ~130k tok
