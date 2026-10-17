@@ -94,12 +94,18 @@ class HistorySession(_Strict):
     History is what gives the resident a baseline to be measured against, so it is
     what lets a scenario expect `flag: true`. Give a session a `score`, or give the
     `errors` it held and let the scoring weights work it out.
+
+    `duration_s` is optional: set it on this session and on `Expected.duration_s` to
+    give a scenario a `duration_ratio` (SPEC §7.5), for example ~10 history sessions
+    at 300s and a replayed session at 450s to reach `motor_slowing`. Leave it unset
+    and `duration_ratio` stays `None`, exactly as before.
     """
 
     hours_ago: float = Field(ge=0.0)
     score: float | None = Field(default=None, ge=0.0)
     errors: dict[ErrorType, int] = {}
     self_corrected: int = Field(default=0, ge=0)
+    duration_s: float | None = Field(default=None, gt=0.0)
 
     @model_validator(mode="after")
     def _scored_one_way(self) -> HistorySession:
@@ -133,6 +139,10 @@ class Expected(_Strict):
     #: Which pattern (SPEC §7.5) the session should score highest, or `"none"` if the
     #: flag is expected to match no pattern. Unset scenarios are unaffected.
     top_pattern: str | None = None
+    #: This session's duration, in seconds. Optional: set it alongside a `duration_s`
+    #: on each `HistorySession` to give the scenario a `duration_ratio` (SPEC §7.5).
+    #: Left unset, `duration_ratio` stays `None`, exactly as before.
+    duration_s: float | None = Field(default=None, gt=0.0)
     #: Prior sessions, oldest or newest first, it makes no difference.
     history: list[HistorySession] = []
 
@@ -272,6 +282,7 @@ def top_pattern_of(
     errors: Sequence[TaskError],
     assisted: bool,
     *,
+    duration_s: float | None = None,
     now: datetime = REPLAY_EPOCH,
 ) -> str:
     """The best-scoring pattern (SPEC §7.5) this session, against this history, is
@@ -288,6 +299,7 @@ def top_pattern_of(
             "ts": (now - timedelta(hours=session.hours_ago)).isoformat(),
             "errors": {str(error_type): count for error_type, count in session.errors.items()},
             "self_corrected": session.self_corrected,
+            "duration_s": session.duration_s,
         }
         for session in history
     ]
@@ -297,6 +309,7 @@ def top_pattern_of(
             "errors": dict(counts),
             "self_corrected": self_corrected,
             "assisted": assisted,
+            "duration_s": duration_s,
         }
     )
     features = extract_features(sessions, baseline, [], now=now)
@@ -312,7 +325,13 @@ def run(scenario: Scenario) -> dict[str, Any]:
     score, assisted, flag = score_session(scenario, errors)
     # Offline output also includes the baseline's display statistics.
     _, baseline = change_flag(score, scenario.expected.history)
-    top_pattern = top_pattern_of(scenario.expected.history, baseline, errors, assisted)
+    top_pattern = top_pattern_of(
+        scenario.expected.history,
+        baseline,
+        errors,
+        assisted,
+        duration_s=scenario.expected.duration_s,
+    )
 
     return {
         "scenario": scenario.name,
