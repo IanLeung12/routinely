@@ -26,3 +26,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - On Windows, run ci.sh with two-CPU process affinity to avoid Vitest default-worker timeouts: in PowerShell, (Get-Process -Id $PID).ProcessorAffinity = 3; bash scripts/ci.sh. (max_API_light)
 - On this Windows worker, use uv run python -m pytest from pipeline: the default python belongs to another project and lacks pytest. (max_API_light)
 - A Vitest file can fail only under the full suite's parallelism (seen: AlertView 'No replay available'); re-run that file alone before assuming your change broke it. (ian-claude)
+- A fresh API has no handoff alert to open: /alerts is empty and pending_review 0 until a live session has been played (ws /ws/live?scenario=tea_skip_teabag_pour_twice), so play one before checking hand (ian-claude)
