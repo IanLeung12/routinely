@@ -411,7 +411,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T066 — Scenario: self-corrected slip is reported but does not flag
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -419,7 +419,7 @@ Acceptance:
 - area: tests/scenarios/tea_self_corrected/
 - owner: max-codex-light-2
 - claimed: 2026-10-17T05:48Z
-- pr: —
+- pr: #60
 
 What: SPEC §7 says a mistake the resident fixes within a short window is a weaker "self-corrected slip", not a full error. No scenario covers it. Add a steps-level scenario where the resident pours before the teabag is in, then puts the teabag in and pours again within the window.
 Interface: `tests/scenarios/tea_self_corrected/{steps.jsonl,expected.yaml}`. Read only `tests/scenarios/README.md` (format), `tests/scenarios/tea_sequence_error/` (template), `pipeline/src/routine_watch/tasks/tea.yaml` (step ids) and the docstring + `SELF_CORRECT_WINDOW_S` in `pipeline/src/routine_watch/errors.py`. Record the actual replay output (`cd pipeline && uv run python -m routine_watch.replay ../tests/scenarios/tea_self_corrected`) in `expected.yaml`, and assert `score:` so a change to self-correction weighting shows up. Give it a `history:` with one earlier bad session so the scenario proves the slip alone does not push it over to `flag: true` (adjust if the real output disagrees; say so in the comment).
