@@ -1,27 +1,9 @@
-/* Print (T333, following the alert view's T289 approach): nurses bring a resident's
-   summary to care conferences and family meetings, so printing it should show the
-   name, consent line, baseline chart, heat calendar, drift card and feedback history
-   in black on white - not the dashboard's dark theme, the nav, or any button with no
-   meaning on paper. `html, body, body *` (not just `.resident-detail`) because the
-   dark theme's colours are set on `:root` and inherited by the page canvas in
-   index.css, outside this component. */
+/* Print (T333, following the alert view's T289 approach): the shared
+   black-on-white rules live in print.css. The app shell's title and the demo
+   banner sit outside .resident-detail (they're rendered unconditionally in
+   App.tsx), but only need hiding while a resident is actually open for
+   print. */
 @media print {
-  .no-print {
-    display: none !important;
-  }
-
-  html,
-  body,
-  body * {
-    background: #fff !important;
-    color: #000 !important;
-    box-shadow: none !important;
-    border-color: #000 !important;
-  }
-
-  /* The app shell's title and the demo banner sit outside .resident-detail (they're
-     rendered unconditionally in App.tsx), but only need hiding while a resident is
-     actually open for print. */
   .app:has(.resident-detail) > header,
   .app:has(.resident-detail) > .demo-banner {
     display: none !important;
