@@ -311,6 +311,38 @@ describe('LiveSession', () => {
     )
   })
 
+  it('says monitoring is paused instead of showing a session, with no mock fallback', async () => {
+    vi.useFakeTimers()
+    render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
+    const socket = FakeWebSocket.latest()
+
+    // The API's answer for a paused room (SPEC section 12): one `paused` message, then
+    // the socket closes without a session.
+    act(() => {
+      socket.emit({ type: 'paused', room: '204' })
+      socket.onclose?.()
+    })
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(screen.getByRole('status').textContent).toContain('Monitoring is paused for room 204')
+    expect(
+      screen.getByText("Turn it back on from the resident's page to watch their routines again."),
+    ).toBeTruthy()
+
+    // Nothing was watched, so there is no skeleton view, task map or error ticker to
+    // show - and a pause is not a lost connection, so no mock session either.
+    expect(screen.queryByRole('list', { name: 'Task steps' })).toBeNull()
+    expect(screen.queryByText('Skeleton view')).toBeNull()
+    expect(screen.queryByText('Errors')).toBeNull()
+    expect(screen.queryByText('Mock data')).toBeNull()
+
+    // Let the resident fetch settle before the test ends, so no state update lands
+    // after jsdom is torn down.
+    await act(async () => {})
+  })
+
   it('announces step completions and raised flags through a polite live region', () => {
     render(<LiveSession scenario="tea_skip_teabag_pour_twice" />)
     const socket = FakeWebSocket.latest()
