@@ -485,14 +485,14 @@ Acceptance:
 - `scripts/ci.sh` passes; PR body notes the viewport widths checked.
 
 ### T237 — Test: de-flake AlertView "loading state for the evidence card" test under load
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: test
 - deps: —
 - area: web/src/alert/AlertView.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T11:27Z
 - pr: —
 
 What: `AlertView > shows a loading state for the evidence card before the replay resolves` fails intermittently under full-suite parallelism (PR #221 CI run 39028279950, and earlier per LESSONS): `findByText('No replay available')` times out at the default 1000 ms after the deferred replay fetch is released. Make it deterministic without changing app code.
