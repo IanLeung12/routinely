@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 8f29909
+- last-reviewed: 8c4bcb8
 
 ## Tasks
 
@@ -481,4 +481,90 @@ What: Tester (main 355d6b1). `web/src/evidence/GhostReplay.tsx:44` colours the c
 Repro: `OFFLINE_MODE=true scripts/dev.sh up`, open alert-mrs-k, scroll to Evidence: caption under the replay.
 Acceptance:
 - No inline colour in the figcaption; "Today" and "Usual" each match their replay stroke colour and pass WCAG AA contrast on the card background.
+- `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T209 — Refactor: move feature extraction out of patterns.py
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: pipeline/src/routine_watch/patterns.py, pipeline/src/routine_watch/pattern_features.py (new), docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: `patterns.py` is 786 lines mixing feature extraction from session history (`_score` … `extract_features`, ~lines 578–786) with signal scoring and evidence text. Move the extraction half into `pattern_features.py` so each module has one job. Behaviour must not change.
+Interface: `pattern_features.extract_features` (+ its private helpers and `Features` if that keeps imports acyclic); `patterns` re-exports `extract_features` and `Features` so existing callers and tests keep working unchanged.
+Acceptance:
+- `patterns.py` under 550 lines; no existing test edited except import lines.
+- `scripts/e2e.sh` still 23/23 (or current count), identical pattern rankings.
+- CODEMAP note for the new module; `scripts/ci.sh` passes.
+
+### T210 — Live screen: end-of-session summary against the resident's normal
+- status: todo
+- class: standard
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: —
+- area: web/src/live/SessionSummary.tsx (new), web/src/live/SessionSummary.test.tsx (new), web/src/live/LiveSession.tsx, web/src/live/LiveSession.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: on demo day the live session just stops; a one-glance close ("Finished in 3m 40s, usually ~2m 50s · 2 errors, usually 0–1") makes the per-resident-baseline idea land for judges (Clarity). Shown when the `session_end` message arrives, above the existing flag/Open alert block.
+Interface: `SessionSummary({durationS, errorCount, usualDurationS?, usualErrors?})`. Duration from the session_end payload if present, else first→last step event timestamps; the resident's normal from data the web already loads (`web/src/resident/api.ts`); omit the "usually" parts when unavailable. No pipeline or contract change.
+Acceptance:
+- Tests: renders with and without the baseline; plain wording, no "diagnos"; uses existing `web/src/ui` components/CSS classes, no inline styles.
+- `cd web && npm test` and `scripts/ci.sh` pass.
+
+### T211 — Test: alert "Copy summary" text keeps the safe wording
+- status: todo
+- class: light
+- priority: 2
+- kind: test
+- deps: —
+- area: web/src/alert/alertText.test.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: T199 (#189) added `web/src/alert/alertText.ts`, the text a nurse pastes into the chart. Pin its wording rules with tests.
+Interface: read only `web/src/alert/alertText.ts` and `web/src/alert/alertText.test.ts`; use the alert fixture the existing test uses.
+Acceptance:
+- New tests: the summary says "consistent with" for patterns, contains no "diagnos" and no "has <pattern>"; includes each error's time; names the resident by display name, not the raw id (e.g. not "mrs-k"); works with zero patterns.
+- `cd web && npx vitest run src/alert/alertText.test.ts` passes.
+
+### T212 — Docs: CODEMAP note that alerts read live session errors
+- status: todo
+- class: light
+- priority: 3
+- kind: docs
+- deps: T179
+- area: docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: T155 (#192) made `alerts.task_errors` return the real `error_events` of a session recorded live by `session_log.py` (keeping its own `session_id`), and only synthesise placeholder errors for the seeded history. Add 2–3 lines to the alerts/session_log notes in `docs/CODEMAP.md` saying so.
+Interface: read `pipeline/src/routine_watch/alerts.py` (`session_id_for`, `task_errors` docstrings) and `pipeline/src/routine_watch/session_log.py`. Edit notes only, not the generated file list.
+Acceptance:
+- Note present and accurate; `scripts/ci.sh` passes.
+
+### T213 — Alert view: heading order, focus on open, landmark
+- status: todo
+- class: standard
+- priority: 2
+- kind: improvement
+- deps: —
+- area: web/src/alert/AlertView.tsx, web/src/alert/AlertView.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The alert is the screen judges and nurses read most. Make it navigable by screen reader and keyboard: one `h1` (resident + "Flagged for review"), section `h2`s in reading order (What changed, Errors, Evidence, Patterns, Suggested checks, Feedback), the view wrapped in a labelled `main`/`section`, and focus moved to the `h1` when an alert opens.
+Interface: markup-only changes in `AlertView.tsx`; keep existing class names and copy.
+Acceptance:
+- Tests: heading levels via `getAllByRole('heading')`, `h1` has focus after render, existing tests still pass unchanged in meaning.
 - `cd web && npm test` and `scripts/ci.sh` pass.
