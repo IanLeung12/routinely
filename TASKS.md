@@ -595,7 +595,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T337 — Unit overview: remember filter and sort for the session
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 2
 - kind: improvement
@@ -603,7 +603,8 @@ Acceptance:
 - area: web/src/overview/UnitOverview.tsx, web/src/overview/overviewPrefs.ts, web/src/overview/overviewPrefs.test.ts, web/src/overview/UnitOverview.prefs.test.tsx
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T16:45Z
-- pr: —
+- pr: #320
+- rating: 5/5 clear
 
 What: A nurse who picks "Flagged" or "Most recent change first", opens a resident and comes back loses the choice. Store filter + sort mode in `sessionStorage` so they survive navigation and reload within the tab.
 Interface: `overviewPrefs.ts` exports `loadOverviewPrefs(): { filter: UnitFilter; sort: SortMode }` and `saveOverviewPrefs(prefs)`; key `rw.overview.prefs`; unknown/corrupt stored values fall back to `{ filter: 'all', sort: 'default' }`. `UnitOverview.tsx` initialises its state from it and saves on change (move the `UnitFilter` type into `overviewPrefs.ts` or `types.ts` if needed).
