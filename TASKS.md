@@ -501,14 +501,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T293 — Test: api_state.reset() clears feedback without replacing the store
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - kind: test
 - deps: —
 - area: pipeline/tests/test_api_state.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T14:31Z
 - pr: —
 
 What: T284 moved the feedback store to `api_state.py`; routers import `_feedback_store` at load time, so `reset()` must clear it in place. Pin that with a direct unit test.
