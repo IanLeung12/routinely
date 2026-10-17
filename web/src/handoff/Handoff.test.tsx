@@ -1,12 +1,13 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Handoff } from './Handoff.tsx'
+import { Handoff, handoffText } from './Handoff.tsx'
 import { mockHandoff } from './mockHandoff.ts'
 import type { Handoff as HandoffData } from './types.ts'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 function serve(handoff: HandoffData) {
@@ -30,6 +31,49 @@ const served: HandoffData = {
 }
 
 describe('Handoff', () => {
+  it('formats the summary and one complete line per resident', () => {
+    const text = handoffText(mockHandoff)
+    expect(text.split('\n')[0]).toBe(mockHandoff.summary)
+    expect(text.split('\n')).toHaveLength(mockHandoff.residents.length + 1)
+    for (const resident of mockHandoff.residents) {
+      expect(text).toContain(resident.name)
+    }
+    expect(text).toContain('Room unavailable: 2 flagged sessions, 1 unreviewed alert, No upward trend')
+    expect(text).toContain('Error score trending up')
+    expect(text).not.toMatch(/diagnos/i)
+  })
+
+  it('copies the handoff and announces success for two seconds', async () => {
+    serve(served)
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    render(<Handoff onBack={() => {}} />)
+    await screen.findByText(served.summary)
+    vi.useFakeTimers()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
+    })
+
+    expect(writeText).toHaveBeenCalledWith(handoffText(served))
+    expect(screen.getByText('Copied').getAttribute('role')).toBe('status')
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(screen.queryByText('Copied')).toBeNull()
+  })
+
+  it.each([undefined, { writeText: vi.fn().mockRejectedValue(new Error('denied')) }])(
+    'shows a fallback when copying is unavailable or rejected', async (clipboard) => {
+      serve(served)
+      vi.stubGlobal('navigator', { clipboard })
+      render(<Handoff onBack={() => {}} />)
+      await screen.findByText(served.summary)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
+
+      expect((await screen.findByText('Copy not available')).getAttribute('role')).toBe('status')
+    },
+  )
+
   it('renders the list and the summary from the mock data when the API is unreachable', async () => {
     offline()
 

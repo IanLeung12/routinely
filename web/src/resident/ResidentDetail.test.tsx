@@ -217,6 +217,20 @@ describe('ResidentDetail', () => {
     expect(screen.queryByRole('grid', { name: /daily error scores/i })).toBeNull()
   })
 
+  it('shows the room monitoring switch and lets the nurse pause it', async () => {
+    offline()
+
+    render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
+
+    const switchEl = await screen.findByRole('switch', { name: 'Monitoring in room 204' })
+    expect(switchEl.textContent).toBe('On')
+
+    fireEvent.click(switchEl)
+
+    expect(switchEl.textContent).toBe('Paused')
+    expect(screen.getByText('No camera data is processed while paused.')).toBeTruthy()
+  })
+
   it('calls onBack when the back button is clicked', async () => {
     offline()
     const onBack = vi.fn()
