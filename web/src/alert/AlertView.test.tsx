@@ -135,7 +135,7 @@ describe('AlertView', () => {
     })
 
     expect(writeText).toHaveBeenCalledWith(alertText(MRS_K, 'Mrs. Kowalski'))
-    expect(writeText.mock.calls[0][0]).toContain('Resident: Mrs. Kowalski')
+    expect(writeText.mock.calls[0][0]).toContain('Person: Mrs. Kowalski')
   })
 
   it('falls back to the resident id when the API has no name for them', async () => {

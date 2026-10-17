@@ -35,14 +35,14 @@ describe('alertText', () => {
   it('names the resident by the name it is given, not one guessed from the id', () => {
     const text = alertText(mockAlerts[0], 'Mrs. Kowalski')
 
-    expect(text).toContain('Resident: Mrs. Kowalski')
-    expect(text).not.toMatch(/Resident: mrs-k/)
+    expect(text).toContain('Person: Mrs. Kowalski')
+    expect(text).not.toMatch(/Person: mrs-k/)
   })
 
   it('falls back to the raw id when no resident name is given', () => {
     const text = alertText(mockAlerts[0])
 
-    expect(text).toContain(`Resident: ${mockAlerts[0].resident_id}`)
+    expect(text).toContain(`Person: ${mockAlerts[0].resident_id}`)
   })
 
   it('says "slow trend" for a trend alert, not "change flagged"', () => {

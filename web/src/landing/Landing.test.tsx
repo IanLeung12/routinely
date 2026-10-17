@@ -26,6 +26,15 @@ describe('landing page', () => {
     expect(screen.getByText(/flags a change for review/)).toBeTruthy()
   })
 
+  it('says who it is for: anyone, alone or with family, a carer or a care home', () => {
+    render(<Landing />)
+
+    const audience = screen.getByText(/For anyone who wants it/).textContent ?? ''
+    for (const reader of ['on your own', 'family', 'carer', 'care home']) {
+      expect(audience).toContain(reader)
+    }
+  })
+
   it('shows every section, in order', () => {
     render(<Landing />)
 
@@ -52,11 +61,11 @@ describe('landing page', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'How it works' }).id).toBe(href.slice(1))
   })
 
-  it('walks through the pipeline, camera to nurse', () => {
+  it('walks through the pipeline, camera to dashboard', () => {
     render(<Landing />)
 
     const stages = screen.getAllByRole('listitem').map((item) => item.textContent ?? '')
-    const labels = ['Camera', 'Skeleton only', 'Task graph', 'Personal baseline', 'Patterns', 'Nurse']
+    const labels = ['Camera', 'Skeleton only', 'Task graph', 'Personal baseline', 'Patterns', 'Your dashboard']
     for (const label of labels) {
       expect(stages.some((stage) => stage.includes(label))).toBe(true)
     }
@@ -103,8 +112,19 @@ describe('landing page', () => {
     const { container } = render(<Landing />)
     const copy = container.textContent ?? ''
 
-    for (const banned of [/diagnos/i, /suffers from/i, /has delirium/i, /has dementia/i]) {
-      expect(copy).not.toMatch(banned)
+    /* Role words included (SPEC section 17): the page is read by someone setting this
+       up for themselves as often as by a care home, so its copy names neither. */
+    const banned = [
+      /diagnos/i,
+      /suffers from/i,
+      /has delirium/i,
+      /has dementia/i,
+      /patient/i,
+      /nurse/i,
+      /resident/i,
+    ]
+    for (const phrase of banned) {
+      expect(copy).not.toMatch(phrase)
     }
   })
 

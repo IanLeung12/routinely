@@ -48,7 +48,7 @@ describe('ResidentDetail print', () => {
     const dailyScoresHeading = screen.getByRole('heading', { name: 'Daily scores' })
     expect(dailyScoresHeading.closest('.no-print')).toBeNull()
 
-    const feedbackHeading = screen.getByRole('heading', { name: 'What nurses said' })
+    const feedbackHeading = screen.getByRole('heading', { name: 'Past feedback' })
     expect(feedbackHeading.closest('.no-print')).toBeNull()
   })
 

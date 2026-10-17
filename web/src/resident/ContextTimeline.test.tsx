@@ -9,7 +9,7 @@ describe('ContextTimeline', () => {
   it('shows an empty state without care records', () => {
     render(<ContextTimeline records={[]} />)
 
-    expect(screen.getByText('No care records for this resident.')).toBeTruthy()
+    expect(screen.getByText('No care records for this person.')).toBeTruthy()
     expect(screen.queryByRole('list')).toBeNull()
   })
 

@@ -198,7 +198,7 @@ describe('Handoff', () => {
 
     // What a nurse reads off the sheet stays: the headline, the window, the summary and
     // every resident row, each with its own counts.
-    expect(screen.getByText(/2 of 3 residents to review/).closest('.no-print')).toBeNull()
+    expect(screen.getByText(/2 of 3 people to review/).closest('.no-print')).toBeNull()
     expect(screen.getByRole('heading', { name: 'Last 12 hours' }).closest('.no-print')).toBeNull()
     expect(screen.getByText(served.summary).closest('.no-print')).toBeNull()
     const rows = screen.getAllByRole('listitem')
@@ -297,7 +297,7 @@ describe('Handoff', () => {
 
     render(<Handoff onBack={() => {}} />)
 
-    const headline = await screen.findByText('2 of 3 residents to review in the last 12 hours')
+    const headline = await screen.findByText('2 of 3 people to review in the last 12 hours')
     expect(headline.getAttribute('role')).toBe('status')
   })
 
@@ -320,7 +320,7 @@ describe('Handoff', () => {
 
     render(<Handoff onBack={() => {}} />)
 
-    expect(await screen.findByText('No residents on this unit yet.')).toBeTruthy()
+    expect(await screen.findByText('Nobody on this unit yet.')).toBeTruthy()
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 

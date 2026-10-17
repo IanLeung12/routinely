@@ -296,7 +296,7 @@ export function AlertView({
         </Card>
 
         <Card className="no-print">
-          <AlertSectionHeading title="Feedback" caption="Tunes this resident's threshold" />
+          <AlertSectionHeading title="Feedback" caption="Tunes this person's threshold" />
           <FeedbackButtons
             value={alert.feedback?.verdict ?? null}
             onChange={(verdict) => saveFeedback(verdict, null)}
