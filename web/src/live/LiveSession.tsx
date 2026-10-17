@@ -2,33 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
-import type { ErrorType, TaskError } from '../contracts.ts'
+import type { TaskError } from '../contracts.ts'
+import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
 import { SkeletonView } from './SkeletonView.tsx'
 import { TaskMap } from './TaskMap.tsx'
 import { TaskMapLegend } from './TaskMapLegend.tsx'
 import type { LiveStep, StepState } from './useLiveSession.ts'
 import { useLiveSession } from './useLiveSession.ts'
-
-/** Plain-language names for the error types in SPEC section 7. */
-const ERROR_LABELS: Record<ErrorType, string> = {
-  omission: 'Omission',
-  sequence: 'Sequence',
-  perseveration: 'Perseveration',
-  substitution: 'Substitution',
-  hesitation: 'Hesitation',
-  abandonment: 'Abandonment',
-}
-
-/** Red = omission/substitution, amber = sequence/repeat, grey = anything softer
- * (SPEC section 9: never colour alone, so the label carries the meaning too). */
-const ERROR_COLOR: Record<ErrorType, 'red' | 'amber' | 'grey'> = {
-  omission: 'red',
-  substitution: 'red',
-  sequence: 'amber',
-  perseveration: 'amber',
-  hesitation: 'grey',
-  abandonment: 'grey',
-}
 
 function formatClock(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
@@ -42,7 +22,7 @@ function stepLabel(steps: LiveStep[], stepId: string | null | undefined): string
 }
 
 function errorText(steps: LiveStep[], error: TaskError): string {
-  return `${ERROR_LABELS[error.type]} · ${stepLabel(steps, error.step_id)} · ${formatClock(error.t_start)}`
+  return `${describeError(error.type, stepLabel(steps, error.step_id))} · ${formatClock(error.t_start)}`
 }
 
 /** Drives the screen-reader-only live region: one short sentence per step completion,
@@ -150,7 +130,7 @@ export function LiveSession({ scenario, speed = 1 }: LiveSessionProps) {
         ) : (
           <ul className="live-session__error-list">
             {errors.map((error) => (
-              <li key={error.error_id} className={`error-chip error-chip--${ERROR_COLOR[error.type]}`}>
+              <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
                 {errorText(steps, error)}
               </li>
             ))}

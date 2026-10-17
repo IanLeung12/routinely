@@ -10,6 +10,7 @@ bash -n scripts/integration.sh
 python3 scripts/codemap.py >/dev/null
 bash -n scripts/worker.sh
 bash -n scripts/e2e.sh
+bash -n scripts/smoke.sh
 
 for proj in $(find . -maxdepth 2 -name pyproject.toml -not -path "./.tasks/*"); do
   d=$(dirname "$proj"); echo "== python: $d"
