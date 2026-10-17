@@ -373,7 +373,7 @@ Acceptance:
 - `cd pipeline && python -m pytest tests/test_pattern_features.py` and `scripts/ci.sh` pass
 
 ### T328 — Test: /ws/live WebSocket routes in api_live.py
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
@@ -542,7 +542,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T337 — Unit overview: remember filter and sort for the session
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: improvement
