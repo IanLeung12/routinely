@@ -267,14 +267,14 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_explain.py -q` and `scripts/ci.sh` pass.
 
 ### T017 — Explainer: name the step, not just the error type
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - deps: —
 - area: pipeline/src/routine_watch/explain.py, pipeline/tests/test_explain.py
 - owner: ian-claude-standard
 - claimed: 2026-10-17T04:32Z
-- pr: —
+- pr: #17
 
 What: Review finding on PR #11: `TemplateExplainer` renders only `error["type"]`, so real classifier output (`type="omission"`, `step_id="teabag_in_cup"`) reads "omission at 0:42", which a nurse can't act on. Render type and step together. Read only the files in `area` and `pipeline/pyproject.toml`.
 Interface: unchanged `TemplateExplainer.summarise(errors, baseline, context)`. Each error renders as a phrase from a small dict keyed by type, with the step id's underscores replaced by spaces: omission → "skipped {step}", perseveration → "repeated {step}", sequence → "{step} out of order", substitution → "wrong object for {step}", hesitation → "long pause at {step}", abandonment → "stopped before {step}"; unknown types → "{type} at {step}" (underscores → spaces). Then " at m:ss" as now.
