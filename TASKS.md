@@ -95,7 +95,7 @@ Acceptance:
 - Note present and accurate; `scripts/ci.sh` passes.
 
 ### T229 — Test: PatternList fixtures use unique pattern ids (no duplicate-key warning)
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - kind: test
