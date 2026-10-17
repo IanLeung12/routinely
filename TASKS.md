@@ -482,7 +482,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T058 — Review: merge duplicate pipeline modules found by the code map
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 1
 - kind: improvement
@@ -490,7 +490,7 @@ Acceptance:
 - area: pipeline/src/routine_watch/baseline.py, pipeline/src/routine_watch/change_detection.py, pipeline/src/routine_watch/task_graph.py, pipeline/src/routine_watch/tasks/, pipeline/tests/, docs/CODEMAP.md
 - owner: ian-claude-standard
 - claimed: 2026-10-17T05:34Z
-- pr: —
+- pr: #51
 - source: reviewer
 
 What: `baseline.py` and `change_detection.py` both describe per-resident baseline/change detection, and `task_graph.py` looks like the T001 placeholder next to the real `tasks/graph.py`. Two homes for one concept confuse every later worker.
