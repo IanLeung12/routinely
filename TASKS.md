@@ -406,7 +406,7 @@ Acceptance:
 - Test asserts the wrapping class/structure is present; `scripts/ci.sh` passes.
 
 ### T310 — Test: pattern library urgency + level filters combine correctly
-- status: claimed
+- status: blocked
 - class: standard
 - priority: 2
 - kind: test
@@ -415,6 +415,7 @@ Acceptance:
 - owner: ian-claude-standard-2
 - claimed: 2026-10-17T15:41Z
 - pr: —
+- note: NEEDS CLARIFICATION: task assumes an existing 'level' filter alongside T300's urgency filter, but PatternLibrary.tsx only has one filter dimension (urgency); T300's own description used 'level' as a synonym for an urgency value ('Urgent'/'Check this shift'/etc), not a second axis. There is nothing to combine - can't write a 'both filters together' test for a filter that doesn't exist, and adding one would be a feature change outside this test-only task's area.
 
 What: T300 added an urgency filter next to the existing level filter; test that both together narrow the list, that clearing one keeps the other, and that "no match" shows the empty state.
 Interface: new test file only; read web/src/patterns/PatternLibrary.tsx and PatternLibrary.test.tsx.
