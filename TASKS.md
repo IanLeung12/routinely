@@ -396,7 +396,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T313 — Scenarios: meds_two_errors_one_session and meds_pill_substitution
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: test
