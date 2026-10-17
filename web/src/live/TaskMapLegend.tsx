@@ -5,20 +5,12 @@ const STATES: StepState[] = ['pending', 'done', 'omission', 'repeat', 'sequence'
 
 export function TaskMapLegend(): JSX.Element {
   return (
-    <ul
-      className="task-map task-map-legend"
-      aria-label="Task map legend"
-      style={{ flexWrap: 'wrap', listStyle: 'none', margin: 0 }}
-    >
+    <ul className="task-map task-map-legend" aria-label="Task map legend">
       {STATES.map((state) => {
         const { legend, icon } = STEP_STATUS[state]
         return (
-          <li key={state} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span
-              aria-hidden="true"
-              className={`step step--${state}`}
-              style={{ padding: 'var(--space-2)' }}
-            />
+          <li key={state} className="task-map-legend__item">
+            <span aria-hidden="true" className={`step step--${state}`} />
             <span>
               {icon && <span aria-hidden="true">{icon} </span>}
               {legend}

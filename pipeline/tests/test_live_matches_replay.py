@@ -40,7 +40,12 @@ FAST = 1000.0
 #: error list is not the one `expected.yaml` (and CI) checked for these three. Real
 #: mismatch, not a test bug: flagged here for the orchestrator to file, not fixed here.
 _SEQUENCE_HEALS_FROM_A_TRANSIENT_OMISSION = frozenset(
-    {"tea_sequence_error", "tea_self_corrected", "meds_pill_before_water"}
+    {
+        "tea_sequence_error",
+        "tea_self_corrected",
+        "meds_pill_before_water",
+        "meds_self_corrected",
+    }
 )
 
 

@@ -16,6 +16,12 @@ describe('Tour', () => {
     }
   })
 
+  it('Alert step describes the flag rule as within 48 hours', () => {
+    const alertStep = TOUR_STEPS.find((step) => step.title === 'Alert')
+    expect(alertStep?.body).toContain('48 hours')
+    expect(alertStep?.body.toLowerCase()).not.toContain('in a row')
+  })
+
   it('disables Back on the first step and Next on the last step', () => {
     render(<Tour />)
     expect((screen.getByRole('button', { name: 'Back' }) as HTMLButtonElement).disabled).toBe(true)
@@ -42,5 +48,30 @@ describe('Tour', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('Escape hides the card and calls onClose', () => {
+    const onClose = vi.fn()
+    render(<Tour onClose={onClose} />)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('ArrowRight/ArrowLeft step through and respect bounds', () => {
+    render(<Tour />)
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[0].title })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[1].title })).toBeTruthy()
+
+    for (let i = 0; i < TOUR_STEPS.length; i++) {
+      fireEvent.keyDown(window, { key: 'ArrowRight' })
+    }
+    expect(screen.getByText(`${TOUR_STEPS.length} of ${TOUR_STEPS.length}`)).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByRole('heading', { name: TOUR_STEPS[TOUR_STEPS.length - 2].title })).toBeTruthy()
   })
 })
