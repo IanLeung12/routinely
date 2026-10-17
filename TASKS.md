@@ -204,29 +204,6 @@ Acceptance:
 - Vitest tests for new primitives; `cd web && npm run lint && npm test && npm run build`; `scripts/ci.sh` passes.
 - Before/after screenshots of the overview in the PR (dev server), labelled.
 
-### T402 — Redesign 2/6: chart kit in Fey style + restyle existing charts
-- status: todo
-- class: heavy
-- priority: 1
-- kind: improvement
-- deps: T401
-- area: web/src/ui/charts/, web/src/overview/Sparkline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/HeatCalendar.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*.test.tsx
-- owner: —
-- claimed: —
-- pr: —
-
-What: The graphs are what Ian likes most in Fey. Build a small, dependency-free SVG chart kit following `docs/DESIGN.md` and move our charts onto it. Study the chart references in T401 with the mobbin MCP first.
-Interface (`web/src/ui/charts/`):
-- `LineChart`: thin (1.25–1.5px) primary line, no heavy area fill (at most a very faint gradient), hairline or dashed gridlines only at a few ticks, tiny muted axis labels, **end-of-line value tag** (pill at the right edge with the latest value), optional **personal-baseline band** (mean ± threshold as a soft band) and optional dotted comparison series, hover/focus crosshair with a small tooltip, keyboard focus over points.
-- `BarChart`: slim rounded bars, paired series (e.g. this week vs baseline) with the second series muted/outlined, callout pill above a highlighted bar ("2.4× baseline").
-- `MicroBars`: row of thin vertical ticks (like Fey's sector rows) for a resident's last 14 days, coloured by status.
-- `RangeSelector`: uses `SegmentedControl` (7D 14D 30D).
-- Restyle: `Sparkline` → MicroBars or mini LineChart; `BaselineChart` → LineChart with baseline band + end tag + range selector; HeatCalendar → muted Fey palette (tinted cells, hairline gaps); drift card → LineChart with dotted trend.
-Acceptance:
-- Every chart has an accessible name and a text alternative (summary line or table) for screen readers.
-- Unit tests for scales/ticks and that the end tag shows the latest value; existing chart tests still pass (update selectors, not behaviour).
-- Before/after screenshots of Mrs. K's detail in the PR.
-
 ### T403 — Redesign 3/6: unit overview + app shell
 - status: todo
 - class: standard
@@ -238,7 +215,7 @@ Acceptance:
 - claimed: —
 - pr: —
 
-What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
+What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Make the overview read like Fey's watchlist: one card, dense resident rows (name + room, status pill, top pattern in muted text, MicroBars trend, score pill right-aligned), sort/filter as small segmented pills. App shell: compact top bar (product name, unit, offline/demo indicator) and a floating rounded nav dock for the main screens, following `docs/DESIGN.md`. Check Fey refs via the mobbin MCP (watchlist, home).
 Acceptance: keyboard nav and existing behaviour unchanged (tests updated for structure only); flagged resident still understood in 10 s; before/after screenshot in PR; `scripts/ci.sh` passes.
 
 ### T404 — Redesign 4/6: resident detail
@@ -246,7 +223,7 @@ Acceptance: keyboard nav and existing behaviour unchanged (tests updated for str
 - class: standard
 - priority: 1
 - kind: improvement
-- deps: T401, T402
+- deps: T401, T421, T422
 - area: web/src/resident/ResidentDetail.tsx, web/src/resident/SessionList.tsx, web/src/resident/ContextTimeline.tsx, web/src/resident/*.css, web/src/resident/ResidentDetail.test.tsx
 - owner: —
 - claimed: —
@@ -266,7 +243,7 @@ Acceptance: same data and states (loading/empty/error) as now; before/after scre
 - claimed: —
 - pr: —
 
-What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
+What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) The "why" screen judges score most. Summary as a Fey "daily recap" card (short bold summary, muted detail); "Possible patterns" as ranked cards with confidence bars and rule-out checks; errors as dense timestamped rows with type pills (red/amber/grey); replay and ghost replay in a dark media card; Confirm / False alarm as clear buttons. Keep "consistent with", never "diagnosis".
 Acceptance: readable in 10 s (one glance: what changed, how sure, what to check); tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T406 — Redesign 6/6: live session + handoff
@@ -280,7 +257,7 @@ Acceptance: readable in 10 s (one glance: what changed, how sure, what to check)
 - claimed: —
 - pr: —
 
-What: (Starts after T401; if T402's chart kit hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
+What: (Starts after T401; if the chart kit (T417–T419) hasn't merged yet, keep existing chart components and only restyle their containers; a follow-up swaps the charts.) Live screen as a dark media card (skeleton view) beside the task map styled as a vertical step list with Fey-style pills (done/green, error/red, repeat/amber, unclear/grey) and a slim progress line; shift handoff as dense rows with delta pills ("+2 vs last shift").
 Acceptance: live updates still animate; tests updated for structure only; before/after screenshot; `scripts/ci.sh` passes.
 
 ### T407 — Redesign: landing page onto the Fey-inspired system
@@ -288,7 +265,7 @@ Acceptance: live updates still animate; tests updated for structure only; before
 - class: standard
 - priority: 2
 - kind: improvement
-- deps: T401, T402
+- deps: T401, T417
 - area: web/src/landing/, web/landing.html
 - owner: —
 - claimed: —
@@ -480,3 +457,93 @@ Acceptance:
 - Tests: preview rejects a non-loopback client; nothing under the repo or `REPLAY_DIR`/`CAMERA_RECORD` contains image data after a session with preview on (privacy test); capture still writes the same JSONL with preview on or off.
 - Web test: toggle hidden when not on localhost or preview unreachable; badge shown when on.
 - `scripts/ci.sh` passes without opencv/mediapipe installed (lazy imports).
+
+### T417 — Chart kit: LineChart + RangeSelector (Fey style)
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T401
+- area: web/src/ui/charts/LineChart.tsx, web/src/ui/charts/LineChart.test.tsx, web/src/ui/charts/RangeSelector.tsx, web/src/ui/charts/RangeSelector.test.tsx, web/src/ui/charts/scale.ts, web/src/ui/charts/scale.test.ts, web/src/ui/charts/charts.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402 so the chart kit is built in parallel. Dependency-free SVG `LineChart` per `docs/DESIGN.md`: thin 1.25–1.5px line, at most a faint gradient, a few hairline/dashed gridlines, tiny muted axis labels, **end-of-line value tag** (pill with the latest value), optional **baseline band** (mean ± threshold), optional dotted comparison series, hover/focus crosshair + tooltip, keyboard focus across points. `RangeSelector` (7D 14D 30D) on `SegmentedControl`. `scale.ts`: linear/time scales and "nice" ticks. Check Fey chart refs via the mobbin MCP (see T401).
+Acceptance: accessible name + text alternative (summary line); tests for ticks, end tag = latest value, band drawn only when given, keyboard focus; `cd web && npm test && npm run build`.
+
+### T418 — Chart kit: BarChart (paired bars + callout)
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T401
+- area: web/src/ui/charts/BarChart.tsx, web/src/ui/charts/BarChart.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` (tokens) and `web/src/ui/` primitives. SVG `BarChart`: slim rounded bars, optional second series muted/outlined beside each bar (e.g. this week vs usual), optional callout pill above one highlighted bar (`callout={{index, label: "2.4× usual"}}`), tiny muted labels, tokens only (no hex). Props: `data: {label: string, value: number, compare?: number}[]`, `ariaLabel`, `highlight?`. Self-contained (own min/max scaling; don't import `scale.ts`).
+Acceptance: renders N bars; compare series only when present; callout shows its label; has an accessible name and a visually hidden data table; `cd web && npx vitest run src/ui/charts/BarChart.test.tsx`.
+
+### T419 — Chart kit: MicroBars (14-day tick strip)
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T401
+- area: web/src/ui/charts/MicroBars.tsx, web/src/ui/charts/MicroBars.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402. Read only `docs/DESIGN.md` and `web/src/index.css`. A row of thin vertical ticks (like Fey's sector rows), one per day, height = score, colour by status token (normal / watch / flagged; missing day = faint hairline). Props: `days: {date: string, score: number | null, status: 'normal'|'watch'|'flagged'}[]`, `ariaLabel`. Fixed small size (~84×20) for list rows.
+Acceptance: one tick per day; null days render as hairlines; status colours via tokens; accessible name summarises "14 days, 2 flagged"; `cd web && npx vitest run src/ui/charts/MicroBars.test.tsx`.
+
+### T420 — Restyle: overview Sparkline → MicroBars
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T419
+- area: web/src/overview/Sparkline.tsx, web/src/overview/Sparkline.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402. Make `Sparkline` render `MicroBars` (web/src/ui/charts/MicroBars.tsx) from the same input it takes today; keep its props and export so callers don't change. Read only those files and `web/src/overview/types.ts`.
+Acceptance: existing Sparkline tests pass (update selectors only); `cd web && npx vitest run src/overview`.
+
+### T421 — Restyle: BaselineChart + drift card on LineChart
+- status: todo
+- class: standard
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T417
+- area: web/src/resident/BaselineChart.tsx, web/src/resident/BaselineChart.test.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*Drift*.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402. `BaselineChart` → `LineChart` with the personal baseline band, end-of-line tag and `RangeSelector`; the slow-drift card → `LineChart` with a dotted trend series. Same props and data as today.
+Acceptance: existing tests pass (selectors only); before/after screenshot of Mrs. K in the PR; `cd web && npm test`.
+
+### T422 — Restyle: HeatCalendar in the Fey palette
+- status: todo
+- class: light
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T401
+- area: web/src/resident/HeatCalendar.tsx, web/src/resident/HeatCalendar.test.tsx, web/src/resident/heatCalendar.css
+- owner: —
+- claimed: —
+- pr: —
+
+What: Split from T402. Read only `docs/DESIGN.md`, `web/src/index.css` and the HeatCalendar files. Muted Fey palette: tinted cells from the status tokens, hairline gaps, small rounded cells, muted weekday labels, legend as small pills. No hex in the component; behaviour unchanged.
+Acceptance: existing HeatCalendar tests pass (selectors only); `cd web && npx vitest run src/resident/HeatCalendar.test.tsx`.

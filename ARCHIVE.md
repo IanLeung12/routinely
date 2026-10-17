@@ -7150,3 +7150,29 @@ Interface: read only web/src/resident/ContextTimeline.tsx, web/src/resident/Sess
 Acceptance:
 - New ContextTimeline.mobile.test.tsx in the style of SessionList.mobile.test.tsx.
 - `cd web && npx vitest run src/resident/ContextTimeline` passes; `scripts/ci.sh` passes.
+
+
+### T402 — Redesign 2/6: chart kit in Fey style + restyle existing charts
+- status: parked
+- class: heavy
+- priority: 1
+- kind: improvement
+- deps: T401
+- area: web/src/ui/charts/, web/src/overview/Sparkline.tsx, web/src/resident/BaselineChart.tsx, web/src/resident/HeatCalendar.tsx, web/src/resident/*Drift*.tsx, web/src/resident/*.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: The graphs are what Ian likes most in Fey. Build a small, dependency-free SVG chart kit following `docs/DESIGN.md` and move our charts onto it. Study the chart references in T401 with the mobbin MCP first.
+Interface (`web/src/ui/charts/`):
+- `LineChart`: thin (1.25–1.5px) primary line, no heavy area fill (at most a very faint gradient), hairline or dashed gridlines only at a few ticks, tiny muted axis labels, **end-of-line value tag** (pill at the right edge with the latest value), optional **personal-baseline band** (mean ± threshold as a soft band) and optional dotted comparison series, hover/focus crosshair with a small tooltip, keyboard focus over points.
+- `BarChart`: slim rounded bars, paired series (e.g. this week vs baseline) with the second series muted/outlined, callout pill above a highlighted bar ("2.4× baseline").
+- `MicroBars`: row of thin vertical ticks (like Fey's sector rows) for a resident's last 14 days, coloured by status.
+- `RangeSelector`: uses `SegmentedControl` (7D 14D 30D).
+- Restyle: `Sparkline` → MicroBars or mini LineChart; `BaselineChart` → LineChart with baseline band + end tag + range selector; HeatCalendar → muted Fey palette (tinted cells, hairline gaps); drift card → LineChart with dotted trend.
+Acceptance:
+- Every chart has an accessible name and a text alternative (summary line or table) for screen readers.
+- Unit tests for scales/ticks and that the end tag shows the latest value; existing chart tests still pass (update selectors, not behaviour).
+- Before/after screenshots of Mrs. K's detail in the PR.
+- note: PARKED: split into T417, T418, T419, T420, T421, T422 so the chart kit runs in parallel (Ian).
+
