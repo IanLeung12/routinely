@@ -27,7 +27,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T068 — Show the demo-data banner in the app
-- status: claimed
+- status: in-review
 - class: light
 - priority: 3
 - kind: feature
@@ -35,7 +35,8 @@ Acceptance:
 - area: web/src/App.tsx, web/src/App.test.tsx
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T08:22Z
-- pr: —
+- pr: #135
+- rating: 5/5 clear
 
 What: Render the `DemoBanner` component from T052 (`web/src/ui/DemoBanner.tsx`) once, at the top of `App.tsx` above the header, on every screen.
 Interface: read only `App.tsx`, `App.test.tsx`, `ui/DemoBanner.tsx`.
