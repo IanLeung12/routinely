@@ -251,13 +251,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_checks.py -q` and `scripts/ci.sh` pass.
 
 ### T016 — Alert summary template (offline explainer)
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: pipeline/src/routine_watch/explain.py, pipeline/tests/test_explain.py
-- owner: —
-- claimed: —
+- owner: ian-claude-light
+- claimed: 2026-10-17T04:00Z
 - pr: —
 
 What: The deterministic, offline plain-language alert summary; it is the default fake behind which the Claude explainer will sit later. Uses only the evidence passed in. Read only the files in `area` and `pipeline/pyproject.toml`.
