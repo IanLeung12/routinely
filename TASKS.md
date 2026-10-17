@@ -129,7 +129,7 @@ Acceptance:
 - note sits next to the existing scoring/replay notes; `scripts/ci.sh` passes
 
 ### T356 — Live camera on the dashboard: one command, laptop webcam → /ws/live
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -137,8 +137,9 @@ Acceptance:
 - area: pipeline/src/routine_watch/api_live.py, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/capture.py, scripts/camera.sh, pipeline/tests/test_api_live_camera.py, docs/DEMO.md
 - owner: ian-claude
 - claimed: 2026-10-17T18:41Z
-- pr: —
+- pr: #366
 - note: released by ian-claude: run ended without progress
+- rating: 4/5 clear on the interface and the acceptance cases; it didn't say how 'waiting for object detector' should reach the screen (a new live message would be a contract change, so I inferred it from frames with no object boxes), nor that scripts/camera.sh installing the capture extra breaks test_capture's CLI-stderr assertion
 
 What: Ian wants to try the real camera locally. `capture.py --camera 0` already writes JSONL and `live_camera.camera_session_messages()` already turns a frame stream into live messages, but `/ws/live` only plays recorded scenarios. Wire them together so the dashboard's Live screen shows his webcam session.
 Interface:
