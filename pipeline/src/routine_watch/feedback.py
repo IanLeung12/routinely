@@ -84,6 +84,10 @@ class FeedbackStore:
         answer = self._by_alert.get(alert_id)
         return answer.feedback if answer else None
 
+    def reset(self) -> None:
+        """Forget every logged answer: thresholds and pattern weights back to base."""
+        self._by_alert.clear()
+
     def cause_of(self, alert_id: str) -> str | None:
         """The stored cause for an alert, or None if it has none."""
         answer = self._by_alert.get(alert_id)

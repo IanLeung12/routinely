@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnec
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
-from . import __version__
+from . import __version__, session_log
 from .alerts import build_alerts
 from .contracts import Alert, AlertFeedback, FeedbackVerdict
 from .demo import DEMO_NOW, demo_residents, status_for
@@ -133,6 +133,29 @@ def _alert_payload(alert: Alert) -> dict:
 def health() -> dict[str, str]:
     """Liveness probe, used by the dashboard, scripts/e2e.sh and the tester."""
     return {"status": "ok", "version": __version__}
+
+
+def _demo_reset_enabled() -> bool:
+    """Whether `/demo/reset` is reachable: offline demo/dev stacks only (SPEC §10, §13)."""
+    return os.environ.get("OFFLINE_MODE", "").lower() == "true" or os.environ.get(
+        "DEMO_RESET"
+    ) == "1"
+
+
+@app.post("/demo/reset")
+def demo_reset() -> dict[str, bool]:
+    """Put the demo back to its seeded history (SPEC §10, §13).
+
+    Forgets every live session recorded against a demo resident and every logged
+    nurse feedback, so a rehearsal's flag doesn't linger into the next run. Only
+    reachable with `OFFLINE_MODE=true` or `DEMO_RESET=1`, so it can't wipe a real
+    deployment's state; 404 otherwise, as if the route didn't exist.
+    """
+    if not _demo_reset_enabled():
+        raise HTTPException(status_code=404, detail="not found")
+    session_log.reset()
+    _feedback_store.reset()
+    return {"ok": True}
 
 
 @app.get("/residents")
