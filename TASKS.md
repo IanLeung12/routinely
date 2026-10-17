@@ -458,13 +458,13 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_notify.py -q` and `scripts/ci.sh` pass.
 
 ### T045 — Privacy & limits panel
-- status: todo
+- status: claimed
 - class: light
 - priority: 2
 - deps: —
 - area: web/src/about/PrivacyPanel.tsx, web/src/about/PrivacyPanel.test.tsx
-- owner: —
-- claimed: —
+- owner: max-codex-light-2
+- claimed: 2026-10-17T05:14Z
 - pr: —
 
 What: A small static panel for the demo close (SPEC §10 step 6, §12): what the system stores and doesn't, and its limits. Not wired into App.tsx in this task. Read only the files in `area` and `web/src/live/TaskMap.tsx` (component style).
