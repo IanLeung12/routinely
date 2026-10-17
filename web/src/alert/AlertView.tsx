@@ -5,13 +5,16 @@ import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
+import { Pill } from '../ui/Pill.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
-import type { Alert, BaselineComparison, FeedbackVerdict, TaskError } from '../contracts.ts'
+import { StatusChip } from '../ui/StatusChip.tsx'
+import type { Alert, FeedbackVerdict, TaskError } from '../contracts.ts'
 import { fetchReplay } from '../evidence/api.ts'
 import type { EvidenceReplay } from '../evidence/api.ts'
 import GhostReplay from '../evidence/GhostReplay.tsx'
 import { ReplayPlayer } from '../evidence/ReplayPlayer.tsx'
 import { fetchResident } from '../resident/api.ts'
+import { formatDayTime } from '../resident/format.ts'
 import type { CareRecord } from '../resident/types.ts'
 import { fetchAlert, postFeedback } from './api.ts'
 import { AlertContext } from './AlertContext.tsx'
@@ -25,18 +28,41 @@ import './alert.css'
 
 const HEADING_ID = 'alert-view-heading'
 
-function formatBaseline(baseline: BaselineComparison): string {
-  return `${baseline.observed.toFixed(1)} vs ${baseline.baseline_mean.toFixed(1)} normal over ${baseline.baseline_days} days`
+function plural(count: number, word: string): string {
+  return `${count} ${count === 1 ? word : `${word}s`}`
+}
+
+/** "2 errors in 2 sessions": what the error rows below add up to, so the count is
+ * read before the rows are (docs/DESIGN.md: numbers, then words). */
+function errorCaption(errors: TaskError[]): string | undefined {
+  if (errors.length === 0) return undefined
+  const sessions = new Set(errors.map((error) => error.session_id)).size
+  return `${plural(errors.length, 'error')} in ${plural(sessions, 'session')}`
 }
 
 /** A card section's title, at `h2` so the alert reads as one heading outline (SPEC
  * section 9): `h1` resident + "Flagged for review", then each section in reading order.
  * Same look as the shared `SectionHeader`, which is fixed at `h3` for use inside screens
  * that already have their own `h2`. */
-function AlertSectionHeading({ title }: { title: string }) {
+function AlertSectionHeading({ title, caption }: { title: string; caption?: string }) {
   return (
     <div className="section-header">
       <h2 className="section-header__title">{title}</h2>
+      {caption ? <span className="section-header__caption">{caption}</span> : null}
+    </div>
+  )
+}
+
+/** One number in the recap card's strip: the value first and large, the label above it
+ * in muted text, so the three of them can be compared without reading a sentence. */
+function Stat({ label, value, after }: { label: string; value: string; after?: ReactNode }) {
+  return (
+    <div className="alert-stat">
+      <dt className="alert-stat__label">{label}</dt>
+      <dd className="alert-stat__value">
+        <span className="alert-stat__number tabular-nums">{value}</span>
+        {after}
+      </dd>
     </div>
   )
 }
@@ -51,8 +77,9 @@ function causeOptions(alert: Alert): { id: string; label: string }[] | undefined
 }
 
 /** Screen 4 (SPEC section 9): the evidence behind a flagged alert, readable in 10
- * seconds. Plain-language summary and baseline comparison first, then the error-by-error
- * detail, suggested checks and the confirm/false-alarm feedback that tunes the threshold. */
+ * seconds. In SPEC order, which is also the order the questions come in: what changed
+ * (the recap card), how sure we are and what to rule out (the ranked patterns), the
+ * errors behind it, the replay, the context, the checks, and the nurse's verdict. */
 export function AlertView({
   alertId,
   onBack,
@@ -182,66 +209,94 @@ export function AlertView({
     body = <EmptyState message="No change flagged for review." />
   } else {
     const alert = loaded.alert
+    const { baseline } = alert
     heading = (
-      <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>
-        {residentName ?? alert.resident_id} flagged for review
-      </h1>
+      <div className="alert-view__header">
+        <h1 id={HEADING_ID} ref={headingRef} tabIndex={-1}>
+          {residentName ?? alert.resident_id} flagged for review
+        </h1>
+        <StatusChip status="flagged" />
+      </div>
     )
     body = (
       <>
-        <AlertSectionHeading title="What changed" />
-        <p className="alert-view__summary">{alert.summary}</p>
-        <p className="alert-view__baseline">{formatBaseline(alert.baseline)}</p>
-        <p className="alert-view__threshold">
-          Current threshold: {alert.baseline.threshold.toFixed(1)}
-        </p>
-        <Button variant="secondary" onClick={() => { void copySummary(alert) }}>
-          Copy summary
-        </Button>
-        <Button variant="secondary" className="no-print" onClick={() => window.print()}>
-          Print
-        </Button>
-        {copyStatus && <p role="status">{copyStatus}</p>}
-
-        {resident !== null && resident.alertId === alertId && resident.records !== null && (
-          <Card>
-            <SectionHeader title="Recent care records" />
-            <AlertContext records={resident.records} alertTs={alert.created_at} />
-          </Card>
-        )}
+        <Card className="alert-recap">
+          <AlertSectionHeading
+            title="What changed"
+            caption={`Flagged ${formatDayTime(alert.created_at)}`}
+          />
+          <p className="alert-recap__summary">{alert.summary}</p>
+          <dl className="alert-recap__stats">
+            <Stat
+              label="Error score"
+              value={baseline.observed.toFixed(1)}
+              after={
+                <Pill tone="negative" direction="up">
+                  above usual
+                </Pill>
+              }
+            />
+            <Stat
+              label="Their usual"
+              value={baseline.baseline_mean.toFixed(1)}
+              after={<span className="alert-stat__unit">over {baseline.baseline_days} days</span>}
+            />
+            <Stat label="Flag threshold" value={baseline.threshold.toFixed(1)} />
+          </dl>
+          <div className="alert-recap__actions">
+            <Button onClick={() => { void copySummary(alert) }}>Copy summary</Button>
+            <Button className="no-print" onClick={() => window.print()}>Print</Button>
+            {copyStatus && (
+              <p className="alert-recap__copy-status" role="status">{copyStatus}</p>
+            )}
+          </div>
+        </Card>
 
         <Card>
-          <AlertSectionHeading title="Errors" />
+          <AlertSectionHeading title="Possible patterns" caption="Ranked, with what to rule out" />
+          <PatternList patterns={alert.patterns ?? []} />
+        </Card>
+
+        <Card>
+          <AlertSectionHeading title="Errors" caption={errorCaption(alert.errors)} />
           <ErrorList errors={alert.errors} onOpen={(error) => onOpenEvidence?.(error)} />
           <TimeOfDayStrip buckets={alert.errors_by_time_of_day} />
         </Card>
 
         <Card className="no-print">
-          <AlertSectionHeading title="Evidence" />
+          <AlertSectionHeading title="Evidence" caption="Skeletons and timestamps only, never video" />
           {replay === null || replay.alertId !== alertId ? (
             <Loading label="Loading replay…" />
           ) : replay.replay === null ? (
             <EmptyState message="No skeleton replay available for this alert." />
           ) : (
             <div className="alert-view__evidence">
-              <ReplayPlayer frames={replay.replay.today} />
-              <GhostReplay today={replay.replay.today} normal={replay.replay.normal} t={replay.replay.t_start} />
+              <div className="media-frame">
+                <p className="media-frame__label">This session</p>
+                <ReplayPlayer frames={replay.replay.today} />
+              </div>
+              <div className="media-frame">
+                <p className="media-frame__label">Today over usual</p>
+                <GhostReplay today={replay.replay.today} normal={replay.replay.normal} t={replay.replay.t_start} />
+              </div>
             </div>
           )}
         </Card>
 
-        <Card>
-          <AlertSectionHeading title="Possible patterns" />
-          <PatternList patterns={alert.patterns ?? []} />
-        </Card>
+        {resident !== null && resident.alertId === alertId && resident.records !== null && (
+          <Card>
+            <SectionHeader title="Recent care records" caption="Last 3 days" />
+            <AlertContext records={resident.records} alertTs={alert.created_at} />
+          </Card>
+        )}
 
         <Card>
-          <AlertSectionHeading title="Suggested checks" />
+          <AlertSectionHeading title="Suggested checks" caption="Before the next session" />
           <SuggestedChecks checks={alert.suggested_checks} />
         </Card>
 
         <Card className="no-print">
-          <AlertSectionHeading title="Feedback" />
+          <AlertSectionHeading title="Feedback" caption="Tunes this resident's threshold" />
           <FeedbackButtons
             value={alert.feedback?.verdict ?? null}
             onChange={(verdict) => saveFeedback(verdict, null)}

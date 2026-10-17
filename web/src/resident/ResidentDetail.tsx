@@ -44,9 +44,13 @@ type Loaded =
 export function ResidentDetail({
   residentId,
   onBack,
+  backLabel = 'Unit overview',
 }: {
   residentId: string
   onBack: () => void
+  /** Where Back goes, when it isn't the unit overview: a supervisor who supports one
+   * person reaches this screen from their people list (SPEC section 17). */
+  backLabel?: string
 }) {
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -264,7 +268,7 @@ export function ResidentDetail({
       aria-labelledby={loaded?.status === 'ok' && loaded.resident ? HEADING_ID : undefined}
     >
       <button type="button" className="back-button no-print" onClick={onBack}>
-        ← Unit overview
+        ← {backLabel}
       </button>
       {body}
     </section>

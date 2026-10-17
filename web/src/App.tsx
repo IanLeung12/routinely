@@ -5,8 +5,14 @@ import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
+import { getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
+import { MyRoutine } from './people/MyRoutine.tsx'
+import { PeopleISupport } from './people/PeopleISupport.tsx'
+import { RoleChooser } from './people/RoleChooser.tsx'
+import { RoleSwitch } from './people/RoleSwitch.tsx'
+import type { RoleId } from './people/types.ts'
 import { ResidentDetail } from './resident/ResidentDetail.tsx'
-import { DemoBanner } from './ui/DemoBanner.tsx'
+import { DemoBanner, resetDemoData } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
 import { Pill } from './ui/Pill.tsx'
 import { useDocumentTitle } from './ui/useDocumentTitle.ts'
@@ -25,7 +31,8 @@ type AlertOrigin = 'overview' | 'handoff' | 'live'
 
 /** The app shell's three top-level destinations, for the floating nav dock. A
  * resident's detail or an open alert are drill-ins reached from the overview, so
- * they still count as 'overview' for which dock item is current. */
+ * they still count as 'overview' for which dock item is current. Supervisor-only:
+ * a person has just the one "My routine" screen, and the role chooser has none. */
 type MainScreen = 'overview' | 'handoff' | 'patterns'
 
 const MAIN_SCREENS: { id: MainScreen; label: string }[] = [
@@ -34,10 +41,30 @@ const MAIN_SCREENS: { id: MainScreen; label: string }[] = [
   { id: 'patterns', label: 'Pattern library' },
 ]
 
+/** What the app is, in the words of whoever is reading it (SPEC section 17). "Nurse"
+ * belongs to the care-home case only, so the shared line never says it. */
+const TAGLINE: Record<RoleId, string> = {
+  person:
+    'Watches an everyday routine, like making a cup of tea, and tells you when something looked different from your usual.',
+  supervisor:
+    'Watches someone make a cup of tea and flags a change in their routine for you to review.',
+}
+
 export default function App() {
   /** `?tour=1` opts into the presenter cue card; off by default so it never touches
    * the real demo path. */
   const showTour = new URLSearchParams(window.location.search).has('tour')
+  /** `?invite=CODE` is the link a person sends whoever they want watching over them:
+   * the code arrives filled in on "People I support" (SPEC section 17). */
+  const inviteCode = new URLSearchParams(window.location.search).get('invite')
+  /** Person or supervisor, remembered between visits; null until the chooser is answered. */
+  const [role, setRoleState] = useState<RoleId | null>(() => getRole())
+  /** The people this supervisor can see. One of them and their detail is the home
+   * screen; several and it is the unit overview (SPEC section 17). */
+  const [supported, setSupported] = useState(() => peopleISupport())
+  /** Set once the one supported person's detail has been left, so Back lands on the
+   * list rather than reopening the detail it just came from. */
+  const [showingPeople, setShowingPeople] = useState(false)
   /** Which resident's detail is open, if any. Two screens don't need a router. */
   const [openResident, setOpenResident] = useState<string | null>(null)
   const [openAlert, setOpenAlert] = useState<string | null>(null)
@@ -56,14 +83,16 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
+    if (role !== 'supervisor') return
     let cancelled = false
     fetchAlerts().then(result => {
       if (!cancelled) setAlerts(result)
     })
     return () => { cancelled = true }
-  }, [refreshKey])
+  }, [refreshKey, role])
 
   useEffect(() => {
+    if (role !== 'supervisor') return
     let cancelled = false
     fetchResidentsWithSource().then(result => {
       if (!cancelled) {
@@ -72,10 +101,14 @@ export default function App() {
       }
     })
     return () => { cancelled = true }
-  }, [refreshKey])
+  }, [refreshKey, role])
 
   function residentName(id: string): string {
-    return residents.find(resident => resident.id === id)?.name ?? id
+    return (
+      residents.find(resident => resident.id === id)?.name ??
+      supported.find(person => person.id === id)?.name ??
+      id
+    )
   }
 
   /** Opens an alert, remembering which screen asked for it. */
@@ -90,24 +123,72 @@ export default function App() {
     setOpenHandoff(alertOrigin === 'handoff')
   }
 
-  /** The dock's current screen: a resident's detail or an open alert are
-   * drill-ins reached from the overview, so they don't get their own dock item. */
+  /** Answers the role chooser, or switches role later from the shell: the home screen
+   * changes, and anything opened under the old role is closed. */
+  function chooseRole(next: RoleId) {
+    saveRole(next)
+    setRoleState(next)
+    setSupported(peopleISupport())
+    setShowingPeople(false)
+    setOpenResident(null)
+    setOpenAlert(null)
+    setOpenHandoff(false)
+    setOpenPatternLibrary(false)
+  }
+
+  /** Re-reads who I support after a link is added or removed. */
+  function refreshPeople() {
+    setSupported(peopleISupport())
+  }
+
+  /** "Reset demo" forgets the role and the links as well as the pipeline's demo state,
+   * so the next open starts at the chooser with the seeded people (SPEC section 17). */
+  async function resetDemo() {
+    resetPeople()
+    setRoleState(null)
+    setSupported(peopleISupport())
+    setShowingPeople(false)
+    await resetDemoData()
+  }
+
+  /** The supervisor who supports exactly one person opens straight into their detail:
+   * a daughter watching her father has no unit to look at first (SPEC section 17). */
+  const soleSupported = supported.length === 1 ? supported[0] : null
+  const shownResident =
+    openResident ?? (showingPeople ? null : (soleSupported?.id ?? null))
+
+  /** Back from the detail: the overview when it was opened from a list, otherwise the
+   * people list, which is the only other screen a one-person supervisor has. */
+  function closeResident() {
+    if (openResident !== null) {
+      setOpenResident(null)
+      return
+    }
+    setShowingPeople(true)
+  }
+
+  /** The dock's current screen: a resident's detail, an open alert or the people
+   * list are drill-ins reached from the overview, so they don't get their own
+   * dock item. */
   const currentScreen: MainScreen = openHandoff ? 'handoff' : openPatternLibrary ? 'patterns' : 'overview'
 
   /** Jumps straight to one of the three main screens, closing whatever drill-in
-   * (a resident's detail, an open alert) was on top of it. */
+   * (a resident's detail, an open alert, the people list) was on top of it. */
   function goToScreen(screen: MainScreen) {
     setOpenResident(null)
     setOpenAlert(null)
+    setShowingPeople(false)
     setOpenHandoff(screen === 'handoff')
     setOpenPatternLibrary(screen === 'patterns')
   }
 
   useDocumentTitle(documentTitle())
 
-  /** So a nurse with several tabs open (or a screen reader) can tell the
-   * overview from Mrs. K's alert. */
+  /** So someone with several tabs open (or a screen reader) can tell the overview from
+   * Mrs. K's alert. */
   function documentTitle(): string {
+    if (role === null) return 'Routine Watch'
+    if (role === 'person') return 'My routine — Routine Watch'
     if (openAlert !== null) {
       const resident = alerts.find(alert => alert.alert_id === openAlert)?.resident_id
       const name = resident ? residentName(resident) : null
@@ -115,33 +196,100 @@ export default function App() {
     }
     if (openHandoff) return 'Shift handoff — Routine Watch'
     if (openPatternLibrary) return 'Pattern library — Routine Watch'
-    if (openResident !== null) return `${residentName(openResident)} — Routine Watch`
-    return 'Unit overview — Routine Watch'
+    if (shownResident !== null) return `${residentName(shownResident)} — Routine Watch`
+    if (supported.length > 1) return 'Unit overview — Routine Watch'
+    return 'People I support — Routine Watch'
   }
+
+  /** The supervisor's home: the unit overview with its live session and alerts when
+   * there are several people, and "people I support" either way (SPEC section 17). */
+  const supervisorHome = (
+    <>
+      {supported.length > 1 && (
+        <>
+          <section>
+            <h2>Unit overview</h2>
+            <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
+          </section>
+
+          <section>
+            <h2>Live session</h2>
+            <LiveScreen
+              onOpenAlert={id => openAlertFrom('live', id)}
+              onSessionEnd={() => setRefreshKey((key) => key + 1)}
+            />
+          </section>
+
+          <section>
+            <h2>Alerts</h2>
+            <ul className="resident-list">
+              {alerts.map(alert => (
+                <li key={alert.alert_id} className="resident-row">
+                  <button
+                    type="button"
+                    className="resident-open"
+                    onClick={() => openAlertFrom('overview', alert.alert_id)}
+                  >
+                    {residentName(alert.resident_id)}: {alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
+
+      <section>
+        <h2>People I support</h2>
+        <PeopleISupport
+          people={supported}
+          initialCode={inviteCode}
+          onOpen={setOpenResident}
+          onChange={refreshPeople}
+        />
+      </section>
+    </>
+  )
 
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
-      <main id="main" className="app app--with-dock">
+      <main id="main" className={role === 'supervisor' ? 'app app--with-dock' : 'app'}>
         {showTour && (
           <Suspense fallback={<Loading label="Loading tour…" />}>
             <Tour />
           </Suspense>
         )}
-        <DemoBanner />
+        <DemoBanner onReset={resetDemo} />
         <header className="app-topbar">
           <div className="app-topbar__brand">
             <h1 className="app-topbar__name">Routine Watch</h1>
-            <span className="app-topbar__unit">
-              {residents.length} resident{residents.length === 1 ? '' : 's'}
-            </span>
+            <p className="app-topbar__tagline">
+              {role === null
+                ? 'Watches an everyday routine, like making a cup of tea, and flags a change for review.'
+                : TAGLINE[role]}
+            </p>
           </div>
-          <Pill tone={residentsSource === 'demo' ? 'watch' : 'positive'} className="app-topbar__status">
-            {residentsSource === 'demo' ? 'Offline — demo data' : 'Live'}
-          </Pill>
+          <div className="app-topbar__actions">
+            {role === 'supervisor' && (
+              <>
+                <span className="app-topbar__unit">
+                  {residents.length} resident{residents.length === 1 ? '' : 's'}
+                </span>
+                <Pill tone={residentsSource === 'demo' ? 'watch' : 'positive'} className="app-topbar__status">
+                  {residentsSource === 'demo' ? 'Offline — demo data' : 'Live'}
+                </Pill>
+              </>
+            )}
+            {role !== null && <RoleSwitch role={role} onChange={chooseRole} />}
+          </div>
         </header>
 
-        {openAlert !== null ? (
+        {role === null ? (
+          <RoleChooser onChoose={chooseRole} />
+        ) : role === 'person' ? (
+          <MyRoutine onChange={refreshPeople} />
+        ) : openAlert !== null ? (
           <AlertView alertId={openAlert} onBack={closeAlert} />
         ) : openHandoff ? (
           <Suspense fallback={<Loading label="Loading shift handoff…" />}>
@@ -154,55 +302,31 @@ export default function App() {
           <Suspense fallback={<Loading label="Loading pattern library…" />}>
             <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
           </Suspense>
-        ) : openResident === null ? (
-          <>
-            <section>
-              <h2>Unit overview</h2>
-              <UnitOverview onSelect={setOpenResident} refreshKey={refreshKey} />
-            </section>
-
-            <section>
-              <h2>Live session</h2>
-              <LiveScreen
-                onOpenAlert={id => openAlertFrom('live', id)}
-                onSessionEnd={() => setRefreshKey((key) => key + 1)}
-              />
-            </section>
-
-            <section>
-              <h2>Alerts</h2>
-              <ul className="resident-list">
-                {alerts.map(alert => (
-                  <li key={alert.alert_id} className="resident-row">
-                    <button
-                      type="button"
-                      className="resident-open"
-                      onClick={() => openAlertFrom('overview', alert.alert_id)}
-                    >
-                      {residentName(alert.resident_id)}: {alert.kind === 'trend' ? 'Slow trend for review' : 'Change flagged for review'}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </>
+        ) : shownResident !== null ? (
+          <ResidentDetail
+            residentId={shownResident}
+            onBack={closeResident}
+            backLabel={supported.length > 1 ? 'Unit overview' : 'People I support'}
+          />
         ) : (
-          <ResidentDetail residentId={openResident} onBack={() => setOpenResident(null)} />
+          supervisorHome
         )}
 
-        <nav className="app-dock" aria-label="Main screens">
-          {MAIN_SCREENS.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              className="app-dock__item"
-              aria-current={currentScreen === id ? 'page' : undefined}
-              onClick={() => goToScreen(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
+        {role === 'supervisor' && (
+          <nav className="app-dock" aria-label="Main screens">
+            {MAIN_SCREENS.filter(({ id }) => id !== 'handoff' || supported.length > 1).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className="app-dock__item"
+                aria-current={currentScreen === id ? 'page' : undefined}
+                onClick={() => goToScreen(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        )}
       </main>
     </>
   )

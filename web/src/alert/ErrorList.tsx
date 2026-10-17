@@ -1,5 +1,6 @@
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
+import { Row } from '../ui/Row.tsx'
 
 function formatTimestamp(t: number): string {
   const minutes = Math.floor(t / 60)
@@ -12,8 +13,11 @@ function errorPhrase(error: TaskError): string {
   return describeError(error.type, step)
 }
 
-/** The error-by-error detail behind an alert (SPEC section 9, screen 4). Each row
- * opens that error's replay through `onOpen`; the replay view itself is a later task. */
+/** The error-by-error detail behind an alert (SPEC section 9, screen 4): one dense,
+ * hairline-separated row per error — type pill on the left (red omission/substitution,
+ * amber sequence/repeat, grey unclear), what happened in the middle, the timestamp
+ * right-aligned and tabular so the column scans. Each row opens that error's replay
+ * through `onOpen`. */
 export function ErrorList({
   errors,
   onOpen,
@@ -32,18 +36,23 @@ export function ErrorList({
         const time = formatTimestamp(error.t_start)
         return (
           <li key={error.error_id}>
-            <button
-              type="button"
-              className="error-list__open"
-              onClick={() => onOpen(error)}
-              aria-label={`Open evidence: ${phrase} at ${time}`}
-            >
-              <span className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
-                {error.type}
-              </span>
-              <span className="error-list__phrase">{phrase}</span>
-              <span className="error-list__time">{time}</span>
-            </button>
+            <Row
+              className="error-row"
+              leading={
+                <span className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
+                  {error.type}
+                </span>
+              }
+              title={<span className="error-list__phrase">{phrase}</span>}
+              value={<span className="error-list__time tabular-nums">{time}</span>}
+              trailing={
+                <span className="error-list__open-hint" aria-hidden="true">
+                  ›
+                </span>
+              }
+              onSelect={() => onOpen(error)}
+              selectLabel={`Open evidence: ${phrase} at ${time}`}
+            />
           </li>
         )
       })}

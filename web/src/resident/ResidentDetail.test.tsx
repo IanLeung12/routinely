@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.tsx'
 import { apiUrl } from '../config.ts'
 import { mockResidentDetail } from '../mock/residentDetail.ts'
+import { setRole } from '../people/api.ts'
 import { ResidentDetail } from './ResidentDetail.tsx'
 import { fetchDrift, fetchResident } from './api.ts'
 import { dailyScores } from './days.ts'
@@ -476,6 +477,10 @@ describe('fetchDrift', () => {
 describe('resident detail navigation', () => {
   it('opens a resident from the overview and comes back', async () => {
     offline()
+    // The unit overview is the supervisor-with-many home (SPEC section 17); with no
+    // role picked the shell opens on the chooser instead.
+    localStorage.clear()
+    setRole('supervisor')
 
     render(<App />)
 

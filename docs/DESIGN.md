@@ -10,6 +10,9 @@ Never hard-code a hex or a px in a component. If a token is missing, add it here
 The unit overview on the tokens alone, before any screen was redesigned:
 `design/overview-before.png` → `design/overview-after.png`.
 
+The alert / evidence view, the first screen rebuilt on the system (same alert, same
+data, half the scroll): `design/alert-before.png` → `design/alert-after.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so

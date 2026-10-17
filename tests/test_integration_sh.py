@@ -100,5 +100,32 @@ def test_no_check_pipes_captured_text_into_grep_q():
 def test_the_render_check_still_looks_for_the_app_title_and_still_fails_loudly():
     text = SCRIPT.read_text()
 
-    assert 'contains "$dom" "Routine Watch"' in text
+    assert 'contains "$body" "Routine Watch"' in text
     assert "dashboard did not render" in text
+
+
+def test_a_title_only_dom_does_not_satisfy_the_render_check():
+    """index.html's static <title>Routine Watch</title> sits in <head> whether
+    or not React ever mounted; a DOM dump with an empty <body> must still read
+    as "did not render" (T426), not pass on the head's title alone."""
+    body = """
+    dom="<html><head><title>Routine Watch</title></head><body></body></html>"
+    body=${dom#*<body}
+    contains "$body" "Routine Watch"
+    """
+
+    done = run_with_helpers(body)
+
+    assert done.returncode == 1, done.stdout + done.stderr
+
+
+def test_a_rendered_body_satisfies_the_render_check():
+    body = """
+    dom="<html><head><title>Routine Watch</title></head><body><h1>Routine Watch</h1></body></html>"
+    body=${dom#*<body}
+    contains "$body" "Routine Watch"
+    """
+
+    done = run_with_helpers(body)
+
+    assert done.returncode == 0, done.stdout + done.stderr

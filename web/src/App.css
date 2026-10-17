@@ -1,6 +1,6 @@
-/* App shell (docs/DESIGN.md): a compact top bar — product name, unit size and an
-   offline/demo indicator — and a floating rounded nav dock for the three main
-   screens, instead of a tall header and plain buttons. */
+/* App shell (docs/DESIGN.md): a compact top bar — product name, a one-line
+   tagline, unit size and an offline/demo indicator — and a floating rounded nav
+   dock for the three main screens, instead of a tall header and plain buttons. */
 
 .app--with-dock {
   padding-bottom: calc(var(--space-6) * 3);
@@ -19,9 +19,9 @@
 
 .app-topbar__brand {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .app-topbar__name {
@@ -31,9 +31,24 @@
   letter-spacing: -0.02em;
 }
 
+.app-topbar__tagline {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.app-topbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .app-topbar__unit {
   color: var(--text-muted);
   font-size: var(--text-sm);
+  white-space: nowrap;
 }
 
 .app-dock {

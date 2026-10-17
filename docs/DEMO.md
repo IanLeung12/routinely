@@ -41,9 +41,15 @@ both and frees the ports.
 
 ## Click path
 
-The dashboard's home screen (`web/src/App.tsx`) shows the unit overview, the live
-session, and the alert list all on one page — no screen to navigate to first.
+The dashboard's home screen for a supervisor who supports several people
+(`web/src/App.tsx`) shows the unit overview, the live session, and the alert list all
+on one page — no screen to navigate to first.
 
+- **Who it's for:** a browser that hasn't answered yet opens on "Who is this for?" —
+  pick **I'm supporting someone** for the care-home demo (SPEC §17). The choice is
+  remembered, and the **Viewing as** switch in the header flips between *Myself* (the
+  person watching their own routine) and *Someone I support*. "Reset demo" puts the
+  question back.
 - **Hook:** nothing to click — say the line about delirium, a medication problem, or
   a decline being easy for staff to miss (SPEC §10.1).
 - **Baseline:** in **Unit overview**, click Mrs. K's row. Her detail screen shows her

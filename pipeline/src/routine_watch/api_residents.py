@@ -1,27 +1,43 @@
-"""Resident, drift, pattern-library and replay routes (SPEC sections 8 and 9).
+"""Resident, drift, pattern-library and replay routes (SPEC sections 8, 9 and 17).
 
 Split out of `api.py`: `GET /residents`, `GET /residents/{id}`,
 `GET /residents/{id}/drift`, `GET /residents/{id}/feedback`, `GET /patterns`,
 `GET /sessions/{id}/replay` and `GET /residents/{id}/normal_replay` share these
 helpers, kept together here.
+
+The replay library (`GET /people/{id}/replays`, `GET /replays/{id}` and its
+`DELETE`) lives here too, with the two older replay routes. It is the same subject
+from the other end: those two answer "show me the window behind this error in this
+alert" out of a stand-in recording (`routine_watch.evidence`), and these answer "let
+me look through the attempts that went wrong" out of what was really captured and
+kept (`routine_watch.replays`, SPEC section 17).
+
 The feedback-tuned status/threshold helpers (`_tuned`, `_SUMMARY_FIELDS`) live
 on `api_state.py`, imported here at module load time instead of reached back
 into for on every call, so a reset there is visible to these routes without
 either module rebinding the other's state.
 """
 
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 
 from . import api_state
-from .contracts import SuggestedCheck
+from .contracts import CaptureFrame, ErrorType, ReplaySummary, SuggestedCheck
 from .demo import demo_residents
 from .drift import daily_scores, drift
-from .evidence import EvidenceError, normal_replay_frames, replay_frames
+from .evidence import (
+    EvidenceError,
+    ensure_demo_replays,
+    normal_replay_frames,
+    person_of,
+    replay_frames,
+)
 from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .patterns_library import LIBRARY as PATTERN_LIBRARY
 from .patterns_library import Pattern, TimeProfile
+from .replays import ReplayStore, downsampled, get_replay_store
 
 router = APIRouter()
 
@@ -158,3 +174,108 @@ def resident_normal_replay(
         "resident_id": resident_id,
         "frames": [frame.model_dump(mode="json") for frame in frames],
     }
+
+
+@router.get("/people/{person_id}/replays")
+def person_replays(
+    person_id: str,
+    error_type: Annotated[ErrorType | None, Query(alias="type")] = None,
+    since: datetime | None = None,
+) -> dict:
+    """One person's kept replays, newest first (SPEC section 17).
+
+    Every session of theirs that had an error and is still inside the retention
+    window, as rows with no frames in them, plus the one clean session kept as the
+    comparison. `?type=` keeps the attempts that had an error of that kind and
+    `?since=` the ones from an ISO 8601 instant onwards; neither touches the
+    comparison, which is what all of them are looked at against.
+
+    A person with nothing kept gets an empty library rather than a 404: who this unit
+    knows is not a question for a route that answers to a person id off a URL, and
+    somebody who has never gone wrong in front of a camera has an empty library in
+    exactly the same way.
+    """
+    store = get_replay_store()
+    ensure_demo_replays(person_id, store)
+    return {
+        "person_id": person_id,
+        "replays": [
+            summary.model_dump(mode="json")
+            for summary in store.list(person_id, since=since, error_type=error_type)
+        ],
+        "normal": _dumped(store.normal_for(person_id)),
+    }
+
+
+@router.get("/replays/{session_id}")
+def session_replay_record(
+    session_id: str,
+    t_start: Annotated[float | None, Query(ge=0.0)] = None,
+    t_end: Annotated[float | None, Query(ge=0.0)] = None,
+    fps: Annotated[float | None, Query(gt=0)] = None,
+) -> dict:
+    """One kept replay: its frames and a marker on each of its errors (SPEC §17, §8).
+
+    The whole session by default, which is what a player opening an attempt wants.
+    `?t_start=`, `?t_end=` and `?fps=` trim it to one error's moment and thin it
+    further, the way `GET /sessions/{id}/replay` does for an alert - except that
+    these are the frames the session really left behind rather than a stand-in for
+    them, and the markers come with it either way, so the player can jump between
+    errors without asking again. 404s for a session nothing was kept for.
+    """
+    store = get_replay_store()
+    _seed_for(session_id, store)
+    replay = store.get(session_id)
+    if replay is None:
+        raise HTTPException(status_code=404, detail="replay not found")
+    frames = _window(replay.frames, t_start, t_end, fps)
+    return replay.model_copy(update={"frames": frames}).model_dump(mode="json")
+
+
+@router.delete("/replays/{session_id}")
+def delete_replay(session_id: str) -> dict:
+    """Delete one kept replay (SPEC section 17: the person can delete any of theirs).
+
+    Deleting is deleting: the frames and the markers go, and nothing regenerates
+    them. 404s for a session nothing was kept for, so a second delete says so rather
+    than claiming to have deleted something twice.
+    """
+    store = get_replay_store()
+    _seed_for(session_id, store)
+    if not store.delete(session_id):
+        raise HTTPException(status_code=404, detail="replay not found")
+    return {"session_id": session_id, "deleted": True}
+
+
+def _seed_for(session_id: str, store: ReplayStore) -> None:
+    """Build the demo library this session would be part of, if it is a demo
+    person's: their history was never in front of a camera, so their replays are
+    generated the first time anybody asks for one (`routine_watch.evidence`)."""
+    person_id = person_of(session_id)
+    if person_id is not None:
+        ensure_demo_replays(person_id, store)
+
+
+def _dumped(summary: ReplaySummary | None) -> dict | None:
+    """One library row as JSON, or null where there is no row to send."""
+    return None if summary is None else summary.model_dump(mode="json")
+
+
+def _window(
+    frames: list[CaptureFrame],
+    t_start: float | None,
+    t_end: float | None,
+    fps: float | None,
+) -> list[CaptureFrame]:
+    """The frames inside the window asked for, thinned to `fps` if one was asked for.
+
+    Both ends are inclusive and both are optional: asking for neither is asking for
+    the session. The replay was already thinned when it was kept
+    (`replays.REPLAY_FPS`), so `fps` only ever takes frames away.
+    """
+    kept = [
+        frame
+        for frame in frames
+        if (t_start is None or frame.t >= t_start) and (t_end is None or frame.t <= t_end)
+    ]
+    return downsampled(kept, fps) if fps else kept

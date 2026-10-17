@@ -23,6 +23,9 @@ pipeline and the dashboard disagree about a shape, the answer lives here.
 | `pattern_library_entry.schema.json` | one entry of the pattern library (`GET /patterns`): signals and weights, time profile, what to rule out, urgency and where the pattern comes from - the rule, not a verdict on a resident (SPEC section 7.5) |
 | `session_replay.schema.json` | one window of a session's skeleton replay (`GET /sessions/{id}/replay`): the capture frames the evidence view plays, never video (SPEC section 8) |
 | `normal_replay.schema.json` | the same window from a normal session (`GET /residents/{id}/normal_replay`): the ghost layer the evidence view lays under it |
+| `replay_summary.schema.json` | one kept replay as a library row (`GET /people/{id}/replays`): when the session was, how long it ran, how many errors and of which kinds, and whether it is the person's normal - no frames (SPEC section 17) |
+| `replay.schema.json` | one kept replay in full (`GET /replays/{session_id}`): that row plus a marker per error and the session's own skeleton frames, thinned to about 10 a second and never video (SPEC sections 17 and 8) |
+| `person_replays.schema.json` | a person's replay library (`GET /people/{id}/replays`): their sessions that had an error, newest first, and the clean one kept to compare them against |
 | `feedback.schema.json` | the body of `POST /alerts/{id}/feedback`: the nurse's verdict, an optional note, and the optional answer to "what was it?" (SPEC section 5, MVP 7 and 8) |
 | `monitoring.schema.json` | every room whose monitoring a nurse has paused (`GET /monitoring`): the state behind the dashboard's pause switches (SPEC section 12) |
 | `room_monitoring.schema.json` | one room's switch as the PUT answers it (`PUT /rooms/{room}/monitoring`): the room and whether it is on now |
@@ -45,9 +48,10 @@ Everything from `resident_summary.schema.json` down is an HTTP payload rather th
 a record: what a route answers with, built by `pipeline/src/routine_watch/demo.py`,
 `drift.py`, `feedback.py`, `handoff.py`, `patterns_library.py`, `evidence.py` and
 `monitoring.py` and served by `api.py` and its route modules, plus the one body that
-travels the other way. Eight of them are generated for the web side as well
+travels the other way. Eleven of them are generated for the web side as well
 (`WEB_PAYLOADS`): `resident_drift`, `resident_feedback`, `pattern_library_entry`,
-`session_replay`, `normal_replay`, `resident_summary`, `handoff` and the monitoring
+`session_replay`, `normal_replay`, `replay_summary`, `replay`, `person_replays`,
+`resident_summary`, `handoff` and the monitoring
 audit trail's `monitoring_change` are TypeScript types in `web/src/contracts.ts`,
 which the dashboard imports (`web/src/resident/api.ts`, `web/src/resident/types.ts`,
 `web/src/patterns/types.ts`, `web/src/evidence/api.ts`,

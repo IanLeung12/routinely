@@ -1,0 +1,160 @@
+/* Roles and linking (SPEC section 17): the first-open role chooser, the switch in the
+   shell, "people I support" and the person's placeholder home. Mobile first - these
+   are the screens someone opens on a phone at home, not at a nurses' station. */
+
+.role-chooser {
+  max-width: 44rem;
+  margin: var(--space-6) auto;
+  text-align: center;
+}
+
+.role-chooser__heading {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
+}
+
+.role-chooser__lead {
+  margin: 0 auto var(--space-5);
+  max-width: 30rem;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.role-chooser__options {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 40rem) {
+  .role-chooser__options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.role-chooser__option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-5) var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.role-chooser__option:hover {
+  border-color: var(--accent);
+}
+
+.role-chooser__option-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.role-chooser__option-detail {
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.role-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.role-switch__label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.people-list {
+  margin: var(--space-2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.people__add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.people__add-label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.people__add-input {
+  min-height: 2.75rem;
+  flex: 1 1 10rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.people__hint,
+.people__message {
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.people__message--failed {
+  color: var(--status-flagged);
+}
+
+.my-routine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-5) 0 var(--space-6);
+}
+
+.my-routine__lead,
+.my-routine__invite-lead {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.my-routine__code {
+  margin: var(--space-3) 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.my-routine__link {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+}
+
+.my-routine__link-url {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}

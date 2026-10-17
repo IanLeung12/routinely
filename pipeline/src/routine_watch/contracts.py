@@ -1086,6 +1086,104 @@ class NormalReplay(_Contract):
     )
 
 
+class ReplayMarker(_Contract):
+    """One error inside a stored replay: what a viewer jumps to (SPEC section 17).
+
+    The error's own window in session time, so whoever is looking back at the attempt
+    goes straight to the moment rather than watching the whole thing. It carries the
+    `error_id`, type, step and times of the `TaskError` it was made from, so the
+    marker and the alert's error list name the same moment; the frames it points into
+    are the replay's own.
+    """
+
+    error_id: Id
+    type: ErrorType
+    step_id: Id | None = Field(
+        default=None,
+        description="The step the error is about. Null only when no single step applies.",
+    )
+    t_start: float = Field(ge=0.0, description="Seconds since the session started.")
+    t_end: float = Field(ge=0.0)
+    self_corrected: bool = Field(
+        default=False,
+        description="The person put it right themselves: still worth seeing, not a full error.",
+    )
+
+    @model_validator(mode="after")
+    def _times_are_ordered(self) -> ReplayMarker:
+        if self.t_end < self.t_start:
+            raise ValueError("t_end must not be before t_start")
+        return self
+
+
+class ReplaySummary(_Contract):
+    """One kept replay, as a row of a person's replay library (SPEC section 17).
+
+    What `GET /people/{person_id}/replays` lists: enough to pick an attempt to look
+    at - when it was, how long it took, how many errors and of which kinds - without
+    carrying a single frame. The frames and the markers come one session at a time
+    (`Replay`).
+    """
+
+    session_id: Id
+    person_id: Id = Field(
+        description="Whose session it was. `Session.resident_id` under the name SPEC "
+        "section 17 gives it: a person watches their own routine, supervisors look with them."
+    )
+    task_id: Id
+    started_at: datetime
+    duration_s: float = Field(ge=0.0, description="How long the attempt took, in seconds.")
+    error_count: int = Field(
+        ge=0, description="Errors found in the session, self-corrected ones included."
+    )
+    error_types: list[ErrorType] = Field(
+        description="Which kinds of error it had, each named once, in the order they happened."
+    )
+    normal: bool = Field(
+        default=False,
+        description="This is the person's most recent session with no errors at all, kept as "
+        "the comparison to look at the others against rather than because anything went wrong.",
+    )
+
+
+class Replay(ReplaySummary):
+    """One kept replay in full (`GET /replays/{session_id}`, SPEC sections 17 and 8).
+
+    The skeleton of an attempt that went wrong, kept so a person and their supervisors
+    can look back and judge for themselves: poses, hand landmarks, object boxes and
+    timestamps, thinned to about ten a second, and never video. `markers` are its
+    errors, so the viewer can jump between them.
+    """
+
+    markers: list[ReplayMarker] = Field(
+        description="The session's errors, oldest first: where to jump to in `frames`."
+    )
+    frames: list[CaptureFrame] = Field(
+        description="The session's frames, oldest first. Skeletons, boxes and timestamps "
+        "only: the image each was read from was dropped when it was processed."
+    )
+
+
+class PersonReplays(_Contract):
+    """A person's replay library (`GET /people/{person_id}/replays`, SPEC section 17).
+
+    Every attempt of theirs that had an error and is still inside the retention
+    window, newest first, plus the one normal session kept beside them: SPEC section
+    17's "compare with the person's normal" needs something to compare against, and a
+    clean session is kept for that and not listed as one of the attempts to review.
+    """
+
+    person_id: Id
+    replays: list[ReplaySummary] = Field(
+        description="Their sessions that had at least one error, newest first, after any "
+        "`type` and `since` filter."
+    )
+    normal: ReplaySummary | None = Field(
+        description="Their most recent session with no errors, to compare the others "
+        "against. Null until they have had one."
+    )
+
+
 class Monitoring(_Contract):
     """Which rooms a nurse has paused right now (`GET /monitoring`, SPEC section 12).
 
@@ -1205,6 +1303,9 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
     PatternLibraryEntry,
     SessionReplay,
     NormalReplay,
+    ReplaySummary,
+    Replay,
+    PersonReplays,
     Monitoring,
     RoomMonitoring,
     RoomMonitoringHistory,
@@ -1212,7 +1313,8 @@ PAYLOADS: tuple[type[BaseModel], ...] = (
 
 #: The payloads the dashboard reads through a generated type instead of a copy of
 #: its own: the drift card's, what her nurses said, the pattern library's entry, both
-#: replay windows', the overview row, the shift handoff and the monitoring audit
+#: replay windows', a person's kept replays and one of them in full, the overview row,
+#: the shift handoff and the monitoring audit
 #: trail's logged change. They are payloads like the rest above - this is only which
 #: of them `web/src/contracts.ts` holds a type for as well, so a field changed here
 #: breaks the dashboard's build (`web/src/resident/api.ts`,
@@ -1226,6 +1328,9 @@ WEB_PAYLOADS: tuple[type[BaseModel], ...] = (
     PatternLibraryEntry,
     SessionReplay,
     NormalReplay,
+    ReplaySummary,
+    Replay,
+    PersonReplays,
     ResidentSummary,
     Handoff,
     MonitoringChange,

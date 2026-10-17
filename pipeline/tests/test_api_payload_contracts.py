@@ -48,6 +48,9 @@ from routine_watch.contracts import (
     NormalReplay,
     PatternLibraryEntry,
     PatternTimeProfile,
+    PersonReplays,
+    Replay,
+    ReplaySummary,
     Resident,
     ResidentDrift,
     ResidentFeedback,
@@ -60,6 +63,7 @@ from routine_watch.contracts import (
 )
 from routine_watch.demo import DEMO_RESIDENT, demo_residents
 from routine_watch.drift import Drift
+from routine_watch.evidence import reset_demo_replays
 from routine_watch.feedback import FeedbackStore
 from routine_watch.monitoring import DEFAULT_BY, get_monitoring_store
 from routine_watch.patterns_library import LIBRARY as PATTERN_LIBRARY
@@ -106,6 +110,35 @@ A_PATTERN_ENTRY: dict[str, Any] = {
     "source": "SPEC section 7.5",
 }
 
+#: One row of a person's replay library as the route answers it, to mutate in the
+#: rejection cases below. `test_a_hand_built_replay_validates` keeps it a valid one.
+A_KEPT_ROW: dict[str, Any] = {
+    "session_id": "mrs-k-22",
+    "person_id": DEMO_RESIDENT,
+    "task_id": "tea",
+    "started_at": "2025-12-31T18:11:00Z",
+    "duration_s": 158.2,
+    "error_count": 2,
+    "error_types": ["omission", "perseveration"],
+    "normal": False,
+}
+
+#: The same session as the whole replay a player opens: that row, a marker per error
+#: and the session's frames (none here - a frame of its own is `CaptureFrame`'s case).
+A_KEPT_RECORD: dict[str, Any] = A_KEPT_ROW | {
+    "markers": [
+        {
+            "error_id": "mrs-k-22:omission:0",
+            "type": "omission",
+            "step_id": "teabag_in_cup",
+            "t_start": 51.1,
+            "t_end": 56.1,
+            "self_corrected": False,
+        }
+    ],
+    "frames": [],
+}
+
 #: One feedback record as the route answers it, to mutate in the rejection cases
 #: below. `test_a_hand_built_feedback_record_validates` keeps it a valid one.
 A_FEEDBACK_RECORD: dict[str, Any] = {
@@ -125,13 +158,16 @@ A_FEEDBACK_RECORD: dict[str, Any] = {
 
 @pytest.fixture(autouse=True)
 def _nothing_reviewed_and_every_room_on():
-    """Both stores the API keeps are global, so each test starts from the seeded
-    demo: nobody has answered an alert and no room is paused."""
+    """Every store the API keeps is global, so each test starts from the seeded
+    demo: nobody has answered an alert, no room is paused, and the replay library is
+    whatever asking for it generates (`routine_watch.replays`)."""
     api_state.reset()
     get_monitoring_store().reset()
+    reset_demo_replays()
     yield
     api_state.reset()
     get_monitoring_store().reset()
+    reset_demo_replays()
 
 
 @pytest.fixture
@@ -257,6 +293,14 @@ def test_the_feedback_record_validates_with_a_cause_off_the_library(
     check(ResidentFeedback, payload)
     assert payload["answers"][0]["cause"] == "other"
     assert payload["pattern_names"] == {}
+
+
+def test_a_hand_built_replay_validates() -> None:
+    """The literals the rejection cases below mutate are a valid library row and a
+    valid kept replay to begin with, so each case fails for the reason it names."""
+    check(ReplaySummary, A_KEPT_ROW)
+    check(Replay, A_KEPT_RECORD)
+    check(PersonReplays, {"person_id": DEMO_RESIDENT, "replays": [A_KEPT_ROW], "normal": None})
 
 
 def test_a_hand_built_feedback_record_validates() -> None:
@@ -390,6 +434,53 @@ def test_a_seeded_sessions_replay_validates(client: TestClient) -> None:
     assert body["frames"]
 
 
+@pytest.mark.parametrize("person_id", RESIDENT_IDS)
+def test_every_persons_replay_library_validates(client: TestClient, person_id: str) -> None:
+    """The library behind SPEC section 17's "browse a person's replays": every row is
+    a session of theirs that went wrong, and the comparison beside them."""
+    body = client.get(f"/people/{person_id}/replays").json()
+
+    check(PersonReplays, body)
+    assert body["person_id"] == person_id
+    for row in body["replays"]:
+        check(ReplaySummary, row)
+
+
+def test_an_empty_library_validates(client: TestClient) -> None:
+    """A person nothing is kept for is an empty library, not a missing one, so the
+    schema has to take `normal: null` and no rows."""
+    body = client.get("/people/nobody-here/replays").json()
+
+    check(PersonReplays, body)
+    assert (body["replays"], body["normal"]) == ([], None)
+
+
+def test_one_kept_replay_validates(client: TestClient) -> None:
+    """The frames and markers a player opens (`GET /replays/{id}`): asked for whole,
+    the way a person looking back at an attempt asks for it."""
+    row = client.get(f"/people/{DEMO_RESIDENT}/replays").json()["replays"][0]
+
+    body = client.get(f"/replays/{row['session_id']}").json()
+
+    check(Replay, body)
+    assert body["markers"] and body["frames"]
+
+
+def test_a_windowed_replay_validates(client: TestClient) -> None:
+    """Trimmed to one error's moment, which is the same payload with fewer frames -
+    including the case where the window lands between frames and there are none."""
+    row = client.get(f"/people/{DEMO_RESIDENT}/replays").json()["replays"][0]
+    url = f"/replays/{row['session_id']}"
+
+    windowed = client.get(url, params={**SHORT_WINDOW, "fps": 1.0}).json()
+    empty = client.get(url, params={"t_start": 10_000.0, "t_end": 10_001.0}).json()
+
+    check(Replay, windowed)
+    check(Replay, empty)
+    assert empty["frames"] == []
+    assert len(empty["markers"]) == len(windowed["markers"])
+
+
 @pytest.mark.parametrize("resident_id", RESIDENT_IDS)
 def test_every_residents_ghost_layer_validates(client: TestClient, resident_id: str) -> None:
     """The ghost layer is asked about the resident, not a session, and comes back
@@ -468,6 +559,7 @@ def test_the_route_validates_the_feedback_contract_itself() -> None:
 def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) -> None:
     """No route may grow a field for a raw frame (SPEC section 8)."""
     switched = client.put(f"/rooms/{MRS_K_ROOM}/monitoring", json={"on": False})
+    kept = client.get(f"/people/{DEMO_RESIDENT}/replays").json()["replays"][0]["session_id"]
     payloads = {
         ResidentSummary: client.get("/residents").json()[0],
         Resident: client.get(f"/residents/{DEMO_RESIDENT}").json(),
@@ -478,6 +570,8 @@ def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) ->
         SessionReplay: client.get(
             f"/sessions/{MRS_K_SESSION}/replay", params=SHORT_WINDOW
         ).json(),
+        PersonReplays: client.get(f"/people/{DEMO_RESIDENT}/replays").json(),
+        Replay: client.get(f"/replays/{kept}", params=SHORT_WINDOW).json(),
         NormalReplay: client.get(
             f"/residents/{DEMO_RESIDENT}/normal_replay", params=SHORT_WINDOW
         ).json(),
@@ -581,6 +675,26 @@ def test_a_payload_cannot_smuggle_a_frame_past_the_schema(client: TestClient) ->
             id="a-replay-without-its-frames",
         ),
         pytest.param(
+            Replay,
+            A_KEPT_RECORD | {"markers": [{"t_start": 1.0}]},
+            id="a-marker-that-names-no-error",
+        ),
+        pytest.param(
+            Replay,
+            {key: value for key, value in A_KEPT_RECORD.items() if key != "person_id"},
+            id="a-kept-replay-that-is-nobodys",
+        ),
+        pytest.param(
+            ReplaySummary,
+            A_KEPT_ROW | {"error_count": -1},
+            id="a-library-row-with-fewer-than-no-errors",
+        ),
+        pytest.param(
+            PersonReplays,
+            {"person_id": "mrs-k", "replays": [A_KEPT_ROW | {"frames": []}], "normal": None},
+            id="a-library-row-carrying-frames",
+        ),
+        pytest.param(
             NormalReplay,
             {"resident_id": "mrs-k", "frames": [{"t": 1.0}]},
             id="a-ghost-frame-that-is-not-a-capture-frame",
@@ -648,6 +762,13 @@ def test_the_library_entry_is_the_pattern_without_the_scoring_machinery() -> Non
 
     assert served == set(PatternLibraryEntry.model_fields)
     assert set(PatternTimeProfile.model_fields) == {f.name for f in fields(TimeProfile)}
+
+
+def test_a_kept_replay_is_its_library_row_plus_the_session_itself() -> None:
+    """`GET /replays/{id}` answers the row `GET /people/{id}/replays` lists with the
+    two things a row leaves out, so a field added to either reaches both."""
+    assert set(Replay.model_fields) == set(ReplaySummary.model_fields) | {"markers", "frames"}
+    assert set(PersonReplays.model_fields) == {"person_id", "replays", "normal"}
 
 
 def test_the_two_replay_windows_differ_only_in_what_was_asked_for() -> None:
