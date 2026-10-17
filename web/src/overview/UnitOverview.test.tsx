@@ -1,6 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockResidents } from '../mock/residents.ts'
+import overviewCss from './overview.css?raw'
 import { UnitOverview } from './UnitOverview.tsx'
 
 function rowNames() {
@@ -247,5 +248,28 @@ describe('UnitOverview', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(mockResidents.length)
     })
+  })
+})
+
+/** jsdom doesn't evaluate @media conditions for getComputedStyle, so this checks the
+ * stylesheet text directly (verified against a real headless Chrome at 320/375/480/768px
+ * for T234: the identity, status and sparkline each get their own full-width row and the
+ * filter buttons keep a 44px tap target, with no horizontal scroll). */
+describe('overview.css phone layout', () => {
+  it('stacks each row full-width below 480px instead of scrolling sideways', () => {
+    const mobileBlock = overviewCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+    expect(mobileBlock).toBeTruthy()
+
+    expect(mobileBlock).toMatch(/\.resident-open\s*\{[^}]*flex-wrap:\s*wrap/)
+    expect(mobileBlock).toMatch(/\.resident-identity\s*\{[^}]*width:\s*100%/)
+    expect(mobileBlock).toMatch(/\.resident-status\s*\{[^}]*width:\s*100%/)
+    expect(mobileBlock).toMatch(/\.resident-open svg\s*\{[^}]*flex-basis:\s*100%/)
+  })
+
+  it('keeps filter buttons at a 44px tap target and lets them wrap', () => {
+    const mobileBlock = overviewCss.match(/@media \(max-width: 480px\) \{([\s\S]*)\}\s*$/)?.[1]
+
+    expect(mobileBlock).toMatch(/\.unit-filter\s*\{[^}]*flex-wrap:\s*wrap/)
+    expect(mobileBlock).toMatch(/\.unit-filter__button\s*\{[^}]*min-height:\s*2\.75rem/)
   })
 })
