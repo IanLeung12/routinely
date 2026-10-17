@@ -575,14 +575,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T122 — Bug: live skeleton view stays "Waiting for camera" for the whole demo replay
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: tests/scenarios/tea_skip_teabag_pour_twice/ (add frames.jsonl)
-- owner: —
-- claimed: —
+- owner: ian-claude-light-2
+- claimed: 2026-10-17T07:30Z
 - pr: —
 - source: tester
 
