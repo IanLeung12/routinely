@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: f587360
+- last-reviewed: 369fc9b
 
 ## Tasks
 
@@ -558,4 +558,58 @@ What: `scripts/ci.sh` and pytest never force `LIVE_API` off (only e2e.sh/integra
 Interface: in `scripts/ci.sh` add `export LIVE_API=0` right after the `cd` line. In `pipeline/tests/conftest.py` add an autouse fixture doing `monkeypatch.setenv("LIVE_API", "0")` so plain `pytest` is safe too; a test that checks the live path can still override it with its own monkeypatch.
 Acceptance:
 - `LIVE_API=1 bash scripts/ci.sh` passes and makes no network calls.
+- `scripts/ci.sh` passes.
+
+### T262 — Monitoring audit trail: who paused/resumed a room and when
+- status: todo
+- class: heavy
+- priority: 2
+- kind: feature
+- source: proposed
+- deps: T256
+- area: pipeline/src/routine_watch/monitoring.py, pipeline/src/routine_watch/routes_monitoring.py, pipeline/tests/test_monitoring_audit.py, web/src/resident/, web/src/api/monitoring.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Rationale: SPEC §12 privacy accountability; judges see that pausing a camera is logged. Record each pause/resume (room, on/off, by, at) in memory and show the last 5 on resident detail under the monitoring switch.
+Interface: `MonitoringState.history(room) -> list[dict(on: bool, by: str, at: iso str)]`; PUT /rooms/{room}/monitoring accepts optional `by` (default "nurse"); GET /rooms/{room}/monitoring/history returns the list (newest first, max 20); `/demo/reset` clears it. Web: small "Recent changes" list under the switch, empty state "No changes this shift". Use the real file names after T256's refactor (adjust area paths in the PR if they differ).
+Acceptance:
+- pytest test covers pause → resume → history order and reset clearing it.
+- web test renders the list and the empty state.
+- `scripts/ci.sh` passes.
+
+### T263 — Contracts: JSON Schema for GET /alerts/{id} and the feedback POST body
+- status: todo
+- class: heavy
+- priority: 2
+- kind: improvement
+- deps: T257
+- area: contracts/, pipeline/src/routine_watch/contracts.py, pipeline/tests/test_contracts.py, web/src/contracts.ts
+- owner: —
+- claimed: —
+- pr: —
+
+What: Same pattern as T250/T257: the alert detail response and the feedback request are hand-mirrored in web/src/contracts.ts; generate schemas from pydantic so drift fails CI.
+Interface: `contracts/alert_detail.schema.json`, `contracts/feedback.schema.json` generated from contracts.py; a test validates real API responses (fakes only) against them and checks web/src/contracts.ts field names match.
+Acceptance:
+- schemas generated, README in contracts/ updated.
+- test fails if a field is added on one side only.
+- `scripts/ci.sh` passes.
+
+### T264 — Test: consent record survives /demo/reset and shows in /handoff residents
+- status: todo
+- class: standard
+- priority: 2
+- kind: test
+- deps: —
+- area: pipeline/tests/test_demo_consent.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: T254 added per-resident consent; nothing checks it survives `/demo/reset` or that every resident in GET /residents (not just mrs-k) carries it.
+Interface: extend pipeline/tests/test_demo_consent.py using the FastAPI TestClient with fakes.
+Acceptance:
+- every resident from GET /residents has consent.given_by and consent.on, before and after POST /demo/reset.
 - `scripts/ci.sh` passes.

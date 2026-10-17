@@ -224,3 +224,5 @@ T249 | standard | claude-sonnet | merged first try | ~45k tok
 T243 | standard | claude-sonnet | merged first try | ~65k tok
 T252 | standard | claude-sonnet | merged first try | ~45k tok
 T251 | standard | claude-sonnet | merged first try | ~45k tok
+T254 | standard | claude-sonnet | merged first try | ~45k tok
+T250 | heavy | claude-opus | merged first try | ~150k tok
