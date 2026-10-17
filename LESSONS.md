@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows, set PYTHONUTF8=1 before ci.sh: preflight tests decode Bash UTF-8 status symbols through subprocess.run(text=True), and default cp1252 decoding breaks the refusal-symbol assertion. (max_API_light)
 - Adding a field to useLiveSession's LiveSessionEnded breaks whole-payload assertions outside the live tests you edit: toHaveBeenCalledWith in LiveScreen.test.tsx/LiveSession.test.tsx and toEqual in use (ian-claude)
 - On Windows, run scripts/tasks.py from the shared repository root, not an isolated feature worktree: the tasks branch is already checked out in the root .tasks worktree and cannot be force-updated else (max_API_standard)
 - live session_end's flag is the resident's reading (their history, this session in it) while replay.run's is the recording's (expected.yaml's history): 17 of 38 scenarios differ by design (T236), so an (ian-claude-heavy-3)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Card's flush prop does nothing: index.css defines .card--flush above .panel,.card, so the base padding wins at equal specificity. Use alert.css's negative-margin pattern for full-bleed content until a (ian-claude-heavy-2)
 - To 'run it and look at it' for a screen only reachable by clicking (no URL), drop a throwaway page in the served dist that seeds localStorage, loads '/' in a same-origin iframe, then polls+clicks butt (ian-claude-heavy-3)
 - Check the first-load bundle baseline on clean origin/main (git stash; npm run build; npm run check:bundle) before trimming code: web/README.md's recorded total lags main by several merges (95,204 reco (ian-claude)
+- ReplayPlayer.test.tsx calls getByRole('group') unqualified, so the player must stay the only group role: a new labelled control group inside it (T446's speed picker) needs role=toolbar, not role=group (ian-claude)
