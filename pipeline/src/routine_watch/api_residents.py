@@ -1,8 +1,9 @@
 """Resident, drift, pattern-library and replay routes (SPEC sections 8 and 9).
 
 Split out of `api.py`: `GET /residents`, `GET /residents/{id}`,
-`GET /residents/{id}/drift`, `GET /patterns`, `GET /sessions/{id}/replay` and
-`GET /residents/{id}/normal_replay` share these helpers, kept together here.
+`GET /residents/{id}/drift`, `GET /residents/{id}/feedback`, `GET /patterns`,
+`GET /sessions/{id}/replay` and `GET /residents/{id}/normal_replay` share these
+helpers, kept together here.
 The feedback-tuned status/threshold helpers (`_tuned`, `_SUMMARY_FIELDS`) live
 on `api_state.py`, imported here at module load time instead of reached back
 into for on every call, so a reset there is visible to these routes without
@@ -18,6 +19,7 @@ from .contracts import SuggestedCheck
 from .demo import demo_residents
 from .drift import daily_scores, drift
 from .evidence import EvidenceError, normal_replay_frames, replay_frames
+from .patterns_library import BY_ID as PATTERNS_BY_ID
 from .patterns_library import LIBRARY as PATTERN_LIBRARY
 from .patterns_library import Pattern, TimeProfile
 
@@ -57,6 +59,34 @@ def resident_drift(resident_id: str) -> dict:
         "slope_per_day": result.slope_per_day,
         "days": result.days,
         "trending": result.trending,
+    }
+
+
+@router.get("/residents/{resident_id}/feedback")
+def resident_feedback(resident_id: str) -> dict:
+    """What this resident's nurses answered, and the ranking those answers changed.
+
+    The feedback loop (SPEC Nice to have 8) re-weights this resident's patterns from
+    her own nurses' answers, which until now only showed up in how her next alert was
+    ranked. This serves the record behind it: every answer newest first
+    (`{alert_id, verdict, cause, at}`), the weights they add up to, and the name each
+    pattern id is shown under, so the card reading this never has to keep its own copy
+    of the library. A pattern nobody has answered about has no weight here and is read
+    as 1.0; `"other"` is a real answer with no pattern to name.
+    """
+    _resident_or_404(resident_id)
+    answers = api_state._feedback_store.history(resident_id)
+    weights = api_state._feedback_store.pattern_weights(resident_id)
+    named = {row["cause"] for row in answers if row["cause"]} | set(weights)
+    return {
+        "resident_id": resident_id,
+        "answers": answers,
+        "pattern_weights": weights,
+        "pattern_names": {
+            pattern_id: PATTERNS_BY_ID[pattern_id].name
+            for pattern_id in sorted(named)
+            if pattern_id in PATTERNS_BY_ID
+        },
     }
 
 

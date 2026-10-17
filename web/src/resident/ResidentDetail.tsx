@@ -8,11 +8,13 @@ import { StatusChip } from '../ui/StatusChip.tsx'
 import { MonitoringToggle } from '../about/MonitoringToggle.tsx'
 import { fetchMonitoringHistory, fetchPausedRooms, setRoomMonitoring } from '../about/monitoringApi.ts'
 import type { MonitoringChange } from '../about/monitoringApi.ts'
-import { fetchDrift, fetchResident } from './api.ts'
+import { fetchDrift, fetchFeedbackHistory, fetchResident } from './api.ts'
 import type { ResidentDrift } from './api.ts'
 import { BaselineChart } from './BaselineChart.tsx'
 import { ContextTimeline } from './ContextTimeline.tsx'
 import { DriftCard } from './DriftCard.tsx'
+import { FeedbackHistory } from './FeedbackHistory.tsx'
+import type { FeedbackState } from './FeedbackHistory.tsx'
 import HeatCalendar from './HeatCalendar.tsx'
 import { MonitoringHistory } from './MonitoringHistory.tsx'
 import { SessionList } from './SessionList.tsx'
@@ -21,6 +23,12 @@ import type { Resident } from './types.ts'
 import './resident.css'
 
 const HEADING_ID = 'resident-detail-heading'
+
+/** Which fetch a stored feedback answer came from: the resident, and which "Try
+ * again" asked for it. */
+function feedbackKeyFor(residentId: string, attempt: number): string {
+  return `${residentId}#${attempt}`
+}
 
 /** Tagged with the id (and attempt) it was fetched for, so switching resident shows
  * the new one loading rather than the last one's chart, and "Try again" shows loading
@@ -44,6 +52,9 @@ export function ResidentDetail({
   const [monitoring, setMonitoring] = useState(true)
   const [monitoringMessage, setMonitoringMessage] = useState<string | null>(null)
   const [monitoringChanges, setMonitoringChanges] = useState<MonitoringChange[]>([])
+  /** Tagged with the resident (and attempt) it was fetched for, like `loaded`: the
+   * card shows the new resident loading rather than the last one's answers. */
+  const [feedback, setFeedback] = useState<{ key: string; state: FeedbackState } | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   /** Which resident focus has already landed on, so re-rendering after the monitoring
    * toggle changes (same resident, new data) doesn't steal focus back from the nurse. */
@@ -75,6 +86,28 @@ export function ResidentDetail({
       .catch(() => {
         if (!cancelled) {
           setLoaded({ residentId, status: 'error' })
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [residentId, attempt])
+
+  /** What her nurses have already answered, and the pattern ranking it changed
+   * (SPEC Nice to have 8). Fetched on its own rather than with the resident: feedback
+   * the API can't serve costs the card, not the whole screen. */
+  useEffect(() => {
+    let cancelled = false
+    const key = feedbackKeyFor(residentId, attempt)
+    fetchFeedbackHistory(residentId)
+      .then((value) => {
+        if (!cancelled) {
+          setFeedback({ key, state: { status: 'ok', feedback: value } })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFeedback({ key, state: { status: 'error' } })
         }
       })
     return () => {
@@ -199,6 +232,14 @@ export function ResidentDetail({
               threshold={resident.baseline.threshold}
             />
           </section>
+
+          <FeedbackHistory
+            state={
+              feedback?.key === feedbackKeyFor(residentId, attempt)
+                ? feedback.state
+                : { status: 'loading' }
+            }
+          />
 
           <section className="panel">
             <h2>Care records</h2>

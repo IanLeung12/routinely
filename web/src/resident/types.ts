@@ -1,4 +1,4 @@
-import type { ErrorType } from '../contracts.ts'
+import type { ErrorType, FeedbackVerdict } from '../contracts.ts'
 import type { ResidentSummary } from '../overview/types.ts'
 
 /** Resident detail (SPEC section 9, screen 2): the shape `GET /residents/{id}` serves,
@@ -50,4 +50,26 @@ export type Resident = ResidentSummary & {
   sessions: ResidentSession[]
   care_records: CareRecord[]
   baseline: Baseline
+}
+
+/** One answer a nurse gave on one of this resident's alerts
+ * (`GET /residents/{id}/feedback`, SPEC Nice to have 8). One row per alert: answering
+ * the same alert again replaces it. */
+export type FeedbackAnswer = {
+  alert_id: string
+  verdict: FeedbackVerdict
+  /** The answer to "what was it?": a pattern_id, 'other', or null when nobody said. */
+  cause: string | null
+  at: string
+}
+
+/** What this resident's nurses have said, and the pattern ranking it changed. The
+ * weights are confidence multipliers, one per pattern her nurses have answered about
+ * (anything missing is unweighted, i.e. 1.0); `pattern_names` is how the pipeline's
+ * library names every pattern id mentioned here, so the card never keeps its own copy
+ * of the library. */
+export type ResidentFeedback = {
+  answers: FeedbackAnswer[]
+  pattern_weights: Record<string, number>
+  pattern_names: Record<string, string>
 }
