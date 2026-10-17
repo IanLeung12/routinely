@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T089 — Unit overview shows the top pattern for flagged/watch residents
-- status: in-review
+- status: done
 - class: standard
 - priority: 2
 - kind: feature
