@@ -76,7 +76,15 @@ class Handedness(StrEnum):
 
 
 class ObjectLabel(StrEnum):
-    """Classes the local detector was trained on (SPEC section 6.1)."""
+    """Classes the local detector reports (SPEC section 6.1).
+
+    Making tea first, then taking medication with water (SPEC nice-to-have 4), then
+    the two classes every task shares. A task graph says which of these count for
+    which step, so a new task adds classes here and a `tasks/<name>.yaml` file and
+    nothing else. A class the running weights were not trained on is simply never
+    reported, and `routine_watch.detector.label_for` drops a class it does not know,
+    so the two lists may land one training run apart.
+    """
 
     KETTLE = "kettle"
     CUP = "cup"
@@ -84,6 +92,10 @@ class ObjectLabel(StrEnum):
     SPOON = "spoon"
     MILK = "milk"
     SUGAR = "sugar"
+    PILL_BOTTLE = "pill_bottle"
+    PILL_ORGANISER = "pill_organiser"
+    GLASS = "glass"
+    WATER_JUG = "water_jug"
     HAND = "hand"
     POURING = "pouring"
 

@@ -1,0 +1,40 @@
+# A resident takes their medication with water, with nothing wrong with it.
+#
+# The second task's version of tea_normal (SPEC nice-to-have 4): the point is the
+# things that are *not* errors, so this is what catches a classifier that reads the
+# new graph too eagerly.
+#
+#   - The two branches interleave. The pill is out of the organiser before the glass
+#     is filled, which is fine: `fill_glass` only waits on `get_glass`, so the pill
+#     side first and the glass side first are both correct.
+#   - `close_organiser` is optional and skipped, so leaving the organiser open is
+#     never an omission.
+#   - The pills come out of an organiser here and out of a bottle in
+#     meds_skip_water; the step allows both, so neither is a substitution.
+#
+# Written at step level, like the tea step-level scenarios: the recogniser's state
+# rules are written for tea's objects, and the meds classes land in the detector's
+# weights with the next training run. See README.md.
+
+task: meds
+
+steps:
+  - get_glass
+  - open_organiser
+  - take_pill
+  - fill_glass # after the pill, and just as correct as before it
+  - drink_water
+  # close_organiser is optional and skipped: not an omission
+
+errors: []
+score: 0.0
+
+# Four quiet mornings, so the resident has a baseline to be measured against. A
+# session this good can never flag.
+history:
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, errors: { hesitation: 1 } }
+  - { hours_ago: 24, score: 0.0 }
+
+flag: false
