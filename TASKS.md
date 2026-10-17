@@ -382,7 +382,7 @@ Acceptance:
 - `api.py` shrinks by ≥80 lines; `scripts/ci.sh` and `scripts/e2e.sh` pass.
 
 ### T257 — Contracts: JSON Schemas for /residents and /handoff payloads
-- status: in-review
+- status: done
 - class: heavy
 - priority: 2
 - kind: improvement
