@@ -482,14 +482,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T058 — Review: merge duplicate pipeline modules found by the code map
-- status: todo
+- status: claimed
 - class: standard
 - priority: 1
 - kind: improvement
 - deps: —
 - area: pipeline/src/routine_watch/baseline.py, pipeline/src/routine_watch/change_detection.py, pipeline/src/routine_watch/task_graph.py, pipeline/src/routine_watch/tasks/, pipeline/tests/, docs/CODEMAP.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-17T05:34Z
 - pr: —
 - source: reviewer
 
