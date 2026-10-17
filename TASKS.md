@@ -260,7 +260,7 @@ Interface (`web/src/routines/`):
 Acceptance: Vitest for both tabs (consent required before upload; text submit; edit updates preview; save adds to list); keyboard operable; screenshot in PR; `cd web && npm test && npm run build`.
 
 ### T439 — Bug: integration check failing on main
-- status: todo
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
@@ -270,6 +270,7 @@ Acceptance: Vitest for both tabs (consent required before upload; text submit; e
 - claimed: —
 - pr: —
 - source: integration
+- note: orch: integration PASS on main per TESTREPORT 2026-10-17T23:05Z (dev.sh up OK); closed as transient, tester will refile if it recurs
 
 What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 24033f5:
   FAIL dev.sh up: 
