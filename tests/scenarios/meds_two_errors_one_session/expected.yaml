@@ -1,0 +1,26 @@
+# Two different error types in one session: the pill comes out of the organiser
+# twice (perseveration, with fill_glass in between so the recogniser is not just
+# seeing one action twice) and the water is never drunk at all (omission, since
+# nothing redoes drink_water later and the task ends without it) - a dry swallow
+# plus a double dose in the same session. Closing the organiser afterwards is
+# optional and taken, which must not count for or against anything.
+#
+# Written at step level, for the same reason as meds_normal. See README.md.
+
+task: meds
+
+steps:
+  - get_glass
+  - open_organiser
+  - take_pill
+  - fill_glass
+  - take_pill # again, with fill_glass in between
+  - close_organiser # optional, taken
+  # drink_water never happens: the pill went down dry, twice over
+
+errors:
+  - { type: perseveration, step: take_pill }
+  - { type: omission, step: drink_water }
+score: 5.0 # perseveration 2.0 + omission 3.0
+
+flag: false

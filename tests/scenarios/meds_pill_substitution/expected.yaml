@@ -1,0 +1,11 @@
+# Drinking straight from the water jug instead of the glass it was poured into is
+# exactly one substitution error - the meds counterpart of tea_substitution, on the
+# object `drink_water` allows (glass) rather than the one it was done with (the
+# jug). Closing the organiser afterwards is optional and taken, which must not count
+# for or against anything.
+
+task: meds
+steps: [get_glass, fill_glass, open_organiser, take_pill, drink_water, close_organiser]
+errors:
+  - { type: substitution, step: drink_water }
+flag: false
