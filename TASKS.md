@@ -371,7 +371,7 @@ Acceptance:
 - offline only; `scripts/ci.sh` passes
 
 ### T335 — Test: dashboard source has no diagnosis wording
-- status: claimed
+- status: in-review
 - class: light
 - priority: 2
 - kind: test
@@ -379,7 +379,8 @@ Acceptance:
 - area: web/src/wording.test.ts
 - owner: ian-claude-light-2
 - claimed: 2026-10-17T17:16Z
-- pr: —
+- pr: #331
+- rating: 4/5 clear, but test file already existed with partial check
 
 What: Same rule as T334 for the dashboard: a vitest that reads every non-test `.ts`/`.tsx` under `web/src/` and fails on banned user-facing wording.
 Interface: use `import.meta.glob('./**/*.{ts,tsx}', { query: '?raw', eager: true })` (or node `fs`), skip `*.test.*` and `contracts.ts`.
