@@ -235,7 +235,7 @@ Acceptance:
 - `cd pipeline && uv run pytest tests/test_hesitation.py -q` and `scripts/ci.sh` pass.
 
 ### T015 — Suggested checks rules
-- status: in-review
+- status: done
 - class: light
 - priority: 2
 - deps: —
