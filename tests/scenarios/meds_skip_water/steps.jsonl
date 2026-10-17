@@ -1,0 +1,5 @@
+{"event_id": "meds-skip-water-1:s0", "session_id": "meds-skip-water-1", "step_id": "get_glass", "objects": ["glass"], "t_start": 3.0, "t_end": 7.5, "confidence": 0.93, "source": "rule"}
+{"event_id": "meds-skip-water-1:s1", "session_id": "meds-skip-water-1", "step_id": "fill_glass", "objects": ["water_jug", "glass"], "t_start": 9.0, "t_end": 16.0, "confidence": 0.92, "source": "rule"}
+{"event_id": "meds-skip-water-1:s2", "session_id": "meds-skip-water-1", "step_id": "open_organiser", "objects": ["pill_bottle"], "t_start": 18.0, "t_end": 23.0, "confidence": 0.91, "source": "rule"}
+{"event_id": "meds-skip-water-1:s3", "session_id": "meds-skip-water-1", "step_id": "take_pill", "objects": ["pill_bottle"], "t_start": 24.5, "t_end": 29.0, "confidence": 0.9, "source": "rule"}
+{"event_id": "meds-skip-water-1:s4", "session_id": "meds-skip-water-1", "step_id": "close_organiser", "objects": ["pill_bottle"], "t_start": 30.5, "t_end": 34.0, "confidence": 0.89, "source": "rule"}

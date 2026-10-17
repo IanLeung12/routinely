@@ -158,7 +158,14 @@ export type ObjectDetection = {
   track_id?: string | null
 }
 
-/** Classes the local detector was trained on (SPEC section 6.1). */
+/**
+ * Classes the local detector reports (SPEC section 6.1). Making tea first, then taking
+ * medication with water (SPEC nice-to-have 4), then the two classes every task shares. A task
+ * graph says which of these count for which step, so a new task adds classes here and a
+ * `tasks/<name>.yaml` file and nothing else. A class the running weights were not trained on is
+ * simply never reported, and `routine_watch.detector.label_for` drops a class it does not know,
+ * so the two lists may land one training run apart.
+ */
 export const OBJECT_LABEL_VALUES = [
   'kettle',
   'cup',
@@ -166,6 +173,10 @@ export const OBJECT_LABEL_VALUES = [
   'spoon',
   'milk',
   'sugar',
+  'pill_bottle',
+  'pill_organiser',
+  'glass',
+  'water_jug',
   'hand',
   'pouring',
 ] as const

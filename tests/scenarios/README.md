@@ -89,6 +89,8 @@ per-step baselines yet. A scenario cannot expect one until the baseline stage la
 | `tea_abandoned` | steps | A 131-second silence after starting tea, followed by one last step and an unfinished routine. Abandonment and remaining omissions flag with another recent bad session. |
 | `tea_skip_teabag_pour_twice` | steps | The demo's bad session: the teabag is never put in (omission) and the water is poured twice with a stir in between (perseveration). With one bad session already 30 hours ago, it flags. |
 | `tea_no_kettle` | frames | Cold water: the kettle is never filled or boiled, so two omissions. The one scenario that goes through the capture format and the real recogniser. One bad session on its own never flags. |
+| `meds_normal` | steps | The second task (`meds`), done right: the pill branch and the glass branch interleaved, and the optional `close_organiser` skipped. Nothing here may ever be an error. |
+| `meds_skip_water` | steps | The dry swallow: the water is poured and never drunk, so `drink_water` is an omission. Shows graph, errors, score and flag running off a task file alone. |
 
 ## Adding one
 
