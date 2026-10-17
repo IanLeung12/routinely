@@ -14,6 +14,7 @@ That makes claims atomic: only one agent can flip a task from todo to claimed.
   tasks.py stale [--minutes 90]             claimed tasks with no PR for too long
   tasks.py sync                             refresh ./.tasks from origin
   tasks.py commit -m "msg"                  commit+push manual edits in ./.tasks (orchestrator)
+  tasks.py lesson "text" --agent max         add a one-line lesson to LESSONS.md (shared by all agents)
   tasks.py reconcile                        mark in-review tasks whose PR merged as done (uses gh)
   tasks.py archive [--keep 10]              move done tasks (except the newest N) to ARCHIVE.md
 """
@@ -88,10 +89,30 @@ def deps_of(t):
     return re.findall(r"T\d+", d)
 
 
+# Files many tasks touch in small, easily merged ways: never a reason to hold a task back.
+SHARED_OK = {"docs/CODEMAP.md", "README.md", ".env.example", "pipeline/pyproject.toml", "pipeline/uv.lock",
+             "web/package.json", "web/package-lock.json", "web/src/ui/README.md"}
+
+
+def area_paths(t):
+    out = []
+    for p in t["vals"].get("area", "").split(","):
+        p = p.strip().split(" ")[0].rstrip("/").replace("*", "").rstrip("/")
+        if p and ("/" in p or "." in p) and p not in SHARED_OK:
+            out.append(p)
+    return out
+
+
+def overlaps(a, b):
+    return any(x == y or x.startswith(y + "/") or y.startswith(x + "/") for x in a for y in b)
+
+
 def claimable(tasks, cls):
     """Todo tasks whose deps are done and whose class <= cls. Exact class first, then lower."""
     rank = CLASSES.index(cls)
     archived = archived_ids()
+    # Don't hand out a task whose files overlap work already in flight (claimed / open PR).
+    busy = [area_paths(t) for t in tasks.values() if t["vals"].get("status") in ("claimed", "in-review")]
     out = []
     for tid, t in tasks.items():
         v = t["vals"]
@@ -100,6 +121,9 @@ def claimable(tasks, cls):
         if CLASSES.index(v["class"]) > rank:
             continue
         if any(d not in archived and tasks.get(d, {}).get("vals", {}).get("status") != "done" for d in deps_of(t)):
+            continue
+        mine = area_paths(t)
+        if mine and any(overlaps(mine, b) for b in busy):
             continue
         try:
             prio = int(v.get("priority", "2") or 2)
@@ -171,6 +195,7 @@ def main():
     s = sub.add_parser("stale"); s.add_argument("--minutes", type=int, default=90)
     sub.add_parser("sync")
     sub.add_parser("reconcile")
+    s = sub.add_parser("lesson"); s.add_argument("text"); s.add_argument("--agent", default="?")
     s = sub.add_parser("archive"); s.add_argument("--keep", type=int, default=10)
     s = sub.add_parser("commit"); s.add_argument("-m", required=True)
     a = p.parse_args()
@@ -234,6 +259,25 @@ def main():
                 lines, tasks = load()
                 return print(block(lines, tasks[c[0]]))
         return print("NO_TASK")
+    if a.cmd == "lesson":
+        path = os.path.join(WT, "LESSONS.md")
+        text = " ".join(a.text.split())[:200]
+        head = "# LESSONS\n\nOne line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.\n\n"
+        for n in range(8):
+            sync()
+            old = open(path).read() if os.path.exists(path) else head
+            items = [l for l in old.splitlines() if l.startswith("- ")]
+            if any(text.lower() in l.lower() for l in items):
+                return print("already known")
+            items = (items + [f"- {text} ({a.agent})"])[-40:]
+            with open(path, "w") as fh:
+                fh.write(head + "\n".join(items) + "\n")
+            git("add", "LESSONS.md")
+            git("commit", "-q", "-m", f"lesson ({a.agent})")
+            if git("push", "-q", "origin", "tasks", check=False).returncode == 0:
+                return print("lesson added")
+            time.sleep(1 + n)
+        sys.exit("could not push lesson")
     if a.cmd == "reconcile":
         import json
         r = subprocess.run(["gh", "pr", "list", "--state", "merged", "-L", "200", "--json", "number"],

@@ -17,4 +17,6 @@ Do it end to end without asking anyone:
 
 If the task is wrong or impossible as written, don't improvise a different task: set it to `blocked` with a clear note and stop.
 If you need something only a human can provide (API key, account, Roboflow training run, hardware, a product decision), use `status=blocked note="NEEDS HUMAN: <exactly what>"`, and still ship anything that can be done without it (mocks, stubs behind an interface).
+If something non-obvious cost you a retry (a CI quirk, a tooling gotcha, a repo convention), record it in one line so nobody repeats it: `python3 scripts/tasks.py lesson "<rule>" --agent {{AGENT}}`.
+If the task note says there is a merge conflict, check out the PR branch, `git merge origin/main`, resolve, run CI, push.
 Finish with one line: `{{ID}} <done|in-review|blocked> PR #<N>`.
