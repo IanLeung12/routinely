@@ -28,7 +28,7 @@ Acceptance:
 - `scripts/ci.sh` passes
 
 ### T367 — Bug: integration check failing on main
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
