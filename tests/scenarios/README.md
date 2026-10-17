@@ -134,6 +134,8 @@ carry the per-step history needed to exercise it.
 | `meds_self_corrected` | steps | The meds counterpart of `tea_self_corrected`: a sequence slip on `take_pill` corrected within 15 seconds pins the reduced weight for the second task too. |
 | `meds_two_errors_one_session` | steps | Two different error types in one session: the pill comes out of the organiser twice (perseveration) and the water is never drunk (omission) - a double dose and a dry swallow together. |
 | `meds_pill_substitution` | steps | The meds counterpart of `tea_substitution`: drinking straight from the water jug instead of the glass it was poured into is exactly one substitution error on `drink_water`. |
+| `tea_two_errors_one_session` | steps | Two different error types in one session: pouring before the teabag goes in (sequence) and stirring with the milk carton instead of a spoon (substitution). |
+| `tea_long_pause_not_error` | steps | An otherwise-correct session with a 100s gap between `teabag_in_cup` and `pour`, under the 120s abandonment threshold: a long pause alone must never surface as a task error or flag a change. |
 
 ## Adding one
 
