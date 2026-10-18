@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 3976dad
-- next-area: contracts+api
+- last-reviewed: 32bed1d
+- next-area: scripts+ci
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
