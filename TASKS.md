@@ -251,15 +251,15 @@ What: The supervisor's half of T450, against the same mock as T451 (reuse `web/s
 Acceptance: Vitest: the banner appears for an alarm and clears on resolve; duress shows "silent help request"; the timeline renders the events; no location when it's absent; sound starts/stops (mock AudioContext); `cd web && npm test && npm run build`.
 
 ### T453 — KAZE demo: scenario runner + docs (what's real vs simulated)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: ian
 - deps: T450
 - area: scripts/kaze_demo.py, docs/KAZE.md, tests/scenarios/kaze/
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-18T00:57Z
 - pr: —
 
 What: `scripts/kaze_demo.py <scenario>` drives a running local stack through each of the 7 KAZE scenarios using only T450's HTTP API (`safe`, `no-response`, `duress`, `disconnect`, `unacknowledged`, `false-alarm`, `privacy`), with demo timings, printing each state change. `docs/KAZE.md` covers: the challenge mapping (each scenario → what to click or run), and a "What the prototype demonstrates / What is simulated / Assumptions / What needs validation" section (real push/SMS providers, location, wearable signals, false-alarm rates).
