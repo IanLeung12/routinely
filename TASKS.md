@@ -218,17 +218,18 @@ Interface:
 Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response → alarm; duress (person sees "ok", supervisor gets a silent duress alarm); disconnect after start → alarm still fires; unacknowledged → escalates to #2; false alarm resolved by a supporter and by the person; permissions (a supporter without `location` never gets it). The duress and safety responses are byte-identical. PINs never appear in any response or log. `scripts/ci.sh` passes.
 
 ### T451 — Check-in UI (person side): countdown, "I'm okay" + PIN pad
-- status: in-review
+- status: todo
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/checkin/CheckInCard.tsx, web/src/checkin/CheckInCard.test.tsx, web/src/checkin/PinPad.tsx, web/src/checkin/PinPad.test.tsx, web/src/checkin/checkin.css, web/src/checkin/api.ts, web/src/checkin/types.ts, web/src/mock/checkins.ts, web/src/people/MyRoutine.tsx
-- owner: ian-claude-standard-4
-- claimed: 2026-10-17T23:57Z
+- owner: —
+- claimed: —
 - pr: #437
 - rating: 5/5 clear task, API shape from T450's todo description was detailed enough to mock against
+- note: merge conflict with main on PR #437: check out its branch, merge origin/main, fix, push
 
 What: The person's half of T450, built in parallel against T450's API shape with a mock (`web/src/mock/checkins.ts`). Follow `docs/DESIGN.md`. In "for myself" mode (`MyRoutine`), when a check-in is active, a calm full-width card appears: "Quick check-in: are you okay?", a large countdown ring, one big **I'm okay** button that opens a large-key PIN pad (works with shaky hands: big targets, no time pressure shown beyond the ring). After any accepted PIN, safety or duress, it shows the **same** "Thanks, you're checked in" screen (duress must be indistinguishable). A wrong PIN says "Try again" and the countdown continues. Accessible: focus moves to the card, `aria-live` announcements, keyboard only.
 Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it pending; the safety and duress paths render identical DOM; countdown text updates; `cd web && npm test && npm run build`.
