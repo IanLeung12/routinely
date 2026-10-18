@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
+import { LiveScreen } from '../live/LiveScreen.tsx'
 import { PrivacyCard } from '../person/routine/PrivacyCard.tsx'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
@@ -45,11 +46,20 @@ const CheckInCard = lazy(() =>
  *
  * Calm and plain on purpose. It says what looked different and who is worth
  * mentioning it to. It never says what a difference means. */
-export function MyRoutine({ onChange }: { onChange?: () => void }) {
+export function MyRoutine({
+  onChange,
+  onOpenAlert,
+}: {
+  onChange?: () => void
+  onOpenAlert?: (alertId: string) => void
+}) {
   const person = currentPerson()
   const [supervisors, setSupervisors] = useState(() => supervisorsOf(person.id))
   const [invite, setInvite] = useState<Invite | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
+  /** Bumped when a live session ends, so the week behind it refetches without a
+   * page reload, the same way the overview's `refreshKey` works (App.tsx). */
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
   /** Front-end only: there is no capture device to switch off behind this yet, so
    * pausing says so and stays in this tab (SPEC section 17, mock linking). */
   const [paused, setPaused] = useState(false)
@@ -88,8 +98,19 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
       </Suspense>
 
       <Suspense fallback={<Loading label="Loading your week…" />}>
-        <RoutineSections personId={person.id} supervisorNames={supervisorNames} />
+        <RoutineSections key={sessionRefreshKey} personId={person.id} supervisorNames={supervisorNames} />
       </Suspense>
+
+      <Card>
+        <SectionHeader title="Your session" />
+        <p className="my-routine__session-lead">
+          Start making tea when you're ready; only your skeleton is used.
+        </p>
+        <LiveScreen
+          onOpenAlert={onOpenAlert}
+          onSessionEnd={() => setSessionRefreshKey((key) => key + 1)}
+        />
+      </Card>
 
       <Card>
         <SectionHeader title="Who can see this" />
