@@ -414,3 +414,4 @@ T457 | standard | claude-opus | merged first try | ~?k tok
 T459 | light | claude-sonnet | merged first try | ~?k tok
 T462 | light | claude-sonnet | merged first try | ~?k tok
 T460 | standard | claude-opus | merged first try | ~?k tok
+T461 | standard | claude-sonnet | merged first try | ~70k tok
