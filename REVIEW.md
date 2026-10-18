@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 32bed1d
-- next-area: scripts+ci
+- last-reviewed: 6bae59e
+- next-area: tests/scenarios
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
