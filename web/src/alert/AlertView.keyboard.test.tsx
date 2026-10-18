@@ -1,10 +1,18 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { mockAlerts } from '../mock/alerts.ts'
 import { AlertView } from './AlertView.tsx'
 
 const MRS_K = mockAlerts[0]
+
+// AlertView's evidence cards pull in ReplayPlayer and GhostReplay, which draw to a
+// canvas; pay that import/transform cost here, once, instead of in the first test's
+// findByRole for the play button.
+beforeAll(async () => {
+  await import('../evidence/ReplayPlayer.tsx')
+  await import('../evidence/GhostReplay.tsx')
+})
 
 function offline() {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
