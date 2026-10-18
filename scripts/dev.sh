@@ -8,6 +8,7 @@
 #   scripts/dev.sh status   show whether each is running
 #
 # Ports: API_PORT (default 8000), DASHBOARD_PORT (default 5173).
+# LAN=1 scripts/dev.sh up   also serve other devices on the same Wi-Fi (prints LAN_DASHBOARD_URL).
 # Logs: .dev/api.log, .dev/web.log. PIDs: .dev/api.pid, .dev/web.pid.
 # Set DEV_DIR to use a different pid/log directory, e.g. to run a second,
 # independent stack (on different ports) without it mistaking the default
@@ -27,6 +28,17 @@ DASHBOARD_PORT=${DASHBOARD_PORT:-5173}
 API_URL="http://localhost:${API_PORT}"
 DASHBOARD_URL="http://localhost:${DASHBOARD_PORT}"
 DASHBOARD_MODE=${DASHBOARD_MODE:-dev}
+# LAN=1: also serve to phones/laptops on the same Wi-Fi. The dashboard binds 0.0.0.0
+# and calls the API at this machine's LAN address. The camera preview stays
+# 127.0.0.1-only by design (SPEC section 12): other devices get skeleton only.
+LAN=${LAN:-0}
+VITE_HOST_ARGS=()
+if [ "$LAN" = 1 ]; then
+  LAN_IP=${LAN_IP:-$(python3 -c "import socket;s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.connect(('10.255.255.255',1));print(s.getsockname()[0])" 2>/dev/null || echo 127.0.0.1)}
+  VITE_HOST_ARGS=(--host 0.0.0.0)
+  export VITE_API_URL=${VITE_API_URL:-http://$LAN_IP:$API_PORT}
+  export CORS_ORIGINS=${CORS_ORIGINS:-$DASHBOARD_URL,http://127.0.0.1:${DASHBOARD_PORT},http://$LAN_IP:${DASHBOARD_PORT}}
+fi
 
 DEV_DIR=${DEV_DIR:-.dev}
 API_PID_FILE="$DEV_DIR/api.pid"
@@ -88,13 +100,13 @@ start_web() {
     (
       cd web
       # Run vite directly (not via `npm run`) so this PID is the actual port listener.
-      exec node_modules/.bin/vite preview --port "$DASHBOARD_PORT" --strictPort --outDir "$WEB_DIST_DIR"
+      exec node_modules/.bin/vite preview "${VITE_HOST_ARGS[@]}" --port "$DASHBOARD_PORT" --strictPort --outDir "$WEB_DIST_DIR"
     ) >>"$WEB_LOG" 2>&1 &
   else
     (
       cd web
       # Run vite directly (not via `npm run`) so this PID is the actual port listener.
-      exec node_modules/.bin/vite --port "$DASHBOARD_PORT" --strictPort
+      exec node_modules/.bin/vite "${VITE_HOST_ARGS[@]}" --port "$DASHBOARD_PORT" --strictPort
     ) >>"$WEB_LOG" 2>&1 &
   fi
   echo $! >"$WEB_PID_FILE"
@@ -135,6 +147,9 @@ cmd_up() {
   wait_for "$DASHBOARD_URL" "dashboard"
   echo "DASHBOARD_URL=$DASHBOARD_URL"
   echo "API_URL=$API_URL"
+  if [ "$LAN" = 1 ]; then
+    echo "LAN_DASHBOARD_URL=http://$LAN_IP:$DASHBOARD_PORT   (open on a phone/laptop on the same Wi-Fi)"
+  fi
 }
 
 cmd_down() {
