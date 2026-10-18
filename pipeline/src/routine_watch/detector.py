@@ -1,7 +1,8 @@
 """The local object detector (SPEC sections 6.1 and 16).
 
-Finds the task objects in one frame - kettle, cup, teabag, spoon, milk, sugar, and
-optionally hands and "pouring" - and reports them as boxes normalised to the frame.
+Finds the task objects in one frame - kettle, cup, teabag, spoon, milk, sugar, shaker,
+protein tub, scoop, and optionally hands and "pouring" - and reports them as boxes
+normalised to the frame.
 
 The detector **always runs locally from downloaded weights**. Roboflow's hosted
 inference is never called, from code, tests or CI: the credits are scarce and the demo
@@ -67,6 +68,11 @@ LABEL_ALIASES: dict[str, ObjectLabel] = {
     "milk_carton": ObjectLabel.MILK,
     "sugar_bowl": ObjectLabel.SUGAR,
     "sugar_jar": ObjectLabel.SUGAR,
+    "shaker_bottle": ObjectLabel.SHAKER,
+    "blender_bottle": ObjectLabel.SHAKER,
+    "protein_powder": ObjectLabel.PROTEIN_TUB,
+    "protein_tub_closed": ObjectLabel.PROTEIN_TUB,
+    "scoop_spoon": ObjectLabel.SCOOP,
     "pour": ObjectLabel.POURING,
     "pouring_water": ObjectLabel.POURING,
     "hands": ObjectLabel.HAND,

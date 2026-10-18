@@ -1,0 +1,24 @@
+# The resident gets the shaker, opens the tub, adds the liquid, closes the lid and
+# shakes it - but never scoops any powder in. One sentence of difference from
+# protein_shake_normal has to produce exactly one error: `scoop_powder` is required
+# and never happens, so the task ending without it is an omission (SPEC section 7).
+# Opening the tub but never scooping from it is not itself an error - only the
+# missing step is.
+#
+# Written at step level, for the same reason as protein_shake_normal. See README.md.
+
+task: protein_shake
+
+steps:
+  - get_shaker
+  - open_tub
+  - add_liquid
+  - close_lid
+  - shake
+  # scoop_powder never happens: the shake goes in with no powder in it
+
+errors:
+  - { type: omission, step: scoop_powder }
+score: 3.0 # omission 3.0
+
+flag: false

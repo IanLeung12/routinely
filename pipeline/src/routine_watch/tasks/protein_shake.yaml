@@ -1,0 +1,83 @@
+# Making a protein shake, as a dependency graph (SPEC section 7).
+#
+# The third task, here to show the approach still generalises past two: nothing
+# outside this file and the three detector classes it adds knows that a protein shake
+# is a task at all. Two branches that do not wait on each other - the powder goes in
+# the shaker, the liquid goes in the shaker - meeting at the step that matters: the
+# lid goes on before it is shaken. Scooping powder-first or pouring liquid-first are
+# both correct, so neither order may ever show up as an error.
+#
+# The field meanings are the same as tea.yaml's; that file documents them, `action`
+# included.
+
+id: make_protein_shake
+title: Make a protein shake
+
+# Extra names that mean the same detector class: a shaker is also called a shaker
+# bottle or a blender bottle, the tub by what is in it, and the water by what it
+# usually comes in - meds' own `water_jug` class already covers "a jug of water", so
+# a protein shake's water bottle is just another name for it rather than a class of
+# its own.
+aliases:
+  shaker_bottle: shaker
+  blender_bottle: shaker
+  protein: protein_tub
+  powder: protein_tub
+  tub: protein_tub
+  water_bottle: water_jug
+
+steps:
+  - id: get_shaker
+    label: Get the shaker
+    objects: [shaker]
+    action: {type: pick_up, object: shaker}
+
+  - id: open_tub
+    label: Open the protein tub
+    objects: [protein_tub]
+    action: {type: open, object: protein_tub}
+
+  - id: scoop_powder
+    label: Scoop powder into the shaker
+    deps: [get_shaker, open_tub]
+    objects: [scoop, shaker]
+    # One or two scoops is normal, so a repeat is never perseveration.
+    once_only: false
+    action: {type: put_into, object: scoop, into: shaker}
+
+  - id: add_liquid
+    label: Add milk or water
+    deps: [get_shaker]
+    # Either liquid counts; scooping the powder first and adding the liquid first are
+    # both correct, so this does not depend on the tub side at all.
+    objects: [milk, water_jug, shaker]
+    action: {type: pour, object: [milk, water_jug], into: shaker}
+
+  - id: close_lid
+    label: Close the lid
+    deps: [scoop_powder, add_liquid]
+    objects: [shaker]
+    action: {type: close, object: shaker}
+
+  - id: shake
+    label: Shake it
+    deps: [close_lid]
+    objects: [shaker]
+    action: {type: shake, object: shaker}
+
+  - id: close_tub
+    label: Close the tub
+    deps: [scoop_powder]
+    objects: [protein_tub]
+    # Leaving it open is untidy, not an error.
+    optional: true
+    action: {type: close, object: protein_tub}
+
+  - id: drink
+    label: Drink the shake
+    deps: [shake]
+    objects: [shaker]
+    # Not finishing it on camera is not an error: the point the task cares about is
+    # the shake being made correctly, not the whole drink being watched.
+    optional: true
+    action: {type: bring_to_face, object: shaker}

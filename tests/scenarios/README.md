@@ -141,6 +141,11 @@ carry the per-step history needed to exercise it.
 | `tea_late_start_normal` | steps | A resident who sits for 200s before touching the kettle at all, then makes tea correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
 | `meds_long_pause_not_error` | steps | The meds counterpart of `tea_long_pause_not_error`: a 100s gap between `take_pill` and `fill_glass`, under the 120s abandonment threshold, must never surface as a task error or flag a change. |
 | `meds_late_start_normal` | steps | The meds counterpart of `tea_late_start_normal`: a resident who sits for 200s before touching the pill organiser or glass at all, then takes the medication correctly: the long idle before the *first* step must not start the abandonment timer or surface as any error. |
+| `protein_shake_normal` | steps | The third task's version of `tea_normal` and `meds_normal` (Ian's own routine): powder scooped before the liquid is added, and both optional steps - closing the tub, drinking - skipped. Nothing here may ever be an error. |
+| `protein_shake_omit_powder` | steps | The shaker is filled and shaken with no powder ever scooped in: `scoop_powder` is required and never happens, so exactly one omission. |
+| `protein_shake_lid_open_shake` | steps | The shaker is shaken before the lid is closed, and the lid is only closed well after the self-correction window: `shake` depends on `close_lid`, done later, so exactly one sequence error. |
+| `protein_shake_double_pour` | steps | The liquid is added twice with `scoop_powder` in between, not two events back to back: a perseveration error on `add_liquid`, the protein-shake counterpart of `meds_pill_twice`. |
+| `protein_shake_abandoned` | steps | The resident gets the shaker and opens the tub, then leaves a 131-second silence before one last step - scooping the powder in - with the liquid, lid and shake left undone: three omissions plus abandonment, flagging with another recent bad session. |
 
 ## Adding one
 

@@ -813,7 +813,7 @@ def test_a_routine_id_from_a_url_cannot_escape_the_directory(tmp_path):
 def test_the_built_in_routines_are_the_task_files():
     built_in = {routine.id: routine for routine in built_in_routines()}
 
-    assert set(built_in) == {"tea", "meds"}
+    assert set(built_in) == {"tea", "meds", "protein_shake"}
     assert built_in["tea"].title == "Make tea"
     assert built_in["tea"].built_in
     assert parse_task_data(built_in["tea"].graph).id == "make_tea"
@@ -1005,8 +1005,10 @@ def test_a_reviewed_routine_is_kept_listed_and_fetched(client, tmp_path):
     assert saved.json()["needs_training"] == ["toothbrush", "toothpaste", "tap"]
 
     listed = client.get("/routines").json()
-    assert [row["id"] for row in listed] == ["tea", "meds", "brush_your_teeth"]
-    assert [row["built_in"] for row in listed] == [True, True, False]
+    # Built-in routines are listed title-sorted ("Make a protein shake", "Make tea",
+    # "Take medication with water"), then the kept ones.
+    assert [row["id"] for row in listed] == ["protein_shake", "tea", "meds", "brush_your_teeth"]
+    assert [row["built_in"] for row in listed] == [True, True, True, False]
 
     fetched = client.get("/routines/brush_your_teeth")
     assert fetched.status_code == 200
