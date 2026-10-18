@@ -323,7 +323,7 @@ What: `scripts/kaze_demo.py <scenario>` drives a running local stack through eac
 Acceptance: each scenario exits 0 against `scripts/dev.sh up`; `python3 scripts/kaze_demo.py --help` works; read only T450's API, nothing else.
 
 ### T454 — Impact evaluation on synthetic data: catch rate, false alarms, hours earlier (docs/EVAL.md)
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -332,8 +332,9 @@ Acceptance: each scenario exits 0 against `scripts/dev.sh up`; `python3 scripts/
 - area: scripts/eval.py, pipeline/tests/test_eval.py, docs/EVAL.md, docs/eval/
 - owner: ian-claude-standard-3
 - claimed: 2026-10-18T00:15Z
-- pr: —
+- pr: #432
 - note: released by max_API_standard-2: run ended without progress
+- rating: 5/5 clear
 
 What: Measurable impact for the "AI for Social Impact" track. `scripts/eval.py` runs the real pipeline (scoring, change detection, patterns; offline fakes, no paid calls) over a seeded synthetic cohort: about 50 people x 60 days generated with the existing generator (`pipeline/src/routine_watch/synth`), with labelled ground truth: a sudden change at a known onset (about 30%), a slow drift (about 15%), and normal with realistic noise (the rest). Report:
 - **sudden changes caught** / missed (sensitivity), and **false alarms per person per month** on the normal group;
