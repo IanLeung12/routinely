@@ -13,42 +13,48 @@
         "objects": ["bread"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pick_up", "object": "bread"}
       },
       {
         "label": "Put a slice in the toaster",
         "objects": ["bread", "toaster"],
         "depends_on": ["Get the bread out"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "put_into", "object": "bread", "target": "toaster"}
       },
       {
         "label": "Push the toaster lever down",
         "objects": ["toaster"],
         "depends_on": ["Put a slice in the toaster"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "hold", "object": "toaster", "seconds": 1.0}
       },
       {
         "label": "Get a plate",
         "objects": ["plate"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pick_up", "object": "plate"}
       },
       {
         "label": "Take the toast out",
         "objects": ["toaster", "plate"],
         "depends_on": ["Push the toaster lever down", "Get a plate"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "take_out", "object": "bread", "target": "toaster"}
       },
       {
         "label": "Spread the butter",
         "objects": ["butter", "knife"],
         "depends_on": ["Take the toast out"],
         "optional": true,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "put_into", "object": "butter", "target": "knife"}
       }
     ]
   }

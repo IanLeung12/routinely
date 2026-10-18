@@ -3,11 +3,12 @@
 Three things are being held here. That a draft - a model's own words, trusted with
 nothing - always comes out as a graph `tasks/graph.py` would load: ids slugged,
 dependencies only ever backwards, objects mapped onto classes the detector was
-actually trained on and the rest listed as `needs_training`. That a mangled answer is
-refused with a reason somebody can act on rather than half-built. And that a setup
-clip is a one-time, opt-in step that never lands anywhere: no consent, no read; with
-consent, nothing new under the repo, the data directories or the temp directory
-afterwards.
+actually trained on and the rest listed as `needs_training`, and an action per step
+that is one of `routine_watch.actions`' primitives, so a built routine is one the step
+recogniser can actually see happen. That a mangled answer is refused with a reason
+somebody can act on rather than half-built. And that a setup clip is a one-time,
+opt-in step that never lands anywhere: no consent, no read; with consent, nothing new
+under the repo, the data directories or the temp directory afterwards.
 
 Nothing here reaches the network. The offline `FixtureDrafter` does most of the work,
 stub drafters supply the answers a real model would get wrong, and `GeminiDrafter`
@@ -23,9 +24,10 @@ from pathlib import Path
 
 import httpx2
 import pytest
+import yaml
 from fastapi.testclient import TestClient
 
-from routine_watch import routine_builder
+from routine_watch import actions, routine_builder
 from routine_watch.api import app
 from routine_watch.api_routines import CONSENT_REQUIRED
 from routine_watch.contracts import ObjectLabel, repo_root
@@ -35,6 +37,7 @@ from routine_watch.routine_builder import (
     MAX_VIDEO_BYTES,
     ClaudeDrafter,
     ClipRejected,
+    DraftAction,
     DrafterAnswer,
     DraftStep,
     FixtureDrafter,
@@ -55,7 +58,7 @@ from routine_watch.routine_builder import (
     use_drafter,
     use_routine_store,
 )
-from routine_watch.tasks.graph import TaskGraphError, parse_task_data
+from routine_watch.tasks.graph import TaskGraphError, parse_task, parse_task_data
 
 #: A marker the privacy test can look for, built in two halves so this file is not
 #: itself a file that "holds the clip" (`explain_claude.py` splits a literal the same
@@ -171,6 +174,149 @@ def test_a_step_with_nothing_the_detector_knows_watches_the_hands():
     objects = {step["id"]: step["objects"] for step in built.graph["steps"]}
     assert objects["get_the_bread_out"] == [str(ObjectLabel.HAND)]
     assert any("watches the hands" in warning for warning in built.warnings)
+
+
+# ------------------------------------------------- an action per step, so it is watchable
+
+
+def test_a_drafted_routine_says_what_each_step_is_and_round_trips_as_yaml():
+    """The acceptance of T463: a draft comes out as a graph with an action per step, and
+    that graph read back through `parse_task` - the loader `tasks/tea.yaml` goes through
+    - is the same thing, actions and all. So a routine somebody built this morning is
+    watched by the same code that watches tea.
+    """
+    built = build_routine(draft_from_text("I make a cup of tea with a tea bag"))
+    assert built.warnings == ()
+
+    actioned = {step["id"]: step.get("action") for step in built.graph["steps"]}
+    assert actioned["get_a_mug"] == {"type": "pick_up", "object": ["cup"]}
+    assert actioned["put_the_tea_bag_in_the_mug"] == {
+        "type": "put_into",
+        "object": ["teabag"],
+        "target": "cup",
+    }
+    assert actioned["boil_the_kettle"] == {
+        "type": "hold",
+        "object": ["kettle"],
+        "seconds": 1.0,
+    }
+    assert all(actioned.values()), actioned
+
+    graph = parse_task(yaml.safe_dump(built.graph, sort_keys=False))
+    assert {step.id: step.action for step in graph.steps} == {
+        step["id"]: actions.Action(
+            type=step["action"]["type"],
+            objects=tuple(step["action"]["object"]),
+            target=step["action"].get("target"),
+            seconds=step["action"].get("seconds"),
+        )
+        for step in built.graph["steps"]
+    }
+
+
+def test_the_thing_an_action_is_done_to_counts_as_an_object_of_the_step():
+    """A model that says "add milk" with only the milk in `objects` still named the mug
+    in its action, and the step is done with both - which is also what the loader needs
+    before it will accept the action at all."""
+    drafter = StubDrafter(
+        _answer(
+            _step(
+                "Add milk",
+                objects=["milk"],
+                action={"type": "pour", "object": "milk", "into": "mug"},
+            )
+        )
+    )
+    built = build_routine(draft_from_text("anything", drafter))
+
+    assert built.graph["steps"][0]["objects"] == ["milk", "cup"]
+    assert built.graph["steps"][0]["action"] == {
+        "type": "pour",
+        "object": ["milk"],
+        "target": "cup",
+    }
+    assert built.warnings == ()
+
+
+@pytest.mark.parametrize(
+    ("action", "expected"),
+    [
+        ({"type": "teleport", "object": "mug"}, "a step can be watched for one of"),
+        ({"type": "pour", "object": "mug"}, "it needs something to be done to"),
+    ],
+)
+def test_an_action_no_primitive_matches_is_dropped_and_said_out_loud(action, expected):
+    """A model invents an action, or forgets what the action is done to. Either way the
+    step keeps everything else about it, and the review screen is told what went."""
+    drafter = StubDrafter(_answer(_step("Do it", objects=["mug"], action=action)))
+    built = build_routine(draft_from_text("anything", drafter))
+
+    assert "action" not in built.graph["steps"][0]
+    assert built.graph["steps"][0]["objects"] == ["cup"]
+    assert len(built.warnings) == 1
+    assert expected in built.warnings[0]
+
+
+def test_an_action_about_a_thing_the_detector_has_never_seen_goes_quietly():
+    """`needs_training` already says the detector cannot watch a toothbrush, so saying
+    it twice would be noise. The step is kept, watching the hands."""
+    drafter = StubDrafter(
+        _answer(
+            _step(
+                "Brush your teeth",
+                objects=["toothbrush"],
+                action={"type": "bring_to_face", "object": "toothbrush"},
+            )
+        )
+    )
+    built = build_routine(draft_from_text("anything", drafter))
+
+    assert "action" not in built.graph["steps"][0]
+    assert built.graph["steps"][0]["objects"] == [str(ObjectLabel.HAND)]
+    assert built.needs_training == ("toothbrush",)
+    assert [w for w in built.warnings if "action" in w] == []
+
+
+def test_a_model_that_answers_an_action_loosely_is_still_understood():
+    """Capitals, a bare name instead of an object, and the model's own spelling of the
+    thing it is done to: all of which a model does, and none of which is worth refusing
+    a whole draft over."""
+    drafter = StubDrafter(
+        _answer(
+            _step("Get a mug", objects=["mug"], action="Pick up"),
+            _step(
+                "Put the bag in",
+                objects=["tea bag", "mug"],
+                action={"type": "Put Into", "object": "tea bag", "in": "mug"},
+            ),
+        )
+    )
+    draft = draft_from_text("anything", drafter)
+
+    assert draft.steps[0].action == DraftAction(type="Pick up")
+    built = build_routine(draft)
+    assert built.warnings == ()
+    assert [step["action"]["type"] for step in built.graph["steps"]] == ["pick_up", "put_into"]
+
+
+def test_a_draft_keeps_the_action_in_the_models_own_words():
+    """`RoutineDraft.as_dict` is what the review screen shows beside the built graph, so
+    it has to carry what the model actually said."""
+    drafter = StubDrafter(
+        _answer(_step("Shake it", objects=["mug"], action={"type": "shake", "object": "mug"}))
+    )
+    drafted = draft_from_text("anything", drafter).as_dict()
+
+    assert drafted["steps"][0]["action"] == {"type": "shake", "object": ["mug"]}
+
+
+def test_the_prompt_names_every_action_a_step_could_be():
+    """The prompt is built from `actions.PRIMITIVES`, so a primitive added later is
+    asked for without anybody remembering to edit a string."""
+    prompt = routine_builder._DRAFT_PROMPT
+    for name in actions.ACTION_TYPES:
+        assert name in prompt, name
+    assert '"action"' in prompt
 
 
 @pytest.mark.parametrize(

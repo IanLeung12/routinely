@@ -19,6 +19,13 @@ change (`warnings`) and which everyday objects the detector would still have to 
 trained on (`needs_training`), so a person reviews a routine they can see the limits
 of rather than one that quietly watches the wrong thing.
 
+Every step is also asked what it *is* - one of `routine_watch.actions`' primitives
+(`pour`, `put_into`, `shake`, ...) - and that is what makes a built routine one the
+step recogniser can actually see happen rather than a list of labels. The prompt names
+the primitives straight out of `actions.PRIMITIVES`, and a step whose action is not one
+of them, or is about a thing the detector has never been trained on, loses it and says
+so.
+
 **Setup clips are a one-time, opt-in step (SPEC section 12).** A clip is held in
 memory, capped at `MAX_VIDEO_BYTES` and `MAX_VIDEO_SECONDS` because one setup
 demonstration is all it is for, sent to Gemini once, and dropped. Nothing here writes
@@ -57,6 +64,7 @@ import httpx2
 import yaml
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from . import actions
 from .api_cache import cached_call, live_api_enabled
 from .contracts import ObjectLabel, repo_root
 from .explain_claude import DEFAULT_MODEL as DEFAULT_ANTHROPIC_MODEL
@@ -170,6 +178,35 @@ class ClipRejected(RoutineBuilderError):
 # -------------------------------------------------------------------- what a model said
 
 
+class _ActionDraft(BaseModel):
+    """What the model said the step *is*: one of `routine_watch.actions`' primitives.
+
+    Read as loosely as the rest of a draft. `"action": "pour"` is a type with nothing
+    else said, the target may be spelled whichever way reads best, and the type is only
+    held to the primitive list later, in `build_routine`, so a model that invents an
+    action is told which ones there are rather than having its whole draft refused.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    type: str = ""
+    object: list[str] = Field(default_factory=list)
+    target: str | None = Field(
+        default=None, validation_alias=AliasChoices("target", "into", "in", "from")
+    )
+    seconds: float | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _a_bare_name_is_a_type(cls, data: object) -> object:
+        """`"action": "pour"` meant `{"type": "pour"}`, and `"object": "mug"` a list."""
+        if isinstance(data, str):
+            return {"type": data}
+        if isinstance(data, dict) and isinstance(data.get("object"), str):
+            return {**data, "object": [data["object"]]}
+        return data
+
+
 class _StepDraft(BaseModel):
     """One `steps:` entry of a model's answer, read as loosely as is still safe.
 
@@ -190,6 +227,7 @@ class _StepDraft(BaseModel):
     )
     optional: bool = False
     once_only: bool = True
+    action: _ActionDraft | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -216,6 +254,24 @@ class _RoutineDraftIn(BaseModel):
 
 
 @dataclass(frozen=True)
+class DraftAction:
+    """What the model said one step is, still in its own words and words only."""
+
+    type: str
+    objects: tuple[str, ...] = ()
+    target: str | None = None
+    seconds: float | None = None
+
+    def as_dict(self) -> dict:
+        action: dict = {"type": self.type, "object": list(self.objects)}
+        if self.target is not None:
+            action["target"] = self.target
+        if self.seconds is not None:
+            action["seconds"] = self.seconds
+        return action
+
+
+@dataclass(frozen=True)
 class DraftStep:
     """One step of a drafted routine, still in the model's own words."""
 
@@ -224,15 +280,21 @@ class DraftStep:
     depends_on: tuple[str, ...] = ()
     optional: bool = False
     once_only: bool = True
+    #: Which of `routine_watch.actions`' primitives the model said this step is, if it
+    #: said one. `build_routine` is what holds it to the list.
+    action: DraftAction | None = None
 
     def as_dict(self) -> dict:
-        return {
+        drafted = {
             "label": self.label,
             "objects": list(self.objects),
             "depends_on": list(self.depends_on),
             "optional": self.optional,
             "once_only": self.once_only,
         }
+        if self.action is not None:
+            drafted["action"] = self.action.as_dict()
+        return drafted
 
 
 @dataclass(frozen=True)
@@ -414,6 +476,12 @@ def _keyword_hits(description: str, canned: _Canned) -> int:
     )
 
 
+#: The actions a step may be, straight out of `routine_watch.actions`, so the prompt
+#: cannot drift from what the recogniser can actually watch for.
+_ACTION_CHOICES = "; ".join(
+    f"{primitive.name} ({primitive.summary})" for primitive in actions.PRIMITIVES.values()
+)
+
 #: What every provider is asked for. JSON only, in everyday words, and never a word
 #: about the person: a routine is a list of actions, not a description of who did them.
 _DRAFT_PROMPT = (
@@ -426,7 +494,13 @@ _DRAFT_PROMPT = (
     '"objects": the things they touch, as everyday names, '
     '"depends_on": the labels of the steps that must happen before this one, '
     '"optional": true if skipping it is fine, '
-    '"once_only": false if doing it again is normal}]}\n'
+    '"once_only": false if doing it again is normal, '
+    '"action": {"type": which action below the step is, '
+    '"object": the thing in their hands, '
+    '"target": the thing it is done to, where the action has one, '
+    '"seconds": how long, for hold only}}]}\n'
+    f"The actions are: {_ACTION_CHOICES}. Give every step the one that fits it best, "
+    "and leave `action` out of a step that is none of them.\n"
     "List the steps in the order they are usually done. Put a step in depends_on only "
     "if it really has to come first, and only if it is earlier in your own list. At "
     f"most {MAX_STEPS} steps. Never describe or identify the person, their face, their "
@@ -725,12 +799,25 @@ def _draft_of(answer: DrafterAnswer, *, source: DraftSource, named_after: str) -
                 depends_on=tuple(step.depends_on),
                 optional=step.optional,
                 once_only=step.once_only,
+                action=_action_draft(step.action),
             )
             for step in spec.steps
         ),
         source=source,
         provider=answer.provider,
         notes=(*answer.notes, *spec.notes),
+    )
+
+
+def _action_draft(spec: _ActionDraft | None) -> DraftAction | None:
+    """A model's `action`, kept in its own words; `build_routine` holds it to the list."""
+    if spec is None or not spec.type.strip():
+        return None
+    return DraftAction(
+        type=spec.type.strip(),
+        objects=tuple(spec.object),
+        target=(spec.target or "").strip() or None,
+        seconds=spec.seconds,
     )
 
 
@@ -828,10 +915,11 @@ def build_routine(draft: RoutineDraft) -> BuiltRoutine:
     Nothing in the draft is trusted. Step ids are slugged off the labels and made
     unique; a dependency is kept only where it names a step already placed, and never
     where it would leave a required step waiting on an optional one; objects are
-    mapped onto detector classes, and a step with none left watches the hands instead.
-    The graph is then handed to `tasks/graph.py`'s own loader before it is returned,
-    so a routine that reaches the rest of the pipeline has passed exactly the checks
-    `tasks/tea.yaml` passed.
+    mapped onto detector classes, and a step with none left watches the hands instead;
+    and a step's action is kept only where it is one of `routine_watch.actions`'
+    primitives, done with things the detector knows. The graph is then handed to
+    `tasks/graph.py`'s own loader before it is returned, so a routine that reaches the
+    rest of the pipeline has passed exactly the checks `tasks/tea.yaml` passed.
     """
     warnings: list[str] = []
     needs_training: dict[str, None] = {}
@@ -840,16 +928,18 @@ def build_routine(draft: RoutineDraft) -> BuiltRoutine:
 
     for step in draft.steps:
         step_id = _unique_id(step.label, placed, warnings)
-        steps.append(
-            {
-                "id": step_id,
-                "label": step.label,
-                "deps": _deps_of(step, step_id, placed, warnings),
-                "objects": _objects_of(step, step_id, needs_training, warnings),
-                "optional": step.optional,
-                "once_only": step.once_only,
-            }
-        )
+        objects, action = _watched(step, step_id, needs_training, warnings)
+        built = {
+            "id": step_id,
+            "label": step.label,
+            "deps": _deps_of(step, step_id, placed, warnings),
+            "objects": objects,
+            "optional": step.optional,
+            "once_only": step.once_only,
+        }
+        if action is not None:
+            built["action"] = action
+        steps.append(built)
         placed.append(_Placed(id=step_id, label=step.label, optional=step.optional))
 
     graph = {
@@ -928,18 +1018,29 @@ def _deps_of(
     return deps
 
 
-def _objects_of(
+def _watched(
     step: DraftStep, step_id: str, needs_training: dict[str, None], warnings: list[str]
-) -> list[str]:
-    """The detector classes `step` can be watched with, and what it would still need.
+) -> tuple[list[str], dict | None]:
+    """How `step` is to be watched: the detector classes, and the action to look for.
 
     Everything the detector does not know yet is collected into `needs_training` in
     the draft's own words. A step with nothing left watches the hands, which every
     task shares: the step map still shows it and the recogniser still times it, and
     the review screen is told why.
+
+    The action is kept only where `routine_watch.actions` has it and the things it
+    names are things the detector knows - otherwise there is nothing for the
+    recogniser to look for, and a step with no action is exactly that. A model that
+    *got the action wrong* is said out loud; a thing the detector has simply never been
+    trained on is not, because `needs_training` already says so.
     """
+    primitive = _primitive_of(step, step_id, warnings)
+    named = list(step.objects)
+    if primitive is not None and step.action is not None:
+        named += [*step.action.objects, *filter(None, (step.action.target,))]
+
     known: list[str] = []
-    for name in step.objects:
+    for name in named:
         label = detector_class(name)
         if label is None:
             if name.strip():
@@ -950,8 +1051,62 @@ def _objects_of(
         warnings.append(
             f"{step_id}: nothing the detector knows yet, so it watches the hands"
         )
-        return [str(ObjectLabel.HAND)]
-    return known
+        return [str(ObjectLabel.HAND)], None
+    if primitive is None or step.action is None:
+        return known, None
+    return known, _action_of(primitive, step.action, known)
+
+
+def _primitive_of(
+    step: DraftStep, step_id: str, warnings: list[str]
+) -> actions.Primitive | None:
+    """The primitive `step`'s drafted action names, or None with a reason said out loud.
+
+    The type is slugged first, so a model answering "Put into" or "bring to face" is
+    taken at its word rather than refused over its capitals.
+    """
+    drafted = step.action
+    if drafted is None:
+        return None
+    primitive = actions.primitive(slug(drafted.type))
+    if primitive is None:
+        warnings.append(
+            f'{step_id}: dropped the action "{drafted.type}" - a step can be watched '
+            f"for one of: {', '.join(actions.ACTION_TYPES)}"
+        )
+        return None
+    if primitive.target and not drafted.target:
+        warnings.append(
+            f'{step_id}: dropped the "{primitive.name}" action - it needs something '
+            "to be done to, and the draft named none"
+        )
+        return None
+    return primitive
+
+
+def _action_of(
+    primitive: actions.Primitive, drafted: DraftAction, known: list[str]
+) -> dict | None:
+    """One drafted action as a task file's `action:`, or None if it cannot be watched."""
+    target = detector_class(drafted.target) if drafted.target else None
+    objects = list(
+        dict.fromkeys(
+            label for name in drafted.objects if (label := detector_class(name)) in known
+        )
+    )
+    if not objects:
+        # `"action": "shake"` named the action and left the rest to the step, which is
+        # the one place the thing in the hand can come from: whichever of the step's own
+        # objects it turns out to be.
+        objects = [label for label in known if label != target]
+    if not objects or (primitive.target and target not in known):
+        return None
+    action: dict = {"type": primitive.name, "object": objects}
+    if primitive.target:
+        action["target"] = target
+    if primitive.seconds and drafted.seconds:
+        action["seconds"] = float(drafted.seconds)
+    return action
 
 
 # --------------------------------------------------------------- the saved routines

@@ -4,7 +4,9 @@
     "`answer` is exactly the shape a real model is asked for, so the offline fake and",
     "Gemini/Claude go through the same parser. `keywords` are matched whole-word,",
     "case-insensitively, against the description; `default` picks the file to fall back",
-    "to when a description matches nothing."
+    "to when a description matches nothing. `action` is which of routine_watch.actions'",
+    "primitives the step is, so a built routine is one the recogniser can see happen;",
+    "one naming an object the detector has never been trained on is dropped."
   ],
   "keywords": ["brush", "brushing", "teeth", "tooth", "toothbrush", "toothpaste", "dental"],
   "default": false,
@@ -16,49 +18,56 @@
         "objects": ["toothbrush"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pick_up", "object": "toothbrush"}
       },
       {
         "label": "Put toothpaste on the brush",
         "objects": ["toothpaste", "toothbrush"],
         "depends_on": ["Get the toothbrush"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "put_into", "object": "toothpaste", "target": "toothbrush"}
       },
       {
         "label": "Fill a cup with water",
         "objects": ["cup", "tap"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pour", "object": "tap", "target": "cup"}
       },
       {
         "label": "Brush your teeth",
         "objects": ["toothbrush"],
         "depends_on": ["Put toothpaste on the brush"],
         "optional": false,
-        "once_only": false
+        "once_only": false,
+        "action": {"type": "bring_to_face", "object": "toothbrush"}
       },
       {
         "label": "Rinse your mouth",
         "objects": ["cup"],
         "depends_on": ["Brush your teeth", "Fill a cup with water"],
         "optional": false,
-        "once_only": false
+        "once_only": false,
+        "action": {"type": "bring_to_face", "object": "cup"}
       },
       {
         "label": "Rinse the brush",
         "objects": ["toothbrush", "tap"],
         "depends_on": ["Brush your teeth"],
         "optional": true,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pour", "object": "tap", "target": "toothbrush"}
       },
       {
         "label": "Put the toothbrush back",
         "objects": ["toothbrush"],
         "depends_on": ["Brush your teeth"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "return", "object": "toothbrush"}
       }
     ]
   }
