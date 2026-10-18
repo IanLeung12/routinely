@@ -1,0 +1,43 @@
+/* Supervisor alarm banner: stays above every routed screen. */
+.supervisor-alarms { display: grid; gap: var(--space-3); }
+.alarm-banner {
+  padding: var(--space-5);
+  border: var(--focus-ring-width) solid var(--status-flagged);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  margin-bottom: var(--space-4);
+  overflow-wrap: anywhere;
+}
+.alarm-banner h2 { color: var(--status-flagged); font-size: var(--text-lg); }
+.alarm-banner--resolved { border-color: var(--hairline-strong); }
+.alarm-banner--resolved h2 { color: var(--text); }
+.alarm-banner__actions, .alarm-banner__sound {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.alarm-banner__actions label { display: grid; gap: var(--space-1); }
+.alarm-banner select, .safety-settings input:not([type='checkbox']) {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: var(--focus-ring-width) solid var(--hairline-strong);
+  border-radius: var(--radius-xs);
+  padding: var(--space-3);
+  font: inherit;
+  max-width: 100%;
+}
+/* Escalation timeline. */
+.escalation-timeline h3 { font-size: var(--text-base); }
+.escalation-timeline__events { padding-left: var(--space-5); }
+.escalation-timeline__events li { padding: var(--space-2) 0; border-bottom: var(--focus-ring-width) solid var(--hairline); }
+.escalation-timeline__events time { display: block; color: var(--text-secondary); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+/* Safety settings. */
+.safety-settings fieldset { border: 0; padding: 0; margin: 0 0 var(--space-5); min-width: 0; }
+.safety-settings legend { font-weight: 600; margin-bottom: var(--space-3); }
+.safety-settings label { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+.safety-settings__supporters { padding-left: var(--space-5); }
+.safety-settings__supporters li { padding: var(--space-3) 0; border-bottom: var(--focus-ring-width) solid var(--hairline); }
+.safety-settings__order { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+.safety-settings__permissions label { display: flex; align-items: center; }
+.safety-settings__permissions input { accent-color: var(--accent); }
