@@ -231,7 +231,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T460 — Bug: person check-in card shows the oldest open check-in (0:00) when a person has several
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -240,6 +240,8 @@ Acceptance:
 - source: tester
 - owner: ian-claude-heavy-2
 - claimed: 2026-10-18T03:23Z
+- pr: #446
+- rating: 4/5 the preferred interface (always return the open check-in) would have kept the repro broken: after the 20 s window the only open one is a stuck alarm, so the card stays at 0:00 - the task's acceptance needed start() to hand back only a still-pending question
 
 What: on main @3a522b0 with the stack up (`OFFLINE_MODE=true scripts/dev.sh up`), run `curl -XPOST localhost:8000/checkins/demo -H 'content-type: application/json' -d '{"person":"sam"}'` twice ~20 s apart (or once after an earlier one expired), then open the dashboard as **Myself**. `GET /checkins/active?person=sam` returns several records: the old ones in `state: "alarm"` with `seconds_left: null`, the new one `pending`. `fetchMyCheckin` (web/src/checkin/api.ts ~98) takes `list[0]`, so the card shows the stale one: countdown stuck at **0:00** with "I'm okay", not the live 20 s question. Its comment assumes "at most one is ever open for a person at a time", but `POST /checkins/demo` without `alert_id` starts a new record every call. A presenter re-triggering the check-in during the demo hits this.
 Expected: a person has at most one open check-in, or the person screen shows the newest pending one.
