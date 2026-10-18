@@ -322,3 +322,50 @@ Interface: in both `vite` exec lines in `start_web()` of `scripts/dev.sh`, repla
 Acceptance:
 - `bash -n scripts/dev.sh` passes; `scripts/dev.sh up` then `scripts/dev.sh down` still works with and without `LAN=1`.
 - `scripts/ci.sh` passes.
+
+### T463 — Generic step building blocks: any routine recognised live, no new code
+- status: todo
+- class: heavy
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: pipeline/src/routine_watch/recogniser.py, pipeline/src/routine_watch/actions.py, pipeline/src/routine_watch/tasks/graph.py, pipeline/src/routine_watch/tasks/tea.yaml, pipeline/src/routine_watch/tasks/meds.yaml, pipeline/src/routine_watch/routine_builder.py, pipeline/tests/test_actions.py, pipeline/tests/test_recogniser.py, pipeline/tests/test_routine_builder.py, docs/CODEMAP.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian wants custom routines (first one: a protein shake) recognised live. Today the recogniser's `RULES` table is hand-written for tea, so any other task recognises nothing. Add **reusable action primitives** that a task YAML step names, and make the recogniser interpret them for any graph.
+Interface:
+- `actions.py`: pure functions over the existing per-frame scene and contact state (reuse recogniser's `_Scene` / `_Contact` / `_held` / `_inside` helpers, moved here if needed): `pick_up(x)`, `put_into(x, y)` (x released inside y's box), `pour(x, into=y)` (x held and tilted/raised over y, or a `pouring` box between them), `open(x)` (hand contact on x and x's box changes aspect/size, or a `<x>_open` class), `close(x)`, `hold(x, seconds)`, `shake(x)` (x held and the holding wrist landmark oscillates: ≥3 direction reversals in 2 s above an amplitude threshold), `bring_to_face(x)` (x box near the nose/mouth pose landmarks), `return(x)`. Each returns the same `(strength, objects)` firing the rules use today, so confidences and `unclear` handling are unchanged.
+- YAML: a step may add `action: {type: put_into, object: teabag, target: cup}` (also `pour`/`shake`/...). `graph.py` validates the action types and that every object it names is in the step's allowed objects or aliases. Steps without `action` keep using the existing tea rules, so nothing changes by default. Then **rewrite `tea.yaml` and `meds.yaml` with `action:`** and prove that recognition on the existing tests and scenarios is identical (same events and timestamps on the e2e scenarios; adjust the confidence constants only if a test says so).
+- `routine_builder.py` (T437): drafts emit `action:` per step, picking from the primitive list (fake drafts too), so builder-made routines are recognisable.
+Acceptance: unit tests per primitive, including `shake` from synthetic wrist oscillation; tea and meds e2e scenarios unchanged; a builder draft round-trips through `parse_task`; `scripts/ci.sh` passes.
+
+### T464 — Protein shake routine: task graph, detector classes, synthetic scenarios
+- status: todo
+- class: standard
+- priority: 0
+- kind: feature
+- source: ian
+- deps: T463
+- area: pipeline/src/routine_watch/tasks/protein_shake.yaml, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/detector.py, web/src/contracts.ts, pipeline/tests/test_protein_shake.py, tests/scenarios/protein_shake/, docs/DETECTOR.md
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian's custom routine, "Make a protein shake", as the second worked example of T463.
+- New detector classes in `ObjectLabel` (and `web/src/contracts.ts`): `shaker`, `protein_tub`, `scoop`, plus `water_bottle` if there isn't already a water class (reuse meds' `water_jug`/`glass` if one fits). Aliases: `shaker_bottle`, `blender_bottle` → shaker; `protein`, `powder`, `tub` → protein_tub.
+- `protein_shake.yaml`, steps with `action:`:
+  1. get shaker: `pick_up(shaker)`
+  2. open tub: `open(protein_tub)`
+  3. scoop powder: `put_into(scoop, shaker)`, deps [get shaker, open tub], `once_only: false` (1–2 scoops is normal)
+  4. add liquid: `pour(milk|water_bottle, into=shaker)`, deps [get shaker]; powder-first and liquid-first are both valid
+  5. close lid: `close(shaker)`, deps [scoop powder, add liquid]
+  6. shake: `shake(shaker)`, deps [close lid]
+  7. close tub: `close(protein_tub)`, optional
+  8. drink: `bring_to_face(shaker)`, optional
+  Errors that fall out: shaking with the lid open (sequence), forgetting the powder (omission), scooping again after shaking (perseveration).
+- `tests/scenarios/protein_shake/`: synthetic capture records (normal; omission of powder; lid-open shake; double pour) passed through the real pipeline, with expected errors.
+- `docs/DETECTOR.md`: the labelling list for Ian's Roboflow project with these classes added to the tea ones, and how to train on his own GPU (yolo11n, cu128 PyTorch, export ONNX to `models/detector.onnx`).
+Acceptance: the scenarios give the expected errors; the dashboard task map renders the graph (parallel powder/liquid branches); `scripts/ci.sh` passes.
