@@ -7,17 +7,18 @@ import type { SafetySettingsData } from './types.ts'
 vi.mock('./api.ts', () => ({ fetchSafetySettings: vi.fn(), saveSafetySettings: vi.fn() }))
 
 const settings: SafetySettingsData = {
-  checkin_window: 120, ack_window: 120, safety_pin_set: true, duress_pin_set: true,
+  person_id: 'mrs-k', name: 'Mrs. K', checkin_window_s: 120, ack_window_s: 120,
+  location: 'Room 204, care home', location_simulated: true, safety_pin_set: true, duress_pin_set: true,
   supporters: [
-    { id: 'ana', name: 'Ana', location: false, alert_details: true, replay: false },
-    { id: 'lena', name: 'Lena', location: false, alert_details: false, replay: false },
+    { id: 'ana', name: 'Ana', relationship: 'nurse', share: { location: false, alert_details: true, replay: false } },
+    { id: 'lena', name: 'Lena', relationship: 'family', share: { location: false, alert_details: false, replay: false } },
   ],
 }
 beforeEach(() => {
   vi.mocked(api.fetchSafetySettings).mockResolvedValue(structuredClone(settings))
   vi.mocked(api.saveSafetySettings).mockImplementation(async (_person, input) => {
-    const { safety_pin: _safetyPin, duress_pin: _duressPin, ...result } = input
-    return result
+    const { safety_pin: _safetyPin, duress_pin: _duressPin, ...changes } = input
+    return { ...settings, ...changes }
   })
 })
 afterEach(() => { cleanup(); vi.clearAllMocks() })
@@ -37,10 +38,13 @@ it('edits ordered supporters, permissions and windows, submitting PINs only as p
   fireEvent.change(screen.getByLabelText('New duress PIN'), { target: { value: '6789' } })
   fireEvent.click(screen.getByRole('button', { name: 'Save safety settings' }))
   await screen.findByText('Safety settings saved. PINs are hidden.')
-  expect(api.saveSafetySettings).toHaveBeenCalledWith('mrs-k', expect.objectContaining({
-    checkin_window: 45, ack_window: 30, safety_pin: '9876', duress_pin: '6789',
-    supporters: [expect.objectContaining({ id: 'lena', location: true }), expect.objectContaining({ id: 'ana' })],
-  }))
+  expect(api.saveSafetySettings).toHaveBeenCalledWith('mrs-k', {
+    checkin_window_s: 45, ack_window_s: 30, safety_pin: '9876', duress_pin: '6789',
+    supporters: [
+      expect.objectContaining({ id: 'lena', share: expect.objectContaining({ location: true }) }),
+      expect.objectContaining({ id: 'ana' }),
+    ],
+  })
   expect((screen.getByLabelText('New safety PIN') as HTMLInputElement).value).toBe('')
   expect((screen.getByLabelText('New duress PIN') as HTMLInputElement).value).toBe('')
   expect(screen.queryByText('9876')).toBeNull()
@@ -52,7 +56,9 @@ it('leaves existing PINs out of the request if blank and handles no linked suppo
   expect(await screen.findByText(/No supporters linked/)).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: 'Save safety settings' }))
   await waitFor(() => expect(api.saveSafetySettings).toHaveBeenCalledOnce())
-  expect(api.saveSafetySettings).toHaveBeenCalledWith('sam', { ...settings, supporters: [] })
+  expect(api.saveSafetySettings).toHaveBeenCalledWith('sam', {
+    checkin_window_s: 120, ack_window_s: 120, supporters: [],
+  })
 })
 
 it('shows a loading failure and allows retry', async () => {

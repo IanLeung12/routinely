@@ -120,7 +120,7 @@ def _ask_claude(
             system=_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}],
         )
-        return {"text": response.content[0].text}
+        return {"text": reply_text(response)}
 
     result = cached_call("anthropic", request, call)
     return result["text"].strip()
@@ -172,3 +172,16 @@ def _allowed_numbers(errors: list[dict], baseline: dict, fallback: str) -> set[s
             allowed.add(str(t_start))
             allowed.add(str(int(t_start)))
     return allowed
+
+
+def reply_text(reply: object) -> str:
+    """The text of an Anthropic Messages reply.
+
+    Newer models can put a thinking (or other non-text) block before the answer, so
+    `content[0].text` is not safe: join every block that has text instead.
+    """
+    parts = [getattr(block, "text", None) for block in getattr(reply, "content", None) or []]
+    text = "".join(part for part in parts if isinstance(part, str))
+    if not text:
+        raise ValueError("the model's reply had no text")
+    return text

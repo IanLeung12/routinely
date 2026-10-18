@@ -1,0 +1,23 @@
+# The resident shakes the shaker before closing the lid, and only closes it
+# afterwards - too late to count as putting the slip right (SPEC section 7's
+# self-correction window is 15 seconds; this gap is much longer). `shake` depends on
+# `close_lid`, which has not happened yet when it is done but does happen later, so
+# this is the wrong order, not a missing step: exactly one sequence error on `shake`.
+#
+# Written at step level, for the same reason as protein_shake_normal. See README.md.
+
+task: protein_shake
+
+steps:
+  - get_shaker
+  - open_tub
+  - scoop_powder
+  - add_liquid
+  - shake # before the lid is on
+  - close_lid # only afterwards, too late to be a correction
+
+errors:
+  - { type: sequence, step: shake }
+score: 2.0 # sequence 2.0
+
+flag: false

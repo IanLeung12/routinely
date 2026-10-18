@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
+import { LiveScreen } from '../live/LiveScreen.tsx'
 import { PrivacyCard } from '../person/routine/PrivacyCard.tsx'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
@@ -28,6 +29,14 @@ const RoutineSections = lazy(() =>
   })),
 )
 
+/** The countdown ring and PIN pad only matter for the rare person with an active
+ * check-in (T450), so they stay out of everyone else's first-load bundle. */
+const CheckInCard = lazy(() =>
+  import('../checkin/CheckInCard.tsx').then((module) => ({
+    default: module.CheckInCard,
+  })),
+)
+
 /** The person's home screen (SPEC section 17): their own routine and nobody else's.
  *
  * In SPEC's order, which is also the order the questions come in: how this week
@@ -37,11 +46,20 @@ const RoutineSections = lazy(() =>
  *
  * Calm and plain on purpose. It says what looked different and who is worth
  * mentioning it to. It never says what a difference means. */
-export function MyRoutine({ onChange }: { onChange?: () => void }) {
+export function MyRoutine({
+  onChange,
+  onOpenAlert,
+}: {
+  onChange?: () => void
+  onOpenAlert?: (alertId: string) => void
+}) {
   const person = currentPerson()
   const [supervisors, setSupervisors] = useState(() => supervisorsOf(person.id))
   const [invite, setInvite] = useState<Invite | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
+  /** Bumped when a live session ends, so the week behind it refetches without a
+   * page reload, the same way the overview's `refreshKey` works (App.tsx). */
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
   /** Front-end only: there is no capture device to switch off behind this yet, so
    * pausing says so and stays in this tab (SPEC section 17, mock linking). */
   const [paused, setPaused] = useState(false)
@@ -75,9 +93,24 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
         it. Nothing is shared with anyone you have not added yourself.
       </p>
 
-      <Suspense fallback={<Loading label="Loading your week…" />}>
-        <RoutineSections personId={person.id} supervisorNames={supervisorNames} />
+      <Suspense fallback={null}>
+        <CheckInCard personId={person.id} />
       </Suspense>
+
+      <Suspense fallback={<Loading label="Loading your week…" />}>
+        <RoutineSections key={sessionRefreshKey} personId={person.id} supervisorNames={supervisorNames} />
+      </Suspense>
+
+      <Card>
+        <SectionHeader title="Your session" />
+        <p className="my-routine__session-lead">
+          Start making tea when you're ready; only your skeleton is used.
+        </p>
+        <LiveScreen
+          onOpenAlert={onOpenAlert}
+          onSessionEnd={() => setSessionRefreshKey((key) => key + 1)}
+        />
+      </Card>
 
       <Card>
         <SectionHeader title="Who can see this" />

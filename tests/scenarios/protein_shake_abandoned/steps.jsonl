@@ -1,0 +1,3 @@
+{"event_id":"abandoned-1","session_id":"protein-shake-abandoned-1","step_id":"get_shaker","objects":["shaker"],"t_start":1,"t_end":6,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-2","session_id":"protein-shake-abandoned-1","step_id":"open_tub","objects":["protein_tub"],"t_start":8,"t_end":13,"confidence":0.95,"source":"rule"}
+{"event_id":"abandoned-3","session_id":"protein-shake-abandoned-1","step_id":"scoop_powder","objects":["scoop","shaker"],"t_start":151,"t_end":156,"confidence":0.95,"source":"rule"}

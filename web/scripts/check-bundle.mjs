@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // T260: fail the build if the JS that index.html loads eagerly (the entry module
 // script plus any modulepreload chunks) grows past a budget. Lazy-loaded screens
-// (handoff, pattern library, tour — see App.tsx) are fetched on demand and are not
-// part of this sum; that's the point of #237's lazy-loading.
+// (handoff, pattern library, tour, the alert screen, a resident's detail — see
+// App.tsx) are fetched on demand and are not part of this sum; that's the point
+// of #237's lazy-loading.
 import { readFileSync, existsSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join, dirname } from 'node:path'
@@ -30,7 +31,14 @@ import { fileURLToPath } from 'node:url'
 // eager by design. Measured 98102 after merging T413 above. 99000 leaves
 // ~1 KB rather than the few hundred bytes above: four PRs in a row have had to
 // raise this line, and each one made main red for whoever landed next.
-const BUDGET_BYTES = 99_000
+// Lowered for T449: the alert screen and a resident's detail are drill-ins one
+// tap off the overview, so they are lazy() now too (App.tsx), which takes the
+// four raises above back off. main measured 98387 before that change and 87435
+// after it — ~11 KB less first-load JS, because the replay player, the baseline
+// chart and the heat calendar left the first-paint chunk with them. 89000
+// leaves the same ~1.5 KB of headroom the raises kept buying. The next
+// always-on screen still has to be lazy().
+const BUDGET_BYTES = 89_000
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
 const distDir = join(webDir, 'dist')

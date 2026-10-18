@@ -121,6 +121,12 @@ rm -f "$probe" "$probe_err"
 # capture runs with the fake detector: skeleton and hands still stream live, and the Live
 # screen says it is waiting for the object detector instead of looking stuck.
 if [ -n "${DETECTOR_WEIGHTS:-}" ]; then
+  # a relative path means relative to where you ran this script, not to pipeline/
+  case "$DETECTOR_WEIGHTS" in
+    /*|[A-Za-z]:*) ;;
+    *) DETECTOR_WEIGHTS="$CALLED_FROM/$DETECTOR_WEIGHTS" ;;
+  esac
+  export DETECTOR_WEIGHTS
   echo "== object detector: $DETECTOR_WEIGHTS"
 else
   echo "== object detector: none (export DETECTOR_WEIGHTS=models/detector.onnx to add one)"

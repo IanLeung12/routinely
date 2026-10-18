@@ -1,0 +1,6 @@
+{"event_id": "protein-shake-normal-1:s0", "session_id": "protein-shake-normal-1", "step_id": "get_shaker", "objects": ["shaker"], "t_start": 2.0, "t_end": 6.0, "confidence": 0.92, "source": "rule"}
+{"event_id": "protein-shake-normal-1:s1", "session_id": "protein-shake-normal-1", "step_id": "open_tub", "objects": ["protein_tub"], "t_start": 8.0, "t_end": 12.5, "confidence": 0.9, "source": "rule"}
+{"event_id": "protein-shake-normal-1:s2", "session_id": "protein-shake-normal-1", "step_id": "scoop_powder", "objects": ["scoop", "shaker"], "t_start": 14.0, "t_end": 19.0, "confidence": 0.88, "source": "rule"}
+{"event_id": "protein-shake-normal-1:s3", "session_id": "protein-shake-normal-1", "step_id": "add_liquid", "objects": ["milk", "shaker"], "t_start": 21.0, "t_end": 27.0, "confidence": 0.91, "source": "rule"}
+{"event_id": "protein-shake-normal-1:s4", "session_id": "protein-shake-normal-1", "step_id": "close_lid", "objects": ["shaker"], "t_start": 29.0, "t_end": 32.0, "confidence": 0.89, "source": "rule"}
+{"event_id": "protein-shake-normal-1:s5", "session_id": "protein-shake-normal-1", "step_id": "shake", "objects": ["shaker"], "t_start": 34.0, "t_end": 39.0, "confidence": 0.93, "source": "rule"}

@@ -528,11 +528,56 @@ def test_one_checkin_per_alert(store, clock):
 
 
 def test_two_checkins_in_the_same_second_get_their_own_ids(store):
+    """`_new_id`'s counter: somebody who checks in and is asked again inside the same
+    second gets a second id rather than overwriting the first."""
     first = store.start("mrs-k")
+    store.respond(first.checkin_id, DEMO_SAFETY_PIN)
     second = store.start("mrs-k")
 
     assert first.checkin_id != second.checkin_id
-    assert {one.checkin_id for one in store.active()} == {first.checkin_id, second.checkin_id}
+    assert [one.checkin_id for one in store.active()] == [second.checkin_id]
+
+
+def test_one_open_question_per_person(store, clock):
+    """A question nobody has answered yet is never asked twice (T460): a second flag -
+    or the demo's button pressed again - joins the countdown already running, instead
+    of leaving a stale check-in on the person's screen."""
+    first = store.start("mrs-k")
+
+    clock.advance(5)
+    again = store.start("mrs-k")
+    for_a_flag = store.start("mrs-k", alert_id="alert-later")
+
+    assert again.checkin_id == first.checkin_id
+    assert for_a_flag.checkin_id == first.checkin_id
+    assert again.state is CheckinState.PENDING
+    assert again.deadline == first.deadline  # the countdown carries on, it is not reset
+    assert events_of(again) == [("started", "server")]  # and nothing was logged twice
+    assert [one.checkin_id for one in store.active("mrs-k")] == [first.checkin_id]
+    # The later flag is answered by the question already out, so once that one closes
+    # it does not come back and ask again.
+    assert store.checkin_for_alert("alert-later").checkin_id == first.checkin_id
+    store.respond(first.checkin_id, DEMO_SAFETY_PIN)
+    assert store.start("mrs-k", alert_id="alert-later").checkin_id == first.checkin_id
+    assert store.active("mrs-k") == []
+
+
+def test_an_alarm_already_out_does_not_block_the_next_question(store, clock):
+    """Once the window has run out the record belongs to the supporters, so the next
+    flag asks a new question (T460) rather than handing back a countdown at 0:00 that
+    the person can no longer answer."""
+    first = store.start("mrs-k")
+    clock.advance(DEMO_CHECKIN_WINDOW_S)
+    assert store.get(first.checkin_id).state is CheckinState.ALARM
+
+    second = store.start("mrs-k")
+
+    assert second.checkin_id != first.checkin_id
+    assert second.state is CheckinState.PENDING
+    assert [one.state for one in store.active("mrs-k")] == [
+        CheckinState.ALARM,
+        CheckinState.PENDING,
+    ]
 
 
 def test_active_is_only_what_somebody_is_still_waiting_for(store, clock):

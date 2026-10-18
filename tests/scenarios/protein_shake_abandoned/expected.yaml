@@ -1,0 +1,21 @@
+# The resident gets the shaker and opens the tub, then leaves a 131-second silence
+# before one last step - scooping the powder in - with the liquid, the lid and the
+# shake itself left undone. The unfinished routine flags for review alongside a
+# second bad session in the preceding 48 hours.
+task: protein_shake
+steps: [get_shaker, open_tub, scoop_powder]
+errors:
+  - { type: omission, step: add_liquid }
+  - { type: omission, step: close_lid }
+  - { type: omission, step: shake }
+  - { type: abandonment }
+score: 11.0 # three omissions at 3.0 plus one abandonment at 2.0
+history:
+  - { hours_ago: 192, score: 0.0 }
+  - { hours_ago: 168, score: 0.0 }
+  - { hours_ago: 144, score: 0.0 }
+  - { hours_ago: 120, score: 0.0 }
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 30, score: 5.0 }
+flag: true

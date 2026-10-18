@@ -40,7 +40,7 @@ from .explain import Explainer
 from .explain_claude import get_explainer
 from .feedback import FeedbackStore
 from .patterns import extract_features, score_patterns
-from .tasks import TASKS_DIR, TaskGraph, TaskGraphError, load_task
+from .tasks import TASKS_DIR, TaskGraph, TaskGraphError, load_task  # noqa: F401 - re-exported for callers and tests
 
 #: How far back a session still counts toward the flag (SPEC section 7).
 FLAG_WINDOW_H = 48.0
@@ -113,20 +113,11 @@ def _qualifying_sessions(resident: dict) -> list[tuple[str, dict, float]]:
 
 
 def _graph_for(task: str) -> TaskGraph:
-    """The task graph behind a session's `task` field.
+    """The task graph behind a session's `task` field: a task file (``"tea"``), a
+    graph id (``"make_tea"``) or a routine saved from the builder."""
+    from .routine_graphs import resolve_task
 
-    Synthetic history names it by the task file (``"tea"``); a session played live
-    names it by the graph's own id (``"make_tea"``, from `live.py`'s `graph.id`).
-    Either way, one of the files in `TASKS_DIR` is it.
-    """
-    try:
-        return load_task(task)
-    except TaskGraphError:
-        for path in TASKS_DIR.glob("*.yaml"):
-            graph = load_task(path.stem)
-            if graph.id == task:
-                return graph
-        raise
+    return resolve_task(task)
 
 
 def _step_candidates(graph: TaskGraph, error_type: str) -> tuple[str, ...]:

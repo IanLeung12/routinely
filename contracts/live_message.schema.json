@@ -555,7 +555,7 @@
       "type": "object"
     },
     "ObjectLabel": {
-      "description": "Classes the local detector reports (SPEC section 6.1).\n\nMaking tea first, then taking medication with water (SPEC nice-to-have 4), then\nthe two classes every task shares. A task graph says which of these count for\nwhich step, so a new task adds classes here and a `tasks/<name>.yaml` file and\nnothing else. A class the running weights were not trained on is simply never\nreported, and `routine_watch.detector.label_for` drops a class it does not know,\nso the two lists may land one training run apart.",
+      "description": "Classes the local detector reports (SPEC section 6.1).\n\nMaking tea first, then taking medication with water (SPEC nice-to-have 4), then\nmaking a protein shake (Ian's own routine), then the two classes every task\nshares. A task graph says which of these count for which step, so a new task adds\nclasses here and a `tasks/<name>.yaml` file and nothing else. A class the running\nweights were not trained on is simply never reported, and\n`routine_watch.detector.label_for` drops a class it does not know, so the two\nlists may land one training run apart.",
       "enum": [
         "kettle",
         "cup",
@@ -567,6 +567,9 @@
         "pill_organiser",
         "glass",
         "water_jug",
+        "shaker",
+        "protein_tub",
+        "scoop",
         "hand",
         "pouring"
       ],

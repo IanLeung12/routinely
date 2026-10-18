@@ -12,6 +12,13 @@
 #              substitution error. `aliases` below adds extra names for a class.
 #   optional   skipping it is not an error (default: false)
 #   once_only  doing it again, after other steps, is perseveration (default: true)
+#   action     what doing it looks like, so the step recogniser can see it happen:
+#              one of routine_watch.actions' primitives, the object it is done with
+#              (`object`, one name or a list of names that count), and where that
+#              applies the thing it is done to (`target`, or `into` where that reads
+#              better) or how long it is held for (`seconds`). Every name has to be one
+#              of the step's own `objects` or an alias of one. A step with no `action`
+#              is read by the recogniser's hand-written tea rules instead.
 #
 # No required step depends on an optional one, so skipping milk or sugar can never make
 # a later step impossible. The loader enforces that.
@@ -29,37 +36,51 @@ steps:
   - id: fill_kettle
     label: Fill the kettle
     objects: [kettle]
+    # Carried off its base and back: to the tap, where there is nothing to detect.
+    action: {type: pick_up, object: kettle}
 
   - id: boil
     label: Boil the kettle
     deps: [fill_kettle]
     objects: [kettle]
+    # The switch: a hand resting on the kettle where it stands. The weakest reading in
+    # the task, which is also all there is to see.
+    action: {type: hold, object: kettle, seconds: 1.0}
 
   - id: get_cup
     label: Get a cup
     objects: [cup]
+    action: {type: pick_up, object: cup}
 
   - id: teabag_in_cup
     label: Put the teabag in the cup
     deps: [get_cup]
     objects: [teabag, cup]
+    action: {type: put_into, object: teabag, into: cup}
 
   - id: pour
     label: Pour the water
     deps: [boil, teabag_in_cup]
     objects: [kettle, cup]
+    action: {type: pour, object: kettle, into: cup}
 
   - id: milk
     label: Add milk
     deps: [pour]
     objects: [milk, cup]
     optional: true
+    action: {type: pour, object: milk, into: cup}
 
   - id: sugar
     label: Add sugar
     deps: [pour]
-    objects: [sugar, spoon]
+    # `cup` is here because the action is done *to* the cup; a spoonful of sugar
+    # reported with the cup in it is not a substitution.
+    objects: [sugar, spoon, cup]
     optional: true
+    # Spooning it out of a jar that never moves is not recognised: the sugar's own box
+    # has to come over the cup.
+    action: {type: pour, object: sugar, into: cup}
 
   - id: stir
     label: Stir
@@ -67,8 +88,11 @@ steps:
     objects: [spoon, cup]
     # Stirring again is normal, so a repeat is never perseveration.
     once_only: false
+    action: {type: stir, object: spoon, in: cup}
 
   - id: remove_teabag
     label: Take the teabag out
     deps: [pour]
-    objects: [teabag, spoon]
+    # `cup` as for sugar: the teabag comes out *of* the cup.
+    objects: [teabag, spoon, cup]
+    action: {type: take_out, object: teabag, from: cup}

@@ -9,6 +9,12 @@ small enough to read.
 The clips are the four steps T011 asks for - filling the kettle, putting the teabag in
 the cup, pouring and stirring - plus a whole session, which is where ordering is
 checked, and one clip the detector barely sees, which is where `unclear` is.
+
+`tasks/tea.yaml` names an action per step (`routine_watch.actions`, T463), so these
+clips are read by the primitives now rather than by the hand-written rules this module
+started as. Both still exist, and
+`test_the_primitives_read_these_clips_exactly_as_the_hand_written_rules_did` is what
+holds them to the same answer; `test_actions.py` is the primitives themselves.
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
+import yaml
 
 from routine_watch.contracts import (
     HAND_LANDMARK_COUNT,
@@ -35,6 +42,7 @@ from routine_watch.contracts import (
 from routine_watch.errors import classify_errors
 from routine_watch.recogniser import MIN_STEP_CONFIDENCE, needs_verifier, recognise
 from routine_watch.tasks import TaskGraph, load_task, parse_task
+from routine_watch.tasks.graph import TASKS_DIR, parse_task_data
 
 #: The session every fixture is recognised as. The frames carry their own id; the
 #: caller's is the one the events get.
@@ -96,6 +104,10 @@ POURING = box(0.40, 0.30, 0.56, 0.56)
 TEABAG_COUNTER = box(0.16, 0.30, 0.23, 0.37)
 TEABAG_IN_CUP = box(0.43, 0.46, 0.47, 0.51)
 TEABAG_LIFTED = box(0.33, 0.34, 0.37, 0.39)
+
+#: The milk on the shelf, and held over the cup.
+MILK_SHELF = box(0.84, 0.60, 0.94, 0.72)
+MILK_POURING = box(0.42, 0.30, 0.52, 0.48)
 
 #: The spoon on the counter, and standing in the cup at each end of a stir.
 SPOON_COUNTER = box(0.22, 0.60, 0.38, 0.66)
@@ -560,6 +572,61 @@ def test_a_step_done_twice_is_reported_twice() -> None:
     assert steps_in(events) == ["pour", "pour"]
     assert events[0].t_end < events[1].t_start
     assert events[0].event_id != events[1].event_id
+
+
+def tea_without_actions() -> TaskGraph:
+    """The tea graph with every `action:` taken out of it.
+
+    `tasks/tea.yaml` as it stood before the action primitives existed, which is also
+    what any task file somebody wrote by hand back then still looks like: the
+    recogniser has to read it with the rules it always had.
+    """
+    data = yaml.safe_load((TASKS_DIR / "tea.yaml").read_text(encoding="utf-8"))
+    for step in data["steps"]:
+        step.pop("action", None)
+    return parse_task_data(data, source="tea.yaml with no actions")
+
+
+def test_the_primitives_read_these_clips_exactly_as_the_hand_written_rules_did() -> None:
+    """The primitives are the hand-written rules generalised, not new ones: every clip
+    in this file has to come out event for event the same read either way."""
+    old = tea_without_actions()
+    assert all(step.action is None for step in old.steps)
+    for name in CLIPS:
+        frames = load(name)
+        assert recognise(frames, TEA, session_id=SESSION) == recognise(
+            frames, old, session_id=SESSION
+        ), name
+
+
+def test_milk_is_read_as_a_pour_like_any_other_container() -> None:
+    """The one thing the primitives changed, and what it was.
+
+    The kettle over the cup, the milk over it and the sugar over it are one picture, so
+    they are one primitive now (`pour`). Each used to be its own rule, and milk's and
+    sugar's base confidence was 0.85 against the kettle's 0.90 for no reason anybody
+    wrote down - so adding milk is now read exactly as confidently as pouring the water
+    is. Same step, same frames, same objects; a larger number on it.
+    """
+    take = Take("milk")
+    take.shot({"cup": CUP, "teabag": TEABAG_IN_CUP, "milk": MILK_SHELF})
+    take.shot({"cup": CUP, "teabag": TEABAG_IN_CUP, "milk": MILK_SHELF}, [grip(MILK_SHELF)])
+    take.shot(
+        {"cup": CUP, "teabag": TEABAG_IN_CUP, "milk": MILK_POURING},
+        [grip(MILK_POURING)],
+        repeat=3,
+    )
+    now = recognise(take.frames, TEA, session_id=SESSION)
+    before = recognise(take.frames, tea_without_actions(), session_id=SESSION)
+
+    assert steps_in(now) == steps_in(before) == ["milk"]
+    assert (now[0].t_start, now[0].t_end, now[0].objects) == (
+        before[0].t_start,
+        before[0].t_end,
+        before[0].objects,
+    )
+    assert now[0].confidence > before[0].confidence
+    assert not now[0].unclear and not before[0].unclear
 
 
 def test_a_step_the_task_graph_does_not_have_is_not_reported() -> None:

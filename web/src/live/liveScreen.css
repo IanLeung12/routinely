@@ -33,3 +33,17 @@
     flex: 1;
   }
 }
+
+.live-screen__select {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, currentColor);
+  background: var(--surface, transparent);
+  color: inherit;
+}
+
+.live-screen__hint {
+  color: var(--text-muted, inherit);
+  padding: 16px 0;
+}

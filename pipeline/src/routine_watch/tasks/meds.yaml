@@ -10,7 +10,8 @@
 # swallowing the pill with water. Doing the pill side first and the glass side first
 # are both correct, so neither order may ever show up as an error.
 #
-# The field meanings are the same as tea.yaml's; that file documents them.
+# The field meanings are the same as tea.yaml's; that file documents them, `action`
+# included.
 
 id: take_meds
 title: Take medication with water
@@ -25,22 +26,33 @@ steps:
   - id: get_glass
     label: Get a glass
     objects: [glass]
+    action: {type: pick_up, object: glass}
 
   - id: fill_glass
     label: Fill the glass with water
     deps: [get_glass]
     objects: [water_jug, glass]
+    # From the jug. Filling it at the tap is not recognised: there is no tap class, so
+    # the glass goes off to a corner of the room and comes back fuller.
+    action: {type: pour, object: water_jug, into: glass}
 
   - id: open_organiser
     label: Open the pill organiser
     # A bottle and a weekly organiser are both how a resident keeps their pills, so
-    # neither is a substitution for the other.
+    # neither is a substitution for the other - and the action names both, so whichever
+    # of them is in the hand is the one read.
     objects: [pill_organiser, pill_bottle]
+    action: {type: open, object: [pill_organiser, pill_bottle]}
 
   - id: take_pill
     label: Take the pill out
     deps: [open_organiser]
     objects: [pill_organiser, pill_bottle]
+    # A pill is too small for the detector to have a class for, so this is the hand
+    # that stays in the open organiser: `hold`, exactly as tea reads the kettle's
+    # switch. `open` above happens in the contact that reshapes the box; reaching in is
+    # the one that does not.
+    action: {type: hold, object: [pill_organiser, pill_bottle], seconds: 1.0}
 
   - id: drink_water
     label: Drink the water
@@ -50,6 +62,9 @@ steps:
     objects: [glass]
     # Another sip is normal, so a repeat is never perseveration.
     once_only: false
+    # The glass up at the nose and mouth, read off the pose landmarks: a frame with
+    # nobody's body in it cannot show this one.
+    action: {type: bring_to_face, object: glass}
 
   - id: close_organiser
     label: Close the organiser
@@ -57,4 +72,4 @@ steps:
     objects: [pill_organiser, pill_bottle]
     # Leaving it open is untidy, not an error.
     optional: true
-
+    action: {type: close, object: [pill_organiser, pill_bottle]}

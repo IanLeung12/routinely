@@ -69,6 +69,7 @@ export function Replays({
   const [openReplay, setOpenReplay] = useState<OpenReplay | null>(null)
   const [notesBySession, setNotesBySession] = useState<Record<string, ReplayNote[]>>({})
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const fromId = useId()
@@ -120,6 +121,7 @@ export function Replays({
    * session may have been left in. */
   function openSession(sessionId: string) {
     setConfirmingDelete(false)
+    setDeleteError(false)
     setOpenSessionId(sessionId)
   }
 
@@ -131,7 +133,13 @@ export function Replays({
   }
 
   async function confirmDelete(sessionId: string) {
-    await deleteReplay(sessionId)
+    try {
+      await deleteReplay(sessionId)
+    } catch {
+      setConfirmingDelete(false)
+      setDeleteError(true)
+      return
+    }
     setLoaded((previous) =>
       previous !== null && previous.status === 'ok'
         ? {
@@ -196,9 +204,12 @@ export function Replays({
                     </div>
                   </>
                 ) : (
-                  <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
-                    Delete this replay
-                  </Button>
+                  <>
+                    {deleteError && <ErrorState message="This replay could not be deleted. It is still stored." />}
+                    <Button variant="danger" onClick={() => { setDeleteError(false); setConfirmingDelete(true) }}>
+                      Delete this replay
+                    </Button>
+                  </>
                 )}
               </Card>
             )}

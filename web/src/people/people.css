@@ -90,11 +90,16 @@
 }
 
 .my-routine__lead,
-.my-routine__invite-lead {
+.my-routine__invite-lead,
+.my-routine__session-lead {
   margin: 0;
   max-width: 34rem;
   color: var(--text-secondary);
   font-size: var(--text-md);
+}
+
+.my-routine__session-lead {
+  margin-bottom: var(--space-3);
 }
 
 .my-routine__code {

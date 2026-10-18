@@ -1,0 +1,25 @@
+# The resident adds liquid, scoops powder, then tops up with liquid again - a
+# second pour with another step in between, not two events back to back, which
+# would be the recogniser seeing one action twice. `add_liquid` has no
+# `once_only: false` in protein_shake.yaml, so it defaults to once-only like most
+# steps, and this is perseveration (SPEC section 7), the same rule
+# `meds_pill_twice` exercises on `take_pill`.
+#
+# Written at step level, for the same reason as protein_shake_normal. See README.md.
+
+task: protein_shake
+
+steps:
+  - get_shaker
+  - open_tub
+  - add_liquid
+  - scoop_powder
+  - add_liquid # again, with scoop_powder in between
+  - close_lid
+  - shake
+
+errors:
+  - { type: perseveration, step: add_liquid }
+score: 2.0 # perseveration 2.0
+
+flag: false

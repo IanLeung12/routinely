@@ -1,78 +1,78 @@
-# htv-2026 — Routine Watch
+# Routine Watch
 
-Hack the Valley 11. Spec: `SPEC.md`. Agent rules: `AGENTS.md`.
+**Hack the Valley 11.** A privacy-first camera that watches an everyday routine, like making a cup of tea, and **flags a change for review** when someone's routine starts going differently from their own usual. Every flag shows its evidence. It never diagnoses.
 
-## What it is
+It's for anyone who wants that support: **a person watching their own routine**, or **a supporter** (family, a carer, a nurse) looking out for someone.
 
-A privacy-preserving camera system that watches care-home residents do everyday
-tasks and **flags a change for review** when how they do a task changes against
-their own normal. Alerts show the evidence and the patterns it's **consistent
-with**, ranked, with what to rule out — never a diagnosis.
+![Tech stack](docs/tech-stack.png)
+
+## What it does
+
+- **Watches a routine live:** pose and hand landmarks (MediaPipe) plus a locally trained object detector turn the camera into step events: kettle filled, teabag in, poured. Frames are dropped on the device.
+- **Spots errors:** skipped steps, wrong order, repeats, wrong object, hesitation and abandonment, checked against a task graph (dependencies, not a fixed order).
+- **Learns the person's normal:** a personal baseline. A change is flagged only after **two unusual sessions within 48 h**; one bad day never alerts.
+- **Explains every flag:** the exact errors with timestamps, a skeleton-only replay, the baseline comparison, the patterns the change is *consistent with* (and what to rule out), and suggested checks. Claude writes the summary from that evidence only.
+- **Two roles:** "My routine" for the person, and "People I support" for supporters, with a replays library, a pattern library and confirm / false-alarm feedback that tunes the threshold per person.
+- **Safety check-ins (Project KAZE):** when an alert fires, the person is asked to check in. If they don't, their supporter gets an alarm, then the next supporter. There's a safety PIN, a silent duress PIN, a server-side countdown that survives a disconnect, and per-supporter sharing permissions. See `docs/KAZE.md`.
+- **Routine builder:** describe a new routine in words, or upload one setup clip (Gemini, opt-in, never stored), and get an editable task graph.
+
+**Impact (synthetic data, see `docs/EVAL.md`):** on a seeded cohort of 50 people over 60 days, sudden changes were flagged a median **18.5 h after onset**, about **40 h earlier than a weekly check**. The cohort is synthetic, so real-world numbers will be worse; the doc states the limits and what a pilot would measure.
 
 ## Run it
 
 ```bash
 gh repo clone IanLeung12/htv-2026 && cd htv-2026
-scripts/dev.sh up      # starts API (:8000) + dashboard (:5173) in the background
-scripts/dev.sh status  # check what's running
-scripts/dev.sh down    # stop both, free the ports
+cp .env.example .env            # defaults are offline: no keys, no cost
+scripts/dev.sh up               # API :8000 + dashboard :5173 (DASHBOARD_MODE=preview for a built, faster UI)
+scripts/dev.sh down
 ```
 
-Open the dashboard at `http://localhost:5173`. Logs: `.dev/api.log`,
-`.dev/web.log`. Override ports with `API_PORT` / `DASHBOARD_PORT`. `up` is
-idempotent — running it twice is fine. No API keys needed.
+Open `http://localhost:5173` and choose **for myself** or **supporting someone**.
+
+- **Live camera:** `scripts/camera.sh --preview` installs MediaPipe/OpenCV, downloads the models, checks the camera and opens the Live screen. `--preview` adds the real video under the skeleton, served on this device only. Run it natively on the machine with the webcam; WSL can't see webcams.
+- **Object detection:** export a YOLO model to `models/detector.onnx` and set `DETECTOR_WEIGHTS=models/detector.onnx`. Without it you get the skeleton, hands and recorded sessions, but no live tea steps. Train locally from a Roboflow-labelled dataset; never use Roboflow's hosted inference. See `docs/DEMO.md`.
+- **Other devices on the same Wi-Fi:** `LAN=1 scripts/dev.sh up` (or `LAN=1 scripts/camera.sh`) prints a URL for a phone or second laptop. The camera preview never leaves the capture machine.
+- **KAZE scenarios:** `python3 scripts/kaze_demo.py no-response` (or `safe`, `duress`, `disconnect`, `unacknowledged`, `false-alarm`, `privacy`, `all`).
+- **Real AI calls:** put your keys in `.env` and set `LIVE_API=1`. Responses are cached on disk. Run `python3 scripts/env_sync.py` to pick up new settings without losing your values.
 
 ## Test it
 
 ```bash
-scripts/ci.sh    # whole-repo checks: ruff + pytest for pipeline/, lint + test + build for web/
-scripts/e2e.sh   # replays every recorded scenario in tests/scenarios/ through the pipeline, offline
+scripts/ci.sh             # everything: tooling, ruff + pytest, web lint/test/build/bundle budget, e2e
+scripts/ci.sh --changed   # only the parts your branch touches (fast local check)
+scripts/e2e.sh            # replay every recorded scenario through the pipeline, offline
+python3 scripts/eval.py   # the impact evaluation above
 ```
 
-## Offline by default
+GitHub CI runs `scripts/ci.sh` as four parallel jobs on every PR and on `main`.
 
-`OFFLINE_MODE` defaults to `true` and `LIVE_API` defaults to `0`: the pipeline
-uses mock data and fakes for every paid API client (Gemini, Anthropic,
-Roboflow, Supabase). No real calls, no cost, no network needed to
-run, test, or replay scenarios. Real calls only happen when a human explicitly
-sets `LIVE_API=1`, and go through an on-disk cache.
+## Privacy and responsible design
 
-## Privacy
-
-Skeletons, bounding boxes, and timestamps only — raw video frames are never
-stored, and there's no face identification.
+- Skeletons, object boxes and timestamps only. No raw video is stored, there's no face identification, and evidence is shown as skeleton replays.
+- It flags a change for a human to review and never diagnoses; that wording is kept consistent everywhere. The AI summary may only restate detected evidence.
+- Uncertainty is shown: low-confidence moments are marked **unclear** and never counted as errors. Pose estimation is less accurate with walkers or wheelchairs, and we say so.
+- Opt-in per person and per room, and it can be turned off. Supporters only see what the person has allowed.
 
 ## Where things are
 
 ```
-pipeline/   Python 3.11 package (uv): capture → recogniser → task graph → errors → baseline, plus the FastAPI API
-web/        Vite + React + TypeScript nurse dashboard
-contracts/  schemas shared by pipeline/ and web/
-scripts/    ci.sh (the one CI entrypoint), dev.sh, e2e.sh, tasks.py (the board), worker.sh (worker loop)
-docs/       architecture diagrams, docs/CODEMAP.md (module map)
+pipeline/   Python 3.11 (uv): capture, recogniser, task graphs (tasks/*.yaml), errors, baseline,
+            change detection, patterns, check-ins, routine builder, FastAPI + WebSocket API
+web/        Vite + React 19 + TypeScript dashboard (both roles), dependency-free SVG charts
+contracts/  JSON schemas shared by pipeline/ and web/
+scripts/    dev.sh, camera.sh, ci.sh, e2e.sh, eval.py, kaze_demo.py, env_sync.py, tasks.py, worker.sh
+tests/      recorded scenarios and repo-tooling tests
+docs/       DEMO, KAZE, EVAL, DESIGN, DEPLOY, CODEMAP (module map), diagrams
 ```
 
-- Architecture and module layout: `docs/CODEMAP.md`.
-- Writing or reading a recorded scenario: `tests/scenarios/README.md`.
-- Full spec: `SPEC.md`.
+Full spec: `SPEC.md`. Agent rules: `AGENTS.md`.
 
-## Run a worker (teammates)
+## How we built it
 
-Needs `git`, `gh` (logged in), `python3`, and `claude` or `codex`.
+We designed the product, the architecture and the UI ourselves, recorded the training data and trained the detector, and used AI coding agents to speed up the implementation work. **Hermes** coordinated them alongside us:
 
-```bash
-cp .env.example .env                                 # fill in keys you need
-python3 scripts/tasks.py list                         # see the board
-AGENT=max TOOL=claude CLASS=light scripts/worker.sh   # loop: claim → PR → auto-merge
-```
+- **The board:** we write and prioritise tasks in `TASKS.md` on the `tasks` branch; `scripts/tasks.py` claims them atomically through git.
+- **Agents:** Claude Code and Codex take a task, open a PR, and `scripts/mergeq.py` merges it once CI is green. We review the direction and the results.
+- **Scheduled checks:** a tester replays scenarios and walks the UI, a reviewer flags bugs, and an integration check runs hourly, so `main` stays demo-ready.
 
-- `CLASS` is the most expensive task class you'll take (`light` / `standard` / `heavy`).
-- `TOOL=codex` for Codex. `ONCE=1` does one task and exits.
-- Model flags per class come from `MODELS.md`; override with `FLAGS="--model haiku"`.
-
-## How it works
-
-- `TASKS.md` lives on the `tasks` branch. `scripts/tasks.py` claims tasks atomically.
-- Workers open PRs that auto-merge when CI (`scripts/ci.sh`) passes.
-- An orchestrator on Ian's VPS runs every ~10 min: writes new tasks, reviews merges, frees stuck claims, keeps `main` green.
-- A tester on Ian's VPS runs when `main` changes: CI, scenario replays, a browser walkthrough. Report: `TESTREPORT.md` on the `tasks` branch.
+Diagram: `docs/orchestration.png`. To run an agent: `AGENT=yourname CLASS=standard scripts/worker.sh`.

@@ -1,0 +1,40 @@
+# A resident makes a protein shake, with nothing wrong with it.
+#
+# The third task's version of tea_normal and meds_normal (Ian's own routine): the
+# point is the things that are *not* errors, so this is what catches a classifier
+# that reads the new graph too eagerly.
+#
+#   - The powder and liquid branches: here the tub is opened and the powder scooped
+#     before the liquid is added, which is fine - `add_liquid` only waits on
+#     `get_shaker`, so either branch may go first.
+#   - `close_tub` and `drink` are both optional and skipped here, so leaving the tub
+#     open and not finishing the shake on camera are never omissions.
+#
+# Written at step level, like meds' scenarios: the geometry primitives this task
+# names (pick_up, open, put_into, pour, close, shake) are already exercised
+# generically, on other objects, in test_actions.py; what this scenario is for is the
+# graph, the errors and the change flag. See README.md.
+
+task: protein_shake
+
+steps:
+  - get_shaker
+  - open_tub
+  - scoop_powder
+  - add_liquid
+  - close_lid
+  - shake
+  # close_tub and drink are optional and skipped: neither is an omission
+
+errors: []
+score: 0.0
+
+# Four quiet mornings, so the resident has a baseline to be measured against. A
+# session this good can never flag.
+history:
+  - { hours_ago: 96, score: 0.0 }
+  - { hours_ago: 72, score: 0.0 }
+  - { hours_ago: 48, score: 0.0 }
+  - { hours_ago: 24, score: 0.0 }
+
+flag: false

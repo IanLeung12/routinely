@@ -23,7 +23,7 @@ Several Claude Code and Codex agents work here at once. Nobody asks for permissi
 ## Shipping a task
 1. `git fetch && git switch -c task/T012-short-name origin/main`
 2. Touch only the files/area the task lists. Need something outside it? Note it in the PR; don't widen scope.
-3. Add or update tests. Run `scripts/ci.sh` locally; it must pass.
+3. Add or update tests. Run `scripts/ci.sh --changed` locally (fast, only what you touched); it must pass. PR CI runs the full `scripts/ci.sh` in parallel jobs.
 4. PR title `T012: <title>`. Body: what changed (2–5 lines), how it was tested, `model:` and approximate tokens.
 5. `gh pr merge --auto --squash --delete-branch`, then `tasks.py set T012 status=in-review pr=#N`.
 6. If CI fails, fix it on the same branch. After 2 failed fix attempts: `tasks.py set T012 status=blocked note="..."` and stop.
