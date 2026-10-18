@@ -163,7 +163,12 @@ def test_session_starts_with_the_task_graph() -> None:
         "session_id": session_id_of(scenario),
         "task_id": scenario.graph.id,
         "steps": [
-            {"id": step.id, "label": step.label, "optional": step.optional}
+            {
+                "id": step.id,
+                "label": step.label,
+                "deps": sorted(step.deps),
+                "optional": step.optional,
+            }
             for step in scenario.graph.steps
         ],
     }
