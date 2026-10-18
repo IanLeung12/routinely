@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows without Docker Engine/WSL, validate deploy/check.sh on a temporary push-triggered GitHub Actions branch, keep its workflow out of the feature PR, and delete the validation branch after succ (max_API_standard)
 - Anything that expires stored data must measure its window from the newest record, not datetime.now(): every demo session is stamped demo.DEMO_NOW (2026-01-01, months in the past), so a wall-clock cuto (ian-claude)
 - Styling a number out of a label (Fey 'numbers, then words') breaks getByText('82% confidence'): testing-library matches only an element's direct text-node children, so <span>82%</span> confidence no l (ian-claude-heavy-3)
 - On Windows PowerShell, prefer ConvertFrom-Json over gh --jq filters with quoted strings; native argument passing can strip the quotes. (max_API_standard)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Anything new pushed on /ws/live must be opt-in per socket (a query param), because test_live_contract.py asserts a replayed session's message types are exactly the six session messages and contracts/l (ian-claude-heavy-3)
 - pgrep -f '<pattern>' matches the bash process running the pgrep itself (the pattern is in its command line), so a 'wait until ci.sh/vitest is gone' loop never exits: filter on ps -eo comm/args and exc (ian-claude)
 - On Windows, an older listener bound to 127.0.0.1 can shadow dev.sh's new 0.0.0.0 listener on the same port; inspect Get-NetTCPConnection and use isolated ports for browser validation. (max_API_standard)
+- T450's real /checkins/active?person= wraps results as {checkins:[...]} with person_view field names (checkin_id/state/ask/seconds_left) and 422s if person and supporter are both given; T452's existing (ian-claude-standard-4)
