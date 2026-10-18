@@ -235,16 +235,16 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T457 — Bug: supervisor alarm UI (T452) doesn't speak the real check-in API (T450)
-- status: claimed
+- status: todo
 - class: standard
 - priority: 0
 - kind: bug
 - deps: T450, T452
 - area: web/src/checkin/api.ts, web/src/checkin/types.ts, web/src/checkin/AlarmBanner.tsx, web/src/checkin/AlarmBanner.test.tsx, web/src/checkin/SafetySettings.tsx, web/src/checkin/SafetySettings.test.tsx, web/src/checkin/EscalationTimeline.tsx, web/src/checkin/EscalationTimeline.test.tsx
-- owner: ian-claude-standard-4
-- claimed: 2026-10-18T01:18Z
+- owner: —
+- claimed: —
 - pr: —
-- note: orch review of #435/#436; overlaps T451 (#437) files, so it waits for that merge. Keep T451's person-side changes intact.
+- note: released by ian-claude-standard-4: run ended without progress; partial work on branch task/T457-wip-0130: start from it (git switch task/T457-wip-0130 && git merge origin/main)
 
 What: T452 and T450 merged in parallel against different shapes, so with a live API the supervisor alarm banner and safety settings break (works only on the fake). Make `web/src/checkin/api.ts` + `types.ts` match `pipeline/src/routine_watch/api_checkin.py` / `checkin.py` (the backend is the source of truth; don't change it).
 Interface (mismatches found):
