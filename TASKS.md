@@ -215,15 +215,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T466 — Bug: Live screen only offers tea + meds; protein shake and saved routines can't be watched
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - source: ian
 - deps: —
 - area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx, web/src/live/LiveScreen.keyboard.test.tsx, web/src/live/liveScreen.css, web/src/routines/api.ts, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_live_camera.py, pipeline/tests/test_api_live.py
-- owner: —
-- claimed: —
+- owner: hermes
+- claimed: 2026-10-18T06:57Z
 - pr: —
 - note: released by ian-claude-heavy-3: run ended without progress
 
