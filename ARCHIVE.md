@@ -8260,3 +8260,25 @@ Acceptance:
 - Every button/heading named in the new steps exists verbatim in those files.
 - Wording: "flags a change for review", never "diagnoses".
 - `scripts/ci.sh` passes.
+
+### T448 — Smoke: check the routines and replays endpoints
+- status: done
+- class: light
+- priority: 1
+- kind: test
+- deps: —
+- area: scripts/smoke.sh
+- owner: ian-claude
+- claimed: 2026-10-17T23:50Z
+- pr: #430
+- source: proposed
+- note: released by max_API_standard-2: run ended without progress
+- rating: 5/5 clear
+
+Why: the demo now shows the routine builder and replays, but `scripts/smoke.sh` (preflight before filming) never calls them; T443 showed these paths can break on the live API unnoticed.
+What: add checks to `scripts/smoke.sh` in the existing `get` / `check_json` / `fail` style: `GET /routines` is a non-empty JSON list whose items have `id` and `title`; `GET /routines/<first id>` has a `task_graph`; `POST /routines/draft` with a short text description returns 200 with a task graph (fake drafter by default; skip this check with a printed note if it answers 503/501); `GET /people/<a person id>/replays` returns a JSON object (take the id from the residents/people list the script already fetches, as `demo_room` is derived).
+Interface: read `scripts/smoke.sh`, `pipeline/src/routine_watch/api_routines.py` (request shape of `/routines/draft`), `pipeline/src/routine_watch/api_residents.py` lines 175–240. No changes outside `scripts/smoke.sh`.
+Acceptance:
+- `scripts/dev.sh up && scripts/smoke.sh; scripts/dev.sh down` passes on main with all new checks listed.
+- Never makes a real Gemini call (LIVE_API unset).
+- `scripts/ci.sh` passes.
