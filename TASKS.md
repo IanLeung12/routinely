@@ -254,14 +254,14 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T457 — Bug: supervisor alarm UI (T452) doesn't speak the real check-in API (T450)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: bug
 - deps: T450, T452
 - area: web/src/checkin/api.ts, web/src/checkin/types.ts, web/src/checkin/AlarmBanner.tsx, web/src/checkin/AlarmBanner.test.tsx, web/src/checkin/SafetySettings.tsx, web/src/checkin/SafetySettings.test.tsx, web/src/checkin/EscalationTimeline.tsx, web/src/checkin/EscalationTimeline.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-4
+- claimed: 2026-10-18T01:18Z
 - pr: —
 - note: orch review of #435/#436; overlaps T451 (#437) files, so it waits for that merge. Keep T451's person-side changes intact.
 
