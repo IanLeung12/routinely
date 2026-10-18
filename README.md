@@ -66,3 +66,13 @@ docs/       DEMO, KAZE, EVAL, DESIGN, DEPLOY, CODEMAP (module map), diagrams
 ```
 
 Full spec: `SPEC.md`. Agent rules: `AGENTS.md`.
+
+## How we built it
+
+We designed the product, the architecture and the UI ourselves, recorded the training data and trained the detector, and used AI coding agents to speed up the implementation work. **Hermes** coordinated them alongside us:
+
+- **The board:** we write and prioritise tasks in `TASKS.md` on the `tasks` branch; `scripts/tasks.py` claims them atomically through git.
+- **Agents:** Claude Code and Codex take a task, open a PR, and `scripts/mergeq.py` merges it once CI is green. We review the direction and the results.
+- **Scheduled checks:** a tester replays scenarios and walks the UI, a reviewer flags bugs, and an integration check runs hourly, so `main` stays demo-ready.
+
+Diagram: `docs/orchestration.png`. To run an agent: `AGENT=yourname CLASS=standard scripts/worker.sh`.
