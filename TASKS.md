@@ -7,23 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T411 — Wording pass: people, not just residents and nurses
-- status: done
-- class: light
-- priority: 1
-- kind: improvement
-- source: ian
-- deps: T408, T409, T410
-- area: web/src/alert/, web/src/resident/, web/src/handoff/, web/src/landing/, web/src/wording.test.ts
-- owner: ian-claude-heavy-3
-- claimed: 2026-10-17T23:28Z
-- pr: #428
-- note: released by max_API_light: run ended without progress
-- rating: 4/5 area list missed the files the new rule forces (about/, ui/DemoBanner, tour/) and the pipeline-written handoff summary; acceptance itself was clear
-
-What: Make shared UI copy role-neutral per SPEC §17: "resident" → "person" (or the person's name), "nurse" only where it's specifically the care-home supervisor, never "patient". Landing page: say it's for anyone, alone or with family, a carer or a care home.
-Acceptance: `web/src/wording.test.ts` extended to fail on "patient" and on "nurse" outside an allow-list of care-home-specific strings; all tests pass; `scripts/ci.sh` passes.
-
 ### T413 — Replays library for supervisors and the person
 - status: claimed
 - class: standard
@@ -64,46 +47,6 @@ What: Ian wants the task map to look like **Postman Flows** (node-graph canvas).
 Why: the task map is the centrepiece of the live demo shot; a flow canvas makes "dependencies, not a fixed order" obvious at a glance.
 Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layout (topological levels left→right) computed from deps; same props and data as today's TaskMap; keyboard/screen-reader: nodes are a list with state in their accessible names.
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
-
-### T435 — Redesign follow-up: privacy panel + monitoring toggle on the Fey system
-- status: done
-- class: light
-- priority: 2
-- kind: improvement
-- deps: T401
-- area: web/src/about/PrivacyPanel.tsx, web/src/about/MonitoringToggle.tsx, web/src/about/privacyPanel.css, web/src/about/PrivacyPanel.test.tsx, web/src/about/PrivacyPanel.keyboard.test.tsx, web/src/about/PrivacyPanel.mobile.test.tsx, web/src/about/MonitoringToggle.test.tsx, web/src/about/MonitoringToggle.keyboard.test.tsx
-- owner: max_API_standard
-- claimed: 2026-10-17T22:29Z
-- pr: #420
-- note: released by ian-laptop-standard: run ended without progress
-- rating: 5/5 clear
-
-What: Move the supervisor-side privacy panel and the pause-monitoring toggle onto the new tokens and primitives (`Card`, `SectionHeader`, `Row` for each "what's stored" line, `Button` for the toggle). Don't edit `monitoringApi.ts` or `ResidentDetail.tsx` (T404 owns it). Read only `docs/DESIGN.md`, `web/src/ui/README.md`, `web/src/index.css` and the files in area.
-Why: privacy (skeletons only, no video) is a judging talking point; the panel that says so is still in the old style.
-Interface: same exports/props; same text.
-Acceptance:
-- no legacy tokens (`--muted`, `--panel`, `--border`) and no hex/px literals in `privacyPanel.css`;
-- existing tests pass (selectors only, keep the phone-width wrapping assertion meaningful); `cd web && npx vitest run src/about && npm run lint`.
-
-### T436 — Review: camera preview MJPEG readable by any website open on the capture machine
-- status: done
-- class: light
-- priority: 0
-- kind: bug
-- source: reviewer
-- deps: T442
-- area: pipeline/src/routine_watch/preview.py, pipeline/tests/test_preview.py
-- owner: Max_codex_light
-- claimed: 2026-10-17T22:40Z
-- pr: #411
-- rating: 5/5 clear
-- note: orch: bundle budget raised in #409; merged origin/main into PR, CI re-running with auto-merge
-
-What: `preview.py` sends `Access-Control-Allow-Origin: *` on every reply, including `/preview.mjpg`. The loopback/Host checks don't stop a cross-site `fetch('http://127.0.0.1:8765/preview.mjpg')`: the browser runs on this machine (client is loopback) and sends `Host: 127.0.0.1:8765` (passes). So any web page open in that browser can read live camera frames and upload them — raw video leaving the machine, against SPEC §8/§12.
-Fix: in `response_for`, take the request's `Origin` header (pass it from `_Handler.do_GET`); if present and its host is not loopback (`is_loopback(urlparse(origin).hostname)`), return 403. Echo the allowed loopback origin in `Access-Control-Allow-Origin` (plus `Vary: Origin`) instead of `*`; send no CORS header when there's no Origin. `<img src>` in `CameraPreview` still works (no CORS needed).
-Acceptance:
-- Tests in `test_preview.py`: `Origin: https://evil.example` → 403 on `/preview.mjpg` and `/health`; `Origin: http://localhost:5173` → 200 with that origin echoed; no Origin → 200; the existing `== "*"` asserts updated.
-- `scripts/ci.sh` passes.
 
 ### T437 — Routine builder backend: draft a routine from words or a setup video (Gemini)
 - status: done
