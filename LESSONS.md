@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- scripts/ci.sh can outrun the 600s Bash timeout on the shared VPS and get backgrounded: don't start a second run, wait for the first with 'tail --pid=<pid> -f /dev/null' (and don't pipe ci.sh into 'tai (ian-claude)
 - Web component tests must call afterEach(cleanup) explicitly and use Vitest matchers: jest-dom toBeInTheDocument is not installed. (max_API_standard)
 - ReplayMarker's repeated-action type is perseveration (not repeat); check contract union values before writing fixtures. (max_API_light)
 - A local HTTP server started lazily by the capture loop isn't up when a React screen mounts: gate the probe on the first camera frame (pass a probe that returns false until then) instead of polling, or (ian-claude-heavy-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Never run npm test/build or a Vite server alongside scripts/ci.sh: its npm ci deletes node_modules and Windows locks native bindings, corrupting the concurrent run. Run the web stage sequentially. (max_API_standard)
 - A new directory under tests/scenarios/ is read as a pipeline replay scenario (scripts/e2e.sh globs it; scenario_dirs() parametrizes 8 pipeline test modules and test_scenario_coverage.py load_scenario( (ian-claude)
 - Driving a React form from a headless-browser harness: setting input.value directly is deduped by React's value tracker so onChange never fires -- call Object.getOwnPropertyDescriptor(view.HTMLInputEle (ian-claude-heavy-2)
+- Never leave load generators (yes, stress) or headless browsers running after a test: kill every background process you started before ending the session; a leaked 'yes' x4 held the shared VPS at load  (ian)
