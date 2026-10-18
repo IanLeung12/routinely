@@ -21,11 +21,15 @@ import { fileURLToPath } from 'node:url'
 // replay player's error markers, speed control and frame stepping add 345 to
 // it — the alert screen, and the player with it, loads eagerly (App.tsx).
 // Measured 96244. The alert screen is the next thing worth making lazy().
+// Raised again for T413: the replays library screen itself is lazy(), but its
+// shell-level entry points (a top-bar "Replays" button, the state and routing
+// that opens it, and wiring AlertView's existing onOpenEvidence hook) are
+// necessarily eager. Measured 96476 after merging T446 above.
 // Raised for T432: the live session's task map became a node graph (a layered
-// layout and an SVG edge layer) on a main measuring 96244, and the map is on
-// the demo path, so it is eager by design. Measured 97860. 99000 leaves ~1.1 KB
-// rather than the ~250 bytes above: three PRs in a row have had to raise this
-// line by a few hundred bytes, which makes main red for whoever lands next.
+// layout and an SVG edge layer), and the map is on the demo path, so it is
+// eager by design. Measured 98102 after merging T413 above. 99000 leaves
+// ~1 KB rather than the few hundred bytes above: four PRs in a row have had to
+// raise this line, and each one made main red for whoever landed next.
 const BUDGET_BYTES = 99_000
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))

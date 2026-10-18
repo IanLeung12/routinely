@@ -5,7 +5,7 @@ import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
-import { getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
+import { currentPerson, getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
 import { MyRoutine } from './people/MyRoutine.tsx'
 import { PeopleISupport } from './people/PeopleISupport.tsx'
 import { RoleChooser } from './people/RoleChooser.tsx'
@@ -27,6 +27,7 @@ const PatternLibrary = lazy(() =>
 const RoutinesScreen = lazy(() =>
   import('./routines/RoutinesScreen.tsx').then(m => ({ default: m.RoutinesScreen })),
 )
+const Replays = lazy(() => import('./replays/Replays.tsx').then(m => ({ default: m.Replays })))
 const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour })))
 
 /** Where an alert was opened from, so its Back button can return there instead of
@@ -80,6 +81,9 @@ export default function App() {
   /** "New routine" (T438): building or saving one sits off the main demo path, behind
    * one button in the top bar that both roles get. */
   const [openRoutines, setOpenRoutines] = useState(false)
+  /** The replays library (SPEC section 17): whose it is, and which session (if any)
+   * it should open straight into, e.g. from an alert's error rows. */
+  const [openReplays, setOpenReplays] = useState<{ personId: string; sessionId: string | null } | null>(null)
   const [alerts, setAlerts] = useState<Awaited<ReturnType<typeof fetchAlerts>>>([])
   const [residents, setResidents] = useState<Awaited<ReturnType<typeof fetchResidentsWithSource>>['residents']>([])
   /** Whether the last residents fetch reached the real API or fell back to demo
@@ -130,6 +134,12 @@ export default function App() {
     setOpenHandoff(alertOrigin === 'handoff')
   }
 
+  /** Opens the replays library for one person, straight into a session when one is
+   * given (an alert's error rows name the session the error happened in). */
+  function openReplaysFor(personId: string, sessionId: string | null = null) {
+    setOpenReplays({ personId, sessionId })
+  }
+
   /** Answers the role chooser, or switches role later from the shell: the home screen
    * changes, and anything opened under the old role is closed. */
   function chooseRole(next: RoleId) {
@@ -142,6 +152,7 @@ export default function App() {
     setOpenHandoff(false)
     setOpenPatternLibrary(false)
     setOpenRoutines(false)
+    setOpenReplays(null)
   }
 
   /** Re-reads who I support after a link is added or removed. */
@@ -164,6 +175,9 @@ export default function App() {
   const soleSupported = supported.length === 1 ? supported[0] : null
   const shownResident =
     openResident ?? (showingPeople ? null : (soleSupported?.id ?? null))
+  /** Who the top bar's "Replays" button opens, if anyone: the person themselves, or
+   * the resident a supervisor has open (SPEC section 17's entry points). */
+  const replaysPersonId = role === 'person' ? currentPerson().id : role === 'supervisor' ? shownResident : null
 
   /** Back from the detail: the overview when it was opened from a list, otherwise the
    * people list, which is the only other screen a one-person supervisor has. */
@@ -189,6 +203,7 @@ export default function App() {
     setOpenHandoff(screen === 'handoff')
     setOpenPatternLibrary(screen === 'patterns')
     setOpenRoutines(false)
+    setOpenReplays(null)
   }
 
   useDocumentTitle(documentTitle())
@@ -197,6 +212,7 @@ export default function App() {
    * Mrs. K's alert. */
   function documentTitle(): string {
     if (role === null) return 'Routine Watch'
+    if (openReplays !== null) return 'Replays — Routine Watch'
     if (role === 'person') return 'My routine — Routine Watch'
     if (openAlert !== null) {
       const resident = alerts.find(alert => alert.alert_id === openAlert)?.resident_id
@@ -298,12 +314,24 @@ export default function App() {
             {role !== null && (
               <Button onClick={() => setOpenRoutines(true)}>New routine</Button>
             )}
+            {replaysPersonId !== null && (
+              <Button onClick={() => openReplaysFor(replaysPersonId)}>Replays</Button>
+            )}
             {role !== null && <RoleSwitch role={role} onChange={chooseRole} />}
           </div>
         </header>
 
         {role === null ? (
           <RoleChooser onChoose={chooseRole} />
+        ) : openReplays !== null ? (
+          <Suspense fallback={<Loading label="Loading replays…" />}>
+            <Replays
+              personId={openReplays.personId}
+              role={role}
+              initialSessionId={openReplays.sessionId}
+              onBack={() => setOpenReplays(null)}
+            />
+          </Suspense>
         ) : openRoutines ? (
           <Suspense fallback={<Loading label="Loading routines…" />}>
             <RoutinesScreen onBack={() => setOpenRoutines(false)} />
@@ -311,7 +339,14 @@ export default function App() {
         ) : role === 'person' ? (
           <MyRoutine onChange={refreshPeople} />
         ) : openAlert !== null ? (
-          <AlertView alertId={openAlert} onBack={closeAlert} />
+          <AlertView
+            alertId={openAlert}
+            onBack={closeAlert}
+            onOpenEvidence={(error) => {
+              const resident = alerts.find((alert) => alert.alert_id === openAlert)?.resident_id
+              if (resident) openReplaysFor(resident, error.session_id)
+            }}
+          />
         ) : openHandoff ? (
           <Suspense fallback={<Loading label="Loading shift handoff…" />}>
             <Handoff
