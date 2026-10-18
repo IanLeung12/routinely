@@ -385,15 +385,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T456 — Review: Replays delete swallows a failed delete (unhandled rejection, no message)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-18T00:32Z
 - pr: —
 - note: —
 
