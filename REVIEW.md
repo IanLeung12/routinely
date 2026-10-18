@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 2dd53df
-- next-area: pipeline
+- last-reviewed: 96df875
+- next-area: contracts+api
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
@@ -36,4 +36,5 @@
 - (noted) REPLAY_DIR unset in compose (volume unused); demo replays reseed after restart if on disk
 - T436 preview.mjpg ACAO * lets any site read camera frames
 - T443 (fixed in T447 merge) RoutinesScreen task_graph vs summary
+- T456 Replays.tsx confirmDelete no catch (unhandled reject, no msg)
 - T444 routines api.ts mock fallback on non-ok (canned draft / fake save)
