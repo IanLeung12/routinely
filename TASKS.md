@@ -211,7 +211,7 @@ Interface:
 Acceptance: unit tests per primitive, including `shake` from synthetic wrist oscillation; tea and meds e2e scenarios unchanged; a builder draft round-trips through `parse_task`; `scripts/ci.sh` passes.
 
 ### T464 — Protein shake routine: task graph, detector classes, synthetic scenarios
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
