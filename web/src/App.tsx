@@ -44,7 +44,7 @@ const ResidentDetail = lazy(() =>
 
 /** Where an alert was opened from, so its Back button can return there instead of
  * always landing on the overview. */
-type AlertOrigin = 'overview' | 'handoff' | 'live'
+type AlertOrigin = 'overview' | 'handoff' | 'live' | 'myRoutine'
 
 /** The app shell's three top-level destinations, for the floating nav dock. A
  * resident's detail or an open alert are drill-ins reached from the overview, so
@@ -230,12 +230,12 @@ export default function App() {
     if (role === null) return 'Routine Watch'
     if (safetyPerson !== null) return 'Safety settings — Routine Watch'
     if (openReplays !== null) return 'Replays — Routine Watch'
-    if (role === 'person') return 'My routine — Routine Watch'
     if (openAlert !== null) {
       const resident = alerts.find(alert => alert.alert_id === openAlert)?.resident_id
       const name = resident ? residentName(resident) : null
       return name ? `Alert · ${name} — Routine Watch` : 'Alert — Routine Watch'
     }
+    if (role === 'person') return 'My routine — Routine Watch'
     if (openRoutines) return 'Routines — Routine Watch'
     if (openHandoff) return 'Shift handoff — Routine Watch'
     if (openPatternLibrary) return 'Pattern library — Routine Watch'
@@ -373,8 +373,6 @@ export default function App() {
           <Suspense fallback={<Loading label="Loading routines…" />}>
             <RoutinesScreen onBack={() => setOpenRoutines(false)} />
           </Suspense>
-        ) : role === 'person' ? (
-          <MyRoutine onChange={refreshPeople} />
         ) : openAlert !== null ? (
           <Suspense fallback={<Loading label="Loading alert…" />}>
             <AlertView
@@ -386,6 +384,8 @@ export default function App() {
               }}
             />
           </Suspense>
+        ) : role === 'person' ? (
+          <MyRoutine onChange={refreshPeople} onOpenAlert={id => openAlertFrom('myRoutine', id)} />
         ) : openHandoff ? (
           <Suspense fallback={<Loading label="Loading shift handoff…" />}>
             <Handoff
