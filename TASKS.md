@@ -7,46 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T441 — Review: deleteReplay reports success when the API refuses the delete
-- status: done
-- class: light
-- priority: 1
-- kind: bug
-- source: reviewer
-- deps: —
-- area: web/src/replays/api.ts, web/src/replays/api.test.ts
-- owner: max_API_standard-2
-- claimed: 2026-10-18T00:20Z
-- pr: #433
-- note: released by max_API_light: run ended without progress
-- rating: 5/5 clear
-
-What: In `web/src/replays/api.ts`, `deleteReplay` (and the two fetches) fall back to the offline mock library on *any* non-ok response, not just a network error. A 500/403 from `DELETE /replays/{id}` on a mock-library id therefore resolves and hides the replay locally while the server still stores it (privacy: the person thinks their replay is gone, SPEC §17). A 404 for a real replay likewise turns into "Replay not found" only by accident.
-Interface: keep the signatures. Fall back to the offline library only inside `catch` (fetch threw = API unreachable). If the API answered: `ok` → success; `404` → throw `Error('Replay not found')`; anything else → throw `Error('Could not delete replay')` and do NOT add the id to `deleted`. Apply the same rule to `fetchPersonReplays`/`fetchReplay` (non-ok response → throw, don't silently show mock data).
-Acceptance:
-- tests in `web/src/replays/api.test.ts`: DELETE returning 500 rejects and a following `fetchPersonReplays` (fetch throwing) still lists the replay; fetch throwing still deletes offline.
-- `cd web && npm test -- replays` and `scripts/ci.sh` pass.
-
-### T442 — Bug: main CI red — first-load JS 336 bytes over bundle budget
-- status: done
-- class: light
-- priority: 0
-- kind: bug
-- source: orchestrator
-- deps: —
-- area: web/scripts/check-bundle.mjs, web/README.md
-- owner: ian-claude
-- claimed: 2026-10-17T22:48Z
-- pr: #422
-- note: main green again: #418 raised the budget to 96,000 and merged; #422 recorded the measured 95,204/96,000 total and rewrapped the README note
-- rating: 4/5 the note's premise was stale: #418 was already conflict-free and auto-merged mid-CI, and main's budget was 95_200 (T421) not 92_200, so the numbers in the task had to be re-measured
-
-What: `main` CI fails at `npm run check:bundle`: first-load JS is 92536 bytes gzipped vs `BUDGET_BYTES = 92_200` (runs 39073873088, 39074550159). No single merge caused it; the redesign (T403/T407), person view (T409) and replays (T430/T431) each added always-on code. Open PRs (#409, #410) fail on this too.
-Interface: in `web/scripts/check-bundle.mjs` raise `BUDGET_BYTES` to `96_000` and update the comment above it to say why (redesign shell + person view + replays are always-on screens added 2026-10-17; measured 92536 bytes). Add one line to the budget section of `web/README.md` with the new number and reason. Touch no other file.
-Acceptance:
-- `cd web && npm run build && npm run check:bundle` passes.
-- `scripts/ci.sh` passes.
-
 ### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
 - status: done
 - class: light
