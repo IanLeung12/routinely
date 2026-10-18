@@ -394,3 +394,6 @@ T406 | standard | claude-opus | merged after conflict fix | ~300k tok
 T443 | light | claude-opus | merged after release | ~105k tok
 T445 | light | claude-sonnet | merged after release | ~?k tok
 T446 | light | claude-opus | merged first try | ~140k tok
+T447 | light | claude-sonnet | merged first try | ~?k tok
+T411 | light | claude-opus | merged first try | ~?k tok
+T444 | light | claude-sonnet | merged first try | ~?k tok
