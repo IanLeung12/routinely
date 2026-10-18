@@ -276,7 +276,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T448 — Smoke: check the routines and replays endpoints
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: test
