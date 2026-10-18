@@ -193,7 +193,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T450 — Safety check-in backend: alert → check-in countdown → supervisor alarm → escalation (Project KAZE)
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
