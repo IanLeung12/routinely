@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 82ef57e
+- last-reviewed: 5c4a0e1
 
 ## Tasks
 
@@ -304,3 +304,20 @@ Acceptance:
 What: Ian, filming tonight: in "for myself" mode there is no way to see the live session (skeleton, task map, camera preview). `LiveScreen` is only rendered on the supervisor overview (App.tsx, "Live session" section). Add a **"Your session"** section to My routine that renders the same `<LiveScreen>` (same props: `onOpenAlert` opens the person's own alert view, `onSessionEnd` refreshes My routine), placed near the top under the summary, with person wording ("Start making tea when you're ready; only your skeleton is used"). The camera source and the "Show camera preview (this device only)" toggle must work exactly as on the supervisor page (LiveScreen already handles them). Don't change LiveScreen itself (another task owns web/src/live/).
 Why: a person watching themselves is the point of SPEC §17; the demo needs the camera shot in that mode.
 Acceptance: Vitest: My routine renders the live section (LiveScreen mocked); the supervisor page is unchanged; wording test passes; `cd web && npm test && npm run build`.
+
+### T462 — Bug: `scripts/dev.sh up` dies with "unbound variable" on macOS bash 3.2 (empty VITE_HOST_ARGS)
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh
+- owner: —
+- claimed: —
+- pr: —
+
+What: commit 5c4a0e1 (LAN=1 support) expands `"${VITE_HOST_ARGS[@]}"` under `set -euo pipefail`. On bash < 4.4 (macOS default /bin/bash 3.2, which `#!/usr/bin/env bash` picks up on a stock Mac) an empty array expansion is an "unbound variable" error, so `scripts/dev.sh up` without `LAN=1` fails to start the dashboard on a laptop.
+Interface: in both `vite` exec lines in `start_web()` of `scripts/dev.sh`, replace `"${VITE_HOST_ARGS[@]}"` with `${VITE_HOST_ARGS[@]+"${VITE_HOST_ARGS[@]}"}`. Nothing else.
+Acceptance:
+- `bash -n scripts/dev.sh` passes; `scripts/dev.sh up` then `scripts/dev.sh down` still works with and without `LAN=1`.
+- `scripts/ci.sh` passes.
