@@ -287,3 +287,19 @@ Acceptance:
 - api.test.ts: given `[alarm(old), pending(new)]`, `fetchMyCheckin` returns the pending one.
 - Manual: the repro above shows a running countdown; I'm okay + PIN 1234 → "Thanks, you're checked in".
 - `scripts/ci.sh` passes.
+
+### T461 — "For myself" mode: show the live camera/skeleton session on My routine
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- source: ian
+- deps: —
+- area: web/src/people/MyRoutine.tsx, web/src/people/MyRoutine.test.tsx, web/src/people/people.css, web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian, filming tonight: in "for myself" mode there is no way to see the live session (skeleton, task map, camera preview). `LiveScreen` is only rendered on the supervisor overview (App.tsx, "Live session" section). Add a **"Your session"** section to My routine that renders the same `<LiveScreen>` (same props: `onOpenAlert` opens the person's own alert view, `onSessionEnd` refreshes My routine), placed near the top under the summary, with person wording ("Start making tea when you're ready; only your skeleton is used"). The camera source and the "Show camera preview (this device only)" toggle must work exactly as on the supervisor page (LiveScreen already handles them). Don't change LiveScreen itself (another task owns web/src/live/).
+Why: a person watching themselves is the point of SPEC §17; the demo needs the camera shot in that mode.
+Acceptance: Vitest: My routine renders the live section (LiveScreen mocked); the supervisor page is unchanged; wording test passes; `cd web && npm test && npm run build`.
