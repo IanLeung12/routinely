@@ -7,30 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T457 — Bug: supervisor alarm UI (T452) doesn't speak the real check-in API (T450)
-- status: done
-- class: standard
-- priority: 0
-- kind: bug
-- deps: T450, T452
-- area: web/src/checkin/api.ts, web/src/checkin/types.ts, web/src/checkin/AlarmBanner.tsx, web/src/checkin/AlarmBanner.test.tsx, web/src/checkin/SafetySettings.tsx, web/src/checkin/SafetySettings.test.tsx, web/src/checkin/EscalationTimeline.tsx, web/src/checkin/EscalationTimeline.test.tsx
-- owner: ian-claude-heavy-2
-- claimed: 2026-10-18T02:40Z
-- pr: #442
-- note: released by ian-claude-standard-4: run ended without progress; partial work on branch task/T457-wip-0130: start from it (git switch task/T457-wip-0130 && git merge origin/main)
-- rating: 4/5 the interface section listed every real mismatch (field names, wrappers, extra=forbid), which made this mostly mechanical; it didn't say the backend also renamed the event-log vocabulary (started/checked_in/alarmed/duress/escalation_exhausted vs T452's alert/no_answer/alarm), so EscalationTimeline needed rewriting too
-
-What: T452 and T450 merged in parallel against different shapes, so with a live API the supervisor alarm banner and safety settings break (works only on the fake). Make `web/src/checkin/api.ts` + `types.ts` match `pipeline/src/routine_watch/api_checkin.py` / `checkin.py` (the backend is the source of truth; don't change it).
-Interface (mismatches found):
-- `GET /checkins/active` 422s when both `person` and `supporter` are sent; the supervisor banner must send only `?supporter=`. Response is `{"checkins": [...]}`, not a bare array.
-- `/ack`, `/resolve` answer `{"checkin": {...}}`.
-- Supporter view fields: `checkin_id` (not `id`), `state` (not `status`), `started_at` (not `created_at`), `person_name`, `seconds_left`, etc. (see `supporter_view` in checkin.py); map them in api.ts or change the types and consumers.
-- Safety settings use `checkin_window_s` / `ack_window_s` (not `checkin_window`/`ack_window`), and `SafetyIn` is `extra="forbid"`, so the current PUT 422s.
-Acceptance:
-- api.ts tests stub `fetch` with payloads copied from the backend shapes (supporter_view, settings_payload) and pass; fake (offline) path still works.
-- With `scripts/dev.sh up`, `POST /checkins/demo` then waiting past the window shows the alarm banner for a linked supporter; acknowledge and resolve work; safety settings save without 422.
-- `scripts/ci.sh` passes.
-
 ### T458 — Review: person CheckInCard throws unhandled on 404/409 (late PIN after escalation hangs)
 - status: done
 - class: light
