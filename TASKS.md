@@ -271,7 +271,7 @@ Acceptance:
 ### T460 — Bug: person check-in card shows the oldest open check-in (0:00) when a person has several
 - status: todo
 - class: light
-- priority: 1
+- priority: 0
 - kind: bug
 - deps: T457, T458
 - area: pipeline/src/routine_watch/checkin.py, pipeline/tests/test_checkin.py, web/src/checkin/api.ts, web/src/checkin/api.test.ts
