@@ -9,7 +9,9 @@
 # Plays mrs-k's tea_skip_teabag_pour_twice live session first (the same way the
 # demo does) so a fresh stack has a flagged resident, then checks GET /health,
 # GET /residents, GET /residents/mrs-k, GET /residents/mrs-k/feedback,
-# GET /alerts, GET /alerts/<first id>, GET /monitoring,
+# GET /alerts, GET /alerts/<first id>, GET /people/<first person>/replays,
+# GET /routines, GET /routines/<first id>, POST /routines/draft (from a
+# sentence; SKIPped if the stack has no drafter), GET /monitoring,
 # GET /rooms/<demo room>/monitoring/history and that the dashboard
 # (DASHBOARD_PORT, default 5173) returns HTML, and that its public landing
 # page at /landing.html also returns HTML containing "Routine Watch" and
@@ -21,7 +23,8 @@
 # fresh `/ws/live` session against `contracts/live_message.schema.json` (SKIP, not
 # FAIL, if jsonschema or websockets isn't importable). Prints PASS/FAIL per
 # check and exits non-zero if any failed.
-# Never sets LIVE_API, never POSTs feedback. POSTs /demo/reset once, last, since
+# Never sets LIVE_API, never POSTs feedback. Drafting a routine keeps nothing (only
+# POST /routines does, and this never calls it). POSTs /demo/reset once, last, since
 # that one is meant to mutate state (it only answers when OFFLINE_MODE or
 # DEMO_RESET is set, which `scripts/dev.sh` and the tester's stack always are).
 set -uo pipefail
@@ -138,6 +141,7 @@ else
 fi
 
 demo_room=""
+demo_person=""
 if residents=$(get "$API_URL/residents"); then
   check_json "GET /residents -> non-empty, mrs-k present" "$residents" \
     "isinstance(data, list) and data and any(r.get('id') == 'mrs-k' for r in data)"
@@ -147,6 +151,11 @@ import json, sys
 data = json.loads(sys.argv[1])
 print(data[0]["room"])
 ' "$residents" 2>/dev/null) || demo_room=""
+  demo_person=$(python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+print(data[0]["id"])
+' "$residents" 2>/dev/null) || demo_person=""
 else
   fail "GET /residents: no response"
 fi
@@ -292,6 +301,74 @@ if [ -n "$replay_args" ]; then
 else
   fail "GET /sessions/<id>/replay and /residents/<id>/normal_replay: no alert error to derive session/resident/time window from"
 fi
+
+# This person's own kept replays (SPEC section 17), which the replays screen opens
+# with. A demo person's library is generated the first time it is asked for, so a
+# fresh stack has rows in it - but an empty library is a real answer too (somebody
+# who has never gone wrong has one), so this holds the shape, not the count.
+if [ -n "$demo_person" ]; then
+  if body=$(get "$API_URL/people/$demo_person/replays"); then
+    check_json "GET /people/$demo_person/replays" "$body" \
+      "isinstance(data, dict) and data.get('person_id') == sys.argv[2] and isinstance(data.get('replays'), list)" \
+      "$demo_person"
+  else
+    fail "GET /people/$demo_person/replays: no response"
+  fi
+else
+  echo "SKIP: GET /people/<person id>/replays (no person id from /residents)"
+fi
+
+# The routine builder's library (SPEC section 12). The built-in routines ship as
+# data (`tasks/*.yaml`), so this is never empty on a stack that can read them.
+first_routine_id=""
+if routines=$(get "$API_URL/routines"); then
+  check_json "GET /routines -> non-empty, every row has an id and a title" "$routines" \
+    "isinstance(data, list) and data and all(r.get('id') and r.get('title') for r in data)"
+  first_routine_id=$(python3 -c '
+import json, sys
+data = json.loads(sys.argv[1])
+print(data[0]["id"])
+' "$routines" 2>/dev/null) || first_routine_id=""
+else
+  fail "GET /routines: no response"
+fi
+
+if [ -n "$first_routine_id" ]; then
+  if body=$(get "$API_URL/routines/$first_routine_id"); then
+    check_json "GET /routines/$first_routine_id -> has a task graph" "$body" \
+      "isinstance(data.get('task_graph'), dict) and data['task_graph'].get('steps')"
+  else
+    fail "GET /routines/$first_routine_id: no response"
+  fi
+else
+  fail "GET /routines/<first id>: no routine id to test (empty /routines, or /routines failed)"
+fi
+
+# Drafting a routine from a sentence. Offline the drafter is the canned one, so
+# this costs nothing and reaches no model; smoke never sets LIVE_API. Read without
+# curl's -f so the status code comes back instead of an error: a stack built
+# without a drafter route at all answers 501/503, which is a SKIP rather than a
+# failure, and anything else is worth seeing the body of.
+draft_answer=$(curl -sS --max-time 10 --connect-timeout 3 -w '\n%{http_code}' -X POST \
+  -F 'description=Make a cup of tea: fill the kettle, put a teabag in the cup, then pour' \
+  "$API_URL/routines/draft" 2>/dev/null)
+draft_status="${draft_answer##*$'\n'}"
+draft_body="${draft_answer%$'\n'*}"
+case "$draft_status" in
+  200)
+    check_json "POST /routines/draft -> task graph" "$draft_body" \
+      "isinstance(data.get('draft'), dict) and isinstance(data.get('task_graph'), dict) and data['task_graph'].get('steps')"
+    ;;
+  501 | 503)
+    echo "SKIP: POST /routines/draft (this stack has no drafter: HTTP $draft_status)"
+    ;;
+  '' | 000)
+    fail "POST /routines/draft: no response"
+    ;;
+  *)
+    fail "POST /routines/draft: expected 200, got $draft_status${draft_body:+ -> $draft_body}"
+    ;;
+esac
 
 if body=$(get "$API_URL/monitoring"); then
   check_json "GET /monitoring -> $body" "$body" "isinstance(data.get('paused_rooms'), list)"
