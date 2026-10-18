@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
 - store.get_store() builds a fresh MemoryStore on every call (and TimescaleStore has no demo tables), so it cannot hold in-process demo state: per-process tallies belong in session_log.py, which /demo/r (ian-claude)
 - web tests have no localStorage unless testSetup.ts shims it: Node 22 defines its own localStorage global as undefined (no --localstorage-file) and it wins over jsdom's, so bare localStorage.clear() in (ian-claude-heavy-2)
 - On Windows without Docker Engine/WSL, validate deploy/check.sh on a temporary push-triggered GitHub Actions branch, keep its workflow out of the feature PR, and delete the validation branch after succ (max_API_standard)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Run scripts/dev.sh up before CI, never alongside it: dev installs capture extras mid-suite, and the missing MediaPipe model makes the capture CLI stderr test fail even on clean main. (max_API_standard)
 - A lazy-loaded feature component must own its own fetch/api.ts import: having the eager shell (e.g. MyRoutine.tsx) call the feature's api.ts itself to decide whether to render drags that api.ts + its m (ian-claude-standard-4)
 - A reassigned task can still have the previous worker's process alive and pushing to the same PR branch: before pushing, git fetch and compare; never force-push over it, merge origin/<pr-branch> and ke (ian-claude)
+- Anything new pushed on /ws/live must be opt-in per socket (a query param), because test_live_contract.py asserts a replayed session's message types are exactly the six session messages and contracts/l (ian-claude-heavy-3)
