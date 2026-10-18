@@ -239,7 +239,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T458 — Review: person CheckInCard throws unhandled on 404/409 (late PIN after escalation hangs)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
