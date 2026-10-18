@@ -227,15 +227,15 @@ Interface:
 Acceptance: unit tests per primitive, including `shake` from synthetic wrist oscillation; tea and meds e2e scenarios unchanged; a builder draft round-trips through `parse_task`; `scripts/ci.sh` passes.
 
 ### T464 — Protein shake routine: task graph, detector classes, synthetic scenarios
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T463
 - area: pipeline/src/routine_watch/tasks/protein_shake.yaml, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/detector.py, web/src/contracts.ts, pipeline/tests/test_protein_shake.py, tests/scenarios/protein_shake/, docs/DETECTOR.md
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-18T04:11Z
 - pr: —
 
 What: Ian's custom routine, "Make a protein shake", as the second worked example of T463.
