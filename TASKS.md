@@ -255,7 +255,7 @@ What: Ian's custom routine, "Make a protein shake", as the second worked example
 Acceptance: the scenarios give the expected errors; the dashboard task map renders the graph (parallel powder/liquid branches); `scripts/ci.sh` passes.
 
 ### T465 — Bug: person's check-in card never shows a check-in that starts while My routine is open (fetches once on mount)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: bug
@@ -264,6 +264,8 @@ Acceptance: the scenarios give the expected errors; the dashboard task map rende
 - source: tester
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-18T04:17Z
+- pr: #449
+- rating: 5/5 clear
 
 What: on main @3976dad with the stack up (`OFFLINE_MODE=true scripts/dev.sh up`), open the dashboard, pick **Myself** (My routine), then `curl -XPOST localhost:8000/checkins/demo -H 'content-type: application/json' -d '{"person":"sam"}'`. `GET /checkins/active?person=sam` returns the pending check-in, but My routine shows no "Can you check in?" card; it appears only after a page reload. `CheckInCard` (web/src/checkin/CheckInCard.tsx ~45) calls `fetchMyCheckin` once in `useEffect([personId])` and never again, unlike the supporter `AlarmBanner`, which re-fetches every second. Since T461 the live session runs on My routine, so the SPEC §18 story (session flagged → person asked to check in) happens on this very screen and the person never sees the question; the 20 s window runs out and supporters are alarmed.
 Expected: a check-in that starts while My routine is open appears within ~2 s with its countdown, no reload.
