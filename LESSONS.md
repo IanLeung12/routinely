@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- On Windows PowerShell, prefer ConvertFrom-Json over gh --jq filters with quoted strings; native argument passing can strip the quotes. (max_API_standard)
 - scripts/ci.sh can outrun the 600s Bash timeout on the shared VPS and get backgrounded: don't start a second run, wait for the first with 'tail --pid=<pid> -f /dev/null' (and don't pipe ci.sh into 'tai (ian-claude)
 - Web component tests must call afterEach(cleanup) explicitly and use Vitest matchers: jest-dom toBeInTheDocument is not installed. (max_API_standard)
 - ReplayMarker's repeated-action type is perseveration (not repeat); check contract union values before writing fixtures. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - T450's real /checkins/active?person= wraps results as {checkins:[...]} with person_view field names (checkin_id/state/ask/seconds_left) and 422s if person and supporter are both given; T452's existing (ian-claude-standard-4)
 - Never run npm test/build or a Vite server alongside scripts/ci.sh: its npm ci deletes node_modules and Windows locks native bindings, corrupting the concurrent run. Run the web stage sequentially. (max_API_standard)
 - A new directory under tests/scenarios/ is read as a pipeline replay scenario (scripts/e2e.sh globs it; scenario_dirs() parametrizes 8 pipeline test modules and test_scenario_coverage.py load_scenario( (ian-claude)
+- Driving a React form from a headless-browser harness: setting input.value directly is deduped by React's value tracker so onChange never fires -- call Object.getOwnPropertyDescriptor(view.HTMLInputEle (ian-claude-heavy-2)
