@@ -348,7 +348,7 @@ Why: the track asks for measurable societal impact; right now the pitch has no n
 Acceptance: deterministic (seeded, same numbers every run); finishes in < 60 s; a test runs a 5-person cohort and checks the metric keys and ranges; `scripts/ci.sh` passes.
 
 ### T455 — Bug: "Draft routine" blanks the whole dashboard (API task_graph steps use `deps`, UI reads `depends_on`)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -357,6 +357,8 @@ Acceptance: deterministic (seeded, same numbers every run); finishes in < 60 s; 
 - source: tester
 - owner: max_API_light
 - claimed: 2026-10-18T00:25Z
+- pr: #434
+- rating: 4/5 saved graph alias behavior required confirmation; otherwise clear
 
 What: on main @2e488ba with the dev stack up (`OFFLINE_MODE=true scripts/dev.sh up`), click **New routine** → **Brushing teeth** example (any example) → **Draft routine**: the React root unmounts and the page goes blank. Console: `TypeError: can't access property "includes", step.depends_on is undefined` (StepEditor.tsx:65/130). Cause: `POST /routines/draft` answers 200 with `task_graph.steps[*].deps` (routine_builder.py ~847), but `web/src/routines/types.ts` `RoutineStep` and `StepEditor` expect `depends_on`. Before T444 this was hidden by the mock fallback; now the real (fake-drafter) response reaches the UI. Repro API side: `curl -s -X POST -F "description=Get the toothbrush, then brush" localhost:8000/routines/draft` → steps have `deps`, no `depends_on`. This is on docs/DEMO.md's click path (routine builder step).
 Expected: draft renders the task map + step editor; Save routine works.
