@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T449 — Stability: lazy-load AlertView and ResidentDetail to restore first-load bundle headroom
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
