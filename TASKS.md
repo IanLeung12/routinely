@@ -231,7 +231,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T460 — Bug: person check-in card shows the oldest open check-in (0:00) when a person has several
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
