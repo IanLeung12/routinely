@@ -6,7 +6,7 @@ Assigned task (already claimed by you):
 Rules for staying cheap:
 - Read only the files listed in the task plus `AGENTS.md`. Do not read `SPEC.md` or explore the repo unless the task says to.
 - No refactors, no extra features, no long explanations.
-- Run only the task's test command while working, then `scripts/ci.sh` once before pushing. It must pass (it runs ruff; `uv run --with ruff ruff check --fix .` fixes most lint).
+- Run only the task's test command while working, then `scripts/ci.sh --changed` once before pushing (PR CI runs everything). It must pass (it runs ruff; `uv run --with ruff ruff check --fix .` fixes most lint).
 - Give up after 2 failed attempts instead of looping.
 
 **You are non-interactive: ending your reply ends the session.** Never stop to "wait" for CI. Never use `run_in_background`, `Monitor` or `ScheduleWakeup`: no notification will arrive. Run `scripts/ci.sh` and `gh pr checks <N> --watch` in the foreground with the Bash tool's max timeout (600000 ms); rerun if it times out. Finish when the task is in-review or blocked; don't wait for the merge.
