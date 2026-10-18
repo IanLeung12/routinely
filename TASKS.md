@@ -239,7 +239,7 @@ What: Ian's custom routine, "Make a protein shake", as the second worked example
 Acceptance: the scenarios give the expected errors; the dashboard task map renders the graph (parallel powder/liquid branches); `scripts/ci.sh` passes.
 
 ### T465 — Bug: person's check-in card never shows a check-in that starts while My routine is open (fetches once on mount)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
