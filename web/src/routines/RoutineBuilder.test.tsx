@@ -15,6 +15,32 @@ afterEach(() => {
 })
 
 describe('Describe it', () => {
+  it('renders and saves a server draft whose graph steps use deps', async () => {
+    const graph = {
+      id: 'brush_teeth', title: 'Brush teeth', steps: [
+        { id: 'get', label: 'Get toothbrush', deps: [], optional: false, once_only: true },
+        { id: 'brush', label: 'Brush', deps: ['get'], optional: false, once_only: true },
+      ],
+    }
+    const fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ draft: { steps: [] }, task_graph: graph }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: graph.id, title: graph.title, task_graph: graph }) })
+    vi.stubGlobal('fetch', fetch)
+    const onSaved = vi.fn()
+    render(<RoutineBuilder onSaved={onSaved} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Brushing teeth' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+
+    await waitFor(() => expect(screen.getByDisplayValue('Get toothbrush')).toBeTruthy())
+    expect(screen.getByRole('list', { name: 'Task steps' }).textContent).toContain('Brush')
+    fireEvent.click(screen.getByRole('button', { name: 'Save routine' }))
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
+    const body = JSON.parse(fetch.mock.calls[1][1].body)
+    expect(body.task_graph.steps[1].deps).toEqual(['get'])
+    expect(body.task_graph.steps[1]).not.toHaveProperty('depends_on')
+    expect(onSaved.mock.calls[0][0].task_graph.steps[1].depends_on).toEqual(['get'])
+  })
+
   it('fills the textarea from an example', () => {
     render(<RoutineBuilder onSaved={vi.fn()} />)
 

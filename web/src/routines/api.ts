@@ -9,12 +9,42 @@ import type { RoutineDraftResult, RoutineSummary, SavedRoutine, TaskGraph } from
 
 const SAVED_KEY = 'rw.routines.saved'
 
+function normalizeGraph(graph: TaskGraph): TaskGraph {
+  return {
+    ...graph,
+    steps: graph.steps.map(step => ({
+      ...step,
+      objects: step.objects ?? [],
+      depends_on: step.depends_on ?? (step as typeof step & { deps?: string[] }).deps ?? [],
+    })),
+  }
+}
+
+function normalizeDraft(draft: RoutineDraftResult): RoutineDraftResult {
+  return {
+    ...draft,
+    task_graph: normalizeGraph(draft.task_graph),
+    needs_training: draft.needs_training ?? [],
+    warnings: draft.warnings ?? [],
+  }
+}
+
+function normalizeRoutine<T extends RoutineSummary>(routine: T): T {
+  return {
+    ...routine,
+    needs_training: routine.needs_training ?? [],
+    ...('task_graph' in routine
+      ? { task_graph: normalizeGraph((routine as SavedRoutine).task_graph) }
+      : {}),
+  }
+}
+
 function readSaved(): SavedRoutine[] {
   try {
     const raw = localStorage.getItem(SAVED_KEY)
     if (raw === null) return []
     const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as SavedRoutine[]) : []
+    return Array.isArray(parsed) ? (parsed as SavedRoutine[]).map(normalizeRoutine) : []
   } catch {
     return []
   }
@@ -56,7 +86,7 @@ export async function draftFromText(description: string): Promise<RoutineDraftRe
     return mockDraftFromText(description)
   }
   if (!response.ok) throw new Error(await errorDetail(response))
-  return (await response.json()) as RoutineDraftResult
+  return normalizeDraft((await response.json()) as RoutineDraftResult)
 }
 
 /** Drafts a routine from a setup clip. `consent` must be true before this is called —
@@ -76,7 +106,7 @@ export async function draftFromVideo(file: File, consent: boolean): Promise<Rout
     return mockDraftFromVideo()
   }
   if (!response.ok) throw new Error(await errorDetail(response))
-  return (await response.json()) as RoutineDraftResult
+  return normalizeDraft((await response.json()) as RoutineDraftResult)
 }
 
 /** Built-ins (`tea`, `meds`) plus whatever has been saved, newest last. Falls back to
@@ -89,7 +119,7 @@ export async function fetchRoutines(): Promise<RoutineSummary[]> {
     return [...mockBuiltInRoutines, ...readSaved()]
   }
   if (!response.ok) throw new Error(await errorDetail(response))
-  return (await response.json()) as RoutineSummary[]
+  return ((await response.json()) as RoutineSummary[]).map(normalizeRoutine)
 }
 
 /** Saves a reviewed task graph (`POST /routines`). Falls back to `localStorage` only
@@ -101,7 +131,12 @@ export async function saveRoutine(graph: TaskGraph): Promise<SavedRoutine> {
     response = await fetch(`${apiUrl}/routines`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task_graph: graph }),
+      body: JSON.stringify({
+        task_graph: {
+          ...graph,
+          steps: graph.steps.map(({ depends_on, ...step }) => ({ ...step, deps: depends_on })),
+        },
+      }),
     })
   } catch {
     const saved = mockSavedRoutine(graph)
@@ -109,5 +144,5 @@ export async function saveRoutine(graph: TaskGraph): Promise<SavedRoutine> {
     return saved
   }
   if (!response.ok) throw new Error(await errorDetail(response))
-  return (await response.json()) as SavedRoutine
+  return normalizeRoutine((await response.json()) as SavedRoutine)
 }

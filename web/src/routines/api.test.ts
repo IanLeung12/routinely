@@ -8,6 +8,55 @@ afterEach(() => {
   localStorage.clear()
 })
 
+const apiGraph = {
+  id: 'brush_teeth', title: 'Brush teeth',
+  steps: [
+    { id: 'get', label: 'Get toothbrush', deps: [], optional: false, once_only: true },
+    { id: 'brush', label: 'Brush', deps: ['get'], optional: false, once_only: true },
+    { id: 'rinse', label: 'Rinse', optional: false, once_only: true },
+  ],
+}
+
+describe('API graph normalization', () => {
+  it.each(['text', 'video'])('normalizes a %s draft and missing arrays', async mode => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, json: async () => ({ draft: { steps: [] }, task_graph: apiGraph }),
+    }))
+    const result = mode === 'text'
+      ? await draftFromText('Brush teeth')
+      : await draftFromVideo(new File(['clip'], 'setup.mp4'), true)
+
+    expect(result.task_graph.steps.map(step => step.depends_on)).toEqual([[], ['get'], []])
+    expect(result.task_graph.steps.every(step => step.objects.length === 0)).toBe(true)
+    expect(result.needs_training).toEqual([])
+    expect(result.warnings).toEqual([])
+  })
+
+  it('normalizes saved graphs from listing, saving and local storage', async () => {
+    const saved = { id: apiGraph.id, task_graph: apiGraph }
+    const fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [saved] })
+      .mockResolvedValueOnce({ ok: true, json: async () => saved })
+      .mockRejectedValue(new Error('offline'))
+    vi.stubGlobal('fetch', fetch)
+
+    const listed = await fetchRoutines()
+    const result = await saveRoutine({ id: 'x', title: 'X', steps: [] })
+    localStorage.setItem('rw.routines.saved', JSON.stringify([saved]))
+    const offline = await fetchRoutines()
+    for (const routine of [listed[0], result, offline.at(-1)]) {
+      expect(routine).toMatchObject({
+        needs_training: [],
+        task_graph: { steps: [
+          { objects: [], depends_on: [] },
+          { objects: [], depends_on: ['get'] },
+          { objects: [], depends_on: [] },
+        ] },
+      })
+    }
+  })
+})
+
 describe('draftFromText', () => {
   it('returns the API draft on a 200', async () => {
     const draft = { draft: { steps: [] }, task_graph: { id: 'x', title: 'X', steps: [] }, needs_training: [], warnings: [] }
@@ -81,6 +130,21 @@ describe('fetchRoutines', () => {
 })
 
 describe('saveRoutine', () => {
+  it('sends edited dependencies using the saved graph API schema', async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({
+      id: apiGraph.id, task_graph: apiGraph,
+    }) })
+    vi.stubGlobal('fetch', fetch)
+    const draft = await draftFromText('Brush teeth')
+    draft.task_graph.steps[1].depends_on = []
+
+    await saveRoutine(draft.task_graph)
+
+    const body = JSON.parse(fetch.mock.calls[1][1].body)
+    expect(body.task_graph.steps[1].deps).toEqual([])
+    expect(body.task_graph.steps[1]).not.toHaveProperty('depends_on')
+  })
+
   it('keeps a saved routine in localStorage when the API is unreachable, so it shows up next time', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     const graph: TaskGraph = { id: 'wash_hands', title: 'Wash hands', steps: [] }
