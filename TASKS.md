@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T413 — Replays library for supervisors and the person
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
