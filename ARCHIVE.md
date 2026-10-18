@@ -8363,3 +8363,19 @@ Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it 
 
 What: The supervisor's half of T450, against the same mock as T451 (reuse `web/src/checkin/api.ts` / `types.ts` if T451 has landed; otherwise add them identically, since T451 owns them). In "supporting someone" mode, an `alarm` / `escalated` check-in shows a prominent, dismiss-proof **alarm banner** on every screen: "Mrs. K hasn't checked in (2 min)", plus "silent help request" for duress. It plays a repeating alarm tone made with Web Audio (no audio file), with a mute toggle and the browser's autoplay rule handled by an "Enable sound" control. Buttons: **I'm on it** (ack) and **Resolve** (false alarm / helped / other). An **escalation timeline** shows each step with times: alert → check-in sent → no answer → you were alarmed → escalated to {next} → acknowledged by → resolved. It shows only the fields the payload carries (respect T450's sharing permissions: no location line if it isn't shared). **SafetySettings**: an ordered supporter list, windows, and what each supporter may see; PINs are set but never displayed.
 Acceptance: Vitest: the banner appears for an alarm and clears on resolve; duress shows "silent help request"; the timeline renders the events; no location when it's absent; sound starts/stops (mock AudioContext); `cd web && npm test && npm run build`.
+
+### T453 — KAZE demo: scenario runner + docs (what's real vs simulated)
+- status: done
+- class: light
+- priority: 1
+- kind: improvement
+- source: ian
+- deps: T450
+- area: scripts/kaze_demo.py, docs/KAZE.md, tests/scenarios/kaze/
+- owner: ian-claude
+- claimed: 2026-10-18T00:57Z
+- pr: #440
+- rating: 4/5 the area's tests/scenarios/kaze/ cannot exist: any directory there is read as a pipeline replay scenario (e2e.sh + scenario_dirs()), so the runner's tests went to tests/test_kaze_demo.py; everything else was clear
+
+What: `scripts/kaze_demo.py <scenario>` drives a running local stack through each of the 7 KAZE scenarios using only T450's HTTP API (`safe`, `no-response`, `duress`, `disconnect`, `unacknowledged`, `false-alarm`, `privacy`), with demo timings, printing each state change. `docs/KAZE.md` covers: the challenge mapping (each scenario → what to click or run), and a "What the prototype demonstrates / What is simulated / Assumptions / What needs validation" section (real push/SMS providers, location, wearable signals, false-alarm rates).
+Acceptance: each scenario exits 0 against `scripts/dev.sh up`; `python3 scripts/kaze_demo.py --help` works; read only T450's API, nothing else.
