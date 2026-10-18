@@ -238,7 +238,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T458 — Review: person CheckInCard throws unhandled on 404/409 (late PIN after escalation hangs)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -247,7 +247,8 @@ Acceptance:
 - area: web/src/checkin/CheckInCard.tsx, web/src/checkin/CheckInCard.test.tsx
 - owner: ian-claude-standard-4
 - claimed: 2026-10-18T02:40Z
-- pr: —
+- pr: #441
+- rating: 5/5 clear
 
 What: `CheckInCard.tsx` has no error handling on either API call. (1) `fetchMyCheckin(...).then(...)` has no `.catch`: `GET /checkins/active?person=` 404s (`UnknownPerson`) for anyone without safety settings, so every such person's home screen logs an unhandled rejection. (2) `handlePin` awaits `respondToCheckin`, which throws on any non-401 error; the backend answers 409 (`NotWaiting`) once the countdown has run out and the check-in escalated, so a late PIN leaves the pad stuck with no message. Fix in CheckInCard.tsx only (api.ts is in T457's area): catch on the fetch -> render nothing; wrap `handlePin` in try/catch -> on error replace the pad with a calm message like "This check-in has already gone to your supporters - they'll be in touch" (no hint about which PIN).
 Acceptance: tests stub fetch with 404 on GET and 409 on respond; no unhandled rejection, the 409 message renders; `scripts/ci.sh` passes.
