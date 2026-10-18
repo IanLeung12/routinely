@@ -311,15 +311,15 @@ What: The person's half of T450, built in parallel against T450's API shape with
 Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it pending; the safety and duress paths render identical DOM; countdown text updates; `cd web && npm test && npm run build`.
 
 ### T452 — Supervisor alarm UI: alarm banner + sound, acknowledge, escalation timeline, resolve
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/checkin/AlarmBanner.tsx, web/src/checkin/AlarmBanner.test.tsx, web/src/checkin/EscalationTimeline.tsx, web/src/checkin/EscalationTimeline.test.tsx, web/src/checkin/alarmSound.ts, web/src/checkin/SafetySettings.tsx, web/src/checkin/SafetySettings.test.tsx, web/src/checkin/alarm.css, web/src/App.tsx
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-18T00:20Z
 - pr: —
 - note: released by ian-laptop-standard: run ended without progress
 
