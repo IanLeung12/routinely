@@ -211,7 +211,7 @@ Interface:
 Acceptance: unit tests per primitive, including `shake` from synthetic wrist oscillation; tea and meds e2e scenarios unchanged; a builder draft round-trips through `parse_task`; `scripts/ci.sh` passes.
 
 ### T464 — Protein shake routine: task graph, detector classes, synthetic scenarios
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -220,7 +220,8 @@ Acceptance: unit tests per primitive, including `shake` from synthetic wrist osc
 - area: pipeline/src/routine_watch/tasks/protein_shake.yaml, pipeline/src/routine_watch/contracts.py, pipeline/src/routine_watch/detector.py, web/src/contracts.ts, pipeline/tests/test_protein_shake.py, tests/scenarios/protein_shake/, docs/DETECTOR.md
 - owner: ian-claude-standard
 - claimed: 2026-10-18T04:11Z
-- pr: —
+- pr: #450
+- rating: 5/5 clear
 
 What: Ian's custom routine, "Make a protein shake", as the second worked example of T463.
 - New detector classes in `ObjectLabel` (and `web/src/contracts.ts`): `shaker`, `protein_tub`, `scoop`, plus `water_bottle` if there isn't already a water class (reuse meds' `water_jug`/`glass` if one fits). Aliases: `shaker_bottle`, `blender_bottle` → shaker; `protein`, `powder`, `tub` → protein_tub.
