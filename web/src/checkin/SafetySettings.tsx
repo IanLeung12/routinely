@@ -37,7 +37,10 @@ export function SafetySettings({ personId, onBack }: { personId: string; onBack:
 
   function permission(index: number, field: 'location' | 'alert_details' | 'replay', value: boolean) {
     if (!settings) return
-    setSettings({ ...settings, supporters: settings.supporters.map((supporter, i) => i === index ? { ...supporter, [field]: value } : supporter) })
+    setSettings({
+      ...settings,
+      supporters: settings.supporters.map((supporter, i) => i === index ? { ...supporter, share: { ...supporter.share, [field]: value } } : supporter),
+    })
     setSaved(false)
   }
 
@@ -52,7 +55,9 @@ export function SafetySettings({ personId, onBack }: { personId: string; onBack:
     setSaved(false)
     try {
       const result = await saveSafetySettings(personId, {
-        ...settings,
+        checkin_window_s: settings.checkin_window_s,
+        ack_window_s: settings.ack_window_s,
+        supporters: settings.supporters,
         ...(safetyPin ? { safety_pin: safetyPin } : {}),
         ...(duressPin ? { duress_pin: duressPin } : {}),
       })
@@ -79,10 +84,10 @@ export function SafetySettings({ personId, onBack }: { personId: string; onBack:
             <fieldset disabled={busy}>
               <legend>Check-in windows</legend>
               <label>Check-in window (seconds)
-                <input type="number" min="1" required value={settings.checkin_window} onChange={event => { setSaved(false); setSettings({ ...settings, checkin_window: Number(event.target.value) }) }} />
+                <input type="number" min="1" required value={settings.checkin_window_s} onChange={event => { setSaved(false); setSettings({ ...settings, checkin_window_s: Number(event.target.value) }) }} />
               </label>
               <label>Acknowledgement window (seconds)
-                <input type="number" min="1" required value={settings.ack_window} onChange={event => { setSaved(false); setSettings({ ...settings, ack_window: Number(event.target.value) }) }} />
+                <input type="number" min="1" required value={settings.ack_window_s} onChange={event => { setSaved(false); setSettings({ ...settings, ack_window_s: Number(event.target.value) }) }} />
               </label>
             </fieldset>
             <fieldset disabled={busy}>
@@ -98,7 +103,7 @@ export function SafetySettings({ personId, onBack }: { personId: string; onBack:
                       </div>
                       <div className="safety-settings__permissions">
                         {([['location', 'Simulated location'], ['alert_details', 'Alert details'], ['replay', 'Replay']] as const).map(([field, label]) => (
-                          <label key={field}><input type="checkbox" checked={supporter[field]} onChange={event => permission(index, field, event.target.checked)} />{label} for {supporter.name}</label>
+                          <label key={field}><input type="checkbox" checked={supporter.share[field]} onChange={event => permission(index, field, event.target.checked)} />{label} for {supporter.name}</label>
                         ))}
                       </div>
                     </li>

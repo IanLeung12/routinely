@@ -21,28 +21,26 @@ export function AlarmBanner({ people, supporter }: { people: Person[]; supporter
   const [now, setNow] = useState(() => Date.now())
   const [sound] = useState(createAlarmSound)
   const revision = useRef(0)
-  const personIds = people.map(person => person.id).sort().join(',')
 
   useEffect(() => {
     let cancelled = false
     let timer: ReturnType<typeof setTimeout>
-    const ids = personIds ? personIds.split(',') : []
     async function refresh() {
       const startedAt = revision.current
       try {
-        const result = (await Promise.all(ids.map(id => fetchActiveCheckins(id, supporter)))).flat()
+        const result = await fetchActiveCheckins(supporter)
         if (!cancelled && startedAt === revision.current) {
           setCheckins(previous => [
             ...result.map(item => {
-              const confirmed = previous.find(entry => entry.id === item.id)
+              const confirmed = previous.find(entry => entry.checkin_id === item.checkin_id)
               // A stale poll cannot undo a confirmed action. Retain only its
-              // status/events; shared fields always come from the new payload.
-              if (confirmed && confirmed.status !== item.status && (confirmed.status === 'resolved' || (confirmed.status === 'acknowledged' && item.status !== 'resolved'))) {
-                return { ...item, status: confirmed.status, events: confirmed.events }
+              // state/events; shared fields always come from the new payload.
+              if (confirmed && confirmed.state !== item.state && (confirmed.state === 'resolved' || (confirmed.state === 'acknowledged' && item.state !== 'resolved'))) {
+                return { ...item, state: confirmed.state, events: confirmed.events }
               }
               return item
             }),
-            ...previous.filter(item => item.status === 'resolved' && !result.some(next => next.id === item.id)),
+            ...previous.filter(item => item.state === 'resolved' && !result.some(next => next.checkin_id === item.checkin_id)),
           ])
           setError(null)
         }
@@ -58,10 +56,10 @@ export function AlarmBanner({ people, supporter }: { people: Person[]; supporter
     }
     void refresh()
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [personIds, supporter])
+  }, [supporter])
 
   const permitted = checkins.filter(item => people.some(person => person.id === item.person_id))
-  const alarming = permitted.some(item => item.status === 'alarm' || item.status === 'escalated')
+  const alarming = permitted.some(item => item.state === 'alarm' || item.state === 'escalated')
   useEffect(() => {
     let cancelled = false
     if (!alarming || muted) {
@@ -78,14 +76,14 @@ export function AlarmBanner({ people, supporter }: { people: Person[]; supporter
   }
 
   async function act(item: CheckIn, action: 'ack' | 'resolve') {
-    setBusy(item.id)
+    setBusy(item.checkin_id)
     setActionError(null)
     revision.current += 1
     try {
       const updated = action === 'ack'
-        ? await acknowledgeCheckin(item.id, supporter)
-        : await resolveCheckin(item.id, supporter, reasons[item.id] ?? 'helped')
-      setCheckins(previous => previous.map(entry => entry.id === item.id ? updated : entry))
+        ? await acknowledgeCheckin(item.checkin_id, supporter)
+        : await resolveCheckin(item.checkin_id, supporter, reasons[item.checkin_id] ?? 'helped')
+      setCheckins(previous => previous.map(entry => entry.checkin_id === item.checkin_id ? updated : entry))
     } catch {
       setActionError('Your response was not saved. Please try again; the alarm remains active.')
     } finally {
@@ -94,7 +92,7 @@ export function AlarmBanner({ people, supporter }: { people: Person[]; supporter
     }
   }
 
-  const visible = permitted.filter(item => ['alarm', 'escalated', 'acknowledged', 'resolved'].includes(item.status))
+  const visible = permitted.filter(item => ['alarm', 'escalated', 'acknowledged', 'resolved'].includes(item.state))
   return (
     <div className="supervisor-alarms">
       {loading && <p role="status">Loading safety alarms…</p>}
@@ -108,31 +106,31 @@ export function AlarmBanner({ people, supporter }: { people: Person[]; supporter
         </div>
       )}
       {visible.map(item => {
-        const name = people.find(person => person.id === item.person_id)?.name ?? 'Someone you support'
-        const resolved = item.status === 'resolved'
-        const acknowledged = item.status === 'acknowledged'
-        const minutes = Math.max(0, Math.floor((now - Date.parse(item.created_at)) / 60000))
+        const name = item.person_name || people.find(person => person.id === item.person_id)?.name || 'Someone you support'
+        const resolved = item.state === 'resolved'
+        const acknowledged = item.state === 'acknowledged'
+        const minutes = Math.max(0, Math.floor((now - Date.parse(item.started_at)) / 60000))
         return (
-          <section className={`alarm-banner${resolved ? ' alarm-banner--resolved' : ''}`} key={item.id} aria-label={`${name} safety check-in`}>
+          <section className={`alarm-banner${resolved ? ' alarm-banner--resolved' : ''}`} key={item.checkin_id} aria-label={`${name} safety check-in`}>
             <div role={resolved ? 'status' : 'alert'}>
               <h2>{resolved ? `${name}: check-in resolved` : item.duress ? `${name}: silent help request` : `${name} hasn't checked in (${minutes} min)`}</h2>
-              {!resolved && <p>{acknowledged ? "Acknowledged — someone is on it. Resolve when everyone is okay." : item.status === 'escalated' ? 'Alarm escalated. Is everyone okay?' : 'Safety alarm. Is everyone okay?'}</p>}
+              {!resolved && <p>{acknowledged ? "Acknowledged — someone is on it. Resolve when everyone is okay." : item.state === 'escalated' ? 'Alarm escalated. Is everyone okay?' : 'Safety alarm. Is everyone okay?'}</p>}
             </div>
             {item.location && <p>Shared location: {item.location}</p>}
             {!resolved && (
               <div className="alarm-banner__actions">
                 {!acknowledged && <Button variant="primary" disabled={busy !== null} onClick={() => void act(item, 'ack')}>I'm on it</Button>}
                 <label>Resolution reason
-                  <select value={reasons[item.id] ?? 'helped'} onChange={event => setReasons(previous => ({ ...previous, [item.id]: event.target.value as ResolutionReason }))}>
+                  <select value={reasons[item.checkin_id] ?? 'helped'} onChange={event => setReasons(previous => ({ ...previous, [item.checkin_id]: event.target.value as ResolutionReason }))}>
                     <option value="false_alarm">False alarm</option>
                     <option value="helped">Helped</option>
                     <option value="other">Other</option>
                   </select>
                 </label>
-                <Button disabled={busy !== null} onClick={() => void act(item, 'resolve')}>{busy === item.id ? 'Saving…' : 'Resolve'}</Button>
+                <Button disabled={busy !== null} onClick={() => void act(item, 'resolve')}>{busy === item.checkin_id ? 'Saving…' : 'Resolve'}</Button>
               </div>
             )}
-            <EscalationTimeline events={item.events} />
+            {item.events && <EscalationTimeline events={item.events} />}
           </section>
         )
       })}
