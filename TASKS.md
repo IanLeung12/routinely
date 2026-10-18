@@ -273,7 +273,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T456 — Review: Replays delete swallows a failed delete (unhandled rejection, no message)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
