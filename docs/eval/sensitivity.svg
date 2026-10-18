@@ -1,0 +1,24 @@
+<svg viewBox="0 0 560 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="False alarms per person per month versus sudden-change catch rate, at three threshold settings">
+<style>.surface { fill: #fcfcfb; } .grid { stroke: #e3e2dd; stroke-width: 1; } .axis { stroke: #52514e; stroke-width: 1; } .tick { fill: #52514e; font: 11px sans-serif; } .label { fill: #0b0b0b; font: 12px sans-serif; font-weight: 600; } .title { fill: #0b0b0b; font: 14px sans-serif; font-weight: 600; } .subtitle { fill: #52514e; font: 11px sans-serif; } .line { stroke: #2a78d6; stroke-width: 2; fill: none; } .dot { fill: #2a78d6; } .ring { fill: none; stroke: #fcfcfb; stroke-width: 2; } @media (prefers-color-scheme: dark) { .surface { fill: #1a1a19; } .grid { stroke: #33332f; } .axis { stroke: #c3c2b7; } .tick { fill: #c3c2b7; } .label { fill: #ffffff; } .title { fill: #ffffff; } .subtitle { fill: #c3c2b7; } .line { stroke: #3987e5; } .dot { fill: #3987e5; } .ring { stroke: #1a1a19; } }</style>
+<rect class="surface" x="0" y="0" width="560" height="340"/>
+<text x="56" y="20" class="title">Catch rate vs. false alarms, by threshold</text>
+<text x="56" y="34" class="subtitle">sudden-change group vs. normal group, synthetic cohort</text>
+<line x1="56" y1="292.0" x2="536" y2="292.0" class="grid"/>
+<text x="46" y="296.0" class="tick" text-anchor="end">0%</text>
+<line x1="56" y1="235.0" x2="536" y2="235.0" class="grid"/>
+<text x="46" y="239.0" class="tick" text-anchor="end">25%</text>
+<line x1="56" y1="178.0" x2="536" y2="178.0" class="grid"/>
+<text x="46" y="182.0" class="tick" text-anchor="end">50%</text>
+<line x1="56" y1="121.0" x2="536" y2="121.0" class="grid"/>
+<text x="46" y="125.0" class="tick" text-anchor="end">75%</text>
+<line x1="56" y1="64.0" x2="536" y2="64.0" class="grid"/>
+<text x="46" y="68.0" class="tick" text-anchor="end">100%</text>
+<line x1="56" y1="64" x2="56" y2="292" class="axis"/>
+<line x1="56" y1="292" x2="536" y2="292" class="axis"/>
+<text x="56.0" y="312" class="tick" text-anchor="middle">0</text>
+<text x="296.0" y="312" class="tick" text-anchor="middle">0.5</text>
+<text x="536.0" y="312" class="tick" text-anchor="middle">1</text>
+<text x="280.0" y="334" class="subtitle" text-anchor="middle">false alarms / person / month (normal group)</text>
+<path d="M369.0,64.0 L56.0,64.0 L56.0,64.0" class="line"/>
+<circle cx="369.0" cy="64.0" r="6" class="dot"/><circle cx="369.0" cy="64.0" r="6" class="ring"/><text x="369.0" y="50.0" class="label" text-anchor="middle">k=1.5</text><circle cx="56.0" cy="64.0" r="6" class="dot"/><circle cx="56.0" cy="64.0" r="6" class="ring"/><text x="56.0" y="50.0" class="label" text-anchor="middle">k=2,2.5</text>
+</svg>
