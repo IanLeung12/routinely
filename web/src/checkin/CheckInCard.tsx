@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { activeCheckIn, respondToCheckIn } from './api.ts'
@@ -18,6 +18,13 @@ function formatCountdown(seconds: number): string {
   return `${minutes}:${remainder.toString().padStart(2, '0')}`
 }
 
+/** Focuses the panel the moment it mounts - a callback ref fires during React's
+ * commit, synchronously, unlike a `useEffect` keyed on async-fetched state, which
+ * races the fetch's own promise microtask under a loaded CI runner. */
+function focusOnMount(node: HTMLDivElement | null): void {
+  node?.focus()
+}
+
 /** A calm full-width card for an active check-in (SPEC section 18, T451): a
  * countdown ring, one big "I'm okay" button, and the PIN pad it opens. Whichever
  * PIN matched - safety or duress - `respondToCheckIn` answers the same `accepted`
@@ -34,8 +41,6 @@ export function CheckInCard({ personId }: { personId: string }) {
   const [error, setError] = useState('')
   const [remaining, setRemaining] = useState(0)
   const [total, setTotal] = useState(1)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const focusedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -52,13 +57,6 @@ export function CheckInCard({ personId }: { personId: string }) {
       cancelled = true
     }
   }, [personId])
-
-  useEffect(() => {
-    if (checkIn && !focusedRef.current) {
-      focusedRef.current = true
-      panelRef.current?.focus()
-    }
-  }, [checkIn])
 
   // The countdown is cosmetic here (T450's server owns the real deadline); once
   // checked in there is nothing left to count down to, so the tick stops.
@@ -84,7 +82,7 @@ export function CheckInCard({ personId }: { personId: string }) {
   if (stage === 'thanks') {
     return (
       <Card className="check-in-card check-in-card--thanks">
-        <div ref={panelRef} tabIndex={-1} role="region" aria-label="Check-in" aria-live="polite">
+        <div ref={focusOnMount} tabIndex={-1} role="region" aria-label="Check-in" aria-live="polite">
           <h2 className="check-in-card__heading">Thanks, you're checked in</h2>
           <p className="check-in-card__lead">That's everything - nothing else to do.</p>
         </div>
@@ -99,7 +97,7 @@ export function CheckInCard({ personId }: { personId: string }) {
 
   return (
     <Card className="check-in-card">
-      <div ref={panelRef} tabIndex={-1} role="region" aria-label="Check-in">
+      <div ref={focusOnMount} tabIndex={-1} role="region" aria-label="Check-in">
         <h2 className="check-in-card__heading">Quick check-in: are you okay?</h2>
         <div className="check-in-card__ring">
           <svg className="check-in-card__ring-svg" viewBox="0 0 120 120" aria-hidden="true">
