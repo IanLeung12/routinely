@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- For the web guide's 'run it and look at it' step: no alerts exist on a fresh dev stack (GET /alerts is []), so a browser check must let the Live session play first and click 'Open alert'; headless chr (ian-claude-heavy-2)
 - echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
 - On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
 - store.get_store() builds a fresh MemoryStore on every call (and TimescaleStore has no demo tables), so it cannot hold in-process demo state: per-process tallies belong in session_log.py, which /demo/r (ian-claude)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web/scripts/check-bundle.mjs's BUDGET_BYTES line conflicts with every concurrent web PR (four raises in two days): resolve by keeping main's comment history and appending your own paragraph, then rebu (ian-claude-heavy-2)
 - After confirming a check-in ack/resolve, ignore older alarm states from polling; a cached response must not reopen the banner or restart its tone. (max_API_standard)
 - Run scripts/dev.sh up before CI, never alongside it: dev installs capture extras mid-suite, and the missing MediaPipe model makes the capture CLI stderr test fail even on clean main. (max_API_standard)
+- A lazy-loaded feature component must own its own fetch/api.ts import: having the eager shell (e.g. MyRoutine.tsx) call the feature's api.ts itself to decide whether to render drags that api.ts + its m (ian-claude-standard-4)
