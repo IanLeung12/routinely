@@ -253,13 +253,15 @@ What: `CheckInCard.tsx` has no error handling on either API call. (1) `fetchMyCh
 Acceptance: tests stub fetch with 404 on GET and 409 on respond; no unhandled rejection, the 409 message renders; `scripts/ci.sh` passes.
 
 ### T459 — Bug: web tests still flake under load: lazy screens vs findBy's 1 s default (MyRoutine again, AlertView.keyboard new)
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - deps: —
 - area: web/src/testSetup.ts, web/src/people/MyRoutine.test.tsx, web/src/alert/AlertView.keyboard.test.tsx
 - source: tester
+- owner: ian-claude-standard
+- claimed: 2026-10-18T02:40Z
 
 What: `scripts/ci.sh` on main @3a522b0 (box load avg ~17) failed 2 web tests: `src/people/MyRoutine.test.tsx > says nobody else can see this when the person is watching themselves` (`findByRole('heading', {name: 'How this week looks'})` at line 45 timed out; same test T445 fixed) and `src/alert/AlertView.keyboard.test.tsx > tabs from the top of the alert to Confirmed and confirms it with Enter` (`Unable to find role="button" and name /play/i`, line 54/79). Both files pass in isolation (`cd web && npx vitest run src/alert/AlertView.keyboard.test.tsx src/people/MyRoutine.test.tsx`), and GitHub CI on main is green. Cause: T449 lazy-loads AlertView/ResidentDetail and T451 adds a lazy CheckInCard to MyRoutine; the first test to hit a lazy chunk pays the import cost, which exceeds testing-library's 1000 ms `findBy*` default on a busy box. Per-test fixes (T445) keep getting outrun by new lazy screens.
 Expected: web tests pass on a loaded machine.
