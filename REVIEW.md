@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 5da28cf
-- next-area: scripts+ci
+- last-reviewed: 3a522b0
+- next-area: tests/scenarios
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
@@ -38,4 +38,5 @@
 - T443 (fixed in T447 merge) RoutinesScreen task_graph vs summary
 - T456 Replays.tsx confirmDelete no catch (unhandled reject, no msg)
 - (noted) checkin web<->api drift = T457; /ws/live checkin msg unschema'd (cf T250)
+- T458 CheckInCard no catch: 404 fetch / 409 late PIN unhandled
 - T444 routines api.ts mock fallback on non-ok (canned draft / fake save)
