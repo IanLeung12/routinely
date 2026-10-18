@@ -7,26 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T456 — Review: Replays delete swallows a failed delete (unhandled rejection, no message)
-- status: done
-- class: light
-- priority: 0
-- kind: bug
-- source: reviewer
-- deps: —
-- area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx
-- owner: ian-claude-standard
-- claimed: 2026-10-18T00:32Z
-- pr: #438
-- note: —
-- rating: 5/5 clear
-
-What: In `web/src/replays/Replays.tsx`, `confirmDelete` awaits `deleteReplay` with no try/catch and is called as `void confirmDelete(...)`. When the delete is refused (already possible for "Replay not found"; every non-ok once T441 lands), the promise rejection is unhandled, the confirm box stays open and the person gets no feedback, so they can't tell whether their replay (SPEC §17 privacy control) was removed.
-Interface: wrap the call in try/catch; on failure keep the replay in the list and on screen, close the confirm, and show the error with `ErrorState` from `web/src/ui/` (e.g. "This replay could not be deleted. It is still stored."). Only filter the list and close the session on success.
-Acceptance:
-- Replays.test.tsx: person role, `deleteReplay` mocked to reject → error message shown, replay still listed after going back; resolve → removed.
-- `scripts/ci.sh` passes.
-
 ### T457 — Bug: supervisor alarm UI (T452) doesn't speak the real check-in API (T450)
 - status: done
 - class: standard
