@@ -6,7 +6,7 @@ import { PinPad } from './PinPad.tsx'
 import type { PersonCheckIn } from './types.ts'
 import './checkin.css'
 
-type Stage = 'prompt' | 'pin' | 'thanks'
+type Stage = 'prompt' | 'pin' | 'thanks' | 'closed'
 
 function formatCountdown(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
@@ -43,14 +43,18 @@ export function CheckInCard({ personId }: { personId: string }) {
 
   useEffect(() => {
     let cancelled = false
-    fetchMyCheckin(personId).then((result) => {
-      if (cancelled) return
-      if (result && result.seconds_left !== null) {
-        setTotal(Math.max(1, result.seconds_left))
-        setRemaining(result.seconds_left)
-      }
-      setCheckIn(result)
-    })
+    fetchMyCheckin(personId)
+      .then((result) => {
+        if (cancelled) return
+        if (result && result.seconds_left !== null) {
+          setTotal(Math.max(1, result.seconds_left))
+          setRemaining(result.seconds_left)
+        }
+        setCheckIn(result)
+      })
+      .catch(() => {
+        if (!cancelled) setCheckIn(null)
+      })
     return () => {
       cancelled = true
     }
@@ -66,12 +70,16 @@ export function CheckInCard({ personId }: { personId: string }) {
 
   async function handlePin(pin: string) {
     if (!checkIn) return
-    const response = await respondToCheckin(checkIn.checkin_id, pin)
-    if (response.accepted) {
-      setError('')
-      setStage('thanks')
-    } else {
-      setError('Try again')
+    try {
+      const response = await respondToCheckin(checkIn.checkin_id, pin)
+      if (response.accepted) {
+        setError('')
+        setStage('thanks')
+      } else {
+        setError('Try again')
+      }
+    } catch {
+      setStage('closed')
     }
   }
 
@@ -83,6 +91,17 @@ export function CheckInCard({ personId }: { personId: string }) {
         <div ref={focusOnMount} tabIndex={-1} role="region" aria-label="Check-in" aria-live="polite">
           <h2 className="check-in-card__heading">Thanks, you're checked in</h2>
           <p className="check-in-card__lead">That's everything - nothing else to do.</p>
+        </div>
+      </Card>
+    )
+  }
+
+  if (stage === 'closed') {
+    return (
+      <Card className="check-in-card check-in-card--thanks">
+        <div ref={focusOnMount} tabIndex={-1} role="region" aria-label="Check-in" aria-live="polite">
+          <h2 className="check-in-card__heading">This check-in has already gone to your supporters</h2>
+          <p className="check-in-card__lead">They'll be in touch.</p>
         </div>
       </Card>
     )
