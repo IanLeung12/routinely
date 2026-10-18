@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 96df875
-- next-area: contracts+api
+- last-reviewed: 5da28cf
+- next-area: scripts+ci
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
@@ -37,4 +37,5 @@
 - T436 preview.mjpg ACAO * lets any site read camera frames
 - T443 (fixed in T447 merge) RoutinesScreen task_graph vs summary
 - T456 Replays.tsx confirmDelete no catch (unhandled reject, no msg)
+- (noted) checkin web<->api drift = T457; /ws/live checkin msg unschema'd (cf T250)
 - T444 routines api.ts mock fallback on non-ok (canned draft / fake save)
