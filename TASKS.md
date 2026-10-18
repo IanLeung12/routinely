@@ -129,8 +129,8 @@ Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response 
 - owner: max_API_standard
 - claimed: 2026-10-18T00:58Z
 - pr: #437
-- rating: 4/5 clear task, but T450/T452 merged mid-work which required reconciling guessed mock shapes against the real backend's field names (checkin_id/state/ask vs id/status/deadline) - unavoidable given parallel work, not a flaw in the task itself
-- note: merge conflict with main on PR #437: check out its branch, merge origin/main, fix, push
+- rating: 5/5 clear
+- note: PR #437 merged with passing CI; concurrent worker completed the merge repair during local validation.
 
 What: The person's half of T450, built in parallel against T450's API shape with a mock (`web/src/mock/checkins.ts`). Follow `docs/DESIGN.md`. In "for myself" mode (`MyRoutine`), when a check-in is active, a calm full-width card appears: "Quick check-in: are you okay?", a large countdown ring, one big **I'm okay** button that opens a large-key PIN pad (works with shaky hands: big targets, no time pressure shown beyond the ring). After any accepted PIN, safety or duress, it shows the **same** "Thanks, you're checked in" screen (duress must be indistinguishable). A wrong PIN says "Try again" and the countdown continues. Accessible: focus moves to the card, `aria-live` announcements, keyboard only.
 Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it pending; the safety and duress paths render identical DOM; countdown text updates; `cd web && npm test && npm run build`.
