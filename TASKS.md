@@ -254,7 +254,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T450 — Safety check-in backend: alert → check-in countdown → supervisor alarm → escalation (Project KAZE)
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -263,7 +263,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/checkin.py, pipeline/src/routine_watch/api_checkin.py, pipeline/src/routine_watch/api.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_checkin.py, pipeline/tests/test_api_checkin.py, SPEC.md
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-17T23:57Z
-- pr: —
+- pr: #436
+- rating: 4/5 clear on the state machine, windows, permissions and the 7 scenarios; the 'api_alerts/alerts.py' hook point does not exist in this codebase (alerts are derived from flags on read, so the hook had to go on the flagged session_end in api_live.py), and the area left out contracts/ + the dashboard's live-message union, so the new checkin WS message is additive and undocumented in contracts/
 
 What: Ian is entering the **Project KAZE** challenge ("help when someone can't ask for it themselves"). Whenever an **alert** is raised for a person, the system asks the **person** to check in. If they don't within a window, it **sounds an alarm for their supervisor**, then escalates to the next supporter if nobody acknowledges. All simulated; never a real call or SMS.
 Why: KAZE prize ($1,500); also makes alerts actionable when the person can't respond.
