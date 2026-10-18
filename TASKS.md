@@ -211,7 +211,7 @@ What: `CheckInCard.tsx` has no error handling on either API call. (1) `fetchMyCh
 Acceptance: tests stub fetch with 404 on GET and 409 on respond; no unhandled rejection, the 409 message renders; `scripts/ci.sh` passes.
 
 ### T459 — Bug: web tests still flake under load: lazy screens vs findBy's 1 s default (MyRoutine again, AlertView.keyboard new)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
@@ -269,7 +269,7 @@ Why: a person watching themselves is the point of SPEC §17; the demo needs the 
 Acceptance: Vitest: My routine renders the live section (LiveScreen mocked); the supervisor page is unchanged; wording test passes; `cd web && npm test && npm run build`.
 
 ### T462 — Bug: `scripts/dev.sh up` dies with "unbound variable" on macOS bash 3.2 (empty VITE_HOST_ARGS)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
