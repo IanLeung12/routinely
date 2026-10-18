@@ -93,7 +93,7 @@ Five stages (see the diagram):
    - An LLM (Claude) writes the plain-language summary **using only the detected evidence and the scorer's output**, never adding a pattern or cause of its own.
    - Suggested checks come from the matched patterns (e.g. infection/UTI, hydration, new medication, CAM screen, medication review, cognitive reassessment).
    - Alerts go to the dashboard over the API WebSocket (§16 B), optionally with a phone push.
-5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is logged in Langfuse and used to tune thresholds.
+5. **Care team UI.** Live task map, evidence view, ghost replay, heat calendar and feedback. Feedback is stored with the alert and used to tune that person's threshold (`feedback.py`). Decision: no Langfuse.
 
 **Decision: custom detector plus a vision LLM, not either alone.**
 - The detector gives fast, consistent, offline-capable results. That makes the demo safe, and it counts as a model we trained.
@@ -213,6 +213,7 @@ Rules for the scorer:
 - Skeleton-only processing, no stored video, no face identification.
 - Optional local camera preview while framing a camera (`scripts/camera.sh --preview`): the capture machine may show itself its own picture under the skeleton, served on loopback only, one frame at a time in memory — never stored, never sent to the API, never visible to a supervisor.
 - Flags for review, **never a diagnosis**, with that wording kept consistent everywhere.
+- Building a routine from a **setup clip** is a one-time, opt-in step: the request must carry explicit consent, the clip is held in memory (or a temp file deleted in a `finally`), sent to Gemini once and never written to `REPLAY_DIR`, `CAMERA_RECORD`, the saved routines or the repo, and never logged. Daily monitoring stays skeleton-only.
 - The LLM summary may only restate detected evidence and the scorer's patterns. No speculation, no new causes, and no medical advice beyond the library's check prompts.
 - Patterns are "consistent with", ranked with confidence, and always allow "no clear pattern". Every pattern in the library cites where its signals come from; patterns without a defensible source don't ship.
 - Show uncertainty: "unclear" events, and confidence on each alert.
@@ -269,3 +270,30 @@ Diagrams: `docs/routine-watch-architecture.png` (components), `docs/routine-watc
 - Wording: "resident" → "person" in shared UI; "nurse" only where it is specifically the care-home supervisor. Never "patient" in the UI (the code may keep `resident_id`).
 - Privacy is stricter for the person: they always see exactly what their supervisors see, and can pause or unlink at any time.
 - **Replays (Ian):** every session with at least one error keeps a skeleton replay (landmarks, boxes, timestamps; never video), kept 30 days by default. Supervisors browse a person's replays, jump to each error, compare with the person's normal, and add notes; the person sees the same replays and can delete any of them.
+
+## 18. Safety check-ins (Project KAZE)
+
+"Help when someone can't ask for it themselves." Whenever a change is flagged for review (§7), the system asks the **person** to check in; if they don't, it alarms their **supervisors** in the order they chose, one after another, until somebody says they're on it. Backend: `pipeline/src/routine_watch/checkin.py` (the state machine) and `api_checkin.py` (routes, countdown, push).
+
+**The flow**
+
+- `pending` → the person is asked "Can you check in?" and has their **check-in window** (default 120 s; the demo people 20 s).
+- Safety PIN → `ok`. Nobody is woken.
+- **Duress PIN → the alarm goes out anyway**, marked `duress` and `silent`. Their own screen says exactly what checking in says — byte for byte — and nothing that happens afterwards changes it.
+- The window runs out → `alarm`: supporter #1 is asked "Is everyone okay?" and has the **ack window** (default 120 s; demo 15 s).
+- Nobody acknowledges → `escalated`: supporter #2, then #3, down the list. When the list runs out, the alarm stays open and says so.
+- A supporter taps "I'm on it" → `acknowledged`; escalation stops.
+- A supporter **or the person** closes it with a reason → `resolved` (`false_alarm` | `helped` | `other`).
+- Every transition is appended to the check-in's event log with a timestamp and who it was by.
+
+**The server owns the countdown.** Deadlines are stored server-side and a background tick (asyncio, every 1 s, started by the app's lifespan) advances them, so the alarm still fires if the person's device disconnects after the check-in started (KAZE's connectivity failure). Every route advances the same way before it answers, so a check-in reads right even after the API restarts.
+
+**Per person** (in memory, and one JSON file each under `SAFETY_DIR`, default `.data/safety/`): check-in window, ack window, the ordered supporter list (from §17's links), a safety PIN and a duress PIN (salted PBKDF2 hashes; never returned, never logged), a simulated location, and **sharing permissions per supporter** — `location`, `alert_details` (the alert id, so they can open the evidence, and the event log) and `replay` (§17). A supervisor's payload carries only what that person switched on for *them*: what is off is absent, not blanked.
+
+**API** — `GET /checkins/active?person=` (their own screen) or `?supporter=` (the alarms that reached them; exactly one of the two) · `POST /checkins/demo` · `POST /checkins/{id}/respond {pin}` (same 200 for both PINs; a wrong PIN is a 401 and the countdown carries on) · `POST /checkins/{id}/ack {supporter}` · `POST /checkins/{id}/resolve {by, reason}` · `POST /checkins/{id}/simulate {event: "disconnect"|"reconnect"}` · `GET/PUT /people/{id}/safety` (PINs write-only). State changes are pushed on the existing live socket as `checkin` messages: `/ws/live?checkin_person=` or `?checkin_supporter=`, or `?source=checkins` for a screen that is not watching a session. A socket that asks for neither sends exactly what it always did.
+
+**The seven scenarios** (all covered by `pipeline/tests/test_checkin.py` and `test_api_checkin.py`, on a clock the test owns): safe; no response → alarm; duress (the person sees "ok", the supervisor gets a silent duress alarm); the device disconnects after the start → the alarm still fires; nobody acknowledges → it escalates to #2; a false alarm closed by a supporter, and by the person; permissions (a supporter without `location` never gets it).
+
+**Real vs simulated.** Real: the state machine, the server-side countdown, the escalation order, the PIN hashing, the per-supporter filtering, the push. Simulated: **no real call, SMS or page ever happens** — an alarm is a payload a screen shows; the location is a room or address the person typed, never a device location; the demo people's timings are shortened (20 s / 15 s) and their PINs are seeded (safety `1234`, duress `9111`, both changeable with `PUT /people/{id}/safety`) so the flow fits the demo. A 4–12 character PIN with no account, no rate limit and no lockout behind it is a demo, not a product: a real deployment needs all three.
+
+**Wording** (§12): "check in", "alarm", "is everyone okay?". A check-in is about whether somebody is okay, never about what is wrong with them.

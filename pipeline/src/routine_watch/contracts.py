@@ -537,6 +537,12 @@ class LiveStep(_Contract):
 
     id: Id = Field(description="The step in the task graph, e.g. 'teabag_in_cup'.")
     label: str = Field(min_length=1, description="How the step is shown to a nurse.")
+    deps: list[Id] = Field(
+        default_factory=list,
+        description="The steps this one waits on, sorted. A task is a graph of "
+        "dependencies, not a fixed order (SPEC section 7), and this is what the "
+        "dashboard's task map draws it from.",
+    )
     optional: bool = Field(description="A step the task does not require, e.g. sugar.")
 
 

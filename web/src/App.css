@@ -1,0 +1,111 @@
+/* App shell (docs/DESIGN.md): a compact top bar — product name, a one-line
+   tagline, unit size and an offline/demo indicator — and a floating rounded nav
+   dock for the three main screens, instead of a tall header and plain buttons. */
+
+.app--with-dock {
+  padding-bottom: calc(var(--space-6) * 3);
+}
+
+.app-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.app-topbar__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.app-topbar__name {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.app-topbar__tagline {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.app-topbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-topbar__unit {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.app-dock {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-5);
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  box-shadow: 0 var(--space-2) var(--space-5) rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+
+.app-dock__item {
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.app-dock__item:hover {
+  color: var(--text);
+}
+
+.app-dock__item[aria-current='page'] {
+  background: var(--surface-raised-hover);
+  color: var(--text);
+}
+
+/* Below 480px the dock spans the width instead of floating as a pill, so every
+   label keeps a comfortable 44px tap target (same rule as the overview's
+   filter/sort pills, T234). */
+@media (max-width: 480px) {
+  .app-dock {
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: var(--space-3);
+    transform: none;
+    justify-content: space-between;
+  }
+
+  .app-dock__item {
+    flex: 1;
+    min-height: 2.75rem;
+    text-align: center;
+  }
+}

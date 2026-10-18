@@ -13,6 +13,21 @@ The unit overview on the tokens alone, before any screen was redesigned:
 The alert / evidence view, the first screen rebuilt on the system (same alert, same
 data, half the scroll): `design/alert-before.png` → `design/alert-after.png`.
 
+The public landing page, same copy, with one chart from the kit as its hero instead of
+a gradient: `design/landing-before-desktop.png` → `design/landing-after-desktop.png`,
+and at phone width `design/landing-before-mobile.png` →
+`design/landing-after-mobile.png`.
+
+The live session — a dark media card beside the task map as a vertical step list with
+a progress line — and the shift handoff as dense rows in one card:
+`design/live-before.png` → `design/live-after.png`,
+`design/handoff-before.png` → `design/handoff-after.png`.
+
+The task map itself, from that step list to a flow canvas of node cards wired by their
+dependencies: `design/task-map-before.png` → `design/task-map-after.png`, mid-session
+with the step that comes next in `design/task-map-live.png`, and left to right on a
+full-width card in `design/task-map-wide.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so

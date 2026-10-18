@@ -1,45 +1,146 @@
-/* Public landing page (web/landing.html). Mobile first: one column at phone
-   width, the flow strip opens out into a row on a wide screen. Tokens only -
-   this page shares the dashboard's palette and type scale (../index.css). */
+/* Public landing page (web/landing.html), on the design system in docs/DESIGN.md:
+   near-black, hairline cards, numbers before words, one chart and no decoration
+   around it. Mobile first - one column at phone width, the flow strip and the
+   pattern cards open out on a wider screen. Tokens only (../index.css), no hex. */
 
 .landing {
-  max-width: 60rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: var(--space-6) var(--space-4) var(--space-5);
 }
 
+/* The hero is the page's one loud thing: the name, what it does, the way in, and
+   the chart that shows it working. No gradient or glow of its own - the page's
+   vignette (--page-glow, set on body) is the only one in the system. */
 .landing__hero {
+  display: grid;
+  gap: var(--space-4);
   padding: var(--space-5) 0 var(--space-6);
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 10%, transparent),
-    transparent 70%
-  );
 }
 
 .landing__title {
-  font-size: clamp(var(--text-xl), 7vw, var(--text-2xl));
+  margin: 0;
+  font-size: clamp(var(--text-xl), 6vw, calc(var(--text-2xl) * 1.4));
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .landing__lead {
-  max-width: 36rem;
-  margin: var(--space-4) 0 var(--space-5);
-  font-size: var(--text-base);
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: clamp(var(--text-base), 2.2vw, var(--text-lg));
+  line-height: 1.45;
+}
+
+/* Who it is for, under the lead: anyone, on their own or with family, a carer or
+   a care home (SPEC section 17). Quieter than the lead, so the hero still reads as
+   one sentence first. */
+.landing__audience {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 .landing__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin: 0;
+  margin: var(--space-2) 0 0;
 }
 
 /* The shared .btn styles assume a <button>; these links need the same box. */
 .landing__actions .btn {
   padding: var(--space-3) var(--space-5);
-  font-size: var(--text-base);
+  font-size: var(--text-md);
   text-decoration: none;
+}
+
+/* The hero chart: one resident, her own usual range behind her readings, the
+   latest one tagged on the line (docs/DESIGN.md, "Charts"). The card's title row
+   is a <p>, not a heading, so the page outline stays h1 then one h2 per section. */
+.landing-chart {
+  margin: var(--space-3) 0 0;
+}
+
+.landing-chart__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.landing-chart__title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.landing-chart__caption {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* What the chart shows, in one sentence, the way the alert screen opens with its
+   recap: the reader should not have to read the line to get the point. */
+.landing-chart__headline {
+  max-width: 46ch;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+/* The chart is 40rem wide at its narrowest and scrolls sideways on a phone. Start
+   that scroll at the newest reading - the end of the line and its tag are the point
+   of the chart - by laying the scroller out right to left, with the chart itself
+   left to right inside it. */
+.landing-chart .line-chart__viewport {
+  direction: rtl;
+}
+
+.landing-chart .line-chart__viewport > svg {
+  direction: ltr;
+}
+
+/* What the chart is measured against, what it found, and what was kept. */
+.landing-chart__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.landing-stat__label {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.landing-stat__value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+}
+
+.landing-stat__number {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.landing-stat__unit {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
 
 .landing-section {
@@ -49,177 +150,191 @@
 .landing-section__title {
   margin: 0 0 var(--space-4);
   font-size: var(--text-lg);
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .landing-section__note {
-  max-width: 40rem;
-  margin: var(--space-4) 0 0;
-  color: var(--muted);
+  max-width: 46rem;
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
   font-size: var(--text-md);
 }
 
-.landing-list {
-  display: grid;
-  gap: var(--space-3);
-  max-width: 44rem;
+/* "Why it matters" and "Privacy by design": one claim per hairline row, no bullets
+   (docs/DESIGN.md: dense rows, not boxes). */
+.landing-notes {
   margin: 0;
-  padding: 0 0 0 var(--space-4);
-  font-size: var(--text-md);
-}
-
-.landing-list--stack {
   padding: 0;
-  color: var(--muted);
   list-style: none;
 }
 
-.landing-list--stack strong {
-  color: var(--text);
+.landing-notes li {
+  padding: var(--space-4);
+  font-size: var(--text-md);
 }
 
-/* Camera to skeleton to task graph to baseline to patterns to nurse (SPEC section 6). */
+.landing-notes li + li {
+  border-top: 1px solid var(--hairline);
+}
+
+/* Camera to skeleton to task graph to baseline to patterns to nurse (SPEC section 6).
+   The gaps are the card's background showing through, so the hairlines between the six
+   stages cost no borders and stay right however the grid rewraps. */
+.landing-flow-card {
+  overflow: hidden;
+}
+
 .landing-flow {
   display: grid;
-  gap: var(--space-3);
   grid-template-columns: 1fr;
+  gap: 1px;
   margin: 0;
   padding: 0;
+  background: var(--hairline);
   list-style: none;
 }
 
 .landing-flow__stage {
-  position: relative;
   display: grid;
   gap: var(--space-1);
   align-content: start;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-card);
 }
 
 .landing-flow__number {
-  color: var(--accent);
+  color: var(--text-muted);
   font-size: var(--text-xs);
   font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .landing-flow__label {
   font-size: var(--text-md);
+  font-weight: 600;
 }
 
 .landing-flow__body {
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 
-/* A caret in the gap, so the strip reads as a flow. Drawn with borders rather
-   than a character, so no screen reader announces it. Shown only in the layouts
-   where the next stage really is below (one column) or to the right (six). */
-.landing-flow__stage:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-top: var(--space-1) solid var(--muted);
-  border-right: var(--space-1) solid transparent;
-  border-left: var(--space-1) solid transparent;
-  transform: translate(-50%, calc(100% + var(--space-1)));
+@media (min-width: 40rem) {
+  .landing-flow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Room to breathe once the page is wider than a phone. */
+  .landing-notes li,
+  .landing-flow__stage {
+    padding: var(--space-4) var(--space-5);
+  }
 }
 
-@media (min-width: 48rem) {
+@media (min-width: 52rem) {
   .landing-flow {
     grid-template-columns: repeat(3, 1fr);
   }
-
-  .landing-flow__stage:not(:last-child)::after {
-    display: none;
-  }
 }
 
-@media (min-width: 64rem) {
-  .landing-flow {
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  /* Six to a row leaves each stage about seven characters-wide of prose: tighter
-     padding and smaller body text keep the cards from turning into columns. */
-  .landing-flow__stage {
-    padding: var(--space-3);
-  }
-
-  .landing-flow__body {
-    font-size: var(--text-xs);
-  }
-
-  .landing-flow__stage:not(:last-child)::after {
-    display: block;
-    top: 50%;
-    right: 0;
-    bottom: auto;
-    left: auto;
-    border-top: var(--space-1) solid transparent;
-    border-right: 0;
-    border-bottom: var(--space-1) solid transparent;
-    border-left: var(--space-1) solid var(--muted);
-    transform: translate(calc(100% + var(--space-1)), -50%);
-  }
-}
-
+/* Three patterns, three cards: the name and when to act on one line, the signals
+   under it, then the reading itself. */
 .landing-patterns {
   display: grid;
-  gap: var(--space-3);
   grid-template-columns: 1fr;
+  gap: var(--space-3);
   margin: var(--space-4) 0 0;
   padding: 0;
   list-style: none;
 }
 
-.landing-patterns__item {
-  display: grid;
-  gap: var(--space-2);
-  align-content: start;
+.landing-patterns > li {
+  display: flex;
 }
 
-.landing-patterns__name {
+.landing-pattern {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* When to act sits at the foot of every card, so the three line up however much
+   the reading above them wraps. */
+.landing-pattern__timing {
+  margin: auto 0 0;
+  padding: var(--space-2) 0 0;
+}
+
+.landing-pattern__name {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.landing-pattern__signals {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.landing-pattern__reading {
   margin: 0;
   font-size: var(--text-md);
 }
 
-.landing-patterns__signals,
-.landing-patterns__reading,
-.landing-patterns__timing {
-  margin: 0;
-  font-size: var(--text-sm);
-}
-
-.landing-patterns__signals {
-  color: var(--muted);
-}
-
-.landing-patterns__timing {
-  color: var(--muted);
-  font-size: var(--text-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-@media (min-width: 48rem) {
+@media (min-width: 52rem) {
   .landing-patterns {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
+/* "Built with": the shared Row, so the five tools read like any list on the
+   dashboard - name on the left, what it does on the right. */
+.landing-stack {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-stack .row {
+  flex-wrap: wrap;
+  padding-inline: var(--space-4);
+  border-radius: 0;
+}
+
+/* Phone width has no room for a column of values, so what each tool does sits
+   under its name until the page is wide enough to put it on the right. */
+.landing-stack .row__value {
+  flex: 1 1 100%;
+  color: var(--text-secondary);
+  font-variant-numeric: normal;
+  text-align: left;
+}
+
+@media (min-width: 40rem) {
+  .landing-stack .row {
+    padding-inline: var(--space-5);
+  }
+
+  .landing-stack .row__value {
+    flex: none;
+    text-align: right;
+  }
+}
+
 .landing-footer {
-  max-width: 60rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) var(--space-6);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hairline);
 }
 
 .landing-footer__line {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 

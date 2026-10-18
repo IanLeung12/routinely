@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -192,13 +192,13 @@ describe('Handoff', () => {
 
     // Nothing a nurse can only tap belongs on paper.
     expect(screen.getByRole('button', { name: /Back/ }).className).toContain('no-print')
-    expect(screen.getByLabelText('Window').closest('.no-print')).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Window' }).closest('.no-print')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Copy summary' }).closest('.no-print')).toBeTruthy()
     expect(open.closest('.no-print')).toBeTruthy()
 
     // What a nurse reads off the sheet stays: the headline, the window, the summary and
     // every resident row, each with its own counts.
-    expect(screen.getByText(/2 of 3 residents to review/).closest('.no-print')).toBeNull()
+    expect(screen.getByText(/2 of 3 people to review/).closest('.no-print')).toBeNull()
     expect(screen.getByRole('heading', { name: 'Last 12 hours' }).closest('.no-print')).toBeNull()
     expect(screen.getByText(served.summary).closest('.no-print')).toBeNull()
     const rows = screen.getAllByRole('listitem')
@@ -297,7 +297,7 @@ describe('Handoff', () => {
 
     render(<Handoff onBack={() => {}} />)
 
-    const headline = await screen.findByText('2 of 3 residents to review in the last 12 hours')
+    const headline = await screen.findByText('2 of 3 people to review in the last 12 hours')
     expect(headline.getAttribute('role')).toBe('status')
   })
 
@@ -320,7 +320,7 @@ describe('Handoff', () => {
 
     render(<Handoff onBack={() => {}} />)
 
-    expect(await screen.findByText('No residents on this unit yet.')).toBeTruthy()
+    expect(await screen.findByText('Nobody on this unit yet.')).toBeTruthy()
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
@@ -355,10 +355,16 @@ describe('Handoff', () => {
     render(<Handoff onBack={() => {}} />)
     await screen.findByText(twelve.summary)
 
-    fireEvent.change(screen.getByLabelText('Window'), { target: { value: '24' } })
+    const windows = within(screen.getByRole('group', { name: 'Window' }))
+    expect(windows.getAllByRole('button').map((option) => option.textContent))
+      .toEqual(['8h', '12h', '24h', '48h'])
+    expect(windows.getByRole('button', { name: '12h' }).getAttribute('aria-pressed')).toBe('true')
+
+    fireEvent.click(windows.getByRole('button', { name: '24h' }))
 
     expect(await screen.findByText(day.summary)).toBeTruthy()
     expect(await screen.findByRole('heading', { name: 'Last 24 hours' })).toBeTruthy()
+    expect(windows.getByRole('button', { name: '24h' }).getAttribute('aria-pressed')).toBe('true')
     expect(fetch.mock.calls.map(([url]) => url as string).some(url => url.includes('hours=24'))).toBe(true)
   })
 
@@ -675,5 +681,7 @@ describe('handoff.css print layout', () => {
   it('keeps the review rail and the chips readable once the colour is gone', () => {
     expect(printBlock).toMatch(/\.handoff__row--review \{[^}]*border-left-width/)
     expect(printBlock).toMatch(/\.handoff__chip \{[^}]*border:/)
+    // The delta pill sits among those chips, so it is outlined with them.
+    expect(printBlock).toMatch(/\.handoff-delta \{[^}]*border:/)
   })
 })

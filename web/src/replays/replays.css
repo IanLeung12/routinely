@@ -1,0 +1,48 @@
+/* Replays library (SPEC section 17): the list and the open session share one
+   screen, so "back to sessions" never leaves the person's library. Tokens only
+   (web/src/index.css), no hex. */
+.replays {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.replays__range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.replays__range-legend {
+  padding: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.replays__range input[type='date'] {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+.replays__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.replays__ghost {
+  margin-top: var(--space-4);
+}
+
+.replays__delete-actions {
+  display: flex;
+  gap: var(--space-3);
+}

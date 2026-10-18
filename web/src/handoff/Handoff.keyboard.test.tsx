@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -87,12 +87,16 @@ describe('Handoff keyboard access', () => {
     await screen.findByText(served.summary)
 
     const backButton = screen.getByRole('button', { name: /Back/ })
-    const windowSelect = screen.getByLabelText('Window')
+    // Every window is its own tab stop, so a nurse can pick one without a mouse.
+    const windows = screen.getByRole('group', { name: 'Window' })
+    const firstWindow = within(windows).getByRole('button', { name: '8h' })
+    const lastWindow = within(windows).getByRole('button', { name: '48h' })
     const copyButton = screen.getByRole('button', { name: 'Copy summary' })
     const openAlertButton = await screen.findByRole('button', { name: "Open Mrs. K's alert" })
 
     await tabTo(user, backButton)
-    await tabTo(user, windowSelect)
+    await tabTo(user, firstWindow)
+    await tabTo(user, lastWindow)
     await tabTo(user, copyButton)
     await tabTo(user, openAlertButton)
 

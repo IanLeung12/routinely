@@ -227,8 +227,23 @@ def load_task(name: str) -> TaskGraph:
 def parse_task(text: str, *, source: str = "<string>") -> TaskGraph:
     """Build a task graph from the YAML text of one task file."""
     try:
-        spec = _TaskSpec.model_validate(yaml.safe_load(text))
-    except (ValidationError, yaml.YAMLError) as exc:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise TaskGraphError(f"{source}: {exc}") from exc
+    return parse_task_data(data, source=source)
+
+
+def parse_task_data(data: object, *, source: str = "<data>") -> TaskGraph:
+    """Build a task graph from one task file's already-read contents.
+
+    `parse_task` is this with the YAML reading in front of it, and
+    `routine_watch.routine_builder` uses this directly: a drafted routine is built as
+    this mapping in memory, and has to be held to exactly the same rules as a task
+    file somebody wrote by hand before anything downstream sees it.
+    """
+    try:
+        spec = _TaskSpec.model_validate(data)
+    except ValidationError as exc:
         raise TaskGraphError(f"{source}: {exc}") from exc
     return _build(spec, source)
 

@@ -1,6 +1,7 @@
-/* Shift handoff (T062): one view of who changed in the hours this nurse was away.
-   A nurse reads the headline, then the rows; every row says what happened in words,
-   so colour is only ever a second signal. Tokens only (web/src/index.css), no hex. */
+/* Shift handoff (T062), on the system in docs/DESIGN.md: a nurse reads the headline,
+   then the recap card, then one dense row per resident in a single card. Every row
+   says what happened in words, so colour is only ever a second signal. Tokens only
+   (web/src/index.css), no hex or px. */
 
 .handoff {
   display: flex;
@@ -13,15 +14,33 @@
   align-self: flex-start;
 }
 
+/* Title left, window picker right, the way every other screen's header reads. */
+.handoff__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+
+.handoff__headings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 .handoff__title {
   margin: 0;
   font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .handoff__lead {
   max-width: 34rem;
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 
@@ -32,157 +51,165 @@
 }
 
 .handoff__label {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.handoff__select {
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--text-sm);
+/* The one line a nurse reads first: the only large type on the screen. */
+.handoff__headline {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-/* Copy and print sit side by side, with the copy's status beside them, and wrap
-   rather than overflow at phone width. */
+.handoff__summary {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+/* Copy and print sit in the recap card's footer, against its edge, with the copy's
+   status beside them; they wrap rather than overflow at phone width. */
 .handoff__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+  margin: var(--space-5) calc(var(--space-5) * -1) calc(var(--space-5) * -1);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--hairline);
 }
 
-.handoff__headline {
+.handoff__actions p {
   margin: 0;
-  font-size: var(--text-lg);
-}
-
-.handoff__summary {
-  margin: 0;
-  color: var(--text);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
 .handoff__paused {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: var(--text-sm);
 }
 
+/* The rows run the full width of their card, against its padding, and the card
+   clips their rails and hairlines back to its own radius. */
+.handoff__rows {
+  overflow: hidden;
+}
+
 .handoff__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
+  margin: calc(var(--space-5) * -1);
   padding: 0;
   list-style: none;
 }
 
+/* A row, not a box: the rail marks the ones worth the nurse's time, and the hairline
+   is the only thing between one resident and the next. */
 .handoff__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-left: var(--space-1) solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border-left: var(--space-1) solid transparent;
 }
 
-/* A row worth the nurse's time keeps its rail; a quiet row stays quiet. */
+/* The hairline belongs to the row, not to the `Row` inside it, so it runs past the
+   rail instead of starting after it (index.css gives `li + li > .row` one of its
+   own, which would otherwise double up). */
+.handoff__row + .handoff__row {
+  border-top: 1px solid var(--hairline);
+}
+
+.handoff__row + .handoff__row > .row {
+  border-top: 0;
+}
+
 .handoff__row--review {
   border-left-color: var(--accent);
 }
 
-.handoff__identity {
-  display: flex;
+.handoff__row .row {
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.handoff__row .row__main {
+  flex: 1 1 10rem;
   flex-direction: column;
-  min-width: 10rem;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+/* What happened takes the width that is left and wraps inside it; the alert button
+   keeps the far right of the row rather than being pushed onto a line of its own. */
+.handoff__row .row__trailing {
+  flex: 1 1 18rem;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.handoff__row .row__trailing > .btn {
+  flex: none;
+  white-space: nowrap;
 }
 
 .handoff__name {
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
-/* Where to find them: the same line the overview and resident screens carry. */
-.handoff__room {
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
+/* Where to find them, and their own normal: the same two lines the overview and
+   resident screens carry. */
+.handoff__room,
 .handoff__baseline {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
+.handoff__room + .handoff__baseline::before {
+  content: ' · ';
+}
+
+/* `align-items`/`align-content` are not decoration here: the chips box grows to fill
+   the row, and without them every pill stretches to the height of its line. */
 .handoff__chips {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  align-items: center;
+  align-content: flex-start;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
+/* The chips are `Pill`s; only the long camera line needs to wrap rather than run
+   off the row. */
 .handoff__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
+  white-space: normal;
+  text-align: left;
 }
 
 .handoff__glyph {
   font-weight: 700;
 }
 
-.handoff__chip--flagged {
-  background: var(--status-flagged-bg);
-  color: var(--status-flagged-text);
-}
-
-.handoff__chip--pending {
-  background: var(--status-watch-bg);
-  color: var(--status-watch-text);
-}
-
-.handoff__chip--trending {
-  background: var(--error-amber-bg);
-  color: var(--error-amber-text);
-}
-
-.handoff__chip--quiet {
-  background: var(--status-normal-bg);
-  color: var(--status-normal-text);
-}
-
-.handoff__chip--paused {
-  background: var(--error-grey-bg);
-  color: var(--error-grey-text);
-}
-
-/* Capture too unclear to score: grey everywhere in the dashboard (SPEC section 7 -
-   unclear is never an error), the same grey as a paused room because both say the
-   pipeline has nothing to report rather than something to report. */
-.handoff__chip--unclear {
-  background: var(--error-grey-bg);
-  color: var(--error-grey-text);
-}
-
 /* Nurses check the handoff on a phone on the floor (T247): below 480px, stack each
    row's identity, chips and alert button instead of squeezing them onto one line
    and forcing horizontal scroll, and give controls room to tap. */
 @media (max-width: 480px) {
-  .handoff__controls {
-    flex-wrap: wrap;
+  .handoff__head {
+    flex-direction: column;
   }
 
-  .handoff__select {
+  .handoff__controls .segmented {
+    flex: 1;
+  }
+
+  .handoff__controls .segmented__option {
     min-height: 2.75rem;
   }
 
@@ -190,18 +217,28 @@
     min-height: 2.75rem;
   }
 
-  .handoff__row {
+  .handoff__row .row {
+    flex-direction: column;
+    align-items: stretch;
+    padding-inline: var(--space-3);
+  }
+
+  /* The row stacks, so `flex: 1 1 10rem` and `1 1 18rem` would be read as heights
+     and leave a tall empty band under every resident: each part takes the height of
+     what is in it. */
+  .handoff__row .row__main,
+  .handoff__row .row__trailing {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .handoff__row .row__trailing {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .handoff__identity {
-    width: 100%;
-    min-width: 0;
-  }
-
   .handoff__chips {
-    width: 100%;
+    justify-content: flex-start;
   }
 
   .handoff__row .btn {
@@ -246,6 +283,12 @@
   /* Same: the chips lose their tone backgrounds in black on white, so each one keeps
      an outline rather than running into its neighbour as one long sentence. */
   .handoff__chip {
+    border: 1px solid;
+  }
+
+  /* The delta rides in the same row of chips (T428 put it on `Pill`), so it takes
+     the same outline rather than printing as a bare phrase between two boxes. */
+  .handoff-delta {
     border: 1px solid;
   }
 }

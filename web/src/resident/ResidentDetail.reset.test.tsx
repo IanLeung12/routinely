@@ -6,7 +6,7 @@ import type { FeedbackAnswer, Resident, ResidentFeedback } from './types.ts'
 
 /** T312: the dashboard side of T304 (`pipeline/tests/test_feedback_reset.py`) - a demo
  * reset drops `/residents/{id}/feedback` back to nothing answered, so the resident
- * detail's "What nurses said" card has to drop the stale answer with it rather than
+ * detail's "Past feedback" card has to drop the stale answer with it rather than
  * keep showing what the first run's nurse said. */
 
 const MRS_K = mockResidentDetail('mrs-k') as Resident
@@ -57,7 +57,7 @@ describe('ResidentDetail feedback after a demo reset (T312)', () => {
     stubFetch(ANSWERED)
     const { unmount } = render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    const card = await screen.findByRole('region', { name: 'What nurses said' })
+    const card = await screen.findByRole('region', { name: 'Past feedback' })
     await waitFor(() =>
       expect(card.textContent).toContain('Confirmed · consistent with Sudden change (delirium pattern) · 1 Jan, 13:40'),
     )
@@ -68,8 +68,8 @@ describe('ResidentDetail feedback after a demo reset (T312)', () => {
     stubFetch(RESET)
     render(<ResidentDetail residentId="mrs-k" onBack={() => {}} />)
 
-    const reopened = await screen.findByRole('region', { name: 'What nurses said' })
-    await waitFor(() => expect(reopened.textContent).toContain('No nurse answers yet'))
+    const reopened = await screen.findByRole('region', { name: 'Past feedback' })
+    await waitFor(() => expect(reopened.textContent).toContain('No feedback yet'))
     expect(reopened.textContent).not.toContain('Confirmed')
   })
 })

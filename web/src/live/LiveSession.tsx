@@ -6,6 +6,8 @@ import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
 import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
+import { Pill } from '../ui/Pill.tsx'
+import { Row } from '../ui/Row.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
 import type { TaskError } from '../contracts.ts'
 import { describeError, ERROR_TYPE_TONE } from '../ui/errorTypes.ts'
@@ -67,8 +69,15 @@ function stepLabel(steps: LiveStep[], stepId: string | null | undefined): string
   return steps.find((step) => step.id === stepId)?.label ?? 'Session'
 }
 
+function errorPhrase(steps: LiveStep[], error: TaskError): string {
+  return describeError(error.type, stepLabel(steps, error.step_id))
+}
+
+/** The whole error in one sentence, for anything that can't show a row: the live
+ * region below, which reads it out. The row itself splits the phrase from its
+ * timestamp so the times line up in a column. */
 function errorText(steps: LiveStep[], error: TaskError): string {
-  return `${describeError(error.type, stepLabel(steps, error.step_id))} · ${formatClock(error.t_start)}`
+  return `${errorPhrase(steps, error)} · ${formatClock(error.t_start)}`
 }
 
 /** Strips `?source=camera` (and `?camera=`) from the dashboard URL and reloads, landing
@@ -239,9 +248,13 @@ export function LiveSession({
         title="Live session"
         action={
           source === 'mock' ? (
-            <span className="live-session__mock-badge">Mock data</span>
+            <Pill className="live-session__badge" tone="neutral">
+              Mock data
+            </Pill>
           ) : camera ? (
-            <span className="live-session__camera-badge">Live camera</span>
+            <Pill className="live-session__badge" tone="positive">
+              Live camera
+            </Pill>
           ) : null
         }
       />
@@ -290,17 +303,26 @@ export function LiveSession({
           )}
 
           <div className="live-session__layout">
-            <Card>
-              <SectionHeader title="Skeleton view" />
-              {/* The real camera picture under the skeleton, for whoever is standing at
-                  this machine (T416): a toggle that only appears when the page is on
-                  localhost and the capture process answers on loopback, so everywhere
-                  else - and every supervisor - sees exactly the skeleton it saw before.
-                  Video never leaves the capture machine and is never stored (SPEC
-                  section 12). */}
-              <CameraPreview port={PREVIEW_PORT} probe={cameraLive ? undefined : noPreview}>
-                <SkeletonView frame={frame} />
-              </CameraPreview>
+            {/* A dark media card: the frame is one step darker than the card around it,
+                so the skeleton reads as footage rather than as another panel. */}
+            <Card className="live-session__media">
+              <div className="live-session__media-head">
+                <SectionHeader
+                  title="Skeleton view"
+                  caption="Skeletons and boxes only — no video stored"
+                />
+              </div>
+              <div className="live-session__frame">
+                {/* The real camera picture under the skeleton, for whoever is standing at
+                    this machine (T416): a toggle that only appears when the page is on
+                    localhost and the capture process answers on loopback, so everywhere
+                    else - and every supervisor - sees exactly the skeleton it saw before.
+                    Video never leaves the capture machine and is never stored (SPEC
+                    section 12). */}
+                <CameraPreview port={PREVIEW_PORT} probe={cameraLive ? undefined : noPreview}>
+                  <SkeletonView frame={frame} />
+                </CameraPreview>
+              </div>
             </Card>
             <Card>
               <SectionHeader title="Task map" />
@@ -321,15 +343,33 @@ export function LiveSession({
             </Card>
           </div>
 
+          {/* Dense hairline-separated rows that run the full width of the card: the
+              tone dot and what happened on the left, the timestamp right-aligned and
+              tabular so a column of them scans (docs/DESIGN.md). The phrase already
+              says "skipped" or "repeated", so the colour is the second signal. */}
           <Card>
-            <SectionHeader title="Errors" />
+            <SectionHeader title="Errors" caption={errors.length > 0 ? 'this session' : undefined} />
             {errors.length === 0 ? (
               <EmptyState message="No errors yet." />
             ) : (
               <ul className="live-session__error-list">
                 {errors.map((error) => (
-                  <li key={error.error_id} className={`error-chip error-chip--${ERROR_TYPE_TONE[error.type]}`}>
-                    {errorText(steps, error)}
+                  <li key={error.error_id}>
+                    <Row
+                      className="live-session__error"
+                      leading={
+                        <span
+                          aria-hidden="true"
+                          className={`live-session__error-dot live-session__error-dot--${ERROR_TYPE_TONE[error.type]}`}
+                        />
+                      }
+                      title={errorPhrase(steps, error)}
+                      value={
+                        <span className="live-session__error-time tabular-nums">
+                          {formatClock(error.t_start)}
+                        </span>
+                      }
+                    />
                   </li>
                 ))}
               </ul>

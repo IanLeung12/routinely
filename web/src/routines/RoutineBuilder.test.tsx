@@ -1,0 +1,193 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { RoutineBuilder } from './RoutineBuilder.tsx'
+
+beforeEach(() => {
+  // Offline in every test: the mock draft responds instantly and deterministically,
+  // same as the demo running with no keys.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline in tests')))
+})
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  localStorage.clear()
+})
+
+describe('Describe it', () => {
+  it('renders and saves a server draft whose graph steps use deps', async () => {
+    const graph = {
+      id: 'brush_teeth', title: 'Brush teeth', steps: [
+        { id: 'get', label: 'Get toothbrush', deps: [], optional: false, once_only: true },
+        { id: 'brush', label: 'Brush', deps: ['get'], optional: false, once_only: true },
+      ],
+    }
+    const fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ draft: { steps: [] }, task_graph: graph }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: graph.id, title: graph.title, task_graph: graph }) })
+    vi.stubGlobal('fetch', fetch)
+    const onSaved = vi.fn()
+    render(<RoutineBuilder onSaved={onSaved} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Brushing teeth' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+
+    await waitFor(() => expect(screen.getByDisplayValue('Get toothbrush')).toBeTruthy())
+    expect(screen.getByRole('list', { name: 'Task steps' }).textContent).toContain('Brush')
+    fireEvent.click(screen.getByRole('button', { name: 'Save routine' }))
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
+    const body = JSON.parse(fetch.mock.calls[1][1].body)
+    expect(body.task_graph.steps[1].deps).toEqual(['get'])
+    expect(body.task_graph.steps[1]).not.toHaveProperty('depends_on')
+    expect(onSaved.mock.calls[0][0].task_graph.steps[1].depends_on).toEqual(['get'])
+  })
+
+  it('fills the textarea from an example', () => {
+    render(<RoutineBuilder onSaved={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Brushing teeth' }))
+
+    const textarea = screen.getByLabelText('What happens, in order') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Get the toothbrush, put toothpaste on it, brush, then rinse and spit.')
+  })
+
+  it('shows the server detail, not a canned draft, when the API refuses the description', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({ detail: 'the drafted routine has no steps' }),
+      }),
+    )
+    render(<RoutineBuilder onSaved={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText('What happens, in order'), {
+      target: { value: 'Brush my teeth every morning' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+    expect(screen.getByRole('alert').textContent).toBe('the drafted routine has no steps')
+    expect(screen.queryByText('Brush teeth')).toBeNull()
+  })
+
+  it('disables submit until there is a description, then drafts a routine', async () => {
+    render(<RoutineBuilder onSaved={vi.fn()} />)
+
+    const submit = screen.getByRole('button', { name: 'Draft routine' }) as HTMLButtonElement
+    expect(submit.disabled).toBe(true)
+
+    fireEvent.change(screen.getByLabelText('What happens, in order'), {
+      target: { value: 'Brush my teeth every morning' },
+    })
+    expect(submit.disabled).toBe(false)
+    fireEvent.click(submit)
+
+    await waitFor(() => expect(screen.getByText('Brush teeth')).toBeTruthy())
+    expect(screen.getByRole('list', { name: 'Task steps' })).toBeTruthy()
+    expect(screen.getByText(/doesn't know/)).toBeTruthy()
+  })
+})
+
+describe('From a video', () => {
+  function openVideoTab() {
+    render(<RoutineBuilder onSaved={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'From a video' }))
+  }
+
+  it('keeps submit disabled until a clip is chosen and consent is ticked', () => {
+    openVideoTab()
+    const submit = screen.getByRole('button', { name: 'Draft routine' }) as HTMLButtonElement
+    const file = new File(['clip'], 'setup.mp4', { type: 'video/mp4' })
+
+    expect(submit.disabled).toBe(true)
+
+    fireEvent.change(screen.getByLabelText(/A clip of the routine/), { target: { files: [file] } })
+    expect(submit.disabled).toBe(true)
+
+    fireEvent.click(screen.getByLabelText(/sent once to Google Gemini/))
+    expect(submit.disabled).toBe(false)
+  })
+
+  it('drafts a routine once a clip and consent are both given', async () => {
+    openVideoTab()
+    const file = new File(['clip'], 'setup.mp4', { type: 'video/mp4' })
+    fireEvent.change(screen.getByLabelText(/A clip of the routine/), { target: { files: [file] } })
+    fireEvent.click(screen.getByLabelText(/sent once to Google Gemini/))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+
+    await waitFor(() => expect(screen.getByText('Brush teeth')).toBeTruthy())
+  })
+})
+
+describe('editing and saving the draft', () => {
+  async function draftBrushTeeth(onSaved = vi.fn()) {
+    render(<RoutineBuilder onSaved={onSaved} />)
+    fireEvent.change(screen.getByLabelText('What happens, in order'), {
+      target: { value: 'Brush my teeth every morning' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+    await waitFor(() => expect(screen.getByText('Brush teeth')).toBeTruthy())
+    return onSaved
+  }
+
+  it('renaming a step updates the task map preview live', async () => {
+    await draftBrushTeeth()
+
+    fireEvent.change(screen.getByDisplayValue('Get the toothbrush'), {
+      target: { value: 'Pick up the toothbrush' },
+    })
+
+    expect(screen.queryByText('Get the toothbrush')).toBeNull()
+    const steps = screen.getByRole('list', { name: 'Task steps' })
+    expect(steps.textContent).toContain('Pick up the toothbrush')
+  })
+
+  it('deleting a step removes it from the task map preview', async () => {
+    await draftBrushTeeth()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Get the toothbrush' }))
+
+    const steps = screen.getByRole('list', { name: 'Task steps' })
+    expect(steps.textContent).not.toContain('Get the toothbrush')
+  })
+
+  it('saves the edited routine', async () => {
+    const onSaved = await draftBrushTeeth()
+
+    fireEvent.change(screen.getByDisplayValue('Get the toothbrush'), {
+      target: { value: 'Pick up the toothbrush' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save routine' }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
+    const saved = onSaved.mock.calls[0][0]
+    expect(saved.title).toBe('Brush teeth')
+    expect(saved.task_graph.steps[0].label).toBe('Pick up the toothbrush')
+  })
+
+  it('shows the server detail and keeps the draft on screen when saving is refused', async () => {
+    const onSaved = await draftBrushTeeth()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 409, json: async () => ({ detail: "'brush_teeth' is a built-in routine" }) }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save routine' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+    expect(screen.getByRole('alert').textContent).toBe("'brush_teeth' is a built-in routine")
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(screen.getByText('Brush teeth')).toBeTruthy()
+  })
+
+  it('starting over returns to the tabs', async () => {
+    await draftBrushTeeth()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start over' }))
+
+    expect(screen.getByLabelText('What happens, in order')).toBeTruthy()
+    expect(screen.queryByText('Brush teeth')).toBeNull()
+  })
+})

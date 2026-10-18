@@ -223,7 +223,14 @@ def _session_start(graph: TaskGraph, session_id: str) -> dict[str, Any]:
         "session_id": session_id,
         "task_id": graph.id,
         "steps": [
-            {"id": step.id, "label": step.label, "optional": step.optional}
+            {
+                "id": step.id,
+                "label": step.label,
+                # Sorted: `Step.deps` is a frozenset, and the message has to be the
+                # same every time a scenario is replayed.
+                "deps": sorted(step.deps),
+                "optional": step.optional,
+            }
             for step in graph.steps
         ],
     }

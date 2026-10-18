@@ -32,6 +32,96 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The timeline: the scrub bar with the session's errors ticked along it. The ticks live
+   in the bar's own box, so a tick's position is its share of the replay's length. */
+.replay-player__timeline {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.replay-player__markers {
+  position: absolute;
+  inset: 0;
+  /* The bar underneath stays draggable everywhere except on a tick. */
+  pointer-events: none;
+}
+
+/* One error, as a tick a thumb can still hit: a wide invisible hit box around a thin
+   coloured bar, in the error colours of SPEC section 7 (red skipped/wrong object, amber
+   out of order/repeated, grey unclear). The colour repeats what the button is already
+   named - "Jump to <what happened> at m:ss" - so it is never the only cue. */
+.replay-player__marker {
+  position: absolute;
+  top: 50%;
+  width: var(--space-4);
+  height: var(--space-5);
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.replay-player__marker::before {
+  content: '';
+  display: block;
+  width: var(--space-1);
+  height: var(--space-3);
+  margin: 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--error-grey-text);
+  box-shadow: 0 0 0 1px var(--surface-page);
+}
+
+.replay-player__marker:hover::before,
+.replay-player__marker:focus-visible::before {
+  height: var(--space-4);
+}
+
+.replay-player__marker--omission::before,
+.replay-player__marker--substitution::before {
+  background: var(--error-red-text);
+}
+
+.replay-player__marker--sequence::before,
+.replay-player__marker--perseveration::before {
+  background: var(--error-amber-text);
+}
+
+.replay-player__marker--hesitation::before,
+.replay-player__marker--abandonment::before {
+  background: var(--error-grey-text);
+}
+
+/* Speed sits on its own quiet line under the transport, which stays the one line that
+   matters; the chosen speed is raised as well as marked `aria-pressed`. */
+.replay-player__speed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.replay-player__speed-label {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.replay-player__speed .btn {
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.replay-player__speed .btn[aria-pressed='true'] {
+  border-color: var(--hairline-strong);
+  background: var(--surface-raised-hover);
+  color: var(--text);
+}
+
 /* Ghost replay: today drawn over the usual routine. The legend names both layers in
    words and repeats their colour as a dot, so the comparison never rests on colour. */
 .ghost-replay {
@@ -114,8 +204,16 @@
     min-height: 2.75rem;
   }
 
+  .replay-player__timeline {
+    flex: 1 1 100%;
+  }
+
   .replay-player__controls input[type='range'] {
     flex: 1 1 100%;
+    min-height: 2.75rem;
+  }
+
+  .replay-player__speed .btn {
     min-height: 2.75rem;
   }
 

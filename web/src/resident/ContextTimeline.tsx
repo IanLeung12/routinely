@@ -7,7 +7,7 @@ import './contextTimeline.css'
  * pipeline neither detects nor interprets these. */
 export function ContextTimeline({ records }: { records: CareRecord[] }) {
   if (records.length === 0) {
-    return <p className="muted">No care records for this resident.</p>
+    return <p className="muted">No care records for this person.</p>
   }
 
   const newestFirst = [...records].sort((a, b) => recordTime(b.ts) - recordTime(a.ts))
@@ -17,9 +17,9 @@ export function ContextTimeline({ records }: { records: CareRecord[] }) {
       {newestFirst.map((record) => (
         <li
           key={`${record.ts}-${record.kind}`}
-          className={`context-record context-record--${record.kind}`}
+          className={`context-record context-record--${record.kind}${record.kind === 'temperature' && Number(record.value) >= 38 ? ' context-record--fever' : ''}`}
         >
-          <span className="context-when">{formatDayTime(record.ts)}</span>
+          <time className="context-when" dateTime={record.ts}>{formatDayTime(record.ts)}</time>
           <span className="context-what">{describeCareRecord(record)}</span>
           {record.note !== '' && <span className="context-note">{record.note}</span>}
         </li>

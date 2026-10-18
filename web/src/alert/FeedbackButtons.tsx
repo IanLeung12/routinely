@@ -22,11 +22,12 @@ function verdictVariant(verdict: FeedbackVerdict, value?: FeedbackVerdict | null
   return value === verdict ? loud : 'secondary'
 }
 
-/** Lets a nurse record whether a flagged alert was real, so the threshold can learn from it.
+/** Lets whoever is reviewing record whether a flagged alert was real, so the threshold
+ * can learn from it.
  *
  * Once an alert is confirmed, `causeOptions` (the patterns this change was flagged as being
  * consistent with) turns into the "what was it?" picker from SPEC section 5, MVP 8: the
- * nurse's answer is reported through `onCauseChange` and stored with the feedback. */
+ * answer is reported through `onCauseChange` and stored with the feedback. */
 export function FeedbackButtons({
   value,
   onChange,
@@ -43,7 +44,7 @@ export function FeedbackButtons({
   const causeLabelId = useId()
   return (
     <div className="feedback-buttons">
-      <div role="group" aria-label="Nurse feedback" className="feedback-buttons__verdicts">
+      <div role="group" aria-label="Your feedback" className="feedback-buttons__verdicts">
         {OPTIONS.map((option) => (
           <Button
             key={option.verdict}

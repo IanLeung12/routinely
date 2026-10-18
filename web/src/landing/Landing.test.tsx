@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import Landing from './Landing.tsx'
+import { HERO_BASELINE, HERO_FLAG_THRESHOLD, HERO_READINGS } from './heroChart.ts'
 
 afterEach(() => {
   cleanup()
@@ -15,12 +16,23 @@ const SECTION_HEADINGS = [
   'Built with',
 ]
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
 describe('landing page', () => {
   it('leads with what Routine Watch is', () => {
     render(<Landing />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Routine Watch' })).toBeTruthy()
     expect(screen.getByText(/flags a change for review/)).toBeTruthy()
+  })
+
+  it('says who it is for: anyone, alone or with family, a carer or a care home', () => {
+    render(<Landing />)
+
+    const audience = screen.getByText(/For anyone who wants it/).textContent ?? ''
+    for (const reader of ['on your own', 'family', 'carer', 'care home']) {
+      expect(audience).toContain(reader)
+    }
   })
 
   it('shows every section, in order', () => {
@@ -49,11 +61,11 @@ describe('landing page', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'How it works' }).id).toBe(href.slice(1))
   })
 
-  it('walks through the pipeline, camera to nurse', () => {
+  it('walks through the pipeline, camera to dashboard', () => {
     render(<Landing />)
 
     const stages = screen.getAllByRole('listitem').map((item) => item.textContent ?? '')
-    const labels = ['Camera', 'Skeleton only', 'Task graph', 'Personal baseline', 'Patterns', 'Nurse']
+    const labels = ['Camera', 'Skeleton only', 'Task graph', 'Personal baseline', 'Patterns', 'Your dashboard']
     for (const label of labels) {
       expect(stages.some((stage) => stage.includes(label))).toBe(true)
     }
@@ -100,17 +112,77 @@ describe('landing page', () => {
     const { container } = render(<Landing />)
     const copy = container.textContent ?? ''
 
-    for (const banned of [/diagnos/i, /suffers from/i, /has delirium/i, /has dementia/i]) {
-      expect(copy).not.toMatch(banned)
+    /* Role words included (SPEC section 17): the page is read by someone setting this
+       up for themselves as often as by a care home, so its copy names neither. */
+    const banned = [
+      /diagnos/i,
+      /suffers from/i,
+      /has delirium/i,
+      /has dementia/i,
+      /patient/i,
+      /nurse/i,
+      /resident/i,
+    ]
+    for (const phrase of banned) {
+      expect(copy).not.toMatch(phrase)
     }
   })
 
   it('stays short enough to read in one pass', () => {
     const { container } = render(<Landing />)
 
-    const words = (container.textContent ?? '')
-      .split(/\s+/)
-      .filter((word) => /[a-z]/i.test(word))
+    /* The hero chart's own text - axis labels, the value of every reading, the keyboard
+       instructions - is the accessible equivalent of the picture, not copy anyone reads
+       top to bottom, so the prose budget is measured without it (T407). */
+    const prose = container.cloneNode(true) as HTMLElement
+    prose.querySelectorAll('figure').forEach((figure) => figure.remove())
+    const words = (prose.textContent ?? '').split(/\s+/).filter((word) => /[a-z]/i.test(word))
     expect(words.length).toBeLessThanOrEqual(350)
+  })
+})
+
+describe('the hero chart', () => {
+  it('draws one resident against her own usual range, latest reading tagged', () => {
+    const { container } = render(<Landing />)
+
+    const chart = screen.getByRole('figure', { name: /Mrs\. K/ })
+    expect(chart.textContent).toContain('Usual range: 0.07–0.17 (mean 0.12).')
+    expect(container.querySelector('.line-chart__band')).toBeTruthy()
+    /* The end-of-line tag: the latest score, next to the point, without hovering. */
+    expect(container.querySelector('foreignObject .pill')?.textContent).toBe('0.78')
+    expect(screen.getByText('Latest: 1 Jan: 0.78, change flagged for review')).toBeTruthy()
+  })
+
+  it('says in words, not only in colour, that two readings are above her threshold', () => {
+    const { container } = render(<Landing />)
+
+    expect(
+      screen.getByText('2 readings above the flag threshold: change flagged for review.'),
+    ).toBeTruthy()
+    expect(container.querySelectorAll('.line-chart__marker--flagged')).toHaveLength(2)
+    expect(screen.getByText('Flagged').getAttribute('aria-label')).toBe('Change flagged for review')
+  })
+
+  it('puts the numbers behind the chart beside it', () => {
+    render(<Landing />)
+
+    const stat = (label: string) => screen.getByText(label).closest('.landing-stat')?.textContent
+    expect(stat('Her own baseline')).toContain('14')
+    expect(stat('Above her usual range')).toContain('2')
+    expect(stat('Video kept')).toContain('0')
+  })
+
+  it('keeps her quiet fortnight inside the band and the flagged day outside it', () => {
+    const flagged = HERO_READINGS.filter((reading) => reading.value > HERO_FLAG_THRESHOLD)
+    const quiet = HERO_READINGS.filter((reading) => reading.value <= HERO_FLAG_THRESHOLD)
+
+    expect(quiet).toHaveLength(HERO_READINGS.length - 2)
+    for (const reading of quiet) {
+      expect(reading.value).toBeGreaterThanOrEqual(HERO_BASELINE.mean - HERO_BASELINE.threshold)
+      expect(reading.value).toBeLessThanOrEqual(HERO_BASELINE.mean + HERO_BASELINE.threshold)
+    }
+    /* Two sessions over her own threshold within 24 h is what a flag takes (SPEC §7). */
+    expect(flagged).toHaveLength(2)
+    expect(flagged[1].time - flagged[0].time).toBeLessThan(DAY_MS)
   })
 })

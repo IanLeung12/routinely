@@ -11,11 +11,11 @@ describe('PrivacyPanel at phone width', () => {
     }>('node:fs')
     const css = fs.readFileSync('src/about/privacyPanel.css', 'utf8')
     const phoneStyles = css.match(
-      /@media\s*\(max-width:\s*480px\)\s*\{([\s\S]*?)\n\}/,
+      /@media\s*\(max-width:\s*30rem\)\s*\{([\s\S]*?)\n\}/,
     )?.[1]
 
     expect(phoneStyles).toBeDefined()
-    expect(phoneStyles).toMatch(/\.privacy-panel__list\s*\{[^}]*word-break:\s*break-word/)
+    expect(phoneStyles).toMatch(/\.privacy-panel__list\s*\{[^}]*overflow-wrap:\s*anywhere/)
   })
 
   it('renders the panel and list with their responsive class names', () => {

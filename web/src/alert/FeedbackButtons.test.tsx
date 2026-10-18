@@ -32,7 +32,7 @@ describe('FeedbackButtons', () => {
   it('groups the choices and leaves the status empty without a value', () => {
     render(<FeedbackButtons onChange={() => {}} />)
 
-    const group = screen.getByRole('group', { name: 'Nurse feedback' })
+    const group = screen.getByRole('group', { name: 'Your feedback' })
     expect(within(group).getAllByRole('button')).toHaveLength(2)
     expect(within(group).getByRole('status').textContent).toBe('')
     expect(screen.getByRole('status').getAttribute('aria-live')).toBe('polite')
