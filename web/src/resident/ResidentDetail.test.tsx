@@ -222,7 +222,7 @@ describe('ResidentDetail', () => {
 
     render(<ResidentDetail residentId="nobody" onBack={() => {}} />)
 
-    expect(await screen.findByText('Resident not found.')).toBeTruthy()
+    expect(await screen.findByText('Person not found.')).toBeTruthy()
     expect(screen.getByRole('button', { name: /unit overview/i })).toBeTruthy()
   })
 

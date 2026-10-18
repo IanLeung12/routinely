@@ -42,6 +42,13 @@ function plural(n: number, noun: string): string {
   return n === 1 ? `${n} ${noun}` : `${n} ${noun}s`
 }
 
+/** `plural` can't make "people" out of "person", and the rows are people whoever
+ * reads them: a care-home unit is one kind of list, not the only one (SPEC
+ * section 17). */
+function people(n: number): string {
+  return n === 1 ? '1 person' : `${n} people`
+}
+
 /** "2 sessions too unclear to score - check the camera view", or null when the window
  * read every session in that room (and when an older or trimmed `/handoff` sent no
  * count at all, which is not the same as none).
@@ -157,7 +164,7 @@ function headline(residents: HandoffResident[], hours: number): string {
   if (residents.length === 0) return `Nothing to hand over for the last ${hours} hours`
   const review = residents.filter(needsReview).length
   if (review === 0) return `No change flagged for review in the last ${hours} hours`
-  return `${review} of ${plural(residents.length, 'resident')} to review in the last ${hours} hours`
+  return `${review} of ${people(residents.length)} to review in the last ${hours} hours`
 }
 
 /** The handoff as plain text, for pasting into a shift note or a message. One line
@@ -324,7 +331,7 @@ export function Handoff({
         <Card className="handoff__recap">
           <SectionHeader
             title={`Last ${handoff.window_hours} hours`}
-            caption={`${plural(handoff.residents.length, 'resident')} on this unit`}
+            caption={`${people(handoff.residents.length)} on this unit`}
           />
           <p className="handoff__summary">{handoff.summary}</p>
           {/* Both actions and the copy's own status in one group: a nurse taps these
@@ -347,7 +354,7 @@ export function Handoff({
         )}
         {handoff.residents.length === 0 ? (
           <Card>
-            <EmptyState message="No residents on this unit yet." />
+            <EmptyState message="Nobody on this unit yet." />
           </Card>
         ) : (
           /* One card, not one box per resident: dense hairline-separated rows with
@@ -422,7 +429,7 @@ export function Handoff({
         <div className="handoff__headings">
           <h2 className="handoff__title">Shift handoff</h2>
           <p className="handoff__lead">
-            Who changed while you were away. Everything here is flagged for a nurse to review.
+            Who changed while you were away. Everything here is flagged for review.
           </p>
         </div>
         {/* "Pick one view" is a segmented control everywhere in the system

@@ -7,10 +7,16 @@ import { SectionHeader } from '../ui/SectionHeader.tsx'
 import { SegmentedControl } from '../ui/SegmentedControl.tsx'
 import { fetchRoutines } from './api.ts'
 import { RoutineBuilder } from './RoutineBuilder.tsx'
-import type { SavedRoutine } from './types.ts'
+import type { RoutineSummary, SavedRoutine } from './types.ts'
 import './routines.css'
 
 type View = 'builder' | 'list'
+
+/** `GET /routines` sends a step count, not the graph (`Routine.summary()`), so the
+ * list reads it straight off the row. */
+function stepCount(steps: number): string {
+  return `${steps} ${steps === 1 ? 'step' : 'steps'}`
+}
 
 /** The shell's "New routine" screen (T438): opens straight into the builder, with a
  * "Routines" view alongside it listing the built-ins (tea, meds) plus anything saved,
@@ -18,7 +24,7 @@ type View = 'builder' | 'list'
  * right away. */
 export function RoutinesScreen({ onBack }: { onBack: () => void }) {
   const [view, setView] = useState<View>('builder')
-  const [routines, setRoutines] = useState<SavedRoutine[] | null>(null)
+  const [routines, setRoutines] = useState<RoutineSummary[] | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -74,7 +80,7 @@ export function RoutinesScreen({ onBack }: { onBack: () => void }) {
                   <Row
                     title={routine.title}
                     subtitle={routine.built_in ? 'Built in' : 'Saved by you'}
-                    value={`${routine.task_graph.steps.length} steps`}
+                    value={stepCount(routine.step_count)}
                   />
                 </li>
               ))}

@@ -29,7 +29,7 @@ export function DemoBanner({ onDismiss, onReset = resetDemoData }: { onDismiss?:
 
   return (
     <div role="note" className="demo-banner">
-      <span>Demo mode: synthetic residents, no real patient data. Changes are flagged for review only.</span>
+      <span>Demo mode: synthetic data, no real people. Changes are flagged for review only.</span>
       <div className="demo-banner__actions">
         {resetError && <span role="alert" className="demo-banner__error">Couldn&apos;t reset the demo</span>}
         <button type="button" className="btn btn--secondary" onClick={handleReset} disabled={resetting}>

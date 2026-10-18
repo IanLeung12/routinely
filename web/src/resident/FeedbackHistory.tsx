@@ -7,9 +7,9 @@ import { formatDayTime } from './format.ts'
 import type { FeedbackAnswer, ResidentFeedback } from './types.ts'
 import './feedbackHistory.css'
 
-const TITLE = 'What nurses said'
+const TITLE = 'Past feedback'
 
-/** How many answers sit on the card: the recent ones a nurse coming on shift needs,
+/** How many answers sit on the card: the recent ones whoever comes on next needs,
  * not the whole log. */
 const SHOWN = 5
 
@@ -18,7 +18,7 @@ const VERDICT_LABEL: Record<FeedbackVerdict, string> = {
   false_alarm: 'False alarm',
 }
 
-/** What a nurse picks when the change was something the pattern library has no
+/** What the answer is when the change was something the pattern library has no
  * pattern for (`api_alerts.OTHER_CAUSE`). */
 const OTHER_CAUSE = 'other'
 
@@ -33,7 +33,7 @@ function patternName(patternId: string, names: Record<string, string>): string {
   return names[patternId] ?? patternId
 }
 
-/** The middle of a row: what the nurse said it was.
+/** The middle of a row: what the answer said it was.
  *
  * Only a confirmed answer gets one. A cause on a dismissed alert isn't evidence the
  * pattern matched, and the ranking doesn't count it either
@@ -49,8 +49,8 @@ function causeClause(answer: FeedbackAnswer, names: Record<string, string>): str
 }
 
 /** The pattern a weight moved furthest, and which way: what the answers above changed
- * about this resident's ranking. Everything the library knows sits at 1.0 until her
- * nurses answer, so only a weight off 1.0 is worth a line. */
+ * about this person's ranking. Everything the library knows sits at 1.0 until someone
+ * answers, so only a weight off 1.0 is worth a line. */
 function ranked(weights: Record<string, number>, direction: 'up' | 'down'): string | null {
   const entries = Object.entries(weights).filter(([, weight]) =>
     direction === 'up' ? weight > 1 : weight < 1,
@@ -63,19 +63,19 @@ function ranked(weights: Record<string, number>, direction: 'up' | 'down'): stri
   )[0]
 }
 
-/** Past nurse answers and the pattern ranking they changed (SPEC Nice to have 8).
+/** Past answers and the pattern ranking they changed (SPEC Nice to have 8).
  *
- * The feedback loop re-weights a resident's patterns from her own nurses' answers;
- * without this it does it silently. Always what a change was "consistent with", never
- * a verdict on the resident. */
+ * The feedback loop re-weights a person's patterns from the answers given on their own
+ * alerts; without this it does it silently. Always what a change was "consistent with",
+ * never a verdict on the person. */
 export function FeedbackHistory({ state }: { state: FeedbackState }) {
   let body
   if (state.status === 'loading') {
-    body = <Loading label="Loading nurse answers…" />
+    body = <Loading label="Loading feedback…" />
   } else if (state.status === 'error') {
     body = <ErrorState message="Couldn't load feedback" />
   } else if (state.feedback.answers.length === 0) {
-    body = <EmptyState message="No nurse answers yet" />
+    body = <EmptyState message="No feedback yet" />
   } else {
     const { answers, pattern_weights: weights, pattern_names: names } = state.feedback
     const favoured = ranked(weights, 'up')

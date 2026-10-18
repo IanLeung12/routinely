@@ -24,6 +24,27 @@ describe('Describe it', () => {
     expect(textarea.value).toBe('Get the toothbrush, put toothpaste on it, brush, then rinse and spit.')
   })
 
+  it('shows the server detail, not a canned draft, when the API refuses the description', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({ detail: 'the drafted routine has no steps' }),
+      }),
+    )
+    render(<RoutineBuilder onSaved={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText('What happens, in order'), {
+      target: { value: 'Brush my teeth every morning' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Draft routine' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+    expect(screen.getByRole('alert').textContent).toBe('the drafted routine has no steps')
+    expect(screen.queryByText('Brush teeth')).toBeNull()
+  })
+
   it('disables submit until there is a description, then drafts a routine', async () => {
     render(<RoutineBuilder onSaved={vi.fn()} />)
 
@@ -118,6 +139,21 @@ describe('editing and saving the draft', () => {
     const saved = onSaved.mock.calls[0][0]
     expect(saved.title).toBe('Brush teeth')
     expect(saved.task_graph.steps[0].label).toBe('Pick up the toothbrush')
+  })
+
+  it('shows the server detail and keeps the draft on screen when saving is refused', async () => {
+    const onSaved = await draftBrushTeeth()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 409, json: async () => ({ detail: "'brush_teeth' is a built-in routine" }) }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save routine' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+    expect(screen.getByRole('alert').textContent).toBe("'brush_teeth' is a built-in routine")
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(screen.getByText('Brush teeth')).toBeTruthy()
   })
 
   it('starting over returns to the tabs', async () => {

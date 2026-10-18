@@ -24,11 +24,15 @@ describe('draftFromText', () => {
     expect(result.needs_training).toEqual(expect.arrayContaining(['toothbrush']))
   })
 
-  it('falls back on a non-OK response too', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
+  it('rejects with the detail on a non-OK response, instead of a canned draft', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({ detail: 'the drafting model could not be reached; try again' }) }),
+    )
 
-    const result = await draftFromText('make toast please')
-    expect(result.task_graph.id).toBe('make_toast')
+    await expect(draftFromText('make toast please')).rejects.toThrow(
+      'the drafting model could not be reached; try again',
+    )
   })
 })
 
@@ -49,6 +53,22 @@ describe('draftFromVideo', () => {
     const result = await draftFromVideo(file, true)
     expect(result.task_graph.id).toBe('brush_teeth')
   })
+
+  it('rejects with the detail on a 413 (clip too big), instead of a canned draft', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 413,
+        json: async () => ({ detail: 'one setup clip is at most 25 MB; film a shorter one' }),
+      }),
+    )
+    const file = new File(['clip'], 'setup.mp4', { type: 'video/mp4' })
+
+    await expect(draftFromVideo(file, true)).rejects.toThrow(
+      'one setup clip is at most 25 MB; film a shorter one',
+    )
+  })
 })
 
 describe('fetchRoutines', () => {
@@ -66,9 +86,30 @@ describe('saveRoutine', () => {
     const graph: TaskGraph = { id: 'wash_hands', title: 'Wash hands', steps: [] }
 
     const saved = await saveRoutine(graph)
-    expect(saved).toEqual({ id: 'wash_hands', title: 'Wash hands', task_graph: graph, built_in: false })
+    // `Routine.detail()`'s shape, so the list's step count works offline too (T443).
+    expect(saved).toEqual({
+      id: 'wash_hands',
+      title: 'Wash hands',
+      task_id: 'wash_hands',
+      built_in: false,
+      source: 'text',
+      step_count: 0,
+      needs_training: [],
+      task_graph: graph,
+    })
 
     const routines = await fetchRoutines()
     expect(routines).toContainEqual(saved)
+  })
+
+  it('rejects with the detail on a 409 (built-in id or full library), and writes nothing to localStorage', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 409, json: async () => ({ detail: "'tea' is a built-in routine" }) }),
+    )
+    const graph: TaskGraph = { id: 'tea', title: 'Tea', steps: [] }
+
+    await expect(saveRoutine(graph)).rejects.toThrow("'tea' is a built-in routine")
+    expect(localStorage.getItem('rw.routines.saved')).toBeNull()
   })
 })

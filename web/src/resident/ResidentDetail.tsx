@@ -151,18 +151,18 @@ export function ResidentDetail({
 
   let body: ReactNode
   if (loaded === null || loaded.residentId !== residentId) {
-    body = <Loading label="Loading resident…" />
+    body = <Loading label="Loading their routine…" />
   } else if (loaded.status === 'error') {
     body = (
       <>
-        <ErrorState message="Could not reach the server. This resident's data could not be loaded." />
+        <ErrorState message="Could not reach the server. This person's data could not be loaded." />
         <Button variant="primary" onClick={() => { setLoaded(null); setAttempt((n) => n + 1) }}>
           Try again
         </Button>
       </>
     )
   } else if (loaded.resident === null) {
-    body = <EmptyState message="Resident not found." />
+    body = <EmptyState message="Person not found." />
   } else {
     const resident = loaded.resident
     const days = dailyScores(resident.scores)

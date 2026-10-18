@@ -57,6 +57,7 @@ export function RoutineBuilder({
   const [graph, setGraph] = useState<TaskGraph | null>(null)
   const [needsTraining, setNeedsTraining] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   async function submitText(event: FormEvent) {
     event.preventDefault()
@@ -68,9 +69,9 @@ export function RoutineBuilder({
       setGraph(result.task_graph)
       setNeedsTraining(result.needs_training)
       setStatus('idle')
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setError("Couldn't draft a routine from that. Try rephrasing it or add more detail.")
+      setError(err instanceof Error ? err.message : "Couldn't draft a routine from that. Try rephrasing it or add more detail.")
     }
   }
 
@@ -84,18 +85,28 @@ export function RoutineBuilder({
       setGraph(result.task_graph)
       setNeedsTraining(result.needs_training)
       setStatus('idle')
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setError("Couldn't draft a routine from that clip. Try again or describe it in words instead.")
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't draft a routine from that clip. Try again or describe it in words instead.",
+      )
     }
   }
 
   async function handleSave() {
     if (!graph) return
     setSaving(true)
-    const saved = await saveRoutine(graph)
-    setSaving(false)
-    onSaved(saved)
+    setSaveError(null)
+    try {
+      const saved = await saveRoutine(graph)
+      onSaved(saved)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Couldn't save this routine. Try again.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   function startOver() {
@@ -103,6 +114,7 @@ export function RoutineBuilder({
     setNeedsTraining([])
     setStatus('idle')
     setError(null)
+    setSaveError(null)
   }
 
   if (graph) {
@@ -119,6 +131,8 @@ export function RoutineBuilder({
             {`The detector doesn't know ${needsTraining.join(', ')} yet. Those steps will need a quick training pass before they can be scored.`}
           </p>
         )}
+
+        {saveError && <ErrorState message={saveError} />}
 
         <div className="routine-builder__actions">
           <Button onClick={startOver}>Start over</Button>

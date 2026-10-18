@@ -26,10 +26,14 @@ chunks. Raise it only alongside a PR that explains the growth (a new eager
 dependency, a new always-on screen); don't raise it just to make the check
 pass.
 
-It is currently 98,500 bytes gzipped (T432): the redesign shell, the person
+It is currently 99,000 bytes gzipped (T432): the redesign shell, the person
 view and the replays added on 2026-10-17 are always-on screens and measured
-92,536 bytes together, over the old 92,200 budget; T421's eager resident-detail
-charts took that to 94,908, and T432 turned the live session's task map into a
-node graph (a layered layout and an SVG edge layer, +1,600 bytes) on a `main`
-that measured 95,899 — 101 bytes of headroom. A new screen off the demo path
-still has to be `lazy()`.
+92,536 bytes together, over the 92,200 budget before them; T421's eager
+resident-detail charts took that to 94,908, T442 raised the budget to 96,000
+with `main` at 95,204, and the rest of that day's screens took `main` to
+95,899. T446's replay-player markers, speed control and frame stepping add
+345 bytes on top of that (the alert screen, and the player with it, is eager —
+see `App.tsx`), measured 96,244. T432 then turned the live session's task map into a node
+graph (a layered layout and an SVG edge layer), measured READMEPLACEHOLDER, and raised
+the budget to 99,000. A new always-on screen still has to be `lazy()`, and the
+alert screen is the next thing worth making lazy if this keeps biting.
