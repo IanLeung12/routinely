@@ -862,10 +862,27 @@ class CheckinStore:
         Idempotent per alert: an `alert_id` that has already asked gives back the
         check-in it asked with, however that one ended, so a flag read again - every
         `session_end`, every dashboard poll - never asks the same person twice.
+
+        Idempotent per question as well: while the person still has a question nobody
+        has answered, this hands **that** one back rather than starting a second
+        countdown, so a second flag - or the demo's button pressed again - joins the
+        check-in in flight instead of leaving a stale one on their screen. Once the
+        alarm is out the record belongs to whoever is being alarmed and a new flag
+        asks a new question: handing back a countdown that has already run out would
+        leave the person a 0:00 card with nothing to answer.
         """
         settings = self.settings_of(person_id)
         if alert_id is not None and (known := self._by_alert.get(alert_id)):
             return self._current(known)
+        if (asked := self._unanswered(person_id)) is not None:
+            # This flag is answered by the question already out, so the alert hook
+            # stays idempotent once that one closes.
+            if alert_id is not None:
+                self._by_alert[alert_id] = asked.checkin_id
+            logger.info(
+                "check-in %s already asked %s (alert %s)", asked.checkin_id, person_id, alert_id
+            )
+            return asked
         now = self.now()
         record = start(settings, now, checkin_id=self._new_id(person_id, now), alert_id=alert_id)
         self._checkins[record.checkin_id] = record
@@ -948,6 +965,18 @@ class CheckinStore:
                 path.unlink()
 
     # -- internals -------------------------------------------------------------
+
+    def _unanswered(self, person_id: str) -> Checkin | None:
+        """The question `person_id` is still being asked, or None.
+
+        `pending` only: an alarm that is already out is not a question any more (and a
+        duress answer left `pending` the moment it was given, so this never hands back
+        the record the person's own screen reads as cancelled). There is at most one,
+        because `start` returns this instead of asking twice; the newest wins if
+        anything ever left two.
+        """
+        asked = [one for one in self.active(person_id) if one.state is CheckinState.PENDING]
+        return asked[-1] if asked else None
 
     def _current(self, checkin_id: str) -> Checkin:
         """`checkin_id` with its countdown applied and the result kept."""
