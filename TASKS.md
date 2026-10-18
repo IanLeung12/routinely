@@ -213,3 +213,21 @@ Acceptance:
 - CheckInCard.test.tsx: first fetch returns null, a later one returns a pending check-in → the card appears (fake timers).
 - Manual: the repro above shows the card with a running countdown without reloading; I'm okay + PIN 1234 → "Thanks, you're checked in".
 - `scripts/ci.sh` passes.
+
+### T466 — Bug: Live screen only offers tea + meds; protein shake and saved routines can't be watched
+- status: todo
+- class: standard
+- priority: 0
+- kind: bug
+- source: ian
+- deps: —
+- area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx, web/src/live/LiveScreen.keyboard.test.tsx, web/src/live/liveScreen.css, web/src/routines/api.ts, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_live_camera.py, pipeline/tests/test_api_live.py
+- owner: —
+- claimed: —
+- pr: —
+
+What: Ian, filming before 13:00 UTC: he saved a routine in the builder and it doesn't appear on the Live screen; the built-in protein shake doesn't either. `LiveScreen.tsx` hardcodes `TASKS` = tea + meds, and the camera path's `load_task(task)` only reads `tasks/<name>.yaml`.
+Interface:
+- Web: build the "Routine to watch" options from `GET /routines` (built-ins: tea, meds, protein_shake; then saved ones), falling back to the current tea/meds list if the API is unreachable (offline demo). Keep tea the default and keep `?task=` working for any routine id. A routine with a recorded scenario (`tea_skip_teabag_pour_twice`, `meds_skip_water`, `protein_shake_omit_powder` from tests/scenarios) plays it when there is no camera; one without a scenario shows "Watch this routine with the camera: run scripts/camera.sh" instead of an empty card when no camera is attached. With a camera (`?source=camera`), any routine is passed as `task=<id>`. A SegmentedControl won't fit many routines: switch to a select/listbox when there are more than 3.
+- Pipeline: the camera session resolves `task` as a built-in `load_task(name)` first, then the saved routines store (`routine_builder.get_routine_store().get(id)` → `parse_task_data(routine.graph)`); unknown → the same error as today. Keep the import out of `tasks/graph.py` (no cycle); do it in `live_camera.py`/`api_live.py`. Built-in routine ids vs file names: accept both (e.g. `tea` and the graph id).
+Acceptance: tests: options come from /routines incl. protein shake + a saved one; offline fallback; camera session starts for a saved routine id and for `protein_shake`; `cd web && npm test && npm run build`; `scripts/ci.sh --changed`.
