@@ -1,7 +1,7 @@
 # REVIEW
 
-- last-reviewed: 3a522b0
-- next-area: tests/scenarios
+- last-reviewed: 82ef57e
+- next-area: web
 
 ## Known issues filed
 - T105 Claude guard misses spelled-out numbers
