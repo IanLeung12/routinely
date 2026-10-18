@@ -136,16 +136,29 @@ export function saveSafetySettings(person: string, input: SafetySettingsInput): 
   })
 }
 
+/** The check-in the person's own card should show, or null when they have none: the
+ * newest question they can still answer, falling back to the newest of what is left.
+ *
+ * A person is only ever asked one question at a time (`CheckinStore.start`), but an
+ * alarm that has already gone to their supporters stays on their open list, so a
+ * person who was asked again has both. The live question is the one with something to
+ * do; the stale one is a countdown stuck at 0:00 (T460). The route answers oldest
+ * first (`CheckinStore.active`), so the newest is the last one. */
+function newestAnswerable(checkins: PersonCheckIn[]): PersonCheckIn | null {
+  const newestFirst = [...checkins].reverse()
+  return newestFirst.find(one => one.state === 'pending') ?? newestFirst[0] ?? null
+}
+
 /** The person's own screen (SPEC section 18, T451): `?person=` alone, never paired
  * with `?supporter=` - the real route 422s if both or neither are given, because a
  * payload that depends on who is asking cannot guess. Answers wrapped as
- * `{ checkins: [...] }`; at most one is ever open for a person at a time. */
+ * `{ checkins: [...] }`, oldest first; `newestAnswerable` picks the one to show. */
 export function fetchMyCheckin(person: string): Promise<PersonCheckIn | null> {
   const query = new URLSearchParams({ person })
   return request<{ checkins: PersonCheckIn[] }>(`/checkins/active?${query}`, undefined, () => {
     const checkin = mockActiveCheckIn(person)
     return { checkins: checkin ? [checkin] : [] }
-  }).then(result => result.checkins[0] ?? null)
+  }).then(result => newestAnswerable(result.checkins))
 }
 
 /** The person checking in (SPEC section 18, T451). The safety PIN and the duress
