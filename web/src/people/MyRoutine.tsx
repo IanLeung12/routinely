@@ -28,6 +28,14 @@ const RoutineSections = lazy(() =>
   })),
 )
 
+/** The countdown ring and PIN pad only matter for the rare person with an active
+ * check-in (T450), so they stay out of everyone else's first-load bundle. */
+const CheckInCard = lazy(() =>
+  import('../checkin/CheckInCard.tsx').then((module) => ({
+    default: module.CheckInCard,
+  })),
+)
+
 /** The person's home screen (SPEC section 17): their own routine and nobody else's.
  *
  * In SPEC's order, which is also the order the questions come in: how this week
@@ -74,6 +82,10 @@ export function MyRoutine({ onChange }: { onChange?: () => void }) {
         Your own routine: how this week went, what looked different, and who can see
         it. Nothing is shared with anyone you have not added yourself.
       </p>
+
+      <Suspense fallback={null}>
+        <CheckInCard personId={person.id} />
+      </Suspense>
 
       <Suspense fallback={<Loading label="Loading your week…" />}>
         <RoutineSections personId={person.id} supervisorNames={supervisorNames} />
