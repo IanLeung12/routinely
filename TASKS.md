@@ -193,7 +193,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T457 — Bug: supervisor alarm UI (T452) doesn't speak the real check-in API (T450)
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
