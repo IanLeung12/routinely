@@ -207,7 +207,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T463 — Generic step building blocks: any routine recognised live, no new code
-- status: in-review
+- status: done
 - class: heavy
 - priority: 0
 - kind: feature
