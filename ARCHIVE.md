@@ -8015,3 +8015,26 @@ Interface:
 Acceptance:
 - Tests with the fake: text → valid graph; video without `consent` → 400; video bytes never touch disk outside a deleted temp file (privacy test asserts nothing new under the repo/data dirs); invalid LLM JSON → clear 422; unknown objects listed in `needs_training`.
 - `scripts/ci.sh` passes without network.
+
+### T413 — Replays library for supervisors and the person
+- status: done
+- class: standard
+- priority: 0
+- kind: feature
+- source: ian
+- deps: T412, T427, T430, T431
+- area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/mock/replays.ts, web/src/App.tsx
+- note: merge conflict fixed: merged origin/main (T446), wired Replay.markers into ReplayPlayer's new markers prop, rebuilt/retested, ci.sh green
+- owner: ian-claude-standard
+- claimed: 2026-10-17T23:56Z
+- pr: #429
+- rating: 4/5 clear, but the listed area (Replays.tsx/test/css, mock/replays.ts, App.tsx) didn't fit the entry-point work the spec asked for (a person's detail, an alert's error rows, My routine); ResidentDetail/AlertView/MyRoutine stayed untouched and entry points went into App.tsx's shell instead -- worth naming that tradeoff in the task next time
+
+What: A "Replays" screen where a supervisor can browse a person's sessions that had errors and analyse them, and the person can see (and delete) their own (SPEC §17: they see exactly what supervisors see). Use the mobbin MCP for 2–3 references of video/recording libraries and timeline scrubbers; follow `docs/DESIGN.md` if merged.
+Interface:
+- List: per person, newest first, each row = date/time, task, error pills (omission/sequence/repeat/…), duration; filter by error type and date range; empty state ("No sessions with errors in the last 30 days").
+- Player (extend `ReplayPlayer`): skeleton + object boxes, **timeline with error markers** (click to jump), play/pause/speed (0.5×/1×/2×), step labels as it plays, optional ghost overlay of the person's normal session, frame-by-frame with arrow keys.
+- Supervisor notes on a replay (local/mock, shown with author + time); person view shows "Delete this replay".
+- Entry points: from a person's detail ("Replays"), from an alert's error rows, and from "My routine" for the person.
+- Offline/mock fallback in `web/src/mock/replays.ts`.
+Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
