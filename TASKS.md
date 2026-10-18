@@ -363,3 +363,21 @@ What: Measurable impact for the "AI for Social Impact" track. `scripts/eval.py` 
 Write `docs/EVAL.md`: the numbers, one SVG/PNG chart in `docs/eval/` (hours earlier vs weekly check, or the trade-off curve; matplotlib only if it's already a dependency, otherwise a hand-made SVG), the method in 5 lines, and **limits stated plainly** (synthetic data, error rates from the literature, not clinical validation; what a real pilot would measure). Add a one-line "impact estimate" with its assumption shown (e.g. "if 1 in N caught changes avoids an ER visit...").
 Why: the track asks for measurable societal impact; right now the pitch has no numbers.
 Acceptance: deterministic (seeded, same numbers every run); finishes in < 60 s; a test runs a 5-person cohort and checks the metric keys and ranges; `scripts/ci.sh` passes.
+
+### T455 — Bug: "Draft routine" blanks the whole dashboard (API task_graph steps use `deps`, UI reads `depends_on`)
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: web/src/routines/api.ts, web/src/routines/api.test.ts, web/src/routines/RoutineBuilder.test.tsx
+- source: tester
+
+What: on main @2e488ba with the dev stack up (`OFFLINE_MODE=true scripts/dev.sh up`), click **New routine** → **Brushing teeth** example (any example) → **Draft routine**: the React root unmounts and the page goes blank. Console: `TypeError: can't access property "includes", step.depends_on is undefined` (StepEditor.tsx:65/130). Cause: `POST /routines/draft` answers 200 with `task_graph.steps[*].deps` (routine_builder.py ~847), but `web/src/routines/types.ts` `RoutineStep` and `StepEditor` expect `depends_on`. Before T444 this was hidden by the mock fallback; now the real (fake-drafter) response reaches the UI. Repro API side: `curl -s -X POST -F "description=Get the toothbrush, then brush" localhost:8000/routines/draft` → steps have `deps`, no `depends_on`. This is on docs/DEMO.md's click path (routine builder step).
+Expected: draft renders the task map + step editor; Save routine works.
+Interface: normalize in `web/src/routines/api.ts` (map `deps` → `depends_on`, default missing `objects`/`depends_on` to `[]`, `needs_training`/`warnings` to `[]`) for `draftFromText`, `draftFromVideo` and any fetched `SavedRoutine.task_graph`. Check that `POST /routines` accepts what the UI sends (backend accepts `depends_on`/`deps` aliases on draft steps; confirm for the saved graph). Don't change `contracts/` or the API.
+Acceptance:
+- api.test.ts: a draft response whose steps use `deps` comes back with `depends_on`.
+- RoutineBuilder test: drafting with a `deps`-shaped response renders the step editor without throwing.
+- Manual: the click path above shows the draft and saves it to the Routines list.
+- `scripts/ci.sh` passes.
