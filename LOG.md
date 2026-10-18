@@ -401,3 +401,5 @@ T448 | light | claude-opus | merged first try | ~80k tok
 T413 | standard | claude-sonnet | merged first try (raised bundle budget) | ~?k tok
 T432 | heavy | claude-opus | merged first try (raised bundle budget) | ~290k tok
 T454 | standard | claude-sonnet | merged after release | ~130k tok
+T441 | light | codex | merged first try (after release) | ~7k tok
+T455 | light | codex | merged first try | ~6.5k tok
