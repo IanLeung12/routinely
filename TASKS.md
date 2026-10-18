@@ -234,7 +234,7 @@ What: The person's half of T450, built in parallel against T450's API shape with
 Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it pending; the safety and duress paths render identical DOM; countdown text updates; `cd web && npm test && npm run build`.
 
 ### T452 — Supervisor alarm UI: alarm banner + sound, acknowledge, escalation timeline, resolve
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
