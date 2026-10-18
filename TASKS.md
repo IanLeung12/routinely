@@ -139,7 +139,7 @@ Interface:
 Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response → alarm; duress (person sees "ok", supervisor gets a silent duress alarm); disconnect after start → alarm still fires; unacknowledged → escalates to #2; false alarm resolved by a supporter and by the person; permissions (a supporter without `location` never gets it). The duress and safety responses are byte-identical. PINs never appear in any response or log. `scripts/ci.sh` passes.
 
 ### T451 — Check-in UI (person side): countdown, "I'm okay" + PIN pad
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: feature
