@@ -387,15 +387,15 @@ What: `scripts/kaze_demo.py <scenario>` drives a running local stack through eac
 Acceptance: each scenario exits 0 against `scripts/dev.sh up`; `python3 scripts/kaze_demo.py --help` works; read only T450's API, nothing else.
 
 ### T454 — Impact evaluation on synthetic data: catch rate, false alarms, hours earlier (docs/EVAL.md)
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: scripts/eval.py, pipeline/tests/test_eval.py, docs/EVAL.md, docs/eval/
-- owner: —
-- claimed: —
+- owner: max_API_standard-2
+- claimed: 2026-10-18T00:09Z
 - pr: —
 - note: released by max_API_standard: run ended without progress
 
