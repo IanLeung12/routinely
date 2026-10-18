@@ -92,6 +92,39 @@ describe('CheckInCard', () => {
     expect(screen.queryByRole('heading', { name: "Thanks, you're checked in" })).toBeNull()
   })
 
+  it('renders nothing (no unhandled rejection) when the active-check-in fetch 404s', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'UnknownPerson' }), { status: 404 })),
+    )
+
+    const { container } = render(<CheckInCard personId={PERSON_ID} />)
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(container.innerHTML).toBe('')
+  })
+
+  it('shows a calm message instead of the PIN pad when the check-in already escalated (409)', async () => {
+    seed()
+    render(<CheckInCard personId={PERSON_ID} />)
+    fireEvent.click(await screen.findByRole('button', { name: "I'm okay" }))
+    await screen.findByRole('button', { name: SAFETY_PIN[0] })
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'NotWaiting' }), { status: 409 })),
+    )
+
+    enterPin(SAFETY_PIN)
+
+    await screen.findByText("This check-in has already gone to your supporters")
+    expect(screen.getByText("They'll be in touch.")).toBeTruthy()
+    expect(screen.queryByRole('button', { name: SAFETY_PIN[0] })).toBeNull()
+  })
+
   it('renders the same DOM for the safety PIN and the duress PIN', async () => {
     seed({ checkin_id: 'checkin-safety' })
     const safety = render(<CheckInCard personId={PERSON_ID} />)
