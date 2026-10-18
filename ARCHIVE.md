@@ -8057,3 +8057,64 @@ What: Ian wants the task map to look like **Postman Flows** (node-graph canvas).
 Why: the task map is the centrepiece of the live demo shot; a flow canvas makes "dependencies, not a fixed order" obvious at a glance.
 Interface: dependency-free SVG/HTML (no graph libraries); a simple layered layout (topological levels left→right) computed from deps; same props and data as today's TaskMap; keyboard/screen-reader: nodes are a list with state in their accessible names.
 Acceptance: renders tea and meds graphs without overlaps; state changes animate; existing TaskMap tests pass (selectors only) + a layout test (parallel steps share a level); screenshot in PR; `cd web && npm test && npm run build`.
+
+### T438 — Routine builder UI: describe it or upload a setup clip → editable task map → save
+- status: done
+- class: standard
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: web/src/routines/, web/src/mock/routines.ts, web/src/App.tsx
+- owner: —
+- claimed: —
+- pr: #414
+- rating: 4/5 clear, though the two task-map interpretations (reorder-the-list vs edit-deps) under 'reorder deps' were ambiguous; implemented both
+- note: merge conflict with main on PR #414: check out its branch, merge origin/main, fix, push
+
+What: The front end for T437, built in parallel against the API shape in T437's Interface with a mock (`web/src/mock/routines.ts`) so it doesn't wait for T437. Follow `docs/DESIGN.md`; check 2–3 Mobbin references for "create from upload / AI builder" flows.
+Interface (`web/src/routines/`):
+- "New routine" entry from the shell (both roles).
+- Two tabs: **Describe it** (textarea + examples) and **From a video** (file picker, max ~60 s; a consent checkbox that must be ticked: "This clip is sent once to Google Gemini to draft the steps. It is not stored. Day-to-day monitoring never sends video."). Progress state while drafting.
+- Result: the drafted routine shown as a task map (reuse `web/src/live/TaskMap`), plus an editable step list (rename, reorder deps, toggle optional, delete, add) that updates the map live; a "needs training" note listing objects the detector doesn't know yet; **Save routine**. Saved routines appear in a "Routines" list (tea, meds, plus saved).
+- Offline: the mock returns a believable draft ("Brush teeth") so the flow demos with no keys.
+Acceptance: Vitest for both tabs (consent required before upload; text submit; edit updates preview; save adds to list); keyboard operable; screenshot in PR; `cd web && npm test && npm run build`.
+
+### T439 — Bug: integration check failing on main
+- status: done
+- class: standard
+- priority: 0
+- kind: bug
+- deps: —
+- area: scripts/dev.sh, pipeline/src/routine_watch/api.py, web/src/
+- owner: —
+- claimed: —
+- pr: —
+- source: integration
+- note: orch: integration PASS on main per TESTREPORT 2026-10-17T23:05Z (dev.sh up OK); closed as transient, tester will refile if it recurs
+
+What: `scripts/integration.sh` (stack up offline → API endpoints → dashboard render → live WebSocket) fails on main @ 24033f5:
+  FAIL dev.sh up: 
+    api log: INFO:     Started server process [2099018] INFO:     Waiting for application startup. INFO:     Application startup complete. INFO:     Uvicorn running on http://0.0.0.0:8100 (Press CTRL+C to quit) 
+Interface: reproduce with `scripts/integration.sh`; logs in `.dev/api.log` / `.dev/web.log`. Fix the cause (not the check) unless the check itself is wrong.
+Acceptance:
+- `scripts/integration.sh` prints OK; `scripts/ci.sh` passes.
+
+### T440 — Bug: flaky unit test test_frames_in_thread_hands_over_every_record_in_order
+- status: done
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: pipeline/tests/test_api_live_camera.py
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-17T22:06Z
+- pr: #419
+- source: orchestrator
+- rating: 5/5 clear - the diagnosis, the exact call to make and the 20x acceptance loop were all in the task; only extra was that main was separately red on the bundle budget (T442/T421), so the branch needed rebasing onto e34c2a5 before ci.sh could pass
+
+What: Failed main CI run 39073146552 (@24033f5, unrelated .gitattributes commit). `frames_in_thread` drops the newest record once `max_pending` (default `MAX_PENDING_FRAMES = 30`, pipeline/src/routine_watch/live_camera.py:94) are waiting, and FakeCamera's clip has ~43 frames, so when the capture thread outruns the event loop on a loaded runner, frames get dropped and `drain(camera) == camera.frames` fails. That's a timing race in the test, not a product bug.
+Interface: test-only change. In `test_frames_in_thread_hands_over_every_record_in_order` (line ~298), call `drain(camera, max_pending=len(camera.frames) + 1)` so nothing can be dropped. Check the other tests in the file that compare a full list (not `stop_after`/`max_pending=0`) for the same race and fix them the same way. Do not change live_camera.py.
+Acceptance:
+- `cd pipeline && python -m pytest tests/test_api_live_camera.py -q` passes; run the file 20 times in a loop (`for i in $(seq 20); do python -m pytest tests/test_api_live_camera.py -q -x || break; done`) with no failure.
+- `scripts/ci.sh` passes.
