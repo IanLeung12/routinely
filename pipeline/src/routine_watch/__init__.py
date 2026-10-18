@@ -1,4 +1,4 @@
-"""Routine Watch pipeline.
+"""Routinely pipeline.
 
 Capture -> step recogniser -> task graph -> errors -> baseline, plus the API that
 serves the nurse dashboard. The pipeline runs on the demo laptop and works offline

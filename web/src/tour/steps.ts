@@ -6,7 +6,7 @@ export interface TourStep {
 
 export const TOUR_STEPS: TourStep[] = [
   {
-    title: 'Routine Watch',
+    title: 'Routinely',
     body: 'Changes in how someone manages everyday tasks are often the first sign something changed — delirium from an infection, a medication issue, a decline. This tour walks through how the dashboard flags a change for review.',
   },
   {

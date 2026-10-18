@@ -1,7 +1,7 @@
 [project]
 name = "routine-watch-pipeline"
 version = "0.1.0"
-description = "Routine Watch: capture, step recogniser, task graph, errors, baseline and API."
+description = "Routinely: capture, step recogniser, task graph, errors, baseline and API."
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "anthropic>=0.40",  # alert summaries (SPEC section 6.4); real calls only via api_cache

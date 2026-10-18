@@ -14,7 +14,7 @@
 # sentence; SKIPped if the stack has no drafter), GET /monitoring,
 # GET /rooms/<demo room>/monitoring/history and that the dashboard
 # (DASHBOARD_PORT, default 5173) returns HTML, and that its public landing
-# page at /landing.html also returns HTML containing "Routine Watch" and
+# page at /landing.html also returns HTML containing "Routinely" and
 # differs from the dashboard's own response (Vite's dev server falls back to
 # index.html for any unknown path, so a landing page missing from the build
 # would otherwise still answer 200 with HTML). Also validates the
@@ -260,7 +260,7 @@ fi
 # HTML; compare against $dashboard_body (the dashboard's own response, above)
 # to tell a real landing page apart from that fallback.
 if body=$(get "$DASHBOARD_URL/landing.html"); then
-  if printf '%s' "$body" | grep -qi '<html' && printf '%s' "$body" | grep -q 'Routine Watch' \
+  if printf '%s' "$body" | grep -qi '<html' && printf '%s' "$body" | grep -q 'Routinely' \
     && [ "$body" != "$dashboard_body" ]; then
     pass "GET $DASHBOARD_URL/landing.html -> HTML"
   else

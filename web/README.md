@@ -1,6 +1,6 @@
 # web
 
-Dashboard for Routine Watch. See `AGENTS.md` for the stack and conventions.
+Dashboard for Routinely. See `AGENTS.md` for the stack and conventions.
 
 ## Bundle size budget
 

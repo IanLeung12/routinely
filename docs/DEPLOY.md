@@ -1,4 +1,4 @@
-# Docker host / Vultr deployment
+# Docker deployment
 
 Use a Linux Docker host with Docker Engine and Compose v2.24.4+; no cloud provisioning
 is performed here. Run from the repository root (`.env` is optional for offline defaults):

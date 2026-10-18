@@ -19,10 +19,10 @@ const SECTION_HEADINGS = [
 const DAY_MS = 24 * 60 * 60 * 1000
 
 describe('landing page', () => {
-  it('leads with what Routine Watch is', () => {
+  it('leads with what Routinely is', () => {
     render(<Landing />)
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Routine Watch' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 1, name: 'Routinely' })).toBeTruthy()
     expect(screen.getByText(/flags a change for review/)).toBeTruthy()
   })
 

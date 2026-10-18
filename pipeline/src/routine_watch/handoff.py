@@ -42,7 +42,7 @@ anchored there, so that is the clock the demo's data lives on.
 
 The plain-language summary comes from the `Explainer` interface, which means the
 template explainer unless `LIVE_API=1` and a key are set (AGENTS.md): no paid call
-from a test, from CI or from the demo's default path. Routine Watch flags a change for
+from a test, from CI or from the demo's default path. Routinely flags a change for
 review - here as everywhere, it never diagnoses anything.
 """
 

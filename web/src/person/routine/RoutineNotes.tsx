@@ -57,7 +57,7 @@ export function RoutineNotes({
               {supervisorNames.length > 0 && (
                 told.includes(pattern.pattern_id) ? (
                   <p className="routine-note__told">
-                    {`${names} ${verb} this the next time they open Routine Watch.`}
+                    {`${names} ${verb} this the next time they open Routinely.`}
                   </p>
                 ) : (
                   <Button

@@ -1,6 +1,6 @@
 /** Who is using the app and who they are linked to (SPEC section 3, section 17).
  *
- * Anyone can use Routine Watch, alone or with someone watching over them, so the shell
+ * Anyone can use Routinely, alone or with someone watching over them, so the shell
  * asks for one of two roles before it shows anything:
  *
  * - `person`: watching their own routine.

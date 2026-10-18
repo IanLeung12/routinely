@@ -168,7 +168,7 @@ describe('MyRoutine', () => {
 
     expect(screen.getByText('Shared with Nurse Ana.')).toBeTruthy()
     expect(
-      screen.getByText('Nurse Ana sees this the next time they open Routine Watch.'),
+      screen.getByText('Nurse Ana sees this the next time they open Routinely.'),
     ).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Tell Nurse Ana' }).length).toBe(
       mockPersonRoutine.patterns.length - 1,

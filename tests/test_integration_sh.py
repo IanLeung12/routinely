@@ -52,8 +52,8 @@ def run_with_helpers(body):
 def test_a_match_near_the_start_of_a_huge_dom_always_succeeds():
     """The failing case: needle first, then far more text than a pipe can hold."""
     body = f"""{PAD}
-    dom="<title>Routine Watch</title>$pad"
-    for _ in $(seq 1 25); do contains "$dom" "Routine Watch"; printf "%s " "$?"; done"""
+    dom="<title>Routinely</title>$pad"
+    for _ in $(seq 1 25); do contains "$dom" "Routinely"; printf "%s " "$?"; done"""
 
     done = run_with_helpers(body)
 
@@ -62,7 +62,7 @@ def test_a_match_near_the_start_of_a_huge_dom_always_succeeds():
 
 
 def test_a_dom_without_the_app_title_still_fails():
-    done = run_with_helpers('contains "<html><body></body></html>" "Routine Watch"')
+    done = run_with_helpers('contains "<html><body></body></html>" "Routinely"')
 
     assert done.returncode == 1, done.stdout + done.stderr
 
@@ -79,7 +79,7 @@ def test_the_error_phrases_are_matched_whatever_the_case_and_however_long_the_do
 
 
 def test_a_healthy_dom_matches_none_of_the_error_phrases():
-    body = f'contains_any_ci "<h1>Routine Watch</h1>" {ERROR_PHRASES}'
+    body = f'contains_any_ci "<h1>Routinely</h1>" {ERROR_PHRASES}'
 
     done = run_with_helpers(body)
 
@@ -100,18 +100,18 @@ def test_no_check_pipes_captured_text_into_grep_q():
 def test_the_render_check_still_looks_for_the_app_title_and_still_fails_loudly():
     text = SCRIPT.read_text()
 
-    assert 'contains "$body" "Routine Watch"' in text
+    assert 'contains "$body" "Routinely"' in text
     assert "dashboard did not render" in text
 
 
 def test_a_title_only_dom_does_not_satisfy_the_render_check():
-    """index.html's static <title>Routine Watch</title> sits in <head> whether
+    """index.html's static <title>Routinely</title> sits in <head> whether
     or not React ever mounted; a DOM dump with an empty <body> must still read
     as "did not render" (T426), not pass on the head's title alone."""
     body = """
-    dom="<html><head><title>Routine Watch</title></head><body></body></html>"
+    dom="<html><head><title>Routinely</title></head><body></body></html>"
     body=${dom#*<body}
-    contains "$body" "Routine Watch"
+    contains "$body" "Routinely"
     """
 
     done = run_with_helpers(body)
@@ -121,9 +121,9 @@ def test_a_title_only_dom_does_not_satisfy_the_render_check():
 
 def test_a_rendered_body_satisfies_the_render_check():
     body = """
-    dom="<html><head><title>Routine Watch</title></head><body><h1>Routine Watch</h1></body></html>"
+    dom="<html><head><title>Routinely</title></head><body><h1>Routinely</h1></body></html>"
     body=${dom#*<body}
-    contains "$body" "Routine Watch"
+    contains "$body" "Routinely"
     """
 
     done = run_with_helpers(body)

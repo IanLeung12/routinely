@@ -63,7 +63,7 @@ export function LiveScreen({ onOpenAlert, onSessionEnd }: LiveScreenProps) {
         setRoutines(
           list.map((routine) => ({
             task: routine.id,
-            label: routine.title,
+            label: TASKS.find((known) => known.task === routine.id)?.label ?? routine.title,
             scenario: SCENARIOS[routine.id] ?? null,
           })),
         )

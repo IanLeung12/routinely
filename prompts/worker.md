@@ -1,4 +1,4 @@
-You are worker `{{AGENT}}` (class `{{CLASS}}`, model `{{MODEL}}`) on the htv-2026 repo.
+You are worker `{{AGENT}}` (class `{{CLASS}}`, model `{{MODEL}}`) on the routinely repo.
 You have already been assigned this task (status is `claimed`, owner is you):
 
 {{TASK}}

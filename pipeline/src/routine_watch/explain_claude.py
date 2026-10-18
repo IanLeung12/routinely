@@ -29,7 +29,7 @@ _SYSTEM_PROMPT = (
     "You write a plain-language summary of one care session for a nurse to review, "
     "in at most three sentences. Use only the facts given below - never diagnose, "
     "never speculate, and never state a number, a count or a timestamp that is not "
-    "in those facts. Routine Watch flags a change for review; it never diagnoses."
+    "in those facts. Routinely flags a change for review; it never diagnoses."
 )
 
 #: A bare number, an m:ss timestamp, or a decimal - whichever a sentence states.

@@ -1,4 +1,4 @@
-# Routine Watch — Product Spec & Handoff
+# Routinely — Product Spec & Handoff
 
 Hackathon: **Hack the Valley 11** (36 h). Team owner: Ian Leung (Discord `thelegend12`).
 Status: in development (multi-agent; see `AGENTS.md`). This doc is the spec, not an implementation plan.

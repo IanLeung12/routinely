@@ -28,18 +28,22 @@ aliases:
 
 steps:
   - id: get_shaker
-    label: Get the shaker
+    label: Pick up the shaker
     objects: [shaker]
+    # The shaker is picked up again to pour, close and shake; that is never a repeat.
+    once_only: false
     action: {type: pick_up, object: shaker}
 
   - id: open_tub
     label: Open the protein tub
     objects: [protein_tub]
+    # Often already open, or opened out of view: not seeing it is not an error.
+    optional: true
     action: {type: open, object: protein_tub}
 
   - id: scoop_powder
     label: Scoop powder into the shaker
-    deps: [get_shaker, open_tub]
+    deps: [get_shaker]
     objects: [scoop, shaker]
     # One or two scoops is normal, so a repeat is never perseveration.
     once_only: false
@@ -72,12 +76,3 @@ steps:
     # Leaving it open is untidy, not an error.
     optional: true
     action: {type: close, object: protein_tub}
-
-  - id: drink
-    label: Drink the shake
-    deps: [shake]
-    objects: [shaker]
-    # Not finishing it on camera is not an error: the point the task cares about is
-    # the shake being made correctly, not the whole drink being watched.
-    optional: true
-    action: {type: bring_to_face, object: shaker}

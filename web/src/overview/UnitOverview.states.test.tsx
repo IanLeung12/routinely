@@ -20,7 +20,7 @@ describe('UnitOverview failure and empty states', () => {
     }
     expect(screen.queryByRole('alert')).toBeNull()
     expect(
-      await screen.findByText("Showing demo residents: the Routine Watch service isn't reachable."),
+      await screen.findByText("Showing demo residents: the Routinely service isn't reachable."),
     ).toBeTruthy()
   })
 
@@ -30,7 +30,7 @@ describe('UnitOverview failure and empty states', () => {
     render(<UnitOverview />)
 
     expect(
-      await screen.findByText("Showing demo residents: the Routine Watch service isn't reachable."),
+      await screen.findByText("Showing demo residents: the Routinely service isn't reachable."),
     ).toBeTruthy()
   })
 
@@ -42,7 +42,7 @@ describe('UnitOverview failure and empty states', () => {
 
     expect(await screen.findByText(residents[0].name)).toBeTruthy()
     expect(
-      screen.queryByText("Showing demo residents: the Routine Watch service isn't reachable."),
+      screen.queryByText("Showing demo residents: the Routinely service isn't reachable."),
     ).toBeNull()
   })
 

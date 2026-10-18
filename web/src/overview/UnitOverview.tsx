@@ -169,7 +169,7 @@ export function UnitOverview({
       </div>
       {source === 'demo' && (
         <p role="status" className="overview__demo-notice">
-          Showing demo residents: the Routine Watch service isn't reachable.
+          Showing demo residents: the Routinely service isn't reachable.
         </p>
       )}
       {filtered.length === 0 ? (

@@ -46,7 +46,7 @@ describe('App', () => {
       render(<App />)
     })
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Routine Watch' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 1, name: 'Routinely' })).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Unit overview' })).toBeTruthy()
     expect(screen.getByRole('note')).toBeTruthy()
   })

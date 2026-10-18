@@ -383,7 +383,7 @@
     }
   },
   "additionalProperties": false,
-  "description": "A change flagged for a human to review (SPEC section 7).\n\nRoutine Watch flags a change and shows the evidence behind it. It never diagnoses.",
+  "description": "A change flagged for a human to review (SPEC section 7).\n\nRoutinely flags a change and shows the evidence behind it. It never diagnoses.",
   "properties": {
     "alert_id": {
       "minLength": 1,

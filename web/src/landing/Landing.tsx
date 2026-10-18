@@ -15,7 +15,7 @@ import {
 } from './heroChart.ts'
 import './landing.css'
 
-/** The public one-pager behind the demo URL: what Routine Watch is, why it matters,
+/** The public one-pager behind the demo URL: what Routinely is, why it matters,
  * how it works, and a way into the dashboard. Separate Vite entry (`web/landing.html`),
  * so nothing here can break the dashboard screens. Copy stays plain and under ~350
  * words; the wording rules of SPEC §7.5 apply to it like everywhere else.
@@ -137,7 +137,7 @@ export function Landing() {
     <>
       <main className="landing" id="main">
         <header className="landing__hero">
-          <h1 className="landing__title">Routine Watch</h1>
+          <h1 className="landing__title">Routinely</h1>
           <p className="landing__lead">
             A privacy-preserving camera system that watches everyday tasks — making tea,
             getting dressed — and flags a change for review when how someone does them moves
@@ -250,7 +250,7 @@ export function Landing() {
         <p className="landing-footer__line">
           Built at Hack the Valley 11.{' '}
           {/* Placeholder until the repository is public. */}
-          <a href="https://github.com/IanLeung12/htv-2026">Source on GitHub</a>
+          <a href="https://github.com/IanLeung12/routinely">Source on GitHub</a>
         </p>
       </footer>
     </>

@@ -1,10 +1,14 @@
-# Routine Watch
+# Routinely
 
 **Hack the Valley 11.** A privacy-first camera that watches an everyday routine, like making a cup of tea, and **flags a change for review** when someone's routine starts going differently from their own usual. Every flag shows its evidence. It never diagnoses.
 
 It's for anyone who wants that support: **a person watching their own routine**, or **a supporter** (family, a carer, a nurse) looking out for someone.
 
-![Tech stack](docs/tech-stack.png)
+## Demo
+
+[![Routinely demo](https://img.youtube.com/vi/bfyo5bohjb4/maxresdefault.jpg)](https://www.youtube.com/watch?v=bfyo5bohjb4)
+
+▶ **[Watch the demo on YouTube](https://www.youtube.com/watch?v=bfyo5bohjb4)**
 
 ## What it does
 
@@ -18,10 +22,21 @@ It's for anyone who wants that support: **a person watching their own routine**,
 
 **Impact (synthetic data, see `docs/EVAL.md`):** on a seeded cohort of 50 people over 60 days, sudden changes were flagged a median **18.5 h after onset**, about **40 h earlier than a weekly check**. The cohort is synthetic, so real-world numbers will be worse; the doc states the limits and what a pilot would measure.
 
+## Tech stack
+
+![Tech stack](docs/tech-stack.png)
+
+- **Capture (on the device):** OpenCV for the webcam, **MediaPipe** pose and hand landmarks, and a custom **YOLO11** object detector trained on our own labelled clips (Roboflow for labelling), run locally with **ONNX Runtime**. Frames are dropped on the device.
+- **Backend:** **Python 3.11**, **FastAPI** + uvicorn (REST and a WebSocket for the live view), Pydantic contracts shared with the frontend, task graphs as YAML.
+- **AI:** **Google Gemini** to verify uncertain steps and to draft a routine from a setup clip; **Anthropic Claude** to write alert summaries from the detected evidence and to draft a routine from words. Both sit behind fakes and an on-disk cache, so nothing is called unless `LIVE_API=1`.
+- **Data:** **Tiger Data** (TimescaleDB, via psycopg) for sessions, steps and errors as time series; an in-memory store when no database is configured.
+- **Frontend:** **React 19**, **TypeScript**, **Vite**, with dependency-free SVG charts and the Web Audio API for safety alarms.
+- **Tooling:** uv, ruff, pytest, Vitest, oxlint, GitHub Actions CI, Docker Compose (`deploy/`).
+
 ## Run it
 
 ```bash
-gh repo clone IanLeung12/htv-2026 && cd htv-2026
+gh repo clone IanLeung12/routinely && cd routinely
 cp .env.example .env            # defaults are offline: no keys, no cost
 scripts/dev.sh up               # API :8000 + dashboard :5173 (DASHBOARD_MODE=preview for a built, faster UI)
 scripts/dev.sh down

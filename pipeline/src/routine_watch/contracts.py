@@ -491,7 +491,7 @@ class TimeOfDayErrors(_Contract):
 class Alert(_Contract):
     """A change flagged for a human to review (SPEC section 7).
 
-    Routine Watch flags a change and shows the evidence behind it. It never diagnoses.
+    Routinely flags a change and shows the evidence behind it. It never diagnoses.
     """
 
     alert_id: Id

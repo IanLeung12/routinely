@@ -54,7 +54,7 @@ describe('RoutineNotes', () => {
     expect(onTell).toHaveBeenCalledWith('motor_slowing')
     expect(screen.queryByRole('button', { name: 'Tell Lena' })).toBeNull()
     expect(
-      screen.getByText('Lena sees this the next time they open Routine Watch.'),
+      screen.getByText('Lena sees this the next time they open Routinely.'),
     ).toBeTruthy()
     expect(screen.getByRole('status').textContent).toBe('Shared with Lena.')
   })
@@ -66,7 +66,7 @@ describe('RoutineNotes', () => {
 
     expect(screen.getByRole('status').textContent).toBe('Shared with Lena and Ana.')
     expect(
-      screen.getByText('Lena and Ana see this the next time they open Routine Watch.'),
+      screen.getByText('Lena and Ana see this the next time they open Routinely.'),
     ).toBeTruthy()
   })
 

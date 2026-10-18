@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Hack the Valley 11 project: **Routine Watch** (see `SPEC.md`, read only the sections your task needs).
+Hack the Valley 11 project: **Routinely** (see `SPEC.md`, read only the sections your task needs).
 Several Claude Code and Codex agents work here at once. Nobody asks for permission; follow these rules instead.
 
 ## Roles

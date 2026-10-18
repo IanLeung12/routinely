@@ -1,4 +1,4 @@
--- Routine Watch time-series schema (SPEC section 6.3): sessions, step events and task
+-- Routinely time-series schema (SPEC section 6.3): sessions, step events and task
 -- errors, stored in TimescaleDB (Tiger Data) as hypertables on their time column.
 --
 -- Safe to run against a fresh or existing database: every statement is idempotent.

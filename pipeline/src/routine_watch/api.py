@@ -55,7 +55,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             await ticker
 
 
-app = FastAPI(title="Routine Watch API", version=__version__, lifespan=lifespan)
+app = FastAPI(title="Routinely API", version=__version__, lifespan=lifespan)
 app.include_router(_live_router)
 app.include_router(_alerts_router)
 app.include_router(_residents_router)

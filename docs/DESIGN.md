@@ -1,6 +1,6 @@
 # Design
 
-Routine Watch looks like a quiet, premium instrument panel: near-black, dense, numbers
+Routinely looks like a quiet, premium instrument panel: near-black, dense, numbers
 first. The reference is **Fey** (links at the bottom) — we borrow its structure, density
 and chart style, never its branding, logo or wording.
 

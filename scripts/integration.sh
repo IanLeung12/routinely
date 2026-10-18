@@ -123,15 +123,15 @@ if [ -n "$CHROME" ]; then
   dom="" body=""
   for attempt in 1 2 3; do
     dom=$("$CHROME" --no-sandbox --headless --virtual-time-budget=8000 --dump-dom "$WEB/" 2>/dev/null)
-    # index.html's static <title> also says "Routine Watch" (T426): strip
+    # index.html's static <title> also says "Routinely" (T426): strip
     # everything before <body> so a page that never actually mounted React
     # (empty body) can't pass by matching the head instead.
     body=${dom#*<body}
-    contains "$body" "Routine Watch" && break
+    contains "$body" "Routinely" && break
     [ "$attempt" -lt 3 ] && sleep 3
   done
-  contains "$body" "Routine Watch" ||
-    fail "dashboard did not render (no 'Routine Watch' in ${#body} bytes of <body>; see $DEV_DIR/web.log)"
+  contains "$body" "Routinely" ||
+    fail "dashboard did not render (no 'Routinely' in ${#body} bytes of <body>; see $DEV_DIR/web.log)"
   contains_any_ci "$body" "something went wrong" "uncaught" "cannot read prop" &&
     fail "dashboard rendered an error"
 fi

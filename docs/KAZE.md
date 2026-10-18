@@ -2,7 +2,7 @@
 
 > "Help when someone can't ask for it themselves."
 
-Routine Watch watches an everyday routine and **flags a change for review** when
+Routinely watches an everyday routine and **flags a change for review** when
 somebody's own pattern shifts (SPEC §7). KAZE is what happens next: the person is
 asked to check in, and if they don't, the people *they* chose are alarmed one after
 another until somebody says they're on it.

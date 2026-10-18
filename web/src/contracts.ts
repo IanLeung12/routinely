@@ -10,8 +10,8 @@
 // Wall-clock times (started_at, created_at) are ISO 8601 strings.
 
 /**
- * A change flagged for a human to review (SPEC section 7). Routine Watch flags a change and
- * shows the evidence behind it. It never diagnoses.
+ * A change flagged for a human to review (SPEC section 7). Routinely flags a change and shows
+ * the evidence behind it. It never diagnoses.
  */
 export type Alert = {
   alert_id: string

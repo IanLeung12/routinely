@@ -6,6 +6,7 @@ import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.t
 import { UnitOverview } from './overview/UnitOverview.tsx'
 import { currentPerson, currentSupervisor, getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
 import { MyRoutine } from './people/MyRoutine.tsx'
+import { RoutineSections } from './person/routine/RoutineSections.tsx'
 import { PeopleISupport } from './people/PeopleISupport.tsx'
 import { RoleChooser } from './people/RoleChooser.tsx'
 import { RoleSwitch } from './people/RoleSwitch.tsx'
@@ -75,7 +76,15 @@ export default function App() {
    * the code arrives filled in on "People I support" (SPEC section 17). */
   const inviteCode = new URLSearchParams(window.location.search).get('invite')
   /** Person or supervisor, remembered between visits; null until the chooser is answered. */
-  const [role, setRoleState] = useState<RoleId | null>(() => getRole())
+  const [role, setRoleState] = useState<RoleId | null>(() => {
+    // An invite link is for the person being invited to support someone: open as a
+    // supporter, whatever role this browser last used, so the code lands where it's typed.
+    if (inviteCode) {
+      saveRole('supervisor')
+      return 'supervisor'
+    }
+    return getRole()
+  })
   /** The people this supervisor can see. One of them and their detail is the home
    * screen; several and it is the unit overview (SPEC section 17). */
   const [supported, setSupported] = useState(() => peopleISupport())
@@ -227,21 +236,21 @@ export default function App() {
   /** So someone with several tabs open (or a screen reader) can tell the overview from
    * Mrs. K's alert. */
   function documentTitle(): string {
-    if (role === null) return 'Routine Watch'
-    if (safetyPerson !== null) return 'Safety settings — Routine Watch'
-    if (openReplays !== null) return 'Replays — Routine Watch'
+    if (role === null) return 'Routinely'
+    if (safetyPerson !== null) return 'Safety settings — Routinely'
+    if (openReplays !== null) return 'Replays — Routinely'
     if (openAlert !== null) {
       const resident = alerts.find(alert => alert.alert_id === openAlert)?.resident_id
       const name = resident ? residentName(resident) : null
-      return name ? `Alert · ${name} — Routine Watch` : 'Alert — Routine Watch'
+      return name ? `Alert · ${name} — Routinely` : 'Alert — Routinely'
     }
-    if (role === 'person') return 'My routine — Routine Watch'
-    if (openRoutines) return 'Routines — Routine Watch'
-    if (openHandoff) return 'Shift handoff — Routine Watch'
-    if (openPatternLibrary) return 'Pattern library — Routine Watch'
-    if (shownResident !== null) return `${residentName(shownResident)} — Routine Watch`
-    if (supported.length > 1) return 'Unit overview — Routine Watch'
-    return 'People I support — Routine Watch'
+    if (role === 'person') return 'My routine — Routinely'
+    if (openRoutines) return 'Routines — Routinely'
+    if (openHandoff) return 'Shift handoff — Routinely'
+    if (openPatternLibrary) return 'Pattern library — Routinely'
+    if (shownResident !== null) return `${residentName(shownResident)} — Routinely`
+    if (supported.length > 1) return 'Unit overview — Routinely'
+    return 'People I support — Routinely'
   }
 
   /** The supervisor's home: the unit overview with its live session and alerts when
@@ -310,7 +319,7 @@ export default function App() {
         <DemoBanner onReset={resetDemo} />
         <header className="app-topbar">
           <div className="app-topbar__brand">
-            <h1 className="app-topbar__name">Routine Watch</h1>
+            <h1 className="app-topbar__name">Routinely</h1>
             <p className="app-topbar__tagline">
               {role === null
                 ? 'Watches an everyday routine, like making a cup of tea, and flags a change for review.'
@@ -397,6 +406,15 @@ export default function App() {
           <Suspense fallback={<Loading label="Loading pattern library…" />}>
             <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
           </Suspense>
+        ) : shownResident !== null && residents.length > 0 &&
+          !residents.some((resident) => resident.id === shownResident) ? (
+          <section className="supported-routine">
+            <Button onClick={closeResident}>
+              {supported.length > 1 ? '← Unit overview' : '← People I support'}
+            </Button>
+            <h2>{residentName(shownResident)}</h2>
+            <RoutineSections personId={shownResident} supervisorNames={[currentSupervisor().name]} />
+          </section>
         ) : shownResident !== null ? (
           <Suspense fallback={<Loading label="Loading their routine…" />}>
             <ResidentDetail

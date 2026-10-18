@@ -1,4 +1,4 @@
-/* Routine Watch design system. The brief, the rules and the references live in
+/* Routinely design system. The brief, the rules and the references live in
    docs/DESIGN.md: quiet, premium, dark, data-first. A supervisor should read a
    screen in about 10 seconds (SPEC section 9), so colour is rare and means
    something. Screens use these tokens; never hard-code a hex or a px. */
