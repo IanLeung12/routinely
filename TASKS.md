@@ -112,7 +112,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T449 — Stability: lazy-load AlertView and ResidentDetail to restore first-load bundle headroom
-- status: claimed
+- status: in-review
 - class: light
 - priority: 1
 - kind: improvement
@@ -121,8 +121,9 @@ Acceptance:
 - area: web/src/App.tsx, web/scripts/check-bundle.mjs, web/README.md
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-18T00:57Z
-- pr: —
+- pr: #439
 - note: orch: T432 (#431) raised BUDGET_BYTES to 99_000 (measured 98,102); after lazy-loading AlertView/ResidentDetail lower it to new measured + ~1,500
+- rating: 5/5 clear — the note named the exact measurement and the budget formula, and the existing tests already used findBy so none needed changing
 
 What: The first-load JS budget has been bumped three times today (92,200 → 96,000 → 96,500) and main sits ~250 B under it, so every remaining pre-freeze UI PR risks a red "first-load JS over budget" CI. Make `AlertView` and `ResidentDetail` lazy in `App.tsx` the same way `Handoff`/`RoutinesScreen` already are, then lower the budget to measured + ~1,500 B.
 Why: stops bundle-budget CI failures from blocking demo-path PRs in the last 90 minutes before the 01:30 UTC freeze.
