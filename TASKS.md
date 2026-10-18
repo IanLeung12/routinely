@@ -172,15 +172,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T449 — Stability: lazy-load AlertView and ResidentDetail to restore first-load bundle headroom
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: improvement
 - source: orchestrator
 - deps: —
 - area: web/src/App.tsx, web/scripts/check-bundle.mjs, web/README.md
-- owner: —
-- claimed: —
+- owner: ian-claude-heavy-3
+- claimed: 2026-10-18T00:57Z
 - pr: —
 - note: orch: T432 (#431) raised BUDGET_BYTES to 99_000 (measured 98,102); after lazy-loading AlertView/ResidentDetail lower it to new measured + ~1,500
 
