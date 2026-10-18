@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
-import type { PersonReplays, Replay, ReplaySummary } from '../contracts.ts'
+import type { Replay, ReplayMarker, PersonReplays, ReplaySummary } from '../contracts.ts'
 import GhostReplay from '../evidence/GhostReplay.tsx'
-import { ReplayPlayer } from '../evidence/ReplayPlayer.tsx'
+import { ReplayPlayer, type ReplayPlayerMarker } from '../evidence/ReplayPlayer.tsx'
 import { currentPerson, currentSupervisor } from '../people/api.ts'
 import type { RoleId } from '../people/types.ts'
 import { fetchResident } from '../resident/api.ts'
@@ -12,6 +12,7 @@ import { EmptyState } from '../ui/EmptyState.tsx'
 import { ErrorState } from '../ui/ErrorState.tsx'
 import { Loading } from '../ui/Loading.tsx'
 import { SectionHeader } from '../ui/SectionHeader.tsx'
+import { describeError } from '../ui/errorTypes.ts'
 import { deleteReplay, fetchPersonReplays, fetchReplay } from './api.ts'
 import { ReplayList } from './ReplayList.tsx'
 import { ReplayNotes, type ReplayNote } from './ReplayNotes.tsx'
@@ -36,13 +37,19 @@ function withinRange(startedAt: string, from: string, to: string): boolean {
   return true
 }
 
+/** Turns a replay's errors into `ReplayPlayer`'s marker shape: the same wording
+ * `ErrorList` uses for the same error, so the alert screen and this one agree. */
+function toPlayerMarkers(markers: ReplayMarker[]): ReplayPlayerMarker[] {
+  return markers.map((marker) => ({
+    t: marker.t_start,
+    label: describeError(marker.type, marker.step_id ? marker.step_id.replace(/_/g, ' ') : 'this step'),
+    kind: marker.type,
+  }))
+}
+
 /** A person's replay library (SPEC section 17): a supervisor browsing a session that
  * had errors to analyse it, or the person seeing exactly the same thing about their
- * own routine. Opened from a person's detail, an alert's error rows, or "My routine".
- *
- * The player itself (`ReplayPlayer`) renders skeleton frames only; error markers,
- * speed and arrow-key stepping are T446's extension and this screen passes them
- * through once that prop exists — until then it renders the same frames without them. */
+ * own routine. Opened from a person's detail, an alert's error rows, or "My routine". */
 export function Replays({
   personId,
   role,
@@ -161,7 +168,7 @@ export function Replays({
                 title={openReplay.replay.task_id}
                 caption={`${formatDayTime(openReplay.replay.started_at)} · ${Math.floor(openReplay.replay.duration_s)}s`}
               />
-              <ReplayPlayer frames={openReplay.replay.frames} />
+              <ReplayPlayer frames={openReplay.replay.frames} markers={toPlayerMarkers(openReplay.replay.markers)} />
               {normal && normal.session_id !== openSessionId && (
                 <div className="replays__ghost">
                   <GhostReplayPanel normalSessionId={normal.session_id} today={openReplay.replay} />

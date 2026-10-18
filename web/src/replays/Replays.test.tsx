@@ -62,6 +62,15 @@ describe('Replays', () => {
     expect(await rows()).toHaveLength(4)
   })
 
+  it('shows the session\'s errors as jumpable markers on the player timeline', async () => {
+    offline()
+    const user = userEvent.setup()
+    render(<Replays personId="mrs-k" role="supervisor" onBack={() => {}} />)
+
+    await user.click((await rows())[0])
+    expect(await screen.findByRole('button', { name: 'Jump to skipped pour-water at 0:10' })).toBeTruthy()
+  })
+
   it('lets a supervisor add a note, shown with their name and the time', async () => {
     offline()
     const user = userEvent.setup()
