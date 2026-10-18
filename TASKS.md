@@ -31,15 +31,15 @@ Interface:
 Acceptance: Vitest for list/filter/empty, marker jump, speed, delete, notes; keyboard operable; screenshot in PR; `scripts/ci.sh` passes.
 
 ### T432 — Task map as a Postman Flows–style node graph
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: improvement
 - source: ian
 - deps: T406
 - area: web/src/live/TaskMap.tsx, web/src/live/TaskMap.test.tsx, web/src/live/taskMap.css, web/src/live/TaskMapLegend.tsx, web/src/live/TaskMapLegend.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude
+- claimed: 2026-10-18T00:08Z
 - pr: #431
 - rating: 4/5 the task says deps already come over /ws/live; they did not, so the PR had to extend session_start (contracts + live.py + live_camera.py). It also assumes the map has room for a left-to-right flow: the live screen's column is ~23 rem, four tea levels need ~49 rem
 - note: merge conflict with main on PR #431: check out its branch, merge origin/main, fix, push
