@@ -88,15 +88,15 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T441 — Review: deleteReplay reports success when the API refuses the delete
-- status: todo
+- status: claimed
 - class: light
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/replays/api.ts, web/src/replays/api.test.ts
-- owner: —
-- claimed: —
+- owner: max_API_light
+- claimed: 2026-10-18T00:20Z
 - pr: —
 - note: released by max_API_light: run ended without progress
 
