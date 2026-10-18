@@ -24,8 +24,8 @@ import { fileURLToPath } from 'node:url'
 // Raised again for T413: the replays library itself is lazy(), but its
 // shell-level entry points (a top-bar "Replays" button, the state and routing
 // that opens it, and wiring AlertView's existing onOpenEvidence hook) are
-// necessarily eager, on top of T446's eager alert screen. Measured after
-// merging both.
+// necessarily eager, on top of T446's eager alert screen. Measured 96463
+// bytes after merging both.
 const BUDGET_BYTES = 96_700
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
