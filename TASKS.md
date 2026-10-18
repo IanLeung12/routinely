@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T432 — Task map as a Postman Flows–style node graph
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: improvement
