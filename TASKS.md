@@ -69,7 +69,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T441 — Review: deleteReplay reports success when the API refuses the delete
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: bug
