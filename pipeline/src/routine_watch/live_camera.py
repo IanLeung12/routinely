@@ -30,8 +30,8 @@ instead and the `boil` never happened. A step already sent cannot be unsaid, so 
 step waits for the contact it was read from to end (`_settled`). That is a fraction of a
 second after the resident lets go, and it is the difference between a live session and a
 correct one. Which frames those are is the recogniser's own reading of what is in a hand
-and for how long, so `_settled` asks it with the three helpers in `recogniser.py` that
-answer the question (`_Scene`, `_scenes`, `_spans`): a copy of them here would be a
+and for how long, so `_settled` asks it with the three helpers in `actions.py` that
+answer the question (`Scene`, `scenes_of`, `spans_of`): a copy of them here would be a
 second reading of a hand on a kettle to keep in step with the rules.
 
 **What a camera session has not got is history.** A session is only flagged against
@@ -65,12 +65,13 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from .actions import FLICKER_GAP_S, Scene, scenes_of, spans_of
 from .contracts import CaptureFrame, Session, StepEvent, TaskError
 from .demo import DEMO_NOW, DEMO_RESIDENT
 from .errors import classify_errors
 from .live import MAX_FRAME_FPS, StepState, save_replay, step_states
 from .quality import session_quality
-from .recogniser import FLICKER_GAP_S, _Scene, _scenes, _spans, recognise
+from .recogniser import recognise
 from .replay import Expected, ReplayError, Scenario, score_session
 from .tasks import TaskGraph, load_task
 
@@ -120,7 +121,7 @@ async def camera_session_messages(
     graph = load_task(task)
     sent = _Sent(graph)
     records: list[CaptureFrame] = []  # the session so far: landmarks and boxes, no images
-    scenes: list[_Scene] = []  # the same records as the recogniser reads them
+    scenes: list[Scene] = []  # the same records as the recogniser reads them
     events: list[StepEvent] = []  # the steps sent, which is all a live session knows
     session_id = ""
     last_sent: float | None = None  # when the last frame was sent, and the last reading
@@ -148,7 +149,7 @@ async def camera_session_messages(
             for message in sent.reading(events, ()):  # the map before anything: all pending
                 yield message
         records.append(frame)
-        scenes += _scenes([frame])  # one scene per record: `_scenes` reads each on its own
+        scenes += scenes_of([frame])  # one scene per record: `scenes_of` reads each on its own
         if last_sent is None or frame.t - last_sent >= 1.0 / MAX_FRAME_FPS - 1e-9:
             last_sent = frame.t  # `live._downsampled`'s rule, a frame at a time
             yield {"type": "frame", "frame": frame}
@@ -270,7 +271,7 @@ class _Sent:
         return messages
 
 
-def _settled(events: Sequence[StepEvent], scenes: Sequence[_Scene]) -> list[StepEvent]:
+def _settled(events: Sequence[StepEvent], scenes: Sequence[Scene]) -> list[StepEvent]:
     """The steps read off these frames that no later frame can change: the ones it is
     safe to send.
 
@@ -283,7 +284,7 @@ def _settled(events: Sequence[StepEvent], scenes: Sequence[_Scene]) -> list[Step
     for event in events:
         # Two ways a later frame could still have a say: the run of frames this step was
         # read from is still open, because a frame close enough behind the last of them
-        # carries it on (`recogniser._continues`); or a contact that was live over those
+        # carries it on (`actions.continues`); or a contact that was live over those
         # frames has not finished, so what the rules make of them can still change.
         if now - event.t_end <= FLICKER_GAP_S or event.t_end >= mutable:
             break
@@ -291,12 +292,12 @@ def _settled(events: Sequence[StepEvent], scenes: Sequence[_Scene]) -> list[Step
     return settled
 
 
-def _mutable_from(scenes: Sequence[_Scene]) -> float:
+def _mutable_from(scenes: Sequence[Scene]) -> float:
     """When the part of the session that can still be re-read begins, in session time.
 
     A contact - one unbroken run of frames with a hand on one object - is what the
     recogniser's rules read, and what they make of *any* frame of a contact depends on
-    the whole of it (`recogniser._Contact`: how far the object travelled, whether it ever
+    the whole of it (`actions.Contact`: how far the object travelled, whether it ever
     went over the cup, how long it was held). So while a contact is live, every step read
     off it is still open to question, and the answer is the start of the earliest one
     still live - or `inf` when nothing is in a hand, when the whole session so far is
@@ -308,7 +309,7 @@ def _mutable_from(scenes: Sequence[_Scene]) -> float:
         (
             scenes[first].t
             for label in held
-            for first, end in _spans(scenes, label)
+            for first, end in spans_of(scenes, label)
             # Live: in a hand in the newest frame, or let go of so recently that the next
             # frame would read as the same contact rather than a new one.
             if end == last or now - scenes[end].t <= FLICKER_GAP_S

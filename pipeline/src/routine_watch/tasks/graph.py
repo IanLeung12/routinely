@@ -3,7 +3,8 @@
 A task is a graph of required dependencies, not a fixed sequence: "teabag in cup" has
 to happen before "pour", but "fill kettle" and "get cup" may happen in either order.
 Each step lists the objects allowed for it ("spoon or teaspoon both count"), whether it
-is optional (milk and sugar are) and whether doing it twice is perseveration.
+is optional (milk and sugar are), whether doing it twice is perseveration, and - so the
+step recogniser can see it happen - which **action** it is (`routine_watch.actions`).
 
 The graphs live next to this module as `<name>.yaml`, so the data a demo depends on can
 be read and reviewed without reading any code::
@@ -12,6 +13,7 @@ be read and reviewed without reading any code::
     graph.deps("pour")              # {'boil', 'teabag_in_cup'}
     graph.allowed_objects("stir")   # {'spoon', 'teaspoon', 'cup'}
     graph.is_optional("milk")       # True
+    graph.step("pour").action       # Action(type='pour', objects=('kettle',), target='cup')
 
 The error classifier (`routine_watch.errors`) reads a graph; nothing here looks at
 step events itself.
@@ -20,15 +22,16 @@ step events itself.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import NoReturn
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from ..actions import ACTION_TYPES, PRIMITIVES, Action
 from ..contracts import ObjectLabel
 
 #: Task files live beside this module: `tasks/<name>.yaml`.
@@ -49,6 +52,36 @@ class TaskGraphError(ValueError):
 # ------------------------------------------------------------------ the file's shape
 
 
+class _ActionSpec(BaseModel):
+    """One step's `action:`: which of `routine_watch.actions`' primitives it is.
+
+    ``{type: put_into, object: teabag, target: cup}``. `object` may be a list where the
+    task allows either of two things ("a bottle or a weekly organiser"), and `target`
+    may be spelled `into:`, `in:` or `from:` where that reads better - they are one
+    field, "the thing it is done to". `_action` is what holds the type and the names to
+    the step they are on.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: str
+    object: tuple[str, ...] = Field(min_length=1)
+    target: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("target", "into", "in", "from"),
+        min_length=1,
+    )
+    seconds: float | None = Field(default=None, gt=0.0)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _one_name_is_a_list(cls, data: object) -> object:
+        """`object: teabag` meant `object: [teabag]`."""
+        if isinstance(data, dict) and isinstance(data.get("object"), str):
+            return {**data, "object": [data["object"]]}
+        return data
+
+
 class _StepSpec(BaseModel):
     """One `steps:` entry of a task file."""
 
@@ -60,6 +93,7 @@ class _StepSpec(BaseModel):
     objects: tuple[ObjectLabel, ...] = Field(min_length=1)
     optional: bool = False
     once_only: bool = True
+    action: _ActionSpec | None = None
 
 
 class _TaskSpec(BaseModel):
@@ -95,6 +129,10 @@ class Step:
     optional: bool
     #: Doing it again, after other steps, is perseveration.
     once_only: bool
+    #: What doing this step looks like, for the step recogniser to read it off the
+    #: capture stream (`routine_watch.actions`). None is a step the task file never
+    #: said how to see: the recogniser falls back to its hand-written tea rules.
+    action: Action | None = None
 
 
 @dataclass(frozen=True)
@@ -269,6 +307,10 @@ def _build(spec: _TaskSpec, source: str) -> TaskGraph:
         if alias in _DETECTOR_CLASSES:
             fail(f"object alias {alias!r} is already a detector class")
         also_called.setdefault(str(label), []).append(alias)
+    # The other way round, for an action that names an object by one of those aliases.
+    means: dict[str, str] = {
+        alias: label for label, aliases in also_called.items() for alias in aliases
+    }
 
     steps = []
     for step in spec.steps:
@@ -289,6 +331,7 @@ def _build(spec: _TaskSpec, source: str) -> TaskGraph:
                 allowed_objects=frozenset(allowed),
                 optional=step.optional,
                 once_only=step.once_only,
+                action=_action(step, frozenset(allowed), means, fail),
             )
         )
 
@@ -301,6 +344,49 @@ def _build(spec: _TaskSpec, source: str) -> TaskGraph:
     if cycle := _unorderable(graph):
         fail(f"dependencies form a cycle: {cycle}")
     return graph
+
+
+def _action(
+    step: _StepSpec,
+    allowed: frozenset[str],
+    means: dict[str, str],
+    fail: Callable[[str], NoReturn],
+) -> Action | None:
+    """One step's `action:`, held to the step it is on, or None if it has none.
+
+    The type has to be one `routine_watch.actions` knows, and every object the action
+    names has to be one the step already allows - so a step cannot be watched for a
+    thing the task says is not part of it, and `routine_watch.errors` cannot then read
+    that thing as a substitution. Aliases are resolved here, so the recogniser only
+    ever sees detector classes.
+    """
+    spec = step.action
+    if spec is None:
+        return None
+    primitive = PRIMITIVES.get(spec.type)
+    if primitive is None:
+        fail(
+            f"step {step.id!r}: no action called {spec.type!r}; "
+            f"the actions are {list(ACTION_TYPES)}"
+        )
+    named = (*spec.object, *((spec.target,) if spec.target is not None else ()))
+    if outside := sorted(set(named).difference(allowed)):
+        fail(
+            f"step {step.id!r}: its action names {outside}, which "
+            f"{'are' if len(outside) > 1 else 'is'} not among its objects {sorted(allowed)}"
+        )
+    if primitive.target and spec.target is None:
+        fail(f"step {step.id!r}: the {spec.type!r} action needs a target to be done to")
+    if not primitive.target and spec.target is not None:
+        fail(f"step {step.id!r}: the {spec.type!r} action takes no target")
+    if not primitive.seconds and spec.seconds is not None:
+        fail(f"step {step.id!r}: the {spec.type!r} action takes no seconds")
+    return Action(
+        type=spec.type,
+        objects=tuple(dict.fromkeys(means.get(name, name) for name in spec.object)),
+        target=None if spec.target is None else means.get(spec.target, spec.target),
+        seconds=spec.seconds,
+    )
 
 
 def _unorderable(graph: TaskGraph) -> list[str]:

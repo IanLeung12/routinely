@@ -14,56 +14,64 @@
         "objects": ["kettle"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pick_up", "object": "kettle"}
       },
       {
         "label": "Boil the kettle",
         "objects": ["kettle"],
         "depends_on": ["Fill the kettle"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "hold", "object": "kettle", "seconds": 1.0}
       },
       {
         "label": "Get a mug",
         "objects": ["mug"],
         "depends_on": [],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pick_up", "object": "mug"}
       },
       {
         "label": "Put the tea bag in the mug",
         "objects": ["tea bag", "mug"],
         "depends_on": ["Get a mug"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "put_into", "object": "tea bag", "target": "mug"}
       },
       {
         "label": "Pour the water",
         "objects": ["kettle", "mug"],
         "depends_on": ["Boil the kettle", "Put the tea bag in the mug"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pour", "object": "kettle", "target": "mug"}
       },
       {
         "label": "Add milk",
         "objects": ["milk"],
         "depends_on": ["Pour the water"],
         "optional": true,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "pour", "object": "milk", "target": "mug"}
       },
       {
         "label": "Stir it",
         "objects": ["teaspoon", "mug"],
         "depends_on": ["Pour the water"],
         "optional": false,
-        "once_only": false
+        "once_only": false,
+        "action": {"type": "stir", "object": "teaspoon", "target": "mug"}
       },
       {
         "label": "Take the tea bag out",
         "objects": ["tea bag", "teaspoon"],
         "depends_on": ["Pour the water"],
         "optional": false,
-        "once_only": true
+        "once_only": true,
+        "action": {"type": "take_out", "object": "tea bag", "target": "mug"}
       }
     ]
   }
