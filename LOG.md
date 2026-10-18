@@ -411,3 +411,6 @@ T452 | standard | codex | merged after release | ~?k tok
 T450 | heavy | claude-opus | merged first try | ~260k tok
 T458 | light | claude-sonnet | merged first try | ~?k tok
 T457 | standard | claude-opus | merged first try | ~?k tok
+T459 | light | claude-sonnet | merged first try | ~?k tok
+T462 | light | claude-sonnet | merged first try | ~?k tok
+T460 | standard | claude-opus | merged first try | ~?k tok
