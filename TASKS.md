@@ -8,14 +8,14 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T413 — Replays library for supervisors and the person
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: T412, T427, T430, T431
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx, web/src/replays/replays.css, web/src/mock/replays.ts, web/src/App.tsx
-- note: merge conflict with main on PR #429: check out its branch, merge origin/main, fix, push
+- note: merge conflict fixed: merged origin/main (T446), wired Replay.markers into ReplayPlayer's new markers prop, rebuilt/retested, ci.sh green
 - owner: ian-claude-standard
 - claimed: 2026-10-17T23:56Z
 - pr: #429
