@@ -214,14 +214,14 @@ Interface:
 Acceptance: tests: options come from /routines incl. protein shake + a saved one; offline fallback; camera session starts for a saved routine id and for `protein_shake`; `cd web && npm test && npm run build`; `scripts/ci.sh --changed`.
 
 ### T467 — Bug: main red: App.test.tsx expects "Making tea" but the Live picker now shows routine titles ("Make tea")
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: web/src/App.test.tsx
-- owner: —
-- claimed: —
+- owner: ian-claude-standard
+- claimed: 2026-10-18T07:24Z
 - pr: —
 
 What: Since 6ea3d97 (T466, Live picker built from `GET /routines`), the `web/src/App.test.tsx` test "shows the live routine picker with making tea selected by default" fails on main: the picker renders "Make tea" / "Take medication with water", not "Making tea" / "Medication with water". It is the only failing test file (CI run 39107150618, 136/137 pass).
