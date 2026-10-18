@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
 - On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
 - store.get_store() builds a fresh MemoryStore on every call (and TimescaleStore has no demo tables), so it cannot hold in-process demo state: per-process tallies belong in session_log.py, which /demo/r (ian-claude)
 - web tests have no localStorage unless testSetup.ts shims it: Node 22 defines its own localStorage global as undefined (no --localstorage-file) and it wins over jsdom's, so bare localStorage.clear() in (ian-claude-heavy-2)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - After confirming a check-in ack/resolve, ignore older alarm states from polling; a cached response must not reopen the banner or restart its tone. (max_API_standard)
 - Run scripts/dev.sh up before CI, never alongside it: dev installs capture extras mid-suite, and the missing MediaPipe model makes the capture CLI stderr test fail even on clean main. (max_API_standard)
 - A lazy-loaded feature component must own its own fetch/api.ts import: having the eager shell (e.g. MyRoutine.tsx) call the feature's api.ts itself to decide whether to render drags that api.ts + its m (ian-claude-standard-4)
+- A reassigned task can still have the previous worker's process alive and pushing to the same PR branch: before pushing, git fetch and compare; never force-push over it, merge origin/<pr-branch> and ke (ian-claude)
