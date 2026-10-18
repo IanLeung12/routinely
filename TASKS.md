@@ -218,15 +218,15 @@ Interface:
 Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response → alarm; duress (person sees "ok", supervisor gets a silent duress alarm); disconnect after start → alarm still fires; unacknowledged → escalates to #2; false alarm resolved by a supporter and by the person; permissions (a supporter without `location` never gets it). The duress and safety responses are byte-identical. PINs never appear in any response or log. `scripts/ci.sh` passes.
 
 ### T451 — Check-in UI (person side): countdown, "I'm okay" + PIN pad
-- status: todo
+- status: claimed
 - class: standard
 - priority: 0
 - kind: feature
 - source: ian
 - deps: —
 - area: web/src/checkin/CheckInCard.tsx, web/src/checkin/CheckInCard.test.tsx, web/src/checkin/PinPad.tsx, web/src/checkin/PinPad.test.tsx, web/src/checkin/checkin.css, web/src/checkin/api.ts, web/src/checkin/types.ts, web/src/mock/checkins.ts, web/src/people/MyRoutine.tsx
-- owner: —
-- claimed: —
+- owner: max_API_standard
+- claimed: 2026-10-18T00:58Z
 - pr: #437
 - rating: 5/5 clear task, API shape from T450's todo description was detailed enough to mock against
 - note: merge conflict with main on PR #437: check out its branch, merge origin/main, fix, push
