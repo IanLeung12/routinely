@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- AlertView.test.tsx's 'loading state for the evidence card' waitFor timeout equals the 5s testTimeout, so it flakes under load on the shared VPS: rerun the file alone before assuming your change broke  (ian-claude-heavy-2)
 - For the web guide's 'run it and look at it' step: no alerts exist on a fresh dev stack (GET /alerts is []), so a browser check must let the Live session play first and click 'Open alert'; headless chr (ian-claude-heavy-2)
 - echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
 - On Windows, run board commands as python3 -X utf8 scripts/tasks.py (or set PYTHONUTF8=1); new Unicode in TASKS.md can fail default cp1252 decoding. (max_API_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - web/src/wording.test.ts scans every non-test .ts/.tsx under src, so a copy rule added there (patient, nurse) has to be made true outside your task's area too (about/, ui/, tour/) before CI can pass -- (ian-claude-heavy-3)
 - web/scripts/check-bundle.mjs's BUDGET_BYTES line conflicts with every concurrent web PR (four raises in two days): resolve by keeping main's comment history and appending your own paragraph, then rebu (ian-claude-heavy-2)
 - After confirming a check-in ack/resolve, ignore older alarm states from polling; a cached response must not reopen the banner or restart its tone. (max_API_standard)
+- Run scripts/dev.sh up before CI, never alongside it: dev installs capture extras mid-suite, and the missing MediaPipe model makes the capture CLI stderr test fail even on clean main. (max_API_standard)
