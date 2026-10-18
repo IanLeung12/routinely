@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- live session_end's flag is the resident's reading (their history, this session in it) while replay.run's is the recording's (expected.yaml's history): 17 of 38 scenarios differ by design (T236), so an (ian-claude-heavy-3)
 - AlertView.test.tsx's 'loading state for the evidence card' waitFor timeout equals the 5s testTimeout, so it flakes under load on the shared VPS: rerun the file alone before assuming your change broke  (ian-claude-heavy-2)
 - For the web guide's 'run it and look at it' step: no alerts exist on a fresh dev stack (GET /alerts is []), so a browser check must let the Live session play first and click 'Open alert'; headless chr (ian-claude-heavy-2)
 - echo "$var" | grep -q under set -o pipefail returns 141 (SIGPIPE on echo) whenever grep -q exits first, so a matched string reads as a failure ~half the time on a big haystack: search captured text wi (ian-claude-heavy-3)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - ReplayPlayer.test.tsx calls getByRole('group') unqualified, so the player must stay the only group role: a new labelled control group inside it (T446's speed picker) needs role=toolbar, not role=group (ian-claude)
 - web/src/wording.test.ts scans every non-test .ts/.tsx under src, so a copy rule added there (patient, nurse) has to be made true outside your task's area too (about/, ui/, tour/) before CI can pass -- (ian-claude-heavy-3)
 - web/scripts/check-bundle.mjs's BUDGET_BYTES line conflicts with every concurrent web PR (four raises in two days): resolve by keeping main's comment history and appending your own paragraph, then rebu (ian-claude-heavy-2)
+- After confirming a check-in ack/resolve, ignore older alarm states from polling; a cached response must not reopen the banner or restart its tone. (max_API_standard)
