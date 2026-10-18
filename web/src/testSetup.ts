@@ -1,5 +1,12 @@
+import { configure } from '@testing-library/react'
 import { beforeEach } from 'vitest'
 import { installFakeWebSocket } from './live/testWebSocket.ts'
+
+/** testing-library's findBy/waitFor default (1000ms) assumes a quiet machine. A lazy
+ * screen's first import (T449, T451), or just a loaded box, can outrun that before any
+ * test logic is slow, so every test gets more room rather than chasing it file by file
+ * (T445, T459). */
+configure({ asyncUtilTimeout: 5000 })
 
 /** Node 22 defines its own `localStorage` global as undefined unless the process was
  * started with `--localstorage-file`, and that wins over jsdom's, so web tests have no
