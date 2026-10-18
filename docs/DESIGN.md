@@ -23,6 +23,11 @@ a progress line — and the shift handoff as dense rows in one card:
 `design/live-before.png` → `design/live-after.png`,
 `design/handoff-before.png` → `design/handoff-after.png`.
 
+The task map itself, from that step list to a flow canvas of node cards wired by their
+dependencies: `design/task-map-before.png` → `design/task-map-after.png`, mid-session
+with the step that comes next in `design/task-map-live.png`, and left to right on a
+full-width card in `design/task-map-wide.png`.
+
 ## Principles
 
 1. **Quiet by default.** A screen is grey text on near-black. Colour means something, so

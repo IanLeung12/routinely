@@ -1,74 +1,156 @@
 /* Task map (live session, SPEC section 9 screen 3), on the system in docs/DESIGN.md.
-   A vertical step list: one dense row per step down a single rail, the node carrying
-   the step number until something happens to it, the state's own word in a pill on the
-   right. The card sits in a ~400 px column beside the skeleton view, so a list reads
-   in one glance where the wrapping grid of boxes this replaced did not - and the step
-   that turns red is never pushed out of sight. Tokens only, no hex or px. */
-
-/* The node is the same atom in the list and in the legend's key. */
-.task-map,
-.task-map-legend {
-  --step-node: 1.375rem;
-}
+   A flow canvas: the task graph's steps as node cards on a dotted board, joined by
+   curved edges from one step's port into the port of every step waiting on it. Steps
+   that only wait on each other share a level and sit side by side, so "a task is a
+   graph of dependencies, not a fixed order" (SPEC section 7) is the first thing the
+   map says. Node geometry (where a card sits, how big it is) comes from the layout in
+   TaskMap.tsx, in rem; everything here is tokens. */
 
 .task-map {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  /* One step darker than the card it sits in, like the skeleton view beside it: the
+     canvas reads as a board the cards are laid on rather than as another panel. */
+  background-color: var(--surface-page);
+  /* The dotted board. A percentage radius keeps the dot a fraction of its own tile,
+     so there is no pixel in here either. */
+  background-image: radial-gradient(var(--hairline-strong) 6%, transparent 6%);
+  background-size: var(--space-4) var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  overflow: auto;
   color: var(--text);
 }
 
-/* The rail every node sits on, behind them, from the first node's centre to the
-   last one's: the thing that makes this read as one routine rather than nine
-   unrelated lines. */
-.task-map::before {
-  content: '';
+/* The wiring, behind the cards. */
+.task-map__edges {
   position: absolute;
-  top: calc(var(--space-2) + var(--step-node) / 2);
-  bottom: calc(var(--space-2) + var(--step-node) / 2);
-  left: calc(var(--space-2) + var(--step-node) / 2);
-  width: 1px;
-  background: var(--hairline-strong);
+  top: 0;
+  left: 0;
+  pointer-events: none;
 }
 
-.step {
-  position: relative;
+.task-map__edge {
+  stroke: var(--hairline-strong);
+  stroke-width: 0.075;
+  stroke-linecap: round;
+  transition: stroke 240ms ease;
+}
+
+.task-map__edge--done {
+  stroke: var(--status-normal);
+  opacity: 0.55;
+}
+
+/* "Errors flash red (omission) or amber (repeat or sequence)" (SPEC section 9): the
+   edges into a flagged step take its colour too, so the eye is pulled along the
+   dependency that was broken rather than just to the card. */
+.task-map__edge--omission {
+  stroke: var(--status-flagged);
+}
+
+.task-map__edge--repeat,
+.task-map__edge--sequence {
+  stroke: var(--status-watch);
+}
+
+/* Skipping an optional step is not a gap in the routine, so the line into it is
+   dashed - the system's own mark for "not required" (docs/DESIGN.md, charts). */
+.task-map__edge--optional {
+  stroke-dasharray: 0.2 0.25;
+}
+
+/* The small ports a curve leaves from and arrives at, drawn over the card's edge. */
+.task-map__port {
+  fill: var(--surface-page);
+  stroke: var(--hairline-strong);
+  stroke-width: 0.06;
+  transition: stroke 240ms ease;
+}
+
+.task-map__port--done {
+  stroke: var(--status-normal);
+}
+
+.task-map__port--omission {
+  stroke: var(--status-flagged);
+}
+
+.task-map__port--repeat,
+.task-map__port--sequence {
+  stroke: var(--status-watch);
+}
+
+/* One step. Position and size come from the layout, so only the look is here. */
+.task-map__node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  box-sizing: border-box;
+  padding: var(--space-2);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
+}
+
+.task-map__head {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
-  padding: var(--space-2);
-  border-radius: var(--radius-xs);
 }
 
-.step__label {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--text-md);
+.task-map__label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: 1.3;
   overflow-wrap: break-word;
 }
 
 /* Nothing has happened here yet, so the step sits back a step from the ones that have. */
-.step--pending .step__label {
+.task-map__node--pending .task-map__label {
   color: var(--text-secondary);
 }
 
-.step__pill {
+.task-map__pill {
   flex: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* The node: the step's number until its state replaces it with an icon. Opaque, so
-   the rail runs behind it rather than through it - which is why the tint is painted
-   as an image over a solid card-coloured background instead of as the background. */
-.step__node {
-  position: relative;
-  z-index: 1;
+/* "Optional", and "Next" for the step whose dependencies have all landed: the word
+   beside the colour, so neither the dashed border nor the glow is the only signal. */
+.task-map__tag {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.task-map__tag--next {
+  margin-left: 0;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+/* The node's own marker: its step number until a state replaces it with an icon. */
+.task-map__dot {
   display: inline-flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: var(--step-node);
-  height: var(--step-node);
+  width: var(--space-5);
+  height: var(--space-5);
   border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-full);
   background-color: var(--surface-card);
@@ -79,54 +161,81 @@
   line-height: 1;
 }
 
-.step__node--done {
-  background-image: linear-gradient(var(--status-normal-tint), var(--status-normal-tint));
+.task-map__dot--done {
+  background-color: var(--status-normal-tint);
   border-color: transparent;
   color: var(--status-normal);
 }
 
-.step__node--omission {
-  background-image: linear-gradient(var(--status-flagged-tint), var(--status-flagged-tint));
+.task-map__dot--omission {
+  background-color: var(--status-flagged-tint);
   border-color: transparent;
   color: var(--status-flagged);
 }
 
-.step__node--repeat,
-.step__node--sequence {
-  background-image: linear-gradient(var(--status-watch-tint), var(--status-watch-tint));
+.task-map__dot--repeat,
+.task-map__dot--sequence {
+  background-color: var(--status-watch-tint);
   border-color: transparent;
   color: var(--status-watch);
 }
 
-/* "Errors flash red (omission) or amber (repeat or sequence)" (SPEC section 9): the
-   row takes the faintest wash of its colour so the error is found without reading,
-   and the missed step's node keeps pulsing until someone has looked at it. */
-.step--omission {
-  background: var(--status-flagged-tint);
+/* The states on the card itself: a done step keeps the quiet card and marks itself
+   with its tick, a flagged one takes the faintest wash of its colour so it is found
+   without reading. */
+.task-map__node--done {
+  border-color: var(--status-normal-tint);
 }
 
-.step--repeat,
-.step--sequence {
-  background: var(--status-watch-tint);
+/* The missed step keeps pulsing until someone has looked at it. */
+.task-map__node--omission {
+  border-color: var(--status-flagged);
+  background-color: var(--status-flagged-tint);
+  animation: task-map-missed 1.4s ease-in-out infinite;
 }
 
-.step--omission .step__node {
-  animation: task-map-pulse 1.4s ease-in-out infinite;
+.task-map__node--repeat,
+.task-map__node--sequence {
+  border-color: var(--status-watch);
+  background-color: var(--status-watch-tint);
 }
 
-@keyframes task-map-pulse {
+/* An optional step is drawn the way its edge is: dashed, "skipping this is fine". */
+.task-map__node--optional {
+  border-style: dashed;
+}
+
+/* The step that could happen next. The one glow in the map, on the one card a reader
+   should look at in a running session; the node also says "Next" in words. */
+.task-map__node--next {
+  border-color: var(--accent);
+  animation: task-map-ready 1.8s ease-in-out infinite;
+}
+
+@keyframes task-map-ready {
+  50% {
+    box-shadow: 0 0 0 var(--space-1) var(--accent-tint);
+  }
+}
+
+@keyframes task-map-missed {
   50% {
     box-shadow: 0 0 0 var(--space-1) var(--status-flagged-tint);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .step--omission .step__node {
+  .task-map__node--next,
+  .task-map__node--omission {
     animation: none;
+  }
+
+  .task-map__node--next {
+    box-shadow: 0 0 0 var(--space-1) var(--accent-tint);
   }
 }
 
-/* How far through the routine, above the list: the fill is read before the count,
+/* How far through the routine, above the canvas: the fill is read before the count,
    and it slides as each step lands rather than jumping. */
 .task-map__progress {
   display: flex;
@@ -161,7 +270,7 @@
   transition: width 300ms ease;
 }
 
-/* The key to the nodes, one quiet line under the map. */
+/* The key to the nodes, one quiet line under the canvas. */
 .task-map-legend {
   display: flex;
   flex-wrap: wrap;
@@ -180,27 +289,17 @@
   gap: var(--space-2);
 }
 
-/* In the legend the node is only a swatch: no number, no icon, just the colour the
+/* In the legend the marker is only a swatch: no number, no icon, just the colour the
    word beside it names. */
-.task-map-legend .step__node {
+.task-map-legend .task-map__dot {
   width: var(--space-3);
   height: var(--space-3);
 }
 
-/* Phone width (375 px and similar, SPEC section 9): the list is already one column,
-   so only the pill has to give way - it keeps the right of the row until the label
-   needs the width, and only then drops onto a line of its own. */
-@media (max-width: 480px) {
-  .step {
-    flex-wrap: wrap;
-    row-gap: var(--space-1);
-  }
-
-  .step__label {
-    min-width: 8rem;
-  }
-
-  .step__pill {
-    margin-left: auto;
-  }
+/* What the canvas says without a word of its own: the line into an optional step, and
+   the glow on the step that comes next. */
+.task-map-legend__note {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }

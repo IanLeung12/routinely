@@ -1,19 +1,20 @@
 import type { CaptureFrame } from '../contracts.ts'
 import type { LiveMessage } from './useLiveSession.ts'
 
-/** The `make_tea` task graph (`pipeline/src/routine_watch/tasks/tea.yaml`), for the
- * task-map layout. Fetching this from the API is a later task; for now the dashboard
- * only ever shows this one task. */
+/** The `make_tea` task graph (`pipeline/src/routine_watch/tasks/tea.yaml`), deps and
+ * all, for the task-map layout: the kettle branch and the cup branch run in parallel
+ * and meet at the pour. Played when the live socket can't be reached; a real session
+ * sends the same shape over `session_start`. */
 export const MOCK_STEPS = [
-  { id: 'fill_kettle', label: 'Fill the kettle', optional: false },
-  { id: 'boil', label: 'Boil the kettle', optional: false },
-  { id: 'get_cup', label: 'Get a cup', optional: false },
-  { id: 'teabag_in_cup', label: 'Put the teabag in the cup', optional: false },
-  { id: 'pour', label: 'Pour the water', optional: false },
-  { id: 'milk', label: 'Add milk', optional: true },
-  { id: 'sugar', label: 'Add sugar', optional: true },
-  { id: 'stir', label: 'Stir', optional: false },
-  { id: 'remove_teabag', label: 'Take the teabag out', optional: false },
+  { id: 'fill_kettle', label: 'Fill the kettle', deps: [], optional: false },
+  { id: 'boil', label: 'Boil the kettle', deps: ['fill_kettle'], optional: false },
+  { id: 'get_cup', label: 'Get a cup', deps: [], optional: false },
+  { id: 'teabag_in_cup', label: 'Put the teabag in the cup', deps: ['get_cup'], optional: false },
+  { id: 'pour', label: 'Pour the water', deps: ['boil', 'teabag_in_cup'], optional: false },
+  { id: 'milk', label: 'Add milk', deps: ['pour'], optional: true },
+  { id: 'sugar', label: 'Add sugar', deps: ['pour'], optional: true },
+  { id: 'stir', label: 'Stir', deps: ['pour'], optional: false },
+  { id: 'remove_teabag', label: 'Take the teabag out', deps: ['pour'], optional: false },
 ]
 
 const MOCK_SESSION_ID = 'mock-session'

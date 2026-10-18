@@ -26,9 +26,10 @@ chunks. Raise it only alongside a PR that explains the growth (a new eager
 dependency, a new always-on screen); don't raise it just to make the check
 pass.
 
-It is currently 96,000 bytes gzipped (T442): the redesign shell, the person
+It is currently 98,500 bytes gzipped (T432): the redesign shell, the person
 view and the replays added on 2026-10-17 are always-on screens and measured
-92,536 bytes together, over the old budget; T421's eager resident-detail
-charts took that to 94,908, and `main` measures 95,204 today. That leaves
-under 800 bytes of headroom, so a new always-on screen still has to be
-`lazy()`.
+92,536 bytes together, over the old 92,200 budget; T421's eager resident-detail
+charts took that to 94,908, and T432 turned the live session's task map into a
+node graph (a layered layout and an SVG edge layer, +1,600 bytes) on a `main`
+that measured 95,899 — 101 bytes of headroom. A new screen off the demo path
+still has to be `lazy()`.

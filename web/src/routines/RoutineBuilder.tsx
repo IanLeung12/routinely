@@ -25,10 +25,15 @@ const EXAMPLES = [
 const CONSENT_LABEL =
   'This clip is sent once to Google Gemini to draft the steps. It is not stored. Day-to-day monitoring never sends video.'
 
+/** The draft as the task map takes it: its own dependencies, so a drafted routine is
+ * previewed as the graph it is rather than as a list. The map says "Optional" on the
+ * node itself, so the label doesn't have to. */
 function previewSteps(steps: RoutineStep[]) {
   return steps.map((step) => ({
     id: step.id,
-    label: step.optional ? `${step.label} (optional)` : step.label,
+    label: step.label,
+    deps: step.depends_on,
+    optional: step.optional,
   }))
 }
 

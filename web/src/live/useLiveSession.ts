@@ -7,8 +7,12 @@ import { mockLiveStream } from './mockLiveStream.ts'
  * they're done, flash red for an omission or amber for a repeat/sequence error. */
 export type StepState = 'pending' | 'done' | 'omission' | 'repeat' | 'sequence'
 
-/** One step of the session's task graph, for the task map (SPEC section 10). */
-export type LiveStep = { id: string; label: string; optional: boolean }
+/** One step of the session's task graph, for the task map (SPEC section 10). `deps`
+ * is the step's `deps:` list from the task YAML - a task is a graph of dependencies,
+ * not a fixed order (SPEC section 7) - and the map lays its nodes out from it. Optional
+ * here, not in the protocol: a session from an API too old to send them still draws,
+ * as the chain its steps arrived in. */
+export type LiveStep = { id: string; label: string; deps?: string[]; optional: boolean }
 
 /** Mirrors `LiveSessionEnd.quality` (SPEC section 12): whether enough of the capture
  * could be read to score the session at all. `unclear` is a walker, a blocked view or
