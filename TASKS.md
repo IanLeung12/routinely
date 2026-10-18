@@ -159,7 +159,7 @@ Interface:
 Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response → alarm; duress (person sees "ok", supervisor gets a silent duress alarm); disconnect after start → alarm still fires; unacknowledged → escalates to #2; false alarm resolved by a supporter and by the person; permissions (a supporter without `location` never gets it). The duress and safety responses are byte-identical. PINs never appear in any response or log. `scripts/ci.sh` passes.
 
 ### T451 — Check-in UI (person side): countdown, "I'm okay" + PIN pad
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: feature
@@ -169,7 +169,7 @@ Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response 
 - owner: max_API_standard
 - claimed: 2026-10-18T00:58Z
 - pr: #437
-- rating: 5/5 clear task, API shape from T450's todo description was detailed enough to mock against
+- rating: 4/5 clear task, but T450/T452 merged mid-work which required reconciling guessed mock shapes against the real backend's field names (checkin_id/state/ask vs id/status/deadline) - unavoidable given parallel work, not a flaw in the task itself
 - note: merge conflict with main on PR #437: check out its branch, merge origin/main, fix, push
 
 What: The person's half of T450, built in parallel against T450's API shape with a mock (`web/src/mock/checkins.ts`). Follow `docs/DESIGN.md`. In "for myself" mode (`MyRoutine`), when a check-in is active, a calm full-width card appears: "Quick check-in: are you okay?", a large countdown ring, one big **I'm okay** button that opens a large-key PIN pad (works with shaky hands: big targets, no time pressure shown beyond the ring). After any accepted PIN, safety or duress, it shows the **same** "Thanks, you're checked in" screen (duress must be indistinguishable). A wrong PIN says "Try again" and the countdown continues. Accessible: focus moves to the card, `aria-live` announcements, keyboard only.
