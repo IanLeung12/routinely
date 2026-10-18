@@ -1,20 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button.tsx'
 import { Card } from '../ui/Card.tsx'
-import { activeCheckIn, respondToCheckIn } from './api.ts'
+import { fetchMyCheckin, respondToCheckin } from './api.ts'
 import { PinPad } from './PinPad.tsx'
-import type { CheckIn } from './types.ts'
+import type { PersonCheckIn } from './types.ts'
 import './checkin.css'
 
 type Stage = 'prompt' | 'pin' | 'thanks'
 
-function secondsLeft(deadline: string): number {
-  return Math.max(0, Math.round((new Date(deadline).getTime() - Date.now()) / 1000))
-}
-
 function formatCountdown(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const remainder = seconds % 60
+  const whole = Math.max(0, Math.round(seconds))
+  const minutes = Math.floor(whole / 60)
+  const remainder = whole % 60
   return `${minutes}:${remainder.toString().padStart(2, '0')}`
 }
 
@@ -27,16 +24,18 @@ function focusOnMount(node: HTMLDivElement | null): void {
 
 /** A calm full-width card for an active check-in (SPEC section 18, T451): a
  * countdown ring, one big "I'm okay" button, and the PIN pad it opens. Whichever
- * PIN matched - safety or duress - `respondToCheckIn` answers the same `accepted`
- * either way (T450), so this component is never told which one it was and the
- * "Thanks" screen below can't help but render identically for both.
+ * PIN matched - safety or duress - `respondToCheckin` answers the same `accepted`
+ * either way (T450's `/respond`), so this component is never told which one it
+ * was and the "Thanks" screen below can't help but render identically for both.
  *
  * Fetches its own check-in and renders nothing when there isn't one, the way
  * `person/routine/RoutineSections.tsx` owns its own data: `MyRoutine.tsx` only
  * ever renders this behind `lazy()`, so nobody's first paint carries the fetch,
- * the PIN pad or the ring unless a check-in is actually active. */
+ * the PIN pad or the ring unless a check-in is actually active. The question
+ * itself (`ask`) comes from the server, so this never hardcodes wording the
+ * backend might phrase differently for a person than for a supporter. */
 export function CheckInCard({ personId }: { personId: string }) {
-  const [checkIn, setCheckIn] = useState<CheckIn | null>(null)
+  const [checkIn, setCheckIn] = useState<PersonCheckIn | null>(null)
   const [stage, setStage] = useState<Stage>('prompt')
   const [error, setError] = useState('')
   const [remaining, setRemaining] = useState(0)
@@ -44,12 +43,11 @@ export function CheckInCard({ personId }: { personId: string }) {
 
   useEffect(() => {
     let cancelled = false
-    activeCheckIn(personId).then((result) => {
+    fetchMyCheckin(personId).then((result) => {
       if (cancelled) return
-      if (result) {
-        const seconds = secondsLeft(result.deadline)
-        setTotal(Math.max(1, seconds))
-        setRemaining(seconds)
+      if (result && result.seconds_left !== null) {
+        setTotal(Math.max(1, result.seconds_left))
+        setRemaining(result.seconds_left)
       }
       setCheckIn(result)
     })
@@ -62,13 +60,13 @@ export function CheckInCard({ personId }: { personId: string }) {
   // checked in there is nothing left to count down to, so the tick stops.
   useEffect(() => {
     if (!checkIn || stage === 'thanks') return
-    const interval = window.setInterval(() => setRemaining(secondsLeft(checkIn.deadline)), 1000)
+    const interval = window.setInterval(() => setRemaining((seconds) => Math.max(0, seconds - 1)), 1000)
     return () => window.clearInterval(interval)
   }, [checkIn, stage])
 
   async function handlePin(pin: string) {
     if (!checkIn) return
-    const response = await respondToCheckIn(checkIn.id, pin)
+    const response = await respondToCheckin(checkIn.checkin_id, pin)
     if (response.accepted) {
       setError('')
       setStage('thanks')
@@ -98,7 +96,7 @@ export function CheckInCard({ personId }: { personId: string }) {
   return (
     <Card className="check-in-card">
       <div ref={focusOnMount} tabIndex={-1} role="region" aria-label="Check-in">
-        <h2 className="check-in-card__heading">Quick check-in: are you okay?</h2>
+        <h2 className="check-in-card__heading">{checkIn.ask}</h2>
         <div className="check-in-card__ring">
           <svg className="check-in-card__ring-svg" viewBox="0 0 120 120" aria-hidden="true">
             <circle className="check-in-card__ring-track" cx="60" cy="60" r={radius} />

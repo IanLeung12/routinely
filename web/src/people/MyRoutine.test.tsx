@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setCheckInApi } from '../checkin/api.ts'
+import { resetMockCheckIns, startMockCheckIn } from '../mock/checkins.ts'
 import { personNote, personStatus } from '../person/personNotes.ts'
 import { setPersonRoutineApi } from '../person/routine/api.ts'
 import { mockPersonRoutine, mockSteadyRoutine } from '../person/routine/mockRoutine.ts'
@@ -20,7 +20,6 @@ beforeEach(() => {
   localStorage.clear()
   setPeopleApi(null)
   setPersonRoutineApi(null)
-  setCheckInApi(null)
   // checkin/api.ts falls back to the mock on a failed fetch, exactly like
   // alert/api.ts; stub it so that fallback is instant instead of a real,
   // slow connection attempt to an API nothing here is running.
@@ -30,7 +29,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   setPersonRoutineApi(null)
-  setCheckInApi(null)
+  resetMockCheckIns()
   vi.unstubAllGlobals()
 })
 
@@ -186,14 +185,13 @@ describe('MyRoutine', () => {
   })
 
   it('shows the check-in card when the person has an active check-in', async () => {
-    setCheckInApi({
-      activeCheckIn: vi.fn().mockResolvedValue({
-        id: 'checkin-1',
-        person_id: currentPerson().id,
-        status: 'pending',
-        deadline: new Date(Date.now() + 60_000).toISOString(),
-      }),
-      respond: vi.fn().mockResolvedValue({ accepted: false }),
+    startMockCheckIn({
+      checkin_id: 'checkin-1',
+      person_id: currentPerson().id,
+      ask: 'Quick check-in: are you okay?',
+      seconds_left: 60,
+      safetyPin: '1954',
+      duressPin: '7227',
     })
     await renderRoutine()
 
@@ -201,7 +199,6 @@ describe('MyRoutine', () => {
   })
 
   it('shows no check-in card when nothing is active', async () => {
-    setCheckInApi({ activeCheckIn: vi.fn().mockResolvedValue(null), respond: vi.fn() })
     await renderRoutine()
 
     expect(screen.queryByRole('heading', { name: 'Quick check-in: are you okay?' })).toBeNull()

@@ -5,7 +5,7 @@ import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
-import { currentPerson, getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
+import { currentPerson, currentSupervisor, getRole, peopleISupport, resetPeople, setRole as saveRole } from './people/api.ts'
 import { MyRoutine } from './people/MyRoutine.tsx'
 import { PeopleISupport } from './people/PeopleISupport.tsx'
 import { RoleChooser } from './people/RoleChooser.tsx'
@@ -29,6 +29,8 @@ const RoutinesScreen = lazy(() =>
 )
 const Replays = lazy(() => import('./replays/Replays.tsx').then(m => ({ default: m.Replays })))
 const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour })))
+const AlarmBanner = lazy(() => import('./checkin/AlarmBanner.tsx').then(m => ({ default: m.AlarmBanner })))
+const SafetySettings = lazy(() => import('./checkin/SafetySettings.tsx').then(m => ({ default: m.SafetySettings })))
 
 /** Where an alert was opened from, so its Back button can return there instead of
  * always landing on the overview. */
@@ -81,6 +83,7 @@ export default function App() {
   /** "New routine" (T438): building or saving one sits off the main demo path, behind
    * one button in the top bar that both roles get. */
   const [openRoutines, setOpenRoutines] = useState(false)
+  const [safetyPerson, setSafetyPerson] = useState<string | null>(null)
   /** The replays library (SPEC section 17): whose it is, and which session (if any)
    * it should open straight into, e.g. from an alert's error rows. */
   const [openReplays, setOpenReplays] = useState<{ personId: string; sessionId: string | null } | null>(null)
@@ -137,6 +140,7 @@ export default function App() {
   /** Opens the replays library for one person, straight into a session when one is
    * given (an alert's error rows name the session the error happened in). */
   function openReplaysFor(personId: string, sessionId: string | null = null) {
+    setSafetyPerson(null)
     setOpenReplays({ personId, sessionId })
   }
 
@@ -152,6 +156,7 @@ export default function App() {
     setOpenHandoff(false)
     setOpenPatternLibrary(false)
     setOpenRoutines(false)
+    setSafetyPerson(null)
     setOpenReplays(null)
   }
 
@@ -203,6 +208,7 @@ export default function App() {
     setOpenHandoff(screen === 'handoff')
     setOpenPatternLibrary(screen === 'patterns')
     setOpenRoutines(false)
+    setSafetyPerson(null)
     setOpenReplays(null)
   }
 
@@ -212,6 +218,7 @@ export default function App() {
    * Mrs. K's alert. */
   function documentTitle(): string {
     if (role === null) return 'Routine Watch'
+    if (safetyPerson !== null) return 'Safety settings — Routine Watch'
     if (openReplays !== null) return 'Replays — Routine Watch'
     if (role === 'person') return 'My routine — Routine Watch'
     if (openAlert !== null) {
@@ -312,7 +319,10 @@ export default function App() {
               </>
             )}
             {role !== null && (
-              <Button onClick={() => setOpenRoutines(true)}>New routine</Button>
+              <Button onClick={() => { setSafetyPerson(null); setOpenRoutines(true) }}>New routine</Button>
+            )}
+            {role !== null && (role === 'person' || supported.length > 0) && (
+              <Button onClick={() => setSafetyPerson(role === 'person' ? currentPerson().id : shownResident ?? supported[0].id)}>Safety settings</Button>
             )}
             {replaysPersonId !== null && (
               <Button onClick={() => openReplaysFor(replaysPersonId)}>Replays</Button>
@@ -321,8 +331,25 @@ export default function App() {
           </div>
         </header>
 
+        {role === 'supervisor' && (
+          <Suspense fallback={<Loading label="Loading safety alarms…" />}>
+            <AlarmBanner people={supported} supporter={currentSupervisor().id} />
+          </Suspense>
+        )}
+
         {role === null ? (
           <RoleChooser onChoose={chooseRole} />
+        ) : safetyPerson !== null ? (
+          <Suspense fallback={<Loading label="Loading safety settings…" />}>
+            {role === 'supervisor' && supported.length > 1 && (
+              <label>Safety settings for
+                <select value={safetyPerson} onChange={event => setSafetyPerson(event.target.value)}>
+                  {supported.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
+                </select>
+              </label>
+            )}
+            <SafetySettings key={safetyPerson} personId={safetyPerson} onBack={() => setSafetyPerson(null)} />
+          </Suspense>
         ) : openReplays !== null ? (
           <Suspense fallback={<Loading label="Loading replays…" />}>
             <Replays

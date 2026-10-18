@@ -1,32 +1,25 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { setCheckInApi } from './api.ts'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { resetMockCheckIns, startMockCheckIn } from '../mock/checkins.ts'
 import { CheckInCard } from './CheckInCard.tsx'
-import type { CheckIn } from './types.ts'
 
 const SAFETY_PIN = '1954'
 const DURESS_PIN = '7227'
 const PERSON_ID = 'sam'
+const ASK = 'Quick check-in: are you okay?'
 
-/** Same `accepted` whichever PIN matched (SPEC section 12): the fake never tells
- * the component which one it was, exactly like T450's real `/respond` will. */
-function fakeApi(checkIn: CheckIn | null) {
-  return {
-    activeCheckIn: vi.fn().mockResolvedValue(checkIn),
-    respond: vi.fn(async (_checkInId: string, pin: string) => ({
-      accepted: pin === SAFETY_PIN || pin === DURESS_PIN,
-    })),
-  }
-}
-
-function buildCheckIn(overrides: Partial<CheckIn> = {}): CheckIn {
-  return {
-    id: 'checkin-1',
+/** Seeds one active check-in in the offline mock, the way T450's `/checkins/demo`
+ * starts one for real. Same `accepted` whichever PIN matches (SPEC section 12). */
+function seed(overrides: Partial<Parameters<typeof startMockCheckIn>[0]> = {}) {
+  return startMockCheckIn({
+    checkin_id: 'checkin-1',
     person_id: PERSON_ID,
-    status: 'pending',
-    deadline: new Date(Date.now() + 120_000).toISOString(),
+    ask: ASK,
+    seconds_left: 120,
+    safetyPin: SAFETY_PIN,
+    duressPin: DURESS_PIN,
     ...overrides,
-  }
+  })
 }
 
 function enterPin(pin: string) {
@@ -35,15 +28,21 @@ function enterPin(pin: string) {
   }
 }
 
+beforeEach(() => {
+  // checkin/api.ts falls back to the offline mock on a failed fetch; stub fetch
+  // so that fallback is instant instead of a real connection attempt.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
+})
+
 afterEach(() => {
   cleanup()
-  setCheckInApi(null)
+  resetMockCheckIns()
+  vi.unstubAllGlobals()
   vi.useRealTimers()
 })
 
 describe('CheckInCard', () => {
   it('renders nothing when the person has no active check-in', async () => {
-    setCheckInApi(fakeApi(null))
     const { container } = render(<CheckInCard personId={PERSON_ID} />)
 
     await act(async () => {
@@ -53,22 +52,21 @@ describe('CheckInCard', () => {
   })
 
   it('shows for an active check-in and moves focus to the card', async () => {
-    setCheckInApi(fakeApi(buildCheckIn()))
+    seed()
     render(<CheckInCard personId={PERSON_ID} />)
 
     const panel = await screen.findByRole('region', { name: 'Check-in' })
-    expect(screen.getByRole('heading', { name: 'Quick check-in: are you okay?' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: ASK })).toBeTruthy()
     expect(screen.getByRole('button', { name: "I'm okay" })).toBeTruthy()
     expect(document.activeElement).toBe(panel)
   })
 
   it('counts down and keeps counting while the PIN pad is open', async () => {
-    setCheckInApi(fakeApi(buildCheckIn({ deadline: new Date(Date.now() + 90_000).toISOString() })))
+    seed({ seconds_left: 90 })
     vi.useFakeTimers()
     render(<CheckInCard personId={PERSON_ID} />)
 
     await act(async () => {
-      await Promise.resolve()
       await Promise.resolve()
     })
     expect(screen.getByText('1:30')).toBeTruthy()
@@ -82,7 +80,7 @@ describe('CheckInCard', () => {
   })
 
   it('says try again on a wrong PIN and leaves the check-in pending', async () => {
-    setCheckInApi(fakeApi(buildCheckIn()))
+    seed()
     render(<CheckInCard personId={PERSON_ID} />)
     fireEvent.click(await screen.findByRole('button', { name: "I'm okay" }))
 
@@ -90,20 +88,21 @@ describe('CheckInCard', () => {
 
     expect(await screen.findByText('Try again')).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toBe('Try again')
-    expect(screen.getByRole('heading', { name: 'Quick check-in: are you okay?' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: ASK })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: "Thanks, you're checked in" })).toBeNull()
   })
 
   it('renders the same DOM for the safety PIN and the duress PIN', async () => {
-    setCheckInApi(fakeApi(buildCheckIn({ id: 'checkin-safety' })))
+    seed({ checkin_id: 'checkin-safety' })
     const safety = render(<CheckInCard personId={PERSON_ID} />)
     fireEvent.click(await screen.findByRole('button', { name: "I'm okay" }))
     enterPin(SAFETY_PIN)
     await screen.findByRole('heading', { name: "Thanks, you're checked in" })
     const safetyHtml = safety.container.innerHTML
     safety.unmount()
+    resetMockCheckIns()
 
-    setCheckInApi(fakeApi(buildCheckIn({ id: 'checkin-duress' })))
+    seed({ checkin_id: 'checkin-duress' })
     const duress = render(<CheckInCard personId={PERSON_ID} />)
     fireEvent.click(await screen.findByRole('button', { name: "I'm okay" }))
     enterPin(DURESS_PIN)
