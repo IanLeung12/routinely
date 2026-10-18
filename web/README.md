@@ -34,6 +34,8 @@ with `main` at 95,204, and the rest of that day's screens took `main` to
 95,899. T446's replay-player markers, speed control and frame stepping add
 345 bytes on top of that (the alert screen, and the player with it, is eager —
 see `App.tsx`), measured 96,244. T432 then turned the live session's task map into a node
-graph (a layered layout and an SVG edge layer), measured READMEPLACEHOLDER, and raised
-the budget to 99,000. A new always-on screen still has to be `lazy()`, and the
-alert screen is the next thing worth making lazy if this keeps biting.
+graph (a layered layout and an SVG edge layer), measured 97,860. The budget is
+99,000 rather than ~98,100: three PRs in a row have had to raise it by a few
+hundred bytes, and each one made `main` red for whoever landed next, so this
+leaves ~1.1 KB. A new always-on screen still has to be `lazy()`, and the alert
+screen is the next thing worth making lazy if this keeps biting.

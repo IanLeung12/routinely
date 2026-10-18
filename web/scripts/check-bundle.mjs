@@ -23,7 +23,9 @@ import { fileURLToPath } from 'node:url'
 // Measured 96244. The alert screen is the next thing worth making lazy().
 // Raised for T432: the live session's task map became a node graph (a layered
 // layout and an SVG edge layer) on a main measuring 96244, and the map is on
-// the demo path, so it is eager by design. Measured BUDGETPLACEHOLDER.
+// the demo path, so it is eager by design. Measured 97860. 99000 leaves ~1.1 KB
+// rather than the ~250 bytes above: three PRs in a row have had to raise this
+// line by a few hundred bytes, which makes main red for whoever lands next.
 const BUDGET_BYTES = 99_000
 
 const webDir = dirname(dirname(fileURLToPath(import.meta.url)))
