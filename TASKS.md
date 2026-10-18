@@ -7,26 +7,6 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
 ## Tasks
 
-### T443 — Review: Routines screen crashes on the live API (GET /routines has no task_graph)
-- status: done
-- class: light
-- priority: 0
-- kind: bug
-- source: reviewer
-- deps: —
-- area: web/src/routines/types.ts, web/src/routines/RoutinesScreen.tsx, web/src/routines/RoutinesScreen.test.tsx, web/src/mock/routines.ts
-- owner: ian-claude-heavy-3
-- claimed: 2026-10-17T22:58Z
-- pr: #423
-- note: released by ian-laptop-standard: run ended without progress
-- rating: 4/5 clear on the fix; it didn't mention that saveRoutine's offline row and api.test.ts's whole-object assertion (T444's area) must change too, since POST /routines answers with detail() = summary + task_graph
-
-What: `GET /routines` returns `Routine.summary()` (pipeline/src/routine_watch/routine_builder.py ~line 979): `id, title, task_id, built_in, source, step_count, needs_training` and NO `task_graph`. `web/src/routines/RoutinesScreen.tsx:77` reads `routine.task_graph.steps.length`, so with the API up the screen throws a TypeError (it only works on the offline mock, which includes `task_graph`).
-Interface: in `types.ts` add a `RoutineSummary` type matching `summary()`; `fetchRoutines()` in api.ts returns `RoutineSummary[]` (change only its type annotation; its fallback logic is T444). `RoutinesScreen.tsx` renders `${routine.step_count} steps`. Make `mockBuiltInRoutines` and the localStorage fallback rows in `mock/routines.ts` carry `step_count` and the other summary fields. Do not change the pipeline.
-Acceptance:
-- RoutinesScreen test feeds a fetch response shaped exactly like `summary()` (no task_graph) and asserts "N steps" renders.
-- `scripts/ci.sh` passes.
-
 ### T444 — Review: routine builder shows a canned draft / fake save when the API refuses
 - status: done
 - class: light
