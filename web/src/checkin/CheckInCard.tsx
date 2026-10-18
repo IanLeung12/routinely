@@ -8,6 +8,12 @@ import './checkin.css'
 
 type Stage = 'prompt' | 'pin' | 'thanks' | 'closed'
 
+/** How often to look for a check-in that started after this screen opened.
+ * Short enough that the question is on screen well inside the shortest window
+ * worth answering, long enough not to be a second-by-second poll on a screen
+ * the person may leave open all day. */
+const ASK_POLL_MS = 1500
+
 function formatCountdown(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds))
   const minutes = Math.floor(whole / 60)
@@ -28,12 +34,13 @@ function focusOnMount(node: HTMLDivElement | null): void {
  * either way (T450's `/respond`), so this component is never told which one it
  * was and the "Thanks" screen below can't help but render identically for both.
  *
- * Fetches its own check-in and renders nothing when there isn't one, the way
- * `person/routine/RoutineSections.tsx` owns its own data: `MyRoutine.tsx` only
- * ever renders this behind `lazy()`, so nobody's first paint carries the fetch,
- * the PIN pad or the ring unless a check-in is actually active. The question
- * itself (`ask`) comes from the server, so this never hardcodes wording the
- * backend might phrase differently for a person than for a supporter. */
+ * Fetches its own check-in - and keeps looking for one, see below - rendering
+ * nothing until there is one to answer, the way `person/routine/RoutineSections.tsx`
+ * owns its own data: `MyRoutine.tsx` only ever renders this behind `lazy()`, so
+ * nobody's first paint carries the fetch, the PIN pad or the ring unless a
+ * check-in is actually active. The question itself (`ask`) comes from the server,
+ * so this never hardcodes wording the backend might phrase differently for a
+ * person than for a supporter. */
 export function CheckInCard({ personId }: { personId: string }) {
   const [checkIn, setCheckIn] = useState<PersonCheckIn | null>(null)
   const [stage, setStage] = useState<Stage>('prompt')
@@ -41,22 +48,40 @@ export function CheckInCard({ personId }: { personId: string }) {
   const [remaining, setRemaining] = useState(0)
   const [total, setTotal] = useState(1)
 
+  /** Keeps asking until there is a question to show (T465). Since T461 the live
+   * session runs on this very screen, so the SPEC section 18 story - session
+   * flagged, person asked to check in - starts while this card is already
+   * mounted; a single fetch on mount meant the person only ever saw the question
+   * after a reload, by which time the window had run out and their supporters
+   * were alarmed. Same shape as the supporter's `AlarmBanner`, except the asking
+   * stops the moment a check-in arrives: from then on the card is theirs to
+   * answer, the countdown below owns the clock, and no late response can shuffle
+   * the question out from under the PIN pad. */
   useEffect(() => {
     let cancelled = false
-    fetchMyCheckin(personId)
-      .then((result) => {
-        if (cancelled) return
-        if (result && result.seconds_left !== null) {
-          setTotal(Math.max(1, result.seconds_left))
-          setRemaining(result.seconds_left)
+    let timer: number | undefined
+    async function look() {
+      let found: PersonCheckIn | null = null
+      try {
+        found = await fetchMyCheckin(personId)
+      } catch {
+        // A look that failed is not an answer: keep asking rather than go quiet.
+      }
+      if (cancelled) return
+      if (found) {
+        if (found.seconds_left !== null) {
+          setTotal(Math.max(1, found.seconds_left))
+          setRemaining(found.seconds_left)
         }
-        setCheckIn(result)
-      })
-      .catch(() => {
-        if (!cancelled) setCheckIn(null)
-      })
+        setCheckIn(found)
+        return
+      }
+      timer = window.setTimeout(look, ASK_POLL_MS)
+    }
+    void look()
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [personId])
 

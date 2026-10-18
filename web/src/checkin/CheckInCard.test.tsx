@@ -125,6 +125,77 @@ describe('CheckInCard', () => {
     expect(screen.queryByRole('button', { name: SAFETY_PIN[0] })).toBeNull()
   })
 
+  it('shows a check-in that starts while the screen is already open, with no reload', async () => {
+    vi.useFakeTimers()
+    render(<CheckInCard personId={PERSON_ID} />)
+
+    // Nothing to answer yet: the person is just getting on with their routine.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(screen.queryByRole('region', { name: 'Check-in' })).toBeNull()
+
+    // The session is flagged and T450 starts a check-in (SPEC section 18) while
+    // this screen is open - the card has to find it without a page reload.
+    seed({ seconds_left: 20 })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+
+    expect(screen.getByRole('heading', { name: ASK })).toBeTruthy()
+    expect(screen.getByRole('button', { name: "I'm okay" })).toBeTruthy()
+    expect(screen.getByText('0:20')).toBeTruthy()
+
+    // ...and its countdown is running, not stuck at the number it arrived with.
+    act(() => vi.advanceTimersByTime(3000))
+    expect(screen.getByText('0:17')).toBeTruthy()
+  })
+
+  it('answers a check-in that arrived late the same way as one found on mount', async () => {
+    vi.useFakeTimers()
+    render(<CheckInCard personId={PERSON_ID} />)
+    // After the first look has already come back empty, so this is the poll's
+    // find and not the mount fetch racing the seed.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    seed()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: "I'm okay" }))
+    enterPin(SAFETY_PIN)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    expect(screen.getByRole('heading', { name: "Thanks, you're checked in" })).toBeTruthy()
+  })
+
+  it('keeps looking after a failed look, so one bad response is not an answer', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify({ error: 'Unavailable' }), { status: 503 }))
+        .mockRejectedValue(new Error('network down')),
+    )
+    seed()
+    vi.useFakeTimers()
+    render(<CheckInCard personId={PERSON_ID} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(screen.queryByRole('heading', { name: ASK })).toBeNull()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000)
+    })
+    expect(screen.getByRole('heading', { name: ASK })).toBeTruthy()
+  })
+
   it('renders the same DOM for the safety PIN and the duress PIN', async () => {
     seed({ checkin_id: 'checkin-safety' })
     const safety = render(<CheckInCard personId={PERSON_ID} />)
