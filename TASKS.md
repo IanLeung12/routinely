@@ -261,6 +261,7 @@ Acceptance:
 - owner: —
 - claimed: —
 - pr: —
+- note: orch: T413 (#429) raised BUDGET_BYTES again to 96_800 (measured 96,476); lower to new measured + ~1,500 after lazy-loading
 
 What: The first-load JS budget has been bumped three times today (92,200 → 96,000 → 96,500) and main sits ~250 B under it, so every remaining pre-freeze UI PR risks a red "first-load JS over budget" CI. Make `AlertView` and `ResidentDetail` lazy in `App.tsx` the same way `Handoff`/`RoutinesScreen` already are, then lower the budget to measured + ~1,500 B.
 Why: stops bundle-budget CI failures from blocking demo-path PRs in the last 90 minutes before the 01:30 UTC freeze.
