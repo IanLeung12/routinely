@@ -350,7 +350,7 @@ Why: the track asks for measurable societal impact; right now the pitch has no n
 Acceptance: deterministic (seeded, same numbers every run); finishes in < 60 s; a test runs a 5-person cohort and checks the metric keys and ranges; `scripts/ci.sh` passes.
 
 ### T455 — Bug: "Draft routine" blanks the whole dashboard (API task_graph steps use `deps`, UI reads `depends_on`)
-- status: in-review
+- status: done
 - class: light
 - priority: 0
 - kind: bug
