@@ -312,7 +312,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T456 — Review: Replays delete swallows a failed delete (unhandled rejection, no message)
-- status: claimed
+- status: in-review
 - class: light
 - priority: 0
 - kind: bug
@@ -321,8 +321,9 @@ Acceptance:
 - area: web/src/replays/Replays.tsx, web/src/replays/Replays.test.tsx
 - owner: ian-claude-standard
 - claimed: 2026-10-18T00:32Z
-- pr: —
+- pr: #438
 - note: —
+- rating: 5/5 clear
 
 What: In `web/src/replays/Replays.tsx`, `confirmDelete` awaits `deleteReplay` with no try/catch and is called as `void confirmDelete(...)`. When the delete is refused (already possible for "Replay not found"; every non-ok once T441 lands), the promise rejection is unhandled, the confirm box stays open and the person gets no feedback, so they can't tell whether their replay (SPEC §17 privacy control) was removed.
 Interface: wrap the call in try/catch; on failure keep the replay in the list and on screen, close the confirm, and show the error with `ErrorState` from `web/src/ui/` (e.g. "This replay could not be deleted. It is still stored."). Only filter the list and close the session on success.
