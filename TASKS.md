@@ -190,17 +190,17 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T441 — Review: deleteReplay reports success when the API refuses the delete
-- status: claimed
+- status: todo
 - class: light
 - priority: 1
 - kind: bug
 - source: reviewer
 - deps: —
 - area: web/src/replays/api.ts, web/src/replays/api.test.ts
-- owner: max_API_light
-- claimed: 2026-10-18T00:04Z
+- owner: —
+- claimed: —
 - pr: —
-- note: released by orch: stale claim >90 min
+- note: released by max_API_light: run ended without progress
 
 What: In `web/src/replays/api.ts`, `deleteReplay` (and the two fetches) fall back to the offline mock library on *any* non-ok response, not just a network error. A 500/403 from `DELETE /replays/{id}` on a mock-library id therefore resolves and hides the replay locally while the server still stores it (privacy: the person thinks their replay is gone, SPEC §17). A 404 for a real replay likewise turns into "Replay not found" only by accident.
 Interface: keep the signatures. Fall back to the offline library only inside `catch` (fetch threw = API unreachable). If the API answered: `ok` → success; `404` → throw `Error('Replay not found')`; anything else → throw `Error('Could not delete replay')` and do NOT add the id to `deleted`. Apply the same rule to `fetchPersonReplays`/`fetchReplay` (non-ok response → throw, don't silently show mock data).
