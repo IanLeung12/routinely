@@ -8346,3 +8346,20 @@ Acceptance: tests with a fake clock for all 7 KAZE scenarios: safe; no response 
 
 What: The person's half of T450, built in parallel against T450's API shape with a mock (`web/src/mock/checkins.ts`). Follow `docs/DESIGN.md`. In "for myself" mode (`MyRoutine`), when a check-in is active, a calm full-width card appears: "Quick check-in: are you okay?", a large countdown ring, one big **I'm okay** button that opens a large-key PIN pad (works with shaky hands: big targets, no time pressure shown beyond the ring). After any accepted PIN, safety or duress, it shows the **same** "Thanks, you're checked in" screen (duress must be indistinguishable). A wrong PIN says "Try again" and the countdown continues. Accessible: focus moves to the card, `aria-live` announcements, keyboard only.
 Acceptance: Vitest: the card shows for an active check-in; a wrong PIN keeps it pending; the safety and duress paths render identical DOM; countdown text updates; `cd web && npm test && npm run build`.
+
+### T452 — Supervisor alarm UI: alarm banner + sound, acknowledge, escalation timeline, resolve
+- status: done
+- class: standard
+- priority: 0
+- kind: feature
+- source: ian
+- deps: —
+- area: web/src/checkin/AlarmBanner.tsx, web/src/checkin/AlarmBanner.test.tsx, web/src/checkin/EscalationTimeline.tsx, web/src/checkin/EscalationTimeline.test.tsx, web/src/checkin/alarmSound.ts, web/src/checkin/SafetySettings.tsx, web/src/checkin/SafetySettings.test.tsx, web/src/checkin/alarm.css, web/src/App.tsx
+- owner: max_API_standard
+- claimed: 2026-10-18T00:25Z
+- pr: #435
+- note: released by max_API_standard: run ended without progress
+- rating: 4/5 Shared API field names were unspecified while T450 and T451 were still unlanded; otherwise clear.
+
+What: The supervisor's half of T450, against the same mock as T451 (reuse `web/src/checkin/api.ts` / `types.ts` if T451 has landed; otherwise add them identically, since T451 owns them). In "supporting someone" mode, an `alarm` / `escalated` check-in shows a prominent, dismiss-proof **alarm banner** on every screen: "Mrs. K hasn't checked in (2 min)", plus "silent help request" for duress. It plays a repeating alarm tone made with Web Audio (no audio file), with a mute toggle and the browser's autoplay rule handled by an "Enable sound" control. Buttons: **I'm on it** (ack) and **Resolve** (false alarm / helped / other). An **escalation timeline** shows each step with times: alert → check-in sent → no answer → you were alarmed → escalated to {next} → acknowledged by → resolved. It shows only the fields the payload carries (respect T450's sharing permissions: no location line if it isn't shared). **SafetySettings**: an ordered supporter list, windows, and what each supporter may see; PINs are set but never displayed.
+Acceptance: Vitest: the banner appears for an alarm and clears on resolve; duress shows "silent help request"; the timeline renders the events; no location when it's absent; sound starts/stops (mock AudioContext); `cd web && npm test && npm run build`.
