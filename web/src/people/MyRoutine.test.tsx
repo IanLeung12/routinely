@@ -1,28 +1,35 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { resetMockCheckIns, startMockCheckIn } from '../mock/checkins.ts'
 import { personNote, personStatus } from '../person/personNotes.ts'
 import { setPersonRoutineApi } from '../person/routine/api.ts'
 import { mockPersonRoutine, mockSteadyRoutine } from '../person/routine/mockRoutine.ts'
 import { acceptInvite, createInvite, currentPerson, setPeopleApi, supervisorsOf } from './api.ts'
 import { MyRoutine } from './MyRoutine.tsx'
 
-// MyRoutine.tsx loads this behind React.lazy so a supervisor's first paint never
-// carries it. Pay the dynamic-import/transform cost here, once, instead of in the
+// MyRoutine.tsx loads these behind React.lazy so a supervisor's first paint never
+// carries them. Pay the dynamic-import/transform cost here, once, instead of in the
 // first test's findByRole, which otherwise races the 1s default timeout.
 beforeAll(async () => {
   await import('../person/routine/RoutineSections.tsx')
+  await import('../checkin/CheckInCard.tsx')
 })
 
 beforeEach(() => {
   localStorage.clear()
   setPeopleApi(null)
   setPersonRoutineApi(null)
+  // checkin/api.ts falls back to the mock on a failed fetch, exactly like
+  // alert/api.ts; stub it so that fallback is instant instead of a real,
+  // slow connection attempt to an API nothing here is running.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
 })
 
 afterEach(() => {
   cleanup()
   setPersonRoutineApi(null)
+  resetMockCheckIns()
   vi.unstubAllGlobals()
 })
 
@@ -175,6 +182,26 @@ describe('MyRoutine', () => {
     await user.keyboard('{Enter}')
     expect(screen.getByRole('button', { name: 'Pause watching' }).getAttribute('aria-pressed'))
       .toBe('false')
+  })
+
+  it('shows the check-in card when the person has an active check-in', async () => {
+    startMockCheckIn({
+      checkin_id: 'checkin-1',
+      person_id: currentPerson().id,
+      ask: 'Quick check-in: are you okay?',
+      seconds_left: 60,
+      safetyPin: '1954',
+      duressPin: '7227',
+    })
+    await renderRoutine()
+
+    expect(await screen.findByRole('heading', { name: 'Quick check-in: are you okay?' })).toBeTruthy()
+  })
+
+  it('shows no check-in card when nothing is active', async () => {
+    await renderRoutine()
+
+    expect(screen.queryByRole('heading', { name: 'Quick check-in: are you okay?' })).toBeNull()
   })
 
   it('never names a condition or raises an alarm, linked or alone', async () => {
