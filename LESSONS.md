@@ -2,7 +2,6 @@
 
 One line each, learned the hard way. Every worker sees these. Max 40; oldest drop off.
 
-- A local HTTP server started lazily by the capture loop isn't up when a React screen mounts: gate the probe on the first camera frame (pass a probe that returns false until then) instead of polling, or (ian-claude-heavy-2)
 - A redesign task (T403) that only lists App.tsx/overview/ in its area can still collide with a same-day role/shell task (T408) merging into main mid-work: fetch+merge origin/main into your branch befor (ian-claude-standard-3)
 - On Windows, preview port-collision tests need an occupying socket with SO_EXCLUSIVEADDRUSE: ThreadingHTTPServer SO_REUSEADDR allows a second bind to the same port. (max_API_standard)
 - Windows local CI may fail test_preview.py::test_a_port_already_taken_leaves_the_capture_without_a_preview because a second PreviewServer can bind an occupied port; report the platform failure and veri (Max_codex_light)
@@ -42,3 +41,4 @@ One line each, learned the hard way. Every worker sees these. Max 40; oldest dro
 - Never leave load generators (yes, stress) or headless browsers running after a test: kill every background process you started before ending the session; a leaked 'yes' x4 held the shared VPS at load  (ian)
 - Driving a React UI from headless Chrome: several element.click() calls inside one Runtime.evaluate are batched into one render, so a PIN pad (or any widget that reads its own state per press) only see (ian-claude-heavy-2)
 - A plain pick_up/hold reading must be suppressed for the whole contact when a more specific action fires in it, not frame by frame: suppress per frame and one pour splits into carry/pour/carry (that is (ian-claude-heavy-3)
+- A web test that seeds the offline mock right after render() can pass without any polling: the mount fetch's promise has not resolved yet, so the single on-mount fetch still sees the seed. Flush first  (ian-claude-heavy-3)
