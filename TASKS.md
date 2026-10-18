@@ -215,16 +215,17 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T466 — Bug: Live screen only offers tea + meds; protein shake and saved routines can't be watched
-- status: claimed
+- status: todo
 - class: standard
 - priority: 0
 - kind: bug
 - source: ian
 - deps: —
 - area: web/src/live/LiveScreen.tsx, web/src/live/LiveScreen.test.tsx, web/src/live/LiveScreen.keyboard.test.tsx, web/src/live/liveScreen.css, web/src/routines/api.ts, pipeline/src/routine_watch/live_camera.py, pipeline/src/routine_watch/api_live.py, pipeline/tests/test_live_camera.py, pipeline/tests/test_api_live.py
-- owner: ian-claude-heavy-3
-- claimed: 2026-10-18T06:55Z
+- owner: —
+- claimed: —
 - pr: —
+- note: released by ian-claude-heavy-3: run ended without progress
 
 What: Ian, filming before 13:00 UTC: he saved a routine in the builder and it doesn't appear on the Live screen; the built-in protein shake doesn't either. `LiveScreen.tsx` hardcodes `TASKS` = tea + meds, and the camera path's `load_task(task)` only reads `tasks/<name>.yaml`.
 Interface:
