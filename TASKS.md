@@ -214,7 +214,7 @@ Interface:
 Acceptance: tests: options come from /routines incl. protein shake + a saved one; offline fallback; camera session starts for a saved routine id and for `protein_shake`; `cd web && npm test && npm run build`; `scripts/ci.sh --changed`.
 
 ### T467 — Bug: main red: App.test.tsx expects "Making tea" but the Live picker now shows routine titles ("Make tea")
-- status: claimed
+- status: done
 - class: light
 - priority: 0
 - kind: bug
@@ -223,6 +223,8 @@ Acceptance: tests: options come from /routines incl. protein shake + a saved one
 - owner: ian-claude-standard
 - claimed: 2026-10-18T07:24Z
 - pr: —
+- note: Already fixed: 60fa686 (merged right after the cited CI run, b22bb32) corrected LiveScreen.tsx's label lookup. Verified on current origin/main (e38f907): npx vitest run src/App.test.tsx and full npm test both pass (137/137 files, 990 tests), 5x repeated with no flakiness. No code/test change needed; opened no PR.
+- rating: 2/5 task was based on a stale CI run; a concurrent commit (60fa686) had already fixed the root cause by the time I claimed it
 
 What: Since 6ea3d97 (T466, Live picker built from `GET /routines`), the `web/src/App.test.tsx` test "shows the live routine picker with making tea selected by default" fails on main: the picker renders "Make tea" / "Take medication with water", not "Making tea" / "Medication with water". It is the only failing test file (CI run 39107150618, 136/137 pass).
 Interface: read `web/src/App.test.tsx` (lines ~35-42) and `web/src/live/LiveScreen.tsx` (how options/labels are built, offline fallback). Update the test only: assert the tea option is selected by default using the label LiveScreen actually renders in this test's setup (the picker may be a segmented control, or a select when there are more than 3 routines). Do not change LiveScreen.tsx.
