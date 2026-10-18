@@ -306,14 +306,14 @@ Why: a person watching themselves is the point of SPEC §17; the demo needs the 
 Acceptance: Vitest: My routine renders the live section (LiveScreen mocked); the supervisor page is unchanged; wording test passes; `cd web && npm test && npm run build`.
 
 ### T462 — Bug: `scripts/dev.sh up` dies with "unbound variable" on macOS bash 3.2 (empty VITE_HOST_ARGS)
-- status: todo
+- status: claimed
 - class: light
 - priority: 0
 - kind: bug
 - deps: —
 - area: scripts/dev.sh
-- owner: —
-- claimed: —
+- owner: ian-claude-standard-3
+- claimed: 2026-10-18T03:16Z
 - pr: —
 
 What: commit 5c4a0e1 (LAN=1 support) expands `"${VITE_HOST_ARGS[@]}"` under `set -euo pipefail`. On bash < 4.4 (macOS default /bin/bash 3.2, which `#!/usr/bin/env bash` picks up on a stock Mac) an empty array expansion is an "unbound variable" error, so `scripts/dev.sh up` without `LAN=1` fails to start the dashboard on a laptop.
