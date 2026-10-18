@@ -189,7 +189,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T461 — "For myself" mode: show the live camera/skeleton session on My routine
-- status: in-review
+- status: done
 - class: standard
 - priority: 0
 - kind: bug
