@@ -416,5 +416,5 @@ T462 | light | claude-sonnet | merged first try | ~?k tok
 T460 | standard | claude-opus | merged first try | ~?k tok
 T461 | standard | claude-sonnet | merged first try | ~70k tok
 T463 | heavy | claude-opus | merged first try | ~345k tok
-T465 | light | claude-sonnet | merged first try | ~230k tok
-T464 | standard | claude-opus | merged first try | ~95k tok
+T465 | light | claude-opus | merged first try | ~95k tok
+T464 | standard | claude-sonnet | merged first try | ~230k tok
