@@ -251,3 +251,37 @@ Acceptance:
 
 What: `CheckInCard.tsx` has no error handling on either API call. (1) `fetchMyCheckin(...).then(...)` has no `.catch`: `GET /checkins/active?person=` 404s (`UnknownPerson`) for anyone without safety settings, so every such person's home screen logs an unhandled rejection. (2) `handlePin` awaits `respondToCheckin`, which throws on any non-401 error; the backend answers 409 (`NotWaiting`) once the countdown has run out and the check-in escalated, so a late PIN leaves the pad stuck with no message. Fix in CheckInCard.tsx only (api.ts is in T457's area): catch on the fetch -> render nothing; wrap `handlePin` in try/catch -> on error replace the pad with a calm message like "This check-in has already gone to your supporters - they'll be in touch" (no hint about which PIN).
 Acceptance: tests stub fetch with 404 on GET and 409 on respond; no unhandled rejection, the 409 message renders; `scripts/ci.sh` passes.
+
+### T459 — Bug: web tests still flake under load: lazy screens vs findBy's 1 s default (MyRoutine again, AlertView.keyboard new)
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/testSetup.ts, web/src/people/MyRoutine.test.tsx, web/src/alert/AlertView.keyboard.test.tsx
+- source: tester
+
+What: `scripts/ci.sh` on main @3a522b0 (box load avg ~17) failed 2 web tests: `src/people/MyRoutine.test.tsx > says nobody else can see this when the person is watching themselves` (`findByRole('heading', {name: 'How this week looks'})` at line 45 timed out; same test T445 fixed) and `src/alert/AlertView.keyboard.test.tsx > tabs from the top of the alert to Confirmed and confirms it with Enter` (`Unable to find role="button" and name /play/i`, line 54/79). Both files pass in isolation (`cd web && npx vitest run src/alert/AlertView.keyboard.test.tsx src/people/MyRoutine.test.tsx`), and GitHub CI on main is green. Cause: T449 lazy-loads AlertView/ResidentDetail and T451 adds a lazy CheckInCard to MyRoutine; the first test to hit a lazy chunk pays the import cost, which exceeds testing-library's 1000 ms `findBy*` default on a busy box. Per-test fixes (T445) keep getting outrun by new lazy screens.
+Expected: web tests pass on a loaded machine.
+Interface: test-only. Raise the default once in `web/src/testSetup.ts` (`configure({ asyncUtilTimeout: 5000 })` from `@testing-library/react`), and/or preload the lazy modules in `beforeAll` of the two files. No product code changes.
+Acceptance:
+- `cd web && npx vitest run` passes while `stress`-style load runs (e.g. run it twice in parallel) with no findBy timeouts in these two files.
+- `scripts/ci.sh` passes.
+
+### T460 — Bug: person check-in card shows the oldest open check-in (0:00) when a person has several
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: T457, T458
+- area: pipeline/src/routine_watch/checkin.py, pipeline/tests/test_checkin.py, web/src/checkin/api.ts, web/src/checkin/api.test.ts
+- source: tester
+
+What: on main @3a522b0 with the stack up (`OFFLINE_MODE=true scripts/dev.sh up`), run `curl -XPOST localhost:8000/checkins/demo -H 'content-type: application/json' -d '{"person":"sam"}'` twice ~20 s apart (or once after an earlier one expired), then open the dashboard as **Myself**. `GET /checkins/active?person=sam` returns several records: the old ones in `state: "alarm"` with `seconds_left: null`, the new one `pending`. `fetchMyCheckin` (web/src/checkin/api.ts ~98) takes `list[0]`, so the card shows the stale one: countdown stuck at **0:00** with "I'm okay", not the live 20 s question. Its comment assumes "at most one is ever open for a person at a time", but `POST /checkins/demo` without `alert_id` starts a new record every call. A presenter re-triggering the check-in during the demo hits this.
+Expected: a person has at most one open check-in, or the person screen shows the newest pending one.
+Interface: preferred: in the store's `start` (checkin.py), if the person already has an open check-in, return it instead of creating another (same idempotency the alert path has). Also make `fetchMyCheckin` prefer a `pending` record, newest first. Don't change `contracts/`. Waits for T457 and T458 (share web/src/checkin/).
+Acceptance:
+- pytest: two `start()` calls for one person leave one open check-in.
+- api.test.ts: given `[alarm(old), pending(new)]`, `fetchMyCheckin` returns the pending one.
+- Manual: the repro above shows a running countdown; I'm okay + PIN 1234 → "Thanks, you're checked in".
+- `scripts/ci.sh` passes.

@@ -1,21 +1,22 @@
 # Test report
-- main: 2e488ba (T444: surface routine builder API refusals instead of a canned draft/fake save)
-- run: 2026-10-18T00:25Z (OFFLINE_MODE=true, LIVE_API unset)
+- main: 3a522b0 (T451: Check-in UI (person side): countdown, "I'm okay" + PIN pad)
+- run: 2026-10-18T01:45Z (OFFLINE_MODE=true, LIVE_API unset)
 
 ## Levels
-- 1 Unit (scripts/ci.sh): PASS. pytest 1550 passed / 1 skipped; vitest 905 passed (130 files); e2e inside CI 38/38. (T445 flake fixed.)
+- 1 Unit (scripts/ci.sh): FAIL (load flake). pytest 1626 passed / 1 skipped; vitest 970 passed / 2 failed (MyRoutine "nobody else can see this", AlertView.keyboard "tabs to Confirmed"), both findBy 1 s timeouts on lazy chunks at load avg ~17; both pass in isolation, GitHub CI on main green → T459
 - 2 Simulation (scripts/e2e.sh): PASS, 38/38 scenarios
-- Smoke (scripts/smoke.sh, stack up): PASS, all checks
-- Integration (scripts/integration.sh): PASS (with dev stack up)
-- 3 UI walkthrough: FAIL (routine builder; core SPEC §10 path passes)
-  - home now opens on "Myself" / My routine: how this week looks + weekly chart, renders cleanly
-  - "Someone I support" → unit overview "4 on watch · 2 normal", 6 rows with chips + sparklines
-  - Mrs. K detail: baseline (threshold 2.4), daily scores, sessions, care records
-  - live replay: teabag missed, pour repeated, "Finished in 1m 43s · 2 errors" → Flagged for review + Open alert
-  - alert/evidence: 4 timestamped errors, "Consistent with" patterns, replay with 0.5×/1×/2× speed, care records, suggested checks
-  - Confirmed → threshold 2.4 → 2.3
-  - New routine → example → Draft routine: whole app goes blank, `step.depends_on is undefined` (API sends `deps`) → T455
-- 4 Robustness: PASS (not re-run separately; e2e corrupted-frames cases pass)
+- Smoke (scripts/smoke.sh): PASS
+- Integration (scripts/integration.sh): PASS
+- 3 UI walkthrough: FAIL (supervisor alarm banner, T457; core SPEC §10 path passes)
+  - every supporter screen shows "Safety alarms could not refresh… Retrying…": UI polls `/checkins/active?person=X&supporter=nurse-ana` → 422 (known, T457 P0 claimed)
+  - unit overview "4 on watch · 2 normal", Mrs. K detail baseline (threshold 2.4) + daily scores
+  - live replay: Finished in 1m 43s · 2 errors → Flagged for review → Open alert
+  - alert/evidence: 4 timestamped errors, Consistent with patterns, replay controls, suggested checks; Confirmed → threshold 2.4 → 2.3
+  - routine builder: Making toast → Draft routine renders node map + step editor, Save routine lands in Routines list (T455 fixed)
+  - person check-in (T451): POST /checkins/demo person=sam → Myself shows countdown ring + I'm okay → PIN pad → 1234 → "Thanks, you're checked in"; stacked check-ins show the stale one at 0:00 → T460
+- 4 Robustness: PASS (e2e corrupted-frames cases pass)
 
 ## Open bug tasks
-- T455 (routine builder draft crashes the dashboard, P0)
+- T457 (alarm UI vs real check-in API, P0, claimed)
+- T459 (web test flake under load, P1)
+- T460 (person sees stale check-in when several open, P1)
