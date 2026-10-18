@@ -59,6 +59,7 @@ GitHub CI runs `scripts/ci.sh` as four parallel jobs on every PR and on `main`.
 pipeline/   Python 3.11 (uv): capture, recogniser, task graphs (tasks/*.yaml), errors, baseline,
             change detection, patterns, check-ins, routine builder, FastAPI + WebSocket API
 web/        Vite + React 19 + TypeScript dashboard (both roles), dependency-free SVG charts
+contracts/  JSON schemas shared by pipeline/ and web/
 scripts/    dev.sh, camera.sh, ci.sh, e2e.sh, eval.py, kaze_demo.py, env_sync.py, tasks.py, worker.sh
 tests/      recorded scenarios and repo-tooling tests
 docs/       DEMO, KAZE, EVAL, DESIGN, DEPLOY, CODEMAP (module map), diagrams
