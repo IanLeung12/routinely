@@ -397,3 +397,4 @@ T446 | light | claude-opus | merged first try | ~140k tok
 T447 | light | claude-sonnet | merged first try | ~?k tok
 T411 | light | claude-opus | merged first try | ~?k tok
 T444 | light | claude-sonnet | merged first try | ~?k tok
+T448 | light | claude-opus | merged first try | ~80k tok
