@@ -100,13 +100,13 @@ start_web() {
     (
       cd web
       # Run vite directly (not via `npm run`) so this PID is the actual port listener.
-      exec node_modules/.bin/vite preview "${VITE_HOST_ARGS[@]}" --port "$DASHBOARD_PORT" --strictPort --outDir "$WEB_DIST_DIR"
+      exec node_modules/.bin/vite preview ${VITE_HOST_ARGS[@]+"${VITE_HOST_ARGS[@]}"} --port "$DASHBOARD_PORT" --strictPort --outDir "$WEB_DIST_DIR"
     ) >>"$WEB_LOG" 2>&1 &
   else
     (
       cd web
       # Run vite directly (not via `npm run`) so this PID is the actual port listener.
-      exec node_modules/.bin/vite "${VITE_HOST_ARGS[@]}" --port "$DASHBOARD_PORT" --strictPort
+      exec node_modules/.bin/vite ${VITE_HOST_ARGS[@]+"${VITE_HOST_ARGS[@]}"} --port "$DASHBOARD_PORT" --strictPort
     ) >>"$WEB_LOG" 2>&1 &
   fi
   echo $! >"$WEB_PID_FILE"
