@@ -75,6 +75,7 @@ camera ─► capture.py ─► capture records (JSONL, contracts.CaptureFrame)
 - `web/src/person/PrivacyCard.tsx` is a standalone person-view card for controlled pause state, storage copy, and supervisor visibility; it is not yet wired into a screen.
 
 ## Adding things
+- `web/src/checkin/AlarmBanner.tsx` is mounted outside the supervisor's screen routing. It polls permission-filtered check-ins, acknowledges/resolves alarms, and owns one Web Audio tone with a browser-unlock control. `EscalationTimeline.tsx` shows only supplied events; `SafetySettings.tsx` edits ordered supporters, sharing permissions and windows with write-only PIN fields. These screens load lazily to preserve the first-load budget.
 - New pipeline stage or rule → its own module, pure functions, a unit test, and a scenario if behaviour changes.
 - New screen → new folder under `web/src/`, built from `web/src/ui/`, with mock data and loading/empty/error states.
 - New public page (not a nurse screen) → its own Vite entry + folder, like `web/landing.html` and `web/src/landing/`.
