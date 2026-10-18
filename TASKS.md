@@ -3,7 +3,7 @@
 Board for htv-2026. Edit only through `scripts/tasks.py` (workers) or `.tasks/` + `tasks.py commit` (orchestrator).
 Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 
-- last-reviewed: 7b7d647
+- last-reviewed: b22bb32
 
 ## Tasks
 
@@ -212,3 +212,20 @@ Interface:
 - Web: build the "Routine to watch" options from `GET /routines` (built-ins: tea, meds, protein_shake; then saved ones), falling back to the current tea/meds list if the API is unreachable (offline demo). Keep tea the default and keep `?task=` working for any routine id. A routine with a recorded scenario (`tea_skip_teabag_pour_twice`, `meds_skip_water`, `protein_shake_omit_powder` from tests/scenarios) plays it when there is no camera; one without a scenario shows "Watch this routine with the camera: run scripts/camera.sh" instead of an empty card when no camera is attached. With a camera (`?source=camera`), any routine is passed as `task=<id>`. A SegmentedControl won't fit many routines: switch to a select/listbox when there are more than 3.
 - Pipeline: the camera session resolves `task` as a built-in `load_task(name)` first, then the saved routines store (`routine_builder.get_routine_store().get(id)` → `parse_task_data(routine.graph)`); unknown → the same error as today. Keep the import out of `tasks/graph.py` (no cycle); do it in `live_camera.py`/`api_live.py`. Built-in routine ids vs file names: accept both (e.g. `tea` and the graph id).
 Acceptance: tests: options come from /routines incl. protein shake + a saved one; offline fallback; camera session starts for a saved routine id and for `protein_shake`; `cd web && npm test && npm run build`; `scripts/ci.sh --changed`.
+
+### T467 — Bug: main red: App.test.tsx expects "Making tea" but the Live picker now shows routine titles ("Make tea")
+- status: todo
+- class: light
+- priority: 0
+- kind: bug
+- deps: —
+- area: web/src/App.test.tsx
+- owner: —
+- claimed: —
+- pr: —
+
+What: Since 6ea3d97 (T466, Live picker built from `GET /routines`), the `web/src/App.test.tsx` test "shows the live routine picker with making tea selected by default" fails on main: the picker renders "Make tea" / "Take medication with water", not "Making tea" / "Medication with water". It is the only failing test file (CI run 39107150618, 136/137 pass).
+Interface: read `web/src/App.test.tsx` (lines ~35-42) and `web/src/live/LiveScreen.tsx` (how options/labels are built, offline fallback). Update the test only: assert the tea option is selected by default using the label LiveScreen actually renders in this test's setup (the picker may be a segmented control, or a select when there are more than 3 routines). Do not change LiveScreen.tsx.
+Acceptance:
+- `cd web && npx vitest run src/App.test.tsx` passes; `cd web && npm test` passes.
+- `scripts/ci.sh --changed` passes.

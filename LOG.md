@@ -418,3 +418,4 @@ T461 | standard | claude-sonnet | merged first try | ~70k tok
 T463 | heavy | claude-opus | merged first try | ~345k tok
 T465 | light | claude-opus | merged first try | ~95k tok
 T464 | standard | claude-sonnet | merged first try | ~230k tok
+T466 | standard | hermes (direct push) | broke main (App.test.tsx), fix T467 | ~?k tok
