@@ -207,7 +207,7 @@ Acceptance:
 - `scripts/ci.sh` passes.
 
 ### T463 — Generic step building blocks: any routine recognised live, no new code
-- status: claimed
+- status: in-review
 - class: heavy
 - priority: 0
 - kind: feature
@@ -216,7 +216,8 @@ Acceptance:
 - area: pipeline/src/routine_watch/recogniser.py, pipeline/src/routine_watch/actions.py, pipeline/src/routine_watch/tasks/graph.py, pipeline/src/routine_watch/tasks/tea.yaml, pipeline/src/routine_watch/tasks/meds.yaml, pipeline/src/routine_watch/routine_builder.py, pipeline/tests/test_actions.py, pipeline/tests/test_recogniser.py, pipeline/tests/test_routine_builder.py, docs/CODEMAP.md
 - owner: ian-claude-heavy-3
 - claimed: 2026-10-18T03:20Z
-- pr: —
+- pr: #448
+- rating: 4/5 clear on the primitive list and the acceptance; it did not say that unifying milk/sugar/pour into one primitive must change their 0.85 base confidence (POUR is 0.90), nor name 'stir'/'take_out', which tea needs but the listed primitives do not cover
 
 What: Ian wants custom routines (first one: a protein shake) recognised live. Today the recogniser's `RULES` table is hand-written for tea, so any other task recognises nothing. Add **reusable action primitives** that a task YAML step names, and make the recogniser interpret them for any graph.
 Interface:
