@@ -66,18 +66,3 @@ docs/       DEMO, KAZE, EVAL, DESIGN, DEPLOY, CODEMAP (module map), diagrams
 ```
 
 Full spec: `SPEC.md`. Agent rules: `AGENTS.md`.
-
-## How it was built
-
-A team of AI coding agents, coordinated by **Hermes**, built most of this, with humans setting direction, design and the demo.
-
-- **The board:** `TASKS.md` lives on the `tasks` branch, and `scripts/tasks.py` claims tasks atomically through git.
-- **Workers:** Claude Code and Codex, on the VPS and teammates' machines, each claim a task, open a PR, and the merge queue (`scripts/mergeq.py`) merges it when CI is green.
-- **Scheduled jobs:** an orchestrator plans tasks and keeps `main` green; a tester replays scenarios and walks the UI in a browser; a reviewer files bugs; an integration check runs hourly.
-- See the orchestration diagram in `docs/orchestration.png`.
-
-To run a worker:
-
-```bash
-AGENT=yourname CLASS=standard scripts/worker.sh   # CLASS: light | standard | heavy; TOOL=codex for Codex
-```
