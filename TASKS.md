@@ -253,3 +253,20 @@ What: Ian's custom routine, "Make a protein shake", as the second worked example
 - `tests/scenarios/protein_shake/`: synthetic capture records (normal; omission of powder; lid-open shake; double pour) passed through the real pipeline, with expected errors.
 - `docs/DETECTOR.md`: the labelling list for Ian's Roboflow project with these classes added to the tea ones, and how to train on his own GPU (yolo11n, cu128 PyTorch, export ONNX to `models/detector.onnx`).
 Acceptance: the scenarios give the expected errors; the dashboard task map renders the graph (parallel powder/liquid branches); `scripts/ci.sh` passes.
+
+### T465 — Bug: person's check-in card never shows a check-in that starts while My routine is open (fetches once on mount)
+- status: todo
+- class: light
+- priority: 1
+- kind: bug
+- deps: —
+- area: web/src/checkin/CheckInCard.tsx, web/src/checkin/CheckInCard.test.tsx
+- source: tester
+
+What: on main @3976dad with the stack up (`OFFLINE_MODE=true scripts/dev.sh up`), open the dashboard, pick **Myself** (My routine), then `curl -XPOST localhost:8000/checkins/demo -H 'content-type: application/json' -d '{"person":"sam"}'`. `GET /checkins/active?person=sam` returns the pending check-in, but My routine shows no "Can you check in?" card; it appears only after a page reload. `CheckInCard` (web/src/checkin/CheckInCard.tsx ~45) calls `fetchMyCheckin` once in `useEffect([personId])` and never again, unlike the supporter `AlarmBanner`, which re-fetches every second. Since T461 the live session runs on My routine, so the SPEC §18 story (session flagged → person asked to check in) happens on this very screen and the person never sees the question; the 20 s window runs out and supporters are alarmed.
+Expected: a check-in that starts while My routine is open appears within ~2 s with its countdown, no reload.
+Interface: simplest: poll `fetchMyCheckin` every 1–2 s while no check-in is shown (stop during the PIN/thanks stages), same pattern as AlarmBanner. Subscribing to `/ws/live?checkin_person=` is also fine. Don't change `contracts/` or the API.
+Acceptance:
+- CheckInCard.test.tsx: first fetch returns null, a later one returns a pending check-in → the card appears (fake timers).
+- Manual: the repro above shows the card with a running countdown without reloading; I'm okay + PIN 1234 → "Thanks, you're checked in".
+- `scripts/ci.sh` passes.

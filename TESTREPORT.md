@@ -1,22 +1,20 @@
 # Test report
-- main: 82ef57e (T453: KAZE demo: scenario runner + docs)
-- run: 2026-10-18T03:02Z (OFFLINE_MODE=true, LIVE_API unset)
+- main: 3976dad (T461: show the live camera/skeleton session on My routine)
+- run: 2026-10-18T04:25Z (OFFLINE_MODE=true, LIVE_API unset)
 
 ## Levels
-- 1 Unit (scripts/ci.sh): FAIL (load flake). pytest 1626 passed / 1 skipped; vitest 969 passed / 3 failed (MyRoutine "nobody else can see this", AlertView.keyboard ×2), all findBy 1 s timeouts on lazy chunks at load avg ~27; both pass in isolation, GitHub CI on main green → T459
+- 1 Unit (scripts/ci.sh): PASS. pytest 1628 passed / 1 skipped; vitest 987 passed (137 files); e2e inside ci OK. T459 flake fix holds under load
 - 2 Simulation (scripts/e2e.sh): PASS, 38/38 scenarios
-- Smoke (scripts/smoke.sh): PASS
+- Smoke (scripts/smoke.sh): PASS (needs the stack up; 24 connection-refused failures if run before `dev.sh up`)
 - Integration (scripts/integration.sh): PASS
-- 3 UI walkthrough: FAIL (supervisor alarm banner, T457; core SPEC §10 path passes). 82ef57e touched no UI/API code (scripts/kaze_demo.py + docs): re-checked overview + supporter view only, alarm banner still shows; details below are from the 3a522b0 full walk
-  - every supporter screen shows "Safety alarms could not refresh… Retrying…": UI polls `/checkins/active?person=X&supporter=nurse-ana` → 422 (known, T457 P0 claimed)
-  - unit overview "4 on watch · 2 normal", Mrs. K detail baseline (threshold 2.4) + daily scores
-  - live replay: Finished in 1m 43s · 2 errors → Flagged for review → Open alert
-  - alert/evidence: 4 timestamped errors, Consistent with patterns, replay controls, suggested checks; Confirmed → threshold 2.4 → 2.3
-  - routine builder: Making toast → Draft routine renders node map + step editor, Save routine lands in Routines list (T455 fixed)
-  - person check-in (T451): POST /checkins/demo person=sam → Myself shows countdown ring + I'm okay → PIN pad → 1234 → "Thanks, you're checked in"; stacked check-ins show the stale one at 0:00 → T460
+- 3 UI walkthrough: PASS (SPEC §10 path + supporter alarm); one P1 gap on the person check-in card → T465
+  - unit overview: residents with status chips; "Safety alarms could not refresh" banner gone (T457 fixed)
+  - live replay: missed teabag 1:10, repeated pour 1:30, Finished in 1m 43s · 2 errors → Flagged for review → Open alert
+  - alert/evidence: What changed, Consistent with (delirium, sundowning), errors, evidence, suggested checks; Confirmed → threshold 2.4 → 2.3
+  - supporter alarm: "Mrs. K hasn't checked in", escalation timeline, I'm on it → Acknowledged → Resolve → "check-in resolved"; /checkins/active empty afterwards
+  - My routine (T461): "Your session" with live skeleton view + task map renders
+  - person check-in: shows the live pending one (0:16, T460 fixed), but only after a reload; the card fetches once on mount → T465
 - 4 Robustness: PASS (e2e corrupted-frames cases pass)
 
 ## Open bug tasks
-- T457 (alarm UI vs real check-in API, P0, claimed)
-- T459 (web test flake under load, P1)
-- T460 (person sees stale check-in when several open, P1)
+- T465 (person check-in card doesn't pick up a new check-in without a reload, P1)
