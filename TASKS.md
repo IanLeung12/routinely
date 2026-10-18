@@ -153,7 +153,7 @@ What: The supervisor's half of T450, against the same mock as T451 (reuse `web/s
 Acceptance: Vitest: the banner appears for an alarm and clears on resolve; duress shows "silent help request"; the timeline renders the events; no location when it's absent; sound starts/stops (mock AudioContext); `cd web && npm test && npm run build`.
 
 ### T453 — KAZE demo: scenario runner + docs (what's real vs simulated)
-- status: in-review
+- status: done
 - class: light
 - priority: 1
 - kind: improvement
