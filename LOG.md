@@ -405,3 +405,4 @@ T441 | light | codex | merged first try (after release) | ~7k tok
 T455 | light | codex | merged first try | ~6.5k tok
 T456 | light | claude-sonnet | merged first try | ~?k tok
 T449 | light | claude-opus | merged first try | ~75k tok
+T451 | standard | claude-sonnet | merged after conflict fix | ~280k tok
