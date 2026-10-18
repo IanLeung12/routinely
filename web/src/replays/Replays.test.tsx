@@ -1,7 +1,13 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { deleteReplay } from './api.ts'
 import { Replays } from './Replays.tsx'
+
+vi.mock('./api.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./api.ts')>()
+  return { ...actual, deleteReplay: vi.fn(actual.deleteReplay) }
+})
 
 function offline() {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
@@ -10,6 +16,7 @@ function offline() {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.mocked(deleteReplay).mockClear()
 })
 
 async function rows() {
@@ -145,5 +152,28 @@ describe('Replays', () => {
       />,
     )
     expect(await screen.findByRole('button', { name: /play/i })).toBeTruthy()
+  })
+
+  it('shows an error and keeps the replay when delete fails, then allows retrying', async () => {
+    offline()
+    const user = userEvent.setup()
+    vi.mocked(deleteReplay).mockRejectedValueOnce(new Error('refused'))
+    render(<Replays personId="mrs-k" role="person" onBack={() => {}} />)
+
+    await user.click((await rows())[0])
+    await user.click(screen.getByRole('button', { name: 'Delete this replay' }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('This replay could not be deleted. It is still stored.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete this replay' })).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: '← Sessions' }))
+    expect(await rows()).toHaveLength(4)
+
+    await user.click((await rows())[0])
+    await user.click(screen.getByRole('button', { name: 'Delete this replay' }))
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await rows()).toHaveLength(3)
   })
 })
