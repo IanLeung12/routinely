@@ -1,7 +1,7 @@
 import { apiUrl } from '../config.ts'
 import { mockActiveCheckIn, mockRespond } from '../mock/checkins.ts'
 import { supervisorsOf } from '../people/api.ts'
-import type { CheckIn, PersonCheckIn, ResolutionReason, SafetySettingsData, SafetySettingsInput } from './types.ts'
+import type { CheckIn, PersonCheckIn, ResolutionReason, SafetySettingsData, SafetySettingsInput, SafetySupporter } from './types.ts'
 
 const checkins = new Map<string, CheckIn>()
 const settings = new Map<string, SafetySettingsData>()
@@ -12,12 +12,16 @@ export function setMockCheckins(scenario: CheckIn[]): void {
   for (const checkin of scenario) checkins.set(checkin.checkin_id, structuredClone(checkin))
 }
 
-function sharingFor(person: string, supporter: string): { location: boolean; alert_details: boolean; replay: boolean } | undefined {
+/** Nothing shared, the way `checkin.py`'s `Sharing()` defaults: a supporter who is
+ * linked but has not been given anything hears the alarm and no more (SPEC §18). */
+const SHARES_NOTHING: SafetySupporter['share'] = { location: false, alert_details: false, replay: false }
+
+/** What `supporter` may see of `person`, or undefined when they are not linked at all.
+ * Only the fake needs this: the real route filters the payload server-side. */
+function sharingFor(person: string, supporter: string): SafetySupporter['share'] | undefined {
   const configured = settings.get(person)
   if (configured) return configured.supporters.find(entry => entry.id === supporter)?.share
-  return supervisorsOf(person).some(entry => entry.id === supporter)
-    ? { location: false, alert_details: false, replay: false }
-    : undefined
+  return supervisorsOf(person).some(entry => entry.id === supporter) ? SHARES_NOTHING : undefined
 }
 
 /** `record` as `supporter` may see it: whatever they were not given stays entirely
@@ -31,8 +35,8 @@ function sharedCheckin(record: CheckIn, supporter: string): CheckIn {
     view.location_simulated = location_simulated
   }
   if (share?.alert_details) {
-    view.alert_id = alert_id
-    view.events = events
+    view.alert_id = alert_id ?? null
+    view.events = events ?? []
   }
   if (share?.replay && replays_url !== undefined) view.replays_url = replays_url
   return view
@@ -107,12 +111,7 @@ function defaultSafetySettings(person: string): SafetySettingsData {
     ack_window_s: 120,
     location: '',
     location_simulated: true,
-    supporters: supervisorsOf(person).map(({ id, name, relationship }) => ({
-      id,
-      name,
-      relationship,
-      share: { location: false, alert_details: false, replay: false },
-    })),
+    supporters: supervisorsOf(person).map(({ id, name, relationship }) => ({ id, name, relationship, share: { ...SHARES_NOTHING } })),
     safety_pin_set: false,
     duress_pin_set: false,
   }
@@ -143,18 +142,10 @@ export function saveSafetySettings(person: string, input: SafetySettingsInput): 
  * `{ checkins: [...] }`; at most one is ever open for a person at a time. */
 export function fetchMyCheckin(person: string): Promise<PersonCheckIn | null> {
   const query = new URLSearchParams({ person })
-  return request<{ checkins: PersonCheckIn[] } | PersonCheckIn[] | PersonCheckIn | null>(
-    `/checkins/active?${query}`,
-    undefined,
-    () => {
-      const checkin = mockActiveCheckIn(person)
-      return checkin ? [checkin] : []
-    },
-  ).then(result => {
-    if (result === null) return null
-    const list = Array.isArray(result) ? result : 'checkins' in result ? result.checkins : [result]
-    return list[0] ?? null
-  })
+  return request<{ checkins: PersonCheckIn[] }>(`/checkins/active?${query}`, undefined, () => {
+    const checkin = mockActiveCheckIn(person)
+    return { checkins: checkin ? [checkin] : [] }
+  }).then(result => result.checkins[0] ?? null)
 }
 
 /** The person checking in (SPEC section 18, T451). The safety PIN and the duress

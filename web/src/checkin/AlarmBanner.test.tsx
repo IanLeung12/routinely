@@ -91,6 +91,15 @@ describe('supervisor alarm', () => {
     expect(screen.getByText('Shared location: Simulated room 2')).toBeTruthy()
   })
 
+  it('hides the timeline entirely for a supporter the person did not share the alert with', async () => {
+    const { events: _events, alert_id: _alertId, ...withoutDetails } = alarm
+    vi.mocked(api.fetchActiveCheckins).mockResolvedValue([withoutDetails])
+    render(<AlarmBanner people={people} supporter="care-line" />)
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Escalation timeline' })).toBeNull()
+    expect(screen.queryByText('No events yet.')).toBeNull()
+  })
+
   it('does not show pending or safe check-ins as alarms', async () => {
     vi.mocked(api.fetchActiveCheckins).mockResolvedValue([{ ...alarm, state: 'pending' }, { ...alarm, checkin_id: 'safe', state: 'ok' }])
     render(<AlarmBanner people={people} supporter="ana" />)

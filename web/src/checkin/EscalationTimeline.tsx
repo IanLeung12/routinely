@@ -5,7 +5,9 @@ function eventLabel(event: CheckInEvent): string {
   switch (event.event) {
     case 'started': return 'Check-in sent'
     case 'checked_in': return 'Checked in'
-    case 'alarmed': return event.detail ? `Alarm raised, notified ${event.detail}` : 'Alarm raised'
+    // `alarmed`'s detail is the first supporter's id, or says nobody is linked
+    // (`checkin.py`'s `_raise_alarm`) - which is not a name to read out.
+    case 'alarmed': return event.detail && !event.detail.includes('nobody') ? `Alarm raised, notified ${event.detail}` : 'Alarm raised'
     case 'duress': return 'Silent help request raised'
     case 'escalated': return event.detail ? `Escalated to ${event.detail}` : 'Escalated'
     case 'escalation_exhausted': return 'No one left to alarm'

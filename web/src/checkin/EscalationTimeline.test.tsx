@@ -29,3 +29,24 @@ it('handles empty or partial event logs without fabricating steps', () => {
   expect(screen.queryByText('Check-in sent')).toBeNull()
   expect(screen.queryByText(/Escalated to/)).toBeNull()
 })
+
+it("spells every other transition checkin.py can log, without reading a machine's own detail out loud", () => {
+  const view = render(
+    <EscalationTimeline
+      events={[
+        { event: 'duress', at: '2026-10-17T12:01:00Z', actor: 'person', state: 'alarm', detail: 'duress' },
+        { event: 'disconnected', at: '2026-10-17T12:01:30Z', actor: 'server', state: 'alarm' },
+        { event: 'reconnected', at: '2026-10-17T12:01:40Z', actor: 'server', state: 'alarm' },
+        { event: 'escalation_exhausted', at: '2026-10-17T12:05:00Z', actor: 'server', state: 'escalated', detail: 'nobody left to alarm' },
+      ]}
+    />,
+  )
+  for (const label of ['Silent help request raised', 'Device disconnected', 'Device reconnected', 'No one left to alarm']) {
+    expect(screen.getByText(label)).toBeTruthy()
+  }
+  // `alarmed`'s detail is a supporter id, except when it says nobody is linked.
+  view.rerender(
+    <EscalationTimeline events={[{ event: 'alarmed', at: '2026-10-17T12:02:00Z', actor: 'server', state: 'alarm', detail: 'nobody linked' }]} />,
+  )
+  expect(screen.getByText('Alarm raised')).toBeTruthy()
+})
