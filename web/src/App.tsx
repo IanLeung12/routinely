@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import './App.css'
 import { fetchAlerts } from './alert/api.ts'
-import { AlertView } from './alert/AlertView.tsx'
 import { LiveScreen } from './live/LiveScreen.tsx'
 import { fetchResidentsWithSource, type ResidentsSource } from './overview/api.ts'
 import { UnitOverview } from './overview/UnitOverview.tsx'
@@ -11,7 +10,6 @@ import { PeopleISupport } from './people/PeopleISupport.tsx'
 import { RoleChooser } from './people/RoleChooser.tsx'
 import { RoleSwitch } from './people/RoleSwitch.tsx'
 import type { RoleId } from './people/types.ts'
-import { ResidentDetail } from './resident/ResidentDetail.tsx'
 import { Button } from './ui/Button.tsx'
 import { DemoBanner, resetDemoData } from './ui/DemoBanner.tsx'
 import { Loading } from './ui/Loading.tsx'
@@ -31,6 +29,18 @@ const Replays = lazy(() => import('./replays/Replays.tsx').then(m => ({ default:
 const Tour = lazy(() => import('./tour/Tour.tsx').then(m => ({ default: m.Tour })))
 const AlarmBanner = lazy(() => import('./checkin/AlarmBanner.tsx').then(m => ({ default: m.AlarmBanner })))
 const SafetySettings = lazy(() => import('./checkin/SafetySettings.tsx').then(m => ({ default: m.SafetySettings })))
+
+/** On the demo path but one tap in, never at first paint: the alert screen (with the
+ * replay player) and a resident's detail (with its charts and calendar) are the two
+ * biggest eager chunks, and the first-load budget had to be raised four times in two
+ * days to fit them (`scripts/check-bundle.mjs`, T449). Both are drill-ins from the
+ * overview, so the shell can load without them and fetch them on the tap that opens
+ * them. Each Suspense fallback reuses the screen's own loading label, so the text
+ * doesn't change when the chunk lands and the screen starts fetching. */
+const AlertView = lazy(() => import('./alert/AlertView.tsx').then(m => ({ default: m.AlertView })))
+const ResidentDetail = lazy(() =>
+  import('./resident/ResidentDetail.tsx').then(m => ({ default: m.ResidentDetail })),
+)
 
 /** Where an alert was opened from, so its Back button can return there instead of
  * always landing on the overview. */
@@ -366,14 +376,16 @@ export default function App() {
         ) : role === 'person' ? (
           <MyRoutine onChange={refreshPeople} />
         ) : openAlert !== null ? (
-          <AlertView
-            alertId={openAlert}
-            onBack={closeAlert}
-            onOpenEvidence={(error) => {
-              const resident = alerts.find((alert) => alert.alert_id === openAlert)?.resident_id
-              if (resident) openReplaysFor(resident, error.session_id)
-            }}
-          />
+          <Suspense fallback={<Loading label="Loading alert…" />}>
+            <AlertView
+              alertId={openAlert}
+              onBack={closeAlert}
+              onOpenEvidence={(error) => {
+                const resident = alerts.find((alert) => alert.alert_id === openAlert)?.resident_id
+                if (resident) openReplaysFor(resident, error.session_id)
+              }}
+            />
+          </Suspense>
         ) : openHandoff ? (
           <Suspense fallback={<Loading label="Loading shift handoff…" />}>
             <Handoff
@@ -386,11 +398,13 @@ export default function App() {
             <PatternLibrary onBack={() => setOpenPatternLibrary(false)} />
           </Suspense>
         ) : shownResident !== null ? (
-          <ResidentDetail
-            residentId={shownResident}
-            onBack={closeResident}
-            backLabel={supported.length > 1 ? 'Unit overview' : 'People I support'}
-          />
+          <Suspense fallback={<Loading label="Loading their routine…" />}>
+            <ResidentDetail
+              residentId={shownResident}
+              onBack={closeResident}
+              backLabel={supported.length > 1 ? 'Unit overview' : 'People I support'}
+            />
+          </Suspense>
         ) : (
           supervisorHome
         )}
