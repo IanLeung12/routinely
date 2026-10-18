@@ -409,3 +409,5 @@ T451 | standard | claude-sonnet | merged after conflict fix | ~280k tok
 T453 | standard | claude-opus | merged first try | ~200k tok
 T452 | standard | codex | merged after release | ~?k tok
 T450 | heavy | claude-opus | merged first try | ~260k tok
+T458 | light | claude-sonnet | merged first try | ~?k tok
+T457 | standard | claude-opus | merged first try | ~?k tok
