@@ -8,7 +8,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 ## Tasks
 
 ### T432 — Task map as a Postman Flows–style node graph
-- status: claimed
+- status: in-review
 - class: standard
 - priority: 0
 - kind: improvement
@@ -19,7 +19,7 @@ Format and rules: `prompts/orchestrator.md`, `MODELS.md`.
 - claimed: 2026-10-18T00:08Z
 - pr: #431
 - rating: 4/5 the task says deps already come over /ws/live; they did not, so the PR had to extend session_start (contracts + live.py + live_camera.py). It also assumes the map has room for a left-to-right flow: the live screen's column is ~23 rem, four tea levels need ~49 rem
-- note: merge conflict with main on PR #431: check out its branch, merge origin/main, fix, push
+- note: conflict fixed on #431 (f98590d); CI running, auto-merge on
 
 What: Ian wants the task map to look like **Postman Flows** (node-graph canvas). Use the mobbin MCP (`search_screens` / `search_flows` "Postman Flows") to study 2–3 references first and name them in the PR. Render the task graph (steps + deps from the task YAML, already sent over /ws/live) as rounded node cards on a dotted canvas, connected by smooth curved edges with small ports; parallel branches side by side (e.g. fill kettle ∥ get cup), optional steps dashed. Live state on each node: pending (muted), done (green check), current (glow/pulse), error (red, with the error type pill: omission/sequence/repeat/substitution), unclear (grey). Edges into an errored step turn red/amber. Fits the Fey-style tokens from `docs/DESIGN.md`.
 Why: the task map is the centrepiece of the live demo shot; a flow canvas makes "dependencies, not a fixed order" obvious at a glance.
